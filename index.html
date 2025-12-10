@@ -424,6 +424,21 @@
             order: 1 !important;
             /* Boutons/ajouts à gauche */
         }
+
+        .rtl-layout .flex.flex-wrap.gap-2.mb-6 {
+            /* Cible le conteneur des tabs */
+            justify-content: flex-start !important;
+            /* Début du flux RTL : à droite */
+            flex-direction: row !important;
+            /* Flux naturel RTL : droite-gauche, garde ordre HTML */
+            text-align: start !important;
+            /* Renforce alignement RTL */
+            gap: 0.5rem !important;
+            /* Espace uniforme */
+            margin-left: auto !important;
+            /* Pousse tout le bloc à droite si besoin */
+            margin-right: 0 !important;
+        }
     </style>
 </head>
 
