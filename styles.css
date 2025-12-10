@@ -1,0 +1,659 @@
+        /* ===== RTL SUPPORT COMPLET ET OPTIMISÉ ===== */
+        .rtl-layout {
+            direction: rtl;
+            text-align: right;
+        }
+
+        /* ===== FLEX & LAYOUT GÉNÉRAUX ===== */
+        .rtl-layout .flex {
+            flex-direction: row-reverse;
+        }
+
+        .rtl-layout .justify-between {
+            justify-content: space-between;
+        }
+
+        .rtl-layout .flex-wrap {
+            flex-direction: row-reverse;
+        }
+
+        /* ===== MARGINS INVERSÉS ===== */
+        .rtl-layout .ml-auto {
+            margin-left: 0 !important;
+            margin-right: auto !important;
+        }
+
+        .rtl-layout .ml-2 {
+            margin-left: 0 !important;
+            margin-right: 0.5rem !important;
+        }
+
+        .rtl-layout .ml-3 {
+            margin-left: 0 !important;
+            margin-right: 0.75rem !important;
+        }
+
+        .rtl-layout .ml-4 {
+            margin-left: 0 !important;
+            margin-right: 1rem !important;
+        }
+
+        .rtl-layout .mr-2 {
+            margin-right: 0 !important;
+            margin-left: 0.5rem !important;
+        }
+
+        .rtl-layout .mr-3 {
+            margin-right: 0 !important;
+            margin-left: 0.75rem !important;
+        }
+
+        .rtl-layout .mr-auto {
+            margin-right: auto !important;
+            margin-left: 0 !important;
+        }
+
+        /* ===== TEXT ALIGNMENT ===== */
+        .rtl-layout .text-left {
+            text-align: right !important;
+        }
+
+        .rtl-layout .text-right {
+            text-align: left !important;
+        }
+
+        /* ===== BORDERS & PADDING ===== */
+        .rtl-layout .border-l {
+            border-left: none !important;
+            border-right: 1px solid !important;
+        }
+
+        .rtl-layout .border-l-4 {
+            border-left: none !important;
+            border-right: 4px solid !important;
+        }
+
+        .rtl-layout .pl-2 {
+            padding-left: 0 !important;
+            padding-right: 0.5rem !important;
+        }
+
+        /* ===== ÉLÈVES - LISTE PRINCIPALE ===== */
+        .rtl-layout #students-list>div {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+        }
+
+        .rtl-layout #students-list .flex {
+            flex-direction: row-reverse !important;
+        }
+
+        .rtl-layout #students-list button {
+            order: 1 !important;
+        }
+
+        .rtl-layout #students-list .font-medium {
+            order: 2 !important;
+        }
+
+        .rtl-layout #students-list .text-gray-400 {
+            order: 3 !important;
+            margin-right: 0.75rem !important;
+        }
+
+        /* ===== EN-TÊTE ÉLÈVES ===== */
+        .rtl-layout #content-students .flex.justify-between {
+            flex-direction: row-reverse !important;
+        }
+
+        .rtl-layout #content-students .flex.justify-between>div:first-child {
+            order: 2 !important;
+        }
+
+        .rtl-layout #content-students .flex.justify-between>div:last-child {
+            order: 1 !important;
+        }
+
+        /* ===== CLASSES - FIX COMPLET ===== */
+        .rtl-layout #class-list {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            flex-direction: row-reverse !important;
+            justify-content: flex-end !important;
+            gap: 0.5rem !important;
+        }
+
+        .rtl-layout #class-list>* {
+            order: unset !important;
+        }
+
+        /* Annule les règles générales .flex qui interfèrent */
+        .rtl-layout .flex.flex-wrap.gap-2:has(#class-list) {
+            flex-direction: row-reverse !important;
+            justify-content: flex-end !important;
+        }
+
+        /* Force sur les conteneurs directs */
+        #class-list.flex {
+            display: flex !important;
+        }
+
+        /* En LTR (français/anglais), laisse la flexbox normale */
+        .ltr-layout #class-list {
+            flex-direction: row;
+            justify-content: flex-start;
+        }
+
+
+        /* ===== EXERCICES DES DEVOIRS - COMPLÈT ===== */
+        .rtl-layout [id*="exercise"],
+        .rtl-layout [id*="exercises"],
+        .rtl-layout .exercise,
+        .rtl-layout .exercice,
+        .rtl-layout .exercise-item,
+        .rtl-layout .hw-exercise {
+            direction: rtl !important;
+        }
+
+        /* Tous les conteneurs exercices */
+        .rtl-layout .exercises-list,
+        .rtl-layout #exercises-list,
+        .rtl-layout #homework-exercises,
+        .rtl-layout #exercises-container,
+        .rtl-layout #homework-exercises-list {
+            flex-direction: row-reverse !important;
+        }
+
+        /* ACTIONS/ICÔNES TOUJOURS À GAUCHE */
+        .rtl-layout .exercise-actions,
+        .rtl-layout .exercise-item button,
+        .rtl-layout .delete-exercise-btn,
+        .rtl-layout .edit-exercise-btn,
+        .rtl-layout .btn-delete-exercise,
+        .rtl-layout .btn-edit-exercise {
+            order: 1 !important;
+            margin-right: 0 !important;
+            margin-left: 0.75rem !important;
+        }
+
+        /* CONTENU EXERCICE À DROITE */
+        .rtl-layout .exercise-info,
+        .rtl-layout .exercise-content,
+        .rtl-layout .exercise-details,
+        .rtl-layout .exercise-name {
+            order: 2 !important;
+            text-align: right !important;
+        }
+
+        /* MODALES EXERCICES SPÉCIFIQUES */
+        .rtl-layout #exercises-container .flex,
+        .rtl-layout #homework-exercises-list .flex,
+        .rtl-layout .exercise-item .flex {
+            flex-direction: row-reverse !important;
+            justify-content: space-between !important;
+        }
+
+        /* ===== TABLEAUX ===== */
+        .rtl-layout table th,
+        .rtl-layout table td {
+            text-align: right !important;
+        }
+
+        .rtl-layout table .sticky.left-0 {
+            left: auto !important;
+            right: 0 !important;
+        }
+
+        /* ===== MODALES & UI ===== */
+        .modal {
+            display: none;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        /* ===== ACCORDÉON ===== */
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .accordion-content.open {
+            max-height: 5000px;
+            transition: max-height 0.5s ease-in;
+        }
+
+        .rotate-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .rotate-icon.open {
+            transform: rotate(180deg);
+        }
+
+        /* ===== NOTES - GRILLE ===== */
+        .grade-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+        }
+
+        .grade-question-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1rem;
+        }
+
+        .grade-question-card {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            min-height: 130px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .question-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .question-title {
+            font-weight: 700;
+            color: #166534;
+            font-size: 1rem;
+        }
+
+        .question-score {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #15803d;
+            background: #ffffff;
+            border-radius: 9999px;
+            padding: 0.15rem 0.75rem;
+            border: 1px solid #bbf7d0;
+        }
+
+        .question-direct-entry {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .question-direct-entry .grade-input {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .question-max {
+            font-size: 0.85rem;
+            color: #4b5563;
+            font-weight: 500;
+        }
+
+        .subquestion-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 0.6rem;
+        }
+
+        .subquestion-chip {
+            background: #ffffff;
+            border: 1px solid #fecdd3;
+            border-radius: 0.75rem;
+            padding: 0.5rem 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .subquestion-chip-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #c2410c;
+        }
+
+        .subquestion-chip .grade-input {
+            width: 100%;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .rtl-layout #students-list .flex {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 1rem !important;
+            }
+
+            .rtl-layout #students-list button {
+                align-self: flex-start !important;
+                order: 1 !important;
+            }
+
+            .rtl-layout .flex-wrap {
+                flex-direction: row-reverse !important;
+            }
+        }
+
+        /* ===== RÉAJUSTEMENTS RTL SPÉCIFIQUES ===== */
+        /* 1. Titre principal et header à droite en RTL */
+        .rtl-layout header .flex>div:first-child {
+            order: 2 !important;
+            /* Pousse le titre à droite */
+            text-align: right !important;
+            margin-left: auto !important;
+            margin-right: 0 !important;
+        }
+
+        .rtl-layout header .flex>div:last-child {
+            order: 1 !important;
+            /* Boutons langues à gauche */
+        }
+
+        .rtl-layout header h1,
+        .rtl-layout header p {
+            text-align: right !important;
+        }
+
+        /* 2. Boutons tabs : Ordre Élèves (droite) → Devoirs → Notes → Récap (gauche) */
+        .rtl-layout .flex.flex-wrap.gap-2.mb-6 {
+            /* Cible précis le conteneur des tabs */
+            justify-content: flex-end !important;
+            /* Bloc poussé à droite */
+            flex-direction: row !important;
+            /* Flux naturel RTL : droite-gauche, garde ordre HTML */
+            gap: 0.5rem !important;
+            /* Espace uniforme */
+        }
+
+        /* 3. Icônes actions dans cartes Devoirs à gauche en RTL */
+        .rtl-layout .flex.items-center.justify-between[onclick*="toggleAccordion"] {
+            flex-direction: row-reverse !important;
+            /* Inverse pour RTL */
+        }
+
+        .rtl-layout .flex.items-center.justify-between[onclick*="toggleAccordion"]>div:first-child {
+            order: 2 !important;
+            /* Contenu (icône + titre) à droite */
+            text-align: right !important;
+        }
+
+        .rtl-layout .flex.items-center.justify-between[onclick*="toggleAccordion"]>div:last-child {
+            order: 1 !important;
+            /* Actions (boutons) à gauche */
+            margin-left: 0.75rem !important;
+            /* Espace à droite du contenu */
+        }
+
+        /* Extension pour tous les titres (h1-h6) en RTL */
+        .rtl-layout h1,
+        .rtl-layout h2,
+        .rtl-layout h3,
+        .rtl-layout h4,
+        .rtl-layout h5,
+        .rtl-layout h6 {
+            text-align: right !important;
+            margin-left: auto !important;
+            margin-right: 0 !important;
+        }
+
+        /* Ajustement général flex en RTL (évite double-inversion) */
+        .rtl-layout .flex {
+            flex-direction: row !important;
+            /* Naturel en RTL */
+        }
+
+        /* Pour headers de sections (ex. dans devoirs, notes) : Inverser ordre */
+        .rtl-layout .flex.justify-between {
+            flex-direction: row-reverse !important;
+            justify-content: space-between !important;
+        }
+
+        .rtl-layout .flex.justify-between>*:first-child {
+            order: 2 !important;
+            /* Titre à droite */
+        }
+
+        .rtl-layout .flex.justify-between>*:last-child {
+            order: 1 !important;
+            /* Boutons/ajouts à gauche */
+        }
+
+        .rtl-layout .flex.flex-wrap.gap-2.mb-6 {
+            /* Cible le conteneur des tabs */
+            justify-content: flex-start !important;
+            /* Début du flux RTL : à droite */
+            flex-direction: row !important;
+            /* Flux naturel RTL : droite-gauche, garde ordre HTML */
+            text-align: start !important;
+            /* Renforce alignement RTL */
+            gap: 0.5rem !important;
+            /* Espace uniforme */
+            margin-left: auto !important;
+            /* Pousse tout le bloc à droite si besoin */
+            margin-right: 0 !important;
+        }
+
+        /* Liste d'élèves compacte en grille */
+        #students-list.student-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 0.75rem;
+        }
+
+        #students-list.student-grid .student-item {
+            position: relative;
+            display: flex !important;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.9rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+            transition: transform 0.08s ease, box-shadow 0.12s ease;
+        }
+
+        #students-list.student-grid .student-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+        }
+
+        .student-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        /* Badge niveau (remplace l’avatar) */
+        .student-level {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            color: #fff;
+            font-weight: 800;
+            font-size: 1.1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+        }
+
+        /* Variantes garçon/fille */
+        .student-level.boy {
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+        }
+
+        .student-level.girl {
+            background: linear-gradient(135deg, #ec4899, #d946ef);
+        }
+
+        .student-level.neutral {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+        }
+
+        .student-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .student-name {
+            font-weight: 700;
+            color: #111827;
+            line-height: 1.2;
+        }
+
+        .student-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            margin-top: 0.25rem;
+            color: #6b7280;
+            font-size: 12px;
+        }
+
+        .student-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #e0f2fe;
+            color: #075985;
+            border: 1px solid #bfdbfe;
+            white-space: nowrap;
+        }
+
+        .student-chip.gray {
+            background: #f3f4f6;
+            color: #374151;
+            border-color: #e5e7eb;
+        }
+
+        .student-chip.birth {
+            background: #fef3c7;
+            color: #92400e;
+            border-color: #fde68a;
+        }
+
+        .student-index {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .student-actions {
+            opacity: 0;
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .student-item:hover .student-actions {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .rtl-layout .student-actions {
+            right: auto;
+            left: 8px;
+        }
+
+        .student-actions button {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            background: #fee2e2;
+            color: #b91c1c;
+            font-size: 15px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.12s ease, transform 0.08s ease;
+        }
+
+        .student-actions button:hover {
+            background: #fecdd3;
+            transform: translateY(-1px);
+        }
+
+        /* RTL ajustements */
+        .rtl-layout #students-list.student-grid .student-item {
+            flex-direction: row-reverse !important;
+        }
+
+        .rtl-layout #students-list.student-grid .student-meta {
+            justify-content: flex-end;
+        }
+
+        /* SEULE LA VERSION QUI MARCHE */
+        .rtl-layout #class-list {
+            display: flex !important;
+            flex-direction: row-reverse !important;
+            flex-wrap: wrap !important;
+            justify-content: flex-end !important;
+            gap: 0.5rem !important;
+        }
+
+
+        /* Annule les styles qui posaient problème */
+        .rtl-layout #class-list .inline-flex {
+            display: inline-flex !important;
+            flex-direction: row-reverse !important;
+        }
+
+        .rtl-layout #class-list>* {
+            order: unset !important;
+            margin-left: 0 !important;
+            margin-right: auto !important;
+        }
+
+        /* ===== NUCLEAR OPTION - CLASSES RTL ===== */
+        html[dir="rtl"] #class-list,
+        html[dir="rtl"] .rtl-layout #class-list,
+        .rtl-layout #class-list {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            flex-direction: row-reverse !important;
+            justify-content: flex-end !important;
+            align-items: flex-start !important;
+            gap: 0.5rem !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
+        html[dir="rtl"] #class-list>div,
+        .rtl-layout #class-list>div {
+            flex-basis: auto !important;
+            order: unset !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+
+        /* Annule TOUS les autres flex qui pourraient interferer */
+        html[dir="rtl"] #class-list.flex,
+        .rtl-layout #class-list.flex {
+            flex-direction: row-reverse !important;
+            justify-content: flex-end !important;
+        }
