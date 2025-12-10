@@ -715,6 +715,22 @@
             renderAssignments();
         }
 
+        function duplicateAssignment(id) {
+            const original = data.assignments.find(a => a.id === id);
+            if (!original) return;
+            
+            const newAssignment = {
+                id: genId(),
+                name: original.name + ' (copie)',
+                className: original.className,
+                exercises: JSON.parse(JSON.stringify(original.exercises))
+            };
+            
+            data.assignments.push(newAssignment);
+            saveData();
+            renderAssignments();
+        }
+
         function getAssignmentMaxPoints(assignment) {
             let total = 0;
             for (const ex of assignment.exercises) {
@@ -776,6 +792,7 @@
                         </div>
                         <div class="flex gap-2">
                             <button onclick="openAssignmentModal('${a.id}')" class="text-blue-500 hover:text-blue-700 px-3 py-1 bg-blue-100 rounded">✏️ Modifier</button>
+                            <button onclick="duplicateAssignment('${a.id}')" class="text-green-500 hover:text-green-700 px-3 py-1 bg-green-100 rounded">⎘ Dupliquer</button>
                             <button onclick="deleteAssignment('${a.id}')" class="text-red-500 hover:text-red-700 px-3 py-1 bg-red-100 rounded">🗑️ Supprimer</button>
                         </div>
                     </div>
@@ -827,12 +844,27 @@
         function loadGradeSelectors() {
             const assignmentSelect = document.getElementById('select-assignment');
             const studentSelect = document.getElementById('select-student');
+            const classSelect = document.getElementById('select-class-grades');
+            const selectedClass = classSelect.value;
+            
+            // Filtrer les devoirs par classe sélectionnée
+            const filteredAssignments = selectedClass ? 
+                data.assignments.filter(a => a.className === selectedClass) : 
+                data.assignments;
             
             assignmentSelect.innerHTML = '<option value="">-- Sélectionner un devoir --</option>' +
-                data.assignments.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+                filteredAssignments.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+            
+            // Filtrer les élèves par classe sélectionnée
+            const filteredStudents = selectedClass ?
+                data.students.filter(s => s.className === selectedClass) :
+                data.students;
             
             studentSelect.innerHTML = '<option value="">-- Sélectionner un élève --</option>' +
-                data.students.map(s => `<option value="${s.id}">${s.name}${s.className ? ' (' + s.className + ')' : ''}</option>`).join('');
+                filteredStudents.map(s => `<option value="${s.id}">${s.name}${s.className ? ' (' + s.className + ')' : ''}</option>`).join('');
+            
+            // Vider la zone de saisie de notes
+            document.getElementById('grade-entry').innerHTML = '<p class="text-gray-500 text-center py-8">Sélectionnez un devoir et un élève pour saisir les notes.</p>';
         }
 
         function renderGradeQuestion(q, studentId, assignmentId, exId, partId = null) {
@@ -1108,15 +1140,29 @@
         function renderSummary() {
             const container = document.getElementById('summary-table');
             const showDetails = document.getElementById('show-details').checked;
+            const classSelect = document.getElementById('select-class-summary');
+            const selectedClass = classSelect.value;
             
-            if (data.students.length === 0 || data.assignments.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-center py-8">Ajoutez des élèves et des devoirs pour voir le récapitulatif.</p>';
+            // Filtrer les élèves par classe sélectionnée
+            const filteredStudents = selectedClass ?
+                data.students.filter(s => s.className === selectedClass) :
+                data.students;
+            
+            // Filtrer les devoirs par classe sélectionnée
+            const filteredAssignments = selectedClass ?
+                data.assignments.filter(a => a.className === selectedClass) :
+                data.assignments;
+            
+            if (filteredStudents.length === 0 || filteredAssignments.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">' + 
+                    (selectedClass ? `Aucun élève ou devoir pour la classe "${selectedClass}".` : 'Ajoutez des élèves et des devoirs pour voir le récapitulatif.') + 
+                    '</p>';
                 return;
             }
             
             let headers = '<th class="p-3 text-left bg-gray-100 sticky left-0 z-10">Élève</th>';
             
-            for (const a of data.assignments) {
+            for (const a of filteredAssignments) {
                 if (showDetails) {
                     for (const ex of a.exercises) {
                         const exIndex = a.exercises.indexOf(ex) + 1;
@@ -1126,10 +1172,10 @@
                 headers += `<th class="p-3 text-center bg-blue-100 font-bold">${a.name}<br><span class="text-xs">/${getAssignmentMaxPoints(a)}</span></th>`;
             }
             
-            let rows = data.students.map(s => {
+            let rows = filteredStudents.map(s => {
                 let row = `<td class="p-3 font-medium bg-gray-50 sticky left-0">${s.name}${s.className ? '<div class=\"text-xs text-gray-500\">' + s.className + '</div>' : ''}</td>`;
                 
-                for (const a of data.assignments) {
+                for (const a of filteredAssignments) {
                     const studentGrades = data.grades[s.id]?.[a.id] || {};
                     
                     if (showDetails) {
