@@ -24,7 +24,7 @@
         </header>
 
         <!-- Tabs -->
-        <div class="flex gap-2 mb-6">
+        <div class="flex flex-wrap gap-2 mb-6">
             <button onclick="showTab('students')" id="tab-students" class="tab-btn px-6 py-3 rounded-lg font-semibold transition-all bg-white text-blue-600 shadow">
                 👥 Élèves
             </button>
@@ -69,11 +69,11 @@
         <div id="content-grades" class="tab-content hidden">
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <h2 class="text-2xl font-bold text-gray-800 mb-6">Saisie des Notes</h2>
-                <div class="flex gap-4 mb-6">
-                    <select id="select-assignment" onchange="loadGradeEntry()" class="flex-1 p-3 border rounded-lg">
+                <div class="flex gap-4 mb-6 flex-wrap">
+                    <select id="select-assignment" onchange="loadGradeEntry()" class="flex-1 min-w-48 p-3 border rounded-lg">
                         <option value="">-- Sélectionner un devoir --</option>
                     </select>
-                    <select id="select-student" onchange="loadGradeEntry()" class="flex-1 p-3 border rounded-lg">
+                    <select id="select-student" onchange="loadGradeEntry()" class="flex-1 min-w-48 p-3 border rounded-lg">
                         <option value="">-- Sélectionner un élève --</option>
                     </select>
                 </div>
@@ -84,7 +84,7 @@
         <!-- Summary Tab -->
         <div id="content-summary" class="tab-content hidden">
             <div class="bg-white rounded-xl shadow-lg p-6 overflow-x-auto">
-                <div class="flex justify-between items-center mb-6">
+                <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
                     <h2 class="text-2xl font-bold text-gray-800">Récapitulatif des Notes</h2>
                     <label class="flex items-center gap-2">
                         <input type="checkbox" id="show-details" onchange="renderSummary()" class="w-5 h-5">
@@ -110,11 +110,11 @@
 
     <!-- Assignment Modal -->
     <div id="assignment-modal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-50 overflow-y-auto py-8">
-        <div class="bg-white rounded-xl p-6 w-full max-w-4xl mx-4 my-auto">
-            <h3 class="text-xl font-bold mb-4">Créer un Devoir</h3>
+        <div class="bg-white rounded-xl p-6 w-full max-w-5xl mx-4 my-auto">
+            <h3 id="assignment-modal-title" class="text-xl font-bold mb-4">Créer un Devoir</h3>
             <input type="text" id="assignment-name" placeholder="Nom du devoir (ex: Devoir 1)" class="w-full p-3 border rounded-lg mb-4">
             
-            <div id="exercises-builder" class="space-y-4 mb-4 max-h-96 overflow-y-auto"></div>
+            <div id="exercises-builder" class="space-y-4 mb-4 max-h-[60vh] overflow-y-auto pr-2"></div>
             
             <button onclick="addExercise()" class="w-full p-3 border-2 border-dashed border-blue-400 text-blue-600 rounded-lg hover:bg-blue-50 mb-4">
                 + Ajouter un exercice
@@ -134,6 +134,10 @@
             assignments: [],
             grades: {}
         };
+
+        // Current editing state
+        let editingAssignmentId = null;
+        let tempExercises = [];
 
         // Load from localStorage
         function loadData() {
@@ -215,50 +219,109 @@
         }
 
         // ===== ASSIGNMENTS =====
-        let tempExercises = [];
-
-        function openAssignmentModal() {
-            tempExercises = [];
+        function openAssignmentModal(assignmentId = null) {
+            editingAssignmentId = assignmentId;
+            
+            if (assignmentId) {
+                // Edit mode
+                const assignment = data.assignments.find(a => a.id === assignmentId);
+                document.getElementById('assignment-modal-title').textContent = 'Modifier le Devoir';
+                document.getElementById('assignment-name').value = assignment.name;
+                tempExercises = JSON.parse(JSON.stringify(assignment.exercises));
+            } else {
+                // Create mode
+                document.getElementById('assignment-modal-title').textContent = 'Créer un Devoir';
+                document.getElementById('assignment-name').value = '';
+                tempExercises = [];
+            }
+            
             document.getElementById('assignment-modal').classList.add('active');
-            document.getElementById('assignment-name').value = '';
-            document.getElementById('exercises-builder').innerHTML = '';
+            renderExercisesBuilder();
         }
 
         function closeAssignmentModal() {
             document.getElementById('assignment-modal').classList.remove('active');
+            editingAssignmentId = null;
         }
 
         function addExercise() {
             const exId = genId();
-            tempExercises.push({ id: exId, name: '', maxPoints: 0, questions: [] });
+            tempExercises.push({ id: exId, name: '', maxPoints: 0, parts: [], questions: [] });
             renderExercisesBuilder();
         }
 
         function removeExercise(exId) {
+            if (!confirm('Supprimer cet exercice ?')) return;
             tempExercises = tempExercises.filter(e => e.id !== exId);
             renderExercisesBuilder();
         }
 
-        function addQuestion(exId) {
+        function addPart(exId) {
             const ex = tempExercises.find(e => e.id === exId);
             if (ex) {
-                ex.questions.push({ id: genId(), name: '', maxPoints: 0, subQuestions: [] });
+                if (!ex.parts) ex.parts = [];
+                const partNum = ex.parts.length + 1;
+                ex.parts.push({ id: genId(), name: `Partie ${partNum}`, questions: [] });
                 renderExercisesBuilder();
             }
         }
 
-        function removeQuestion(exId, qId) {
+        function removePart(exId, partId) {
+            if (!confirm('Supprimer cette partie ?')) return;
             const ex = tempExercises.find(e => e.id === exId);
-            if (ex) {
-                ex.questions = ex.questions.filter(q => q.id !== qId);
+            if (ex && ex.parts) {
+                ex.parts = ex.parts.filter(p => p.id !== partId);
                 renderExercisesBuilder();
             }
         }
 
-        function addSubQuestion(exId, qId) {
+        function addQuestion(exId, partId = null) {
             const ex = tempExercises.find(e => e.id === exId);
             if (ex) {
-                const q = ex.questions.find(q => q.id === qId);
+                const newQuestion = { id: genId(), name: '', maxPoints: 0, subQuestions: [] };
+                
+                if (partId) {
+                    const part = ex.parts.find(p => p.id === partId);
+                    if (part) {
+                        const qNum = part.questions.length + 1;
+                        newQuestion.name = `Q${qNum}`;
+                        part.questions.push(newQuestion);
+                    }
+                } else {
+                    const qNum = ex.questions.length + 1;
+                    newQuestion.name = `Q${qNum}`;
+                    ex.questions.push(newQuestion);
+                }
+                renderExercisesBuilder();
+            }
+        }
+
+        function removeQuestion(exId, qId, partId = null) {
+            const ex = tempExercises.find(e => e.id === exId);
+            if (ex) {
+                if (partId) {
+                    const part = ex.parts.find(p => p.id === partId);
+                    if (part) {
+                        part.questions = part.questions.filter(q => q.id !== qId);
+                    }
+                } else {
+                    ex.questions = ex.questions.filter(q => q.id !== qId);
+                }
+                renderExercisesBuilder();
+            }
+        }
+
+        function addSubQuestion(exId, qId, partId = null) {
+            const ex = tempExercises.find(e => e.id === exId);
+            if (ex) {
+                let q;
+                if (partId) {
+                    const part = ex.parts.find(p => p.id === partId);
+                    if (part) q = part.questions.find(x => x.id === qId);
+                } else {
+                    q = ex.questions.find(x => x.id === qId);
+                }
+                
                 if (q) {
                     const letters = 'abcdefghijklmnopqrstuvwxyz';
                     const letter = letters[q.subQuestions.length] || '?';
@@ -268,10 +331,17 @@
             }
         }
 
-        function removeSubQuestion(exId, qId, sqId) {
+        function removeSubQuestion(exId, qId, sqId, partId = null) {
             const ex = tempExercises.find(e => e.id === exId);
             if (ex) {
-                const q = ex.questions.find(q => q.id === qId);
+                let q;
+                if (partId) {
+                    const part = ex.parts.find(p => p.id === partId);
+                    if (part) q = part.questions.find(x => x.id === qId);
+                } else {
+                    q = ex.questions.find(x => x.id === qId);
+                }
+                
                 if (q) {
                     q.subQuestions = q.subQuestions.filter(sq => sq.id !== sqId);
                     renderExercisesBuilder();
@@ -279,58 +349,171 @@
             }
         }
 
+        function updateExerciseField(exId, field, value) {
+            const ex = tempExercises.find(e => e.id === exId);
+            if (ex) {
+                if (field === 'maxPoints') {
+                    ex[field] = parseFloat(value) || 0;
+                } else {
+                    ex[field] = value;
+                }
+            }
+        }
+
+        function updatePartField(exId, partId, field, value) {
+            const ex = tempExercises.find(e => e.id === exId);
+            if (ex && ex.parts) {
+                const part = ex.parts.find(p => p.id === partId);
+                if (part) part[field] = value;
+            }
+        }
+
+        function updateQuestionField(exId, qId, partId, field, value) {
+            const ex = tempExercises.find(e => e.id === exId);
+            if (ex) {
+                let q;
+                if (partId) {
+                    const part = ex.parts.find(p => p.id === partId);
+                    if (part) q = part.questions.find(x => x.id === qId);
+                } else {
+                    q = ex.questions.find(x => x.id === qId);
+                }
+                
+                if (q) {
+                    if (field === 'maxPoints') {
+                        q[field] = parseFloat(value) || 0;
+                    } else {
+                        q[field] = value;
+                    }
+                }
+            }
+        }
+
+        function updateSubQuestionField(exId, qId, sqId, partId, field, value) {
+            const ex = tempExercises.find(e => e.id === exId);
+            if (ex) {
+                let q;
+                if (partId) {
+                    const part = ex.parts.find(p => p.id === partId);
+                    if (part) q = part.questions.find(x => x.id === qId);
+                } else {
+                    q = ex.questions.find(x => x.id === qId);
+                }
+                
+                if (q) {
+                    const sq = q.subQuestions.find(s => s.id === sqId);
+                    if (sq) {
+                        if (field === 'maxPoints') {
+                            sq[field] = parseFloat(value) || 0;
+                        } else {
+                            sq[field] = value;
+                        }
+                    }
+                }
+            }
+        }
+
+        function renderQuestionBuilder(q, exId, partId = null) {
+            const partParam = partId ? `'${partId}'` : 'null';
+            return `
+                <div class="border border-green-200 rounded p-3 bg-green-50">
+                    <div class="flex items-center gap-2 mb-2 flex-wrap">
+                        <input type="text" placeholder="Q1, Q2..." value="${q.name}"
+                            onchange="updateQuestionField('${exId}','${q.id}',${partParam},'name',this.value)"
+                            class="w-20 p-1 border rounded text-sm font-semibold text-green-700 bg-white">
+                        <input type="number" placeholder="Pts" value="${q.maxPoints || ''}" min="0" step="0.25"
+                            onchange="updateQuestionField('${exId}','${q.id}',${partParam},'maxPoints',this.value)"
+                            class="w-16 p-1 border rounded text-sm" title="Points (si pas de sous-questions)">
+                        <button onclick="addSubQuestion('${exId}','${q.id}',${partParam})" class="text-blue-500 hover:text-blue-700 text-sm px-2 py-1 bg-blue-50 rounded">+a,b,c</button>
+                        <button onclick="removeQuestion('${exId}','${q.id}',${partParam})" class="text-red-500 hover:text-red-700 ml-auto">✕</button>
+                    </div>
+                    
+                    ${q.subQuestions.length > 0 ? `
+                        <div class="flex flex-wrap gap-2 ml-4">
+                            ${q.subQuestions.map(sq => `
+                                <div class="flex items-center gap-1 bg-white px-2 py-1 rounded border">
+                                    <input type="text" value="${sq.name}" 
+                                        onchange="updateSubQuestionField('${exId}','${q.id}','${sq.id}',${partParam},'name',this.value)"
+                                        class="w-8 p-0 border-0 text-orange-600 font-medium text-center text-sm">
+                                    <span class="text-orange-400">)</span>
+                                    <input type="number" placeholder="Pts" value="${sq.maxPoints || ''}" min="0" step="0.25"
+                                        onchange="updateSubQuestionField('${exId}','${q.id}','${sq.id}',${partParam},'maxPoints',this.value)"
+                                        class="w-14 p-1 border rounded text-sm">
+                                    <button onclick="removeSubQuestion('${exId}','${q.id}','${sq.id}',${partParam})" class="text-red-400 hover:text-red-600 text-xs">✕</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
         function renderExercisesBuilder() {
             const container = document.getElementById('exercises-builder');
-            container.innerHTML = tempExercises.map((ex, exIndex) => `
+            
+            if (tempExercises.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-4">Aucun exercice. Cliquez sur "+ Ajouter un exercice" pour commencer.</p>';
+                return;
+            }
+            
+            container.innerHTML = tempExercises.map((ex, exIndex) => {
+                // Ensure parts array exists
+                if (!ex.parts) ex.parts = [];
+                if (!ex.questions) ex.questions = [];
+                
+                return `
                 <div class="border-2 border-blue-200 rounded-lg p-4 bg-blue-50">
-                    <div class="flex items-center gap-2 mb-3">
-                        <span class="font-bold text-blue-700">Exercice ${exIndex + 1}</span>
+                    <div class="flex items-center gap-2 mb-3 flex-wrap">
+                        <span class="font-bold text-blue-700 text-lg">Exercice ${exIndex + 1}</span>
                         <input type="text" placeholder="Nom (optionnel)" value="${ex.name}" 
-                            onchange="tempExercises.find(e=>e.id==='${ex.id}').name=this.value"
-                            class="flex-1 p-2 border rounded text-sm">
+                            onchange="updateExerciseField('${ex.id}','name',this.value)"
+                            class="flex-1 min-w-32 p-2 border rounded text-sm">
                         <input type="number" placeholder="Points" value="${ex.maxPoints || ''}" min="0" step="0.5"
-                            onchange="tempExercises.find(e=>e.id==='${ex.id}').maxPoints=parseFloat(this.value)||0"
-                            class="w-20 p-2 border rounded text-sm" title="Points max (si note directe)">
-                        <button onclick="removeExercise('${ex.id}')" class="text-red-500 hover:text-red-700">✕</button>
+                            onchange="updateExerciseField('${ex.id}','maxPoints',this.value)"
+                            class="w-20 p-2 border rounded text-sm" title="Points max (si note directe sans questions)">
+                        <button onclick="removeExercise('${ex.id}')" class="text-red-500 hover:text-red-700 text-lg">✕</button>
                     </div>
                     
-                    <div class="space-y-2 ml-4">
-                        ${ex.questions.map((q, qIndex) => `
-                            <div class="border border-green-200 rounded p-3 bg-green-50">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <span class="font-semibold text-green-700">Q${qIndex + 1}</span>
-                                    <input type="text" placeholder="Intitulé" value="${q.name}"
-                                        onchange="tempExercises.find(e=>e.id==='${ex.id}').questions.find(x=>x.id==='${q.id}').name=this.value"
-                                        class="flex-1 p-1 border rounded text-sm">
-                                    <input type="number" placeholder="Pts" value="${q.maxPoints || ''}" min="0" step="0.25"
-                                        onchange="tempExercises.find(e=>e.id==='${ex.id}').questions.find(x=>x.id==='${q.id}').maxPoints=parseFloat(this.value)||0"
-                                        class="w-16 p-1 border rounded text-sm" title="Points (si pas de sous-questions)">
-                                    <button onclick="addSubQuestion('${ex.id}','${q.id}')" class="text-blue-500 hover:text-blue-700 text-sm">+a,b,c</button>
-                                    <button onclick="removeQuestion('${ex.id}','${q.id}')" class="text-red-500 hover:text-red-700">✕</button>
-                                </div>
-                                
-                                ${q.subQuestions.length > 0 ? `
-                                    <div class="flex flex-wrap gap-2 ml-4">
-                                        ${q.subQuestions.map(sq => `
-                                            <div class="flex items-center gap-1 bg-white px-2 py-1 rounded border">
-                                                <span class="text-orange-600 font-medium">${sq.name})</span>
-                                                <input type="number" placeholder="Pts" value="${sq.maxPoints || ''}" min="0" step="0.25"
-                                                    onchange="tempExercises.find(e=>e.id==='${ex.id}').questions.find(x=>x.id==='${q.id}').subQuestions.find(s=>s.id==='${sq.id}').maxPoints=parseFloat(this.value)||0"
-                                                    class="w-14 p-1 border rounded text-sm">
-                                                <button onclick="removeSubQuestion('${ex.id}','${q.id}','${sq.id}')" class="text-red-400 hover:text-red-600 text-xs">✕</button>
-                                            </div>
-                                        `).join('')}
+                    <!-- Direct Questions (without parts) -->
+                    ${ex.questions.length > 0 || (ex.parts.length === 0) ? `
+                        <div class="space-y-2 ml-4 mb-3">
+                            ${ex.questions.map(q => renderQuestionBuilder(q, ex.id, null)).join('')}
+                        </div>
+                        <button onclick="addQuestion('${ex.id}', null)" class="ml-4 text-sm text-green-600 hover:text-green-800 px-3 py-1 bg-green-100 rounded">
+                            + Question
+                        </button>
+                    ` : ''}
+                    
+                    <!-- Parts -->
+                    ${ex.parts.length > 0 ? `
+                        <div class="space-y-3 mt-4">
+                            ${ex.parts.map((part, partIndex) => `
+                                <div class="border-2 border-purple-200 rounded-lg p-3 bg-purple-50 ml-2">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <input type="text" value="${part.name}" 
+                                            onchange="updatePartField('${ex.id}','${part.id}','name',this.value)"
+                                            class="font-semibold text-purple-700 p-1 border rounded bg-white">
+                                        <button onclick="removePart('${ex.id}','${part.id}')" class="text-red-500 hover:text-red-700 ml-auto">✕</button>
                                     </div>
-                                ` : ''}
-                            </div>
-                        `).join('')}
-                    </div>
+                                    
+                                    <div class="space-y-2 ml-4">
+                                        ${part.questions.map(q => renderQuestionBuilder(q, ex.id, part.id)).join('')}
+                                    </div>
+                                    
+                                    <button onclick="addQuestion('${ex.id}', '${part.id}')" class="mt-2 ml-4 text-sm text-green-600 hover:text-green-800 px-3 py-1 bg-green-100 rounded">
+                                        + Question
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
                     
-                    <button onclick="addQuestion('${ex.id}')" class="mt-2 ml-4 text-sm text-green-600 hover:text-green-800">
-                        + Ajouter une question
+                    <!-- Add Part Button -->
+                    <button onclick="addPart('${ex.id}')" class="mt-3 ml-4 text-sm text-purple-600 hover:text-purple-800 px-3 py-1 bg-purple-100 rounded">
+                        + Ajouter une Partie
                     </button>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         function saveAssignment() {
@@ -338,11 +521,22 @@
             if (!name) return alert('Veuillez entrer un nom pour le devoir');
             if (tempExercises.length === 0) return alert('Ajoutez au moins un exercice');
             
-            data.assignments.push({
-                id: genId(),
-                name,
-                exercises: JSON.parse(JSON.stringify(tempExercises))
-            });
+            if (editingAssignmentId) {
+                // Update existing assignment
+                const assignment = data.assignments.find(a => a.id === editingAssignmentId);
+                if (assignment) {
+                    assignment.name = name;
+                    assignment.exercises = JSON.parse(JSON.stringify(tempExercises));
+                }
+            } else {
+                // Create new assignment
+                data.assignments.push({
+                    id: genId(),
+                    name,
+                    exercises: JSON.parse(JSON.stringify(tempExercises))
+                });
+            }
+            
             saveData();
             renderAssignments();
             closeAssignmentModal();
@@ -368,16 +562,32 @@
         }
 
         function getExerciseMaxPoints(ex) {
-            if (ex.questions.length === 0) return ex.maxPoints || 0;
+            const directQuestions = ex.questions || [];
+            const parts = ex.parts || [];
+            
+            if (directQuestions.length === 0 && parts.length === 0) {
+                return ex.maxPoints || 0;
+            }
+            
             let total = 0;
-            for (const q of ex.questions) {
+            
+            // Direct questions
+            for (const q of directQuestions) {
                 total += getQuestionMaxPoints(q);
             }
+            
+            // Parts
+            for (const part of parts) {
+                for (const q of (part.questions || [])) {
+                    total += getQuestionMaxPoints(q);
+                }
+            }
+            
             return total;
         }
 
         function getQuestionMaxPoints(q) {
-            if (q.subQuestions.length === 0) return q.maxPoints || 0;
+            if (!q.subQuestions || q.subQuestions.length === 0) return q.maxPoints || 0;
             return q.subQuestions.reduce((sum, sq) => sum + (sq.maxPoints || 0), 0);
         }
 
@@ -390,27 +600,55 @@
             
             container.innerHTML = data.assignments.map(a => `
                 <div class="border rounded-lg p-4 bg-gray-50">
-                    <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
                         <div>
                             <h3 class="font-bold text-lg">${a.name}</h3>
                             <span class="text-sm text-gray-500">Total: ${getAssignmentMaxPoints(a)} points • ${a.exercises.length} exercice(s)</span>
                         </div>
-                        <button onclick="deleteAssignment('${a.id}')" class="text-red-500 hover:text-red-700 px-3 py-1">🗑️</button>
+                        <div class="flex gap-2">
+                            <button onclick="openAssignmentModal('${a.id}')" class="text-blue-500 hover:text-blue-700 px-3 py-1 bg-blue-100 rounded">✏️ Modifier</button>
+                            <button onclick="deleteAssignment('${a.id}')" class="text-red-500 hover:text-red-700 px-3 py-1 bg-red-100 rounded">🗑️ Supprimer</button>
+                        </div>
                     </div>
                     <div class="space-y-2 text-sm">
-                        ${a.exercises.map((ex, i) => `
-                            <div class="bg-white p-2 rounded border-l-4 border-blue-400">
-                                <strong>Exercice ${i + 1}${ex.name ? ' - ' + ex.name : ''}</strong> (${getExerciseMaxPoints(ex)} pts)
-                                ${ex.questions.length > 0 ? `
-                                    <div class="ml-4 text-gray-600">
-                                        ${ex.questions.map((q, qi) => `
-                                            Q${qi + 1}${q.name ? ' ' + q.name : ''}: ${getQuestionMaxPoints(q)} pts
-                                            ${q.subQuestions.length > 0 ? `(${q.subQuestions.map(sq => sq.name + ':' + sq.maxPoints).join(', ')})` : ''}
-                                        `).join(' • ')}
+                        ${a.exercises.map((ex, i) => {
+                            const parts = ex.parts || [];
+                            const directQuestions = ex.questions || [];
+                            
+                            let exContent = '';
+                            
+                            // Direct questions
+                            if (directQuestions.length > 0) {
+                                exContent += `<div class="ml-4 text-gray-600">
+                                    ${directQuestions.map(q => `
+                                        <span class="inline-block mr-2">${q.name || 'Q?'}: ${getQuestionMaxPoints(q)} pts
+                                        ${q.subQuestions && q.subQuestions.length > 0 ? `(${q.subQuestions.map(sq => sq.name + ':' + sq.maxPoints).join(', ')})` : ''}</span>
+                                    `).join('')}
+                                </div>`;
+                            }
+                            
+                            // Parts
+                            if (parts.length > 0) {
+                                exContent += parts.map(part => `
+                                    <div class="ml-4 mt-1">
+                                        <span class="text-purple-600 font-medium">${part.name}:</span>
+                                        <span class="text-gray-600">
+                                            ${(part.questions || []).map(q => `
+                                                ${q.name || 'Q?'}: ${getQuestionMaxPoints(q)} pts
+                                                ${q.subQuestions && q.subQuestions.length > 0 ? `(${q.subQuestions.map(sq => sq.name + ':' + sq.maxPoints).join(', ')})` : ''}
+                                            `).join(' • ')}
+                                        </span>
                                     </div>
-                                ` : ''}
-                            </div>
-                        `).join('')}
+                                `).join('');
+                            }
+                            
+                            return `
+                                <div class="bg-white p-2 rounded border-l-4 border-blue-400">
+                                    <strong>Exercice ${i + 1}${ex.name ? ' - ' + ex.name : ''}</strong> (${getExerciseMaxPoints(ex)} pts)
+                                    ${exContent}
+                                </div>
+                            `;
+                        }).join('')}
                     </div>
                 </div>
             `).join('');
@@ -426,6 +664,45 @@
             
             studentSelect.innerHTML = '<option value="">-- Sélectionner un élève --</option>' +
                 data.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+        }
+
+        function renderGradeQuestion(q, studentId, assignmentId, exId, partId = null) {
+            const studentGrades = data.grades[studentId]?.[assignmentId]?.[exId] || {};
+            const partKey = partId || 'direct';
+            if (!studentGrades[partKey]) studentGrades[partKey] = {};
+            const qGrades = studentGrades[partKey][q.id] || {};
+            
+            let qHtml = `<div class="bg-green-50 p-2 rounded">
+                <div class="flex items-center gap-2 mb-2 flex-wrap">
+                    <span class="font-semibold text-green-700">${q.name || 'Q?'}</span>
+                    <span class="text-sm text-green-600" id="q-total-${q.id}">0 / ${getQuestionMaxPoints(q)}</span>
+                </div>`;
+            
+            if (!q.subQuestions || q.subQuestions.length === 0) {
+                const val = qGrades['direct'] || '';
+                qHtml += `<div class="flex items-center gap-2 ml-4">
+                    <input type="number" min="0" max="${q.maxPoints}" step="0.25" value="${val}"
+                        onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','direct',this.value)"
+                        class="grade-input w-16 p-1 border rounded text-center">
+                    <span class="text-sm text-gray-500">/ ${q.maxPoints}</span>
+                </div>`;
+            } else {
+                qHtml += `<div class="flex flex-wrap gap-3 ml-4">`;
+                qHtml += q.subQuestions.map(sq => {
+                    const val = qGrades[sq.id] || '';
+                    return `<div class="flex items-center gap-1 bg-white px-2 py-1 rounded border">
+                        <span class="text-orange-600 font-medium">${sq.name})</span>
+                        <input type="number" min="0" max="${sq.maxPoints}" step="0.25" value="${val}"
+                            onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','${sq.id}',this.value)"
+                            class="grade-input w-14 p-1 border rounded text-center text-sm">
+                        <span class="text-xs text-gray-400">/${sq.maxPoints}</span>
+                    </div>`;
+                }).join('');
+                qHtml += `</div>`;
+            }
+            
+            qHtml += `</div>`;
+            return qHtml;
         }
 
         function loadGradeEntry() {
@@ -444,15 +721,18 @@
             if (!data.grades[studentId]) data.grades[studentId] = {};
             if (!data.grades[studentId][assignmentId]) data.grades[studentId][assignmentId] = {};
             
-            const studentGrades = data.grades[studentId][assignmentId];
-            
             let html = `<div class="bg-blue-50 p-4 rounded-lg mb-4">
                 <h3 class="font-bold text-xl">${student.name} - ${assignment.name}</h3>
                 <p class="text-2xl font-bold text-blue-600 mt-2">Total: <span id="grade-total">0</span> / ${getAssignmentMaxPoints(assignment)}</p>
             </div>`;
             
             html += assignment.exercises.map((ex, exIndex) => {
-                if (!studentGrades[ex.id]) studentGrades[ex.id] = {};
+                if (!data.grades[studentId][assignmentId][ex.id]) {
+                    data.grades[studentId][assignmentId][ex.id] = {};
+                }
+                
+                const directQuestions = ex.questions || [];
+                const parts = ex.parts || [];
                 
                 let exHtml = `<div class="border rounded-lg overflow-hidden">
                     <div class="bg-blue-100 p-3 flex justify-between items-center">
@@ -461,52 +741,33 @@
                     </div>
                     <div class="p-3 space-y-3">`;
                 
-                if (ex.questions.length === 0) {
+                if (directQuestions.length === 0 && parts.length === 0) {
                     // Direct exercise grade
-                    const val = studentGrades[ex.id]['direct'] || '';
+                    const val = data.grades[studentId][assignmentId][ex.id]?.['direct']?.['direct']?.['direct'] || '';
                     exHtml += `<div class="flex items-center gap-3">
                         <span>Note:</span>
                         <input type="number" min="0" max="${ex.maxPoints}" step="0.25" value="${val}"
-                            onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','direct','direct',this.value)"
+                            onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','direct','direct','direct',this.value)"
                             class="grade-input w-20 p-2 border rounded text-center font-bold">
                         <span>/ ${ex.maxPoints}</span>
                     </div>`;
                 } else {
-                    exHtml += ex.questions.map((q, qIndex) => {
-                        if (!studentGrades[ex.id][q.id]) studentGrades[ex.id][q.id] = {};
-                        
-                        let qHtml = `<div class="bg-green-50 p-2 rounded">
-                            <div class="flex items-center gap-2 mb-2">
-                                <span class="font-semibold text-green-700">Q${qIndex + 1}${q.name ? ' ' + q.name : ''}</span>
-                                <span class="text-sm text-green-600" id="q-total-${q.id}">0 / ${getQuestionMaxPoints(q)}</span>
-                            </div>`;
-                        
-                        if (q.subQuestions.length === 0) {
-                            const val = studentGrades[ex.id][q.id]['direct'] || '';
-                            qHtml += `<div class="flex items-center gap-2 ml-4">
-                                <input type="number" min="0" max="${q.maxPoints}" step="0.25" value="${val}"
-                                    onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','${q.id}','direct',this.value)"
-                                    class="grade-input w-16 p-1 border rounded text-center">
-                                <span class="text-sm text-gray-500">/ ${q.maxPoints}</span>
-                            </div>`;
-                        } else {
-                            qHtml += `<div class="flex flex-wrap gap-3 ml-4">`;
-                            qHtml += q.subQuestions.map(sq => {
-                                const val = studentGrades[ex.id][q.id][sq.id] || '';
-                                return `<div class="flex items-center gap-1 bg-white px-2 py-1 rounded border">
-                                    <span class="text-orange-600 font-medium">${sq.name})</span>
-                                    <input type="number" min="0" max="${sq.maxPoints}" step="0.25" value="${val}"
-                                        onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','${q.id}','${sq.id}',this.value)"
-                                        class="grade-input w-14 p-1 border rounded text-center text-sm">
-                                    <span class="text-xs text-gray-400">/${sq.maxPoints}</span>
-                                </div>`;
-                            }).join('');
-                            qHtml += `</div>`;
-                        }
-                        
-                        qHtml += `</div>`;
-                        return qHtml;
-                    }).join('');
+                    // Direct questions
+                    if (directQuestions.length > 0) {
+                        exHtml += directQuestions.map(q => renderGradeQuestion(q, studentId, assignmentId, ex.id, null)).join('');
+                    }
+                    
+                    // Parts
+                    if (parts.length > 0) {
+                        exHtml += parts.map(part => {
+                            let partHtml = `<div class="border-l-4 border-purple-400 pl-3 mt-3">
+                                <h4 class="font-semibold text-purple-700 mb-2">${part.name}</h4>
+                                <div class="space-y-2">`;
+                            partHtml += (part.questions || []).map(q => renderGradeQuestion(q, studentId, assignmentId, ex.id, part.id)).join('');
+                            partHtml += `</div></div>`;
+                            return partHtml;
+                        }).join('');
+                    }
                 }
                 
                 exHtml += `</div></div>`;
@@ -518,13 +779,14 @@
             recalculateTotals(assignmentId, studentId);
         }
 
-        function updateGrade(studentId, assignmentId, exId, qId, sqId, value) {
+        function updateGrade(studentId, assignmentId, exId, partKey, qId, sqId, value) {
             if (!data.grades[studentId]) data.grades[studentId] = {};
             if (!data.grades[studentId][assignmentId]) data.grades[studentId][assignmentId] = {};
             if (!data.grades[studentId][assignmentId][exId]) data.grades[studentId][assignmentId][exId] = {};
-            if (!data.grades[studentId][assignmentId][exId][qId]) data.grades[studentId][assignmentId][exId][qId] = {};
+            if (!data.grades[studentId][assignmentId][exId][partKey]) data.grades[studentId][assignmentId][exId][partKey] = {};
+            if (!data.grades[studentId][assignmentId][exId][partKey][qId]) data.grades[studentId][assignmentId][exId][partKey][qId] = {};
             
-            data.grades[studentId][assignmentId][exId][qId][sqId] = parseFloat(value) || 0;
+            data.grades[studentId][assignmentId][exId][partKey][qId][sqId] = parseFloat(value) || 0;
             saveData();
             recalculateTotals(assignmentId, studentId);
         }
@@ -538,15 +800,18 @@
             for (const ex of assignment.exercises) {
                 let exTotal = 0;
                 const exGrades = studentGrades[ex.id] || {};
+                const directQuestions = ex.questions || [];
+                const parts = ex.parts || [];
                 
-                if (ex.questions.length === 0) {
-                    exTotal = exGrades['direct']?.['direct'] || 0;
+                if (directQuestions.length === 0 && parts.length === 0) {
+                    exTotal = exGrades['direct']?.['direct']?.['direct'] || 0;
                 } else {
-                    for (const q of ex.questions) {
+                    // Direct questions
+                    for (const q of directQuestions) {
                         let qTotal = 0;
-                        const qGrades = exGrades[q.id] || {};
+                        const qGrades = exGrades['direct']?.[q.id] || {};
                         
-                        if (q.subQuestions.length === 0) {
+                        if (!q.subQuestions || q.subQuestions.length === 0) {
                             qTotal = qGrades['direct'] || 0;
                         } else {
                             for (const sq of q.subQuestions) {
@@ -557,6 +822,26 @@
                         const qEl = document.getElementById('q-total-' + q.id);
                         if (qEl) qEl.textContent = qTotal + ' / ' + getQuestionMaxPoints(q);
                         exTotal += qTotal;
+                    }
+                    
+                    // Parts
+                    for (const part of parts) {
+                        for (const q of (part.questions || [])) {
+                            let qTotal = 0;
+                            const qGrades = exGrades[part.id]?.[q.id] || {};
+                            
+                            if (!q.subQuestions || q.subQuestions.length === 0) {
+                                qTotal = qGrades['direct'] || 0;
+                            } else {
+                                for (const sq of q.subQuestions) {
+                                    qTotal += qGrades[sq.id] || 0;
+                                }
+                            }
+                            
+                            const qEl = document.getElementById('q-total-' + q.id);
+                            if (qEl) qEl.textContent = qTotal + ' / ' + getQuestionMaxPoints(q);
+                            exTotal += qTotal;
+                        }
                     }
                 }
                 
@@ -583,15 +868,19 @@
 
         function getStudentExerciseTotal(studentGrades, ex) {
             const exGrades = studentGrades[ex.id] || {};
+            const directQuestions = ex.questions || [];
+            const parts = ex.parts || [];
             
-            if (ex.questions.length === 0) {
-                return exGrades['direct']?.['direct'] || 0;
+            if (directQuestions.length === 0 && parts.length === 0) {
+                return exGrades['direct']?.['direct']?.['direct'] || 0;
             }
             
             let total = 0;
-            for (const q of ex.questions) {
-                const qGrades = exGrades[q.id] || {};
-                if (q.subQuestions.length === 0) {
+            
+            // Direct questions
+            for (const q of directQuestions) {
+                const qGrades = exGrades['direct']?.[q.id] || {};
+                if (!q.subQuestions || q.subQuestions.length === 0) {
                     total += qGrades['direct'] || 0;
                 } else {
                     for (const sq of q.subQuestions) {
@@ -599,6 +888,21 @@
                     }
                 }
             }
+            
+            // Parts
+            for (const part of parts) {
+                for (const q of (part.questions || [])) {
+                    const qGrades = exGrades[part.id]?.[q.id] || {};
+                    if (!q.subQuestions || q.subQuestions.length === 0) {
+                        total += qGrades['direct'] || 0;
+                    } else {
+                        for (const sq of q.subQuestions) {
+                            total += qGrades[sq.id] || 0;
+                        }
+                    }
+                }
+            }
+            
             return total;
         }
 
@@ -612,12 +916,13 @@
                 return;
             }
             
-            let headers = '<th class="p-3 text-left bg-gray-100 sticky left-0">Élève</th>';
+            let headers = '<th class="p-3 text-left bg-gray-100 sticky left-0 z-10">Élève</th>';
             
             for (const a of data.assignments) {
                 if (showDetails) {
                     for (const ex of a.exercises) {
-                        headers += `<th class="p-2 text-center bg-blue-50 text-sm">Ex${a.exercises.indexOf(ex) + 1}<br><span class="text-xs text-gray-500">/${getExerciseMaxPoints(ex)}</span></th>`;
+                        const exIndex = a.exercises.indexOf(ex) + 1;
+                        headers += `<th class="p-2 text-center bg-blue-50 text-sm">Ex${exIndex}<br><span class="text-xs text-gray-500">/${getExerciseMaxPoints(ex)}</span></th>`;
                     }
                 }
                 headers += `<th class="p-3 text-center bg-blue-100 font-bold">${a.name}<br><span class="text-xs">/${getAssignmentMaxPoints(a)}</span></th>`;
