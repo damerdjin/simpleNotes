@@ -2001,13 +2001,13 @@
                 const headers = json[1];
                 const rows = json.slice(2); // à partir de la 3ème ligne (index 2)
                 const getIndex = (label) => headers.findIndex(h => (h || '').toString().trim() === label);
-                const idxNIN = getIndex('NIN');
-                const idxNom = getIndex('Nom');
-                const idxPrenom = getIndex('Prenom');
-                const idxClasse = getIndex('classe');
-                const idxSexe = getIndex('Sexe');
-                const idxBirth = getIndex('Date_de_naissance');
-                const idxReg = getIndex('num_enregistrement');
+                const idxNIN = getIndex('رقم التعريف');
+                const idxNom = getIndex('اللقب');
+                const idxPrenom = getIndex('الاسم');
+                const idxClasse = getIndex('الفوج التربوي');
+                const idxSexe = getIndex('الجنس');
+                const idxBirth = getIndex('تاريخ الميلاد');
+                const idxReg = getIndex('رقم التسجيل');
 
                 let added = 0;
                 rows.forEach(row => {
