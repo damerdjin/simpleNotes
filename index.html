@@ -1736,6 +1736,7 @@
         }
 
         function handleStudentImport(event) {
+            const t = translations[currentLanguage];
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
@@ -1746,7 +1747,7 @@
                 const sheet = workbook.Sheets[firstSheetName];
                 const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
                 if (json.length < 2) {
-                    alert('Fichier vide ou sans données.');
+                    alert(t.emptyFile);
                     return;
                 }
                 const headers = json[1];
@@ -1811,7 +1812,7 @@
                 loadGradeSelectors();
                 renderSummary();
 
-                alert('Import terminé. Nouveaux élèves ajoutés : ' + added);
+                alert(t.importSuccess + ' ' + added + t.newStudentsAdded);
                 event.target.value = '';
             };
             reader.readAsArrayBuffer(file);
