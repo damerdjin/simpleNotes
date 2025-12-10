@@ -2433,23 +2433,32 @@
 
                 for (const a of filteredAssignments) {
                     const studentGrades = data.grades[s.id]?.[a.id] || {};
+                    const isCompatible = ((s.className || '').trim() === (a.className || '').trim());
 
                     if (showDetails) {
                         for (const ex of a.exercises) {
-                            const exTotal = getStudentExerciseTotal(studentGrades, ex);
-                            const max = getExerciseMaxPoints(ex);
-                            const existingFinal = studentGrades[ex.id]?.['final']?.['final']?.['final'];
-                            row += `<td class="px-2 py-1 text-center">
-                                <input type="number" min="0" max="${max}" step="0.25" value="${existingFinal !== undefined && existingFinal !== '' ? existingFinal : exTotal.toFixed(2)}" oninput="clampExerciseInput(this, ${max})" onchange="setExerciseFinalGrade('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" class="summary-grade-input">
-                            </td>`;
+                            if (isCompatible) {
+                                const exTotal = getStudentExerciseTotal(studentGrades, ex);
+                                const max = getExerciseMaxPoints(ex);
+                                const existingFinal = studentGrades[ex.id]?.['final']?.['final']?.['final'];
+                                row += `<td class="px-2 py-1 text-center">
+                                    <input type="number" min="0" max="${max}" step="0.25" value="${existingFinal !== undefined && existingFinal !== '' ? existingFinal : exTotal.toFixed(2)}" oninput="clampExerciseInput(this, ${max})" onchange="setExerciseFinalGrade('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" class="summary-grade-input">
+                                </td>`;
+                            } else {
+                                row += `<td class="px-2 py-1 text-center text-gray-300 bg-gray-50">-</td>`;
+                            }
                         }
                     }
 
-                    const total = getStudentAssignmentTotal(s.id, a.id);
-                    const max = getAssignmentMaxPoints(a);
-                    const pct = max > 0 ? (total / max * 100) : 0;
-                    const bgColor = pct >= 70 ? 'bg-green-100' : pct >= 50 ? 'bg-orange-100' : 'bg-red-100';
-                    row += `<td class="p-3 text-center font-bold ${bgColor}">${total.toFixed(1)}</td>`;
+                    if (isCompatible) {
+                        const total = getStudentAssignmentTotal(s.id, a.id);
+                        const max = getAssignmentMaxPoints(a);
+                        const pct = max > 0 ? (total / max * 100) : 0;
+                        const bgColor = pct >= 70 ? 'bg-green-100' : pct >= 50 ? 'bg-orange-100' : 'bg-red-100';
+                        row += `<td class="p-3 text-center font-bold ${bgColor}">${total.toFixed(1)}</td>`;
+                    } else {
+                        row += `<td class="p-3 text-center text-gray-400 bg-gray-50">-</td>`;
+                    }
                 }
 
                 return `<tr class="border-b hover:bg-gray-50">${row}</tr>`;
