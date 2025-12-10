@@ -119,6 +119,7 @@
                 <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
                     <h2 class="text-2xl font-bold text-gray-800">Récapitulatif des Notes</h2>
                     <div class="flex items-center gap-4 flex-wrap">
+                        <input type="text" id="summary-search" placeholder="Rechercher (nom, prénom, classe)" oninput="renderSummary()" class="p-3 border rounded-lg min-w-60">
                         <select id="select-class-summary" onchange="renderSummary()" class="p-3 border rounded-lg">
                             <option value="">-- Sélectionner une classe --</option>
                         </select>
@@ -1207,26 +1208,74 @@
             const container = document.getElementById('summary-table');
             const showDetails = document.getElementById('show-details').checked;
             const classSelect = document.getElementById('select-class-summary');
-            const selectedClass = classSelect.value;
-            
-            // Filtrer les élèves par classe sélectionnée
-            let filteredStudents = selectedClass ?
-                data.students.filter(s => s.className === selectedClass) :
-                data.students.slice();
-            
-            // Filtrer les devoirs par classe sélectionnée
-            let filteredAssignments = selectedClass ?
-                data.assignments.filter(a => a.className === selectedClass) :
-                data.assignments.slice();
-            
+            const searchInput = document.getElementById('summary-search');
+            const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+            let selectedClass = classSelect ? classSelect.value : '';
+            let searchMatches = data.students.slice();
+
+            if (searchTerm) {
+                searchMatches = searchMatches.filter(s => {
+                    const haystack = `${s.name || ''} ${s.firstName || ''} ${s.lastName || ''} ${s.className || ''}`.toLowerCase();
+                    return haystack.includes(searchTerm);
+                });
+            }
+
+            const matchingClasses = Array.from(new Set(
+                searchMatches
+                    .map(s => (s.className || '').trim())
+                    .filter(c => c.length > 0)
+            )).sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
+
+            if (classSelect) {
+                const previousValue = selectedClass;
+                classSelect.innerHTML = '<option value="">-- Sélectionner une classe --</option>' +
+                    matchingClasses.map(c => `<option value="${c}">${c}</option>`).join('');
+
+                let autoSelectedClass = '';
+                if (searchMatches.length === 1 && searchMatches[0].className) {
+                    autoSelectedClass = searchMatches[0].className;
+                } else if (matchingClasses.length === 1) {
+                    autoSelectedClass = matchingClasses[0];
+                }
+
+                if (autoSelectedClass) {
+                    classSelect.value = autoSelectedClass;
+                } else if (matchingClasses.includes(previousValue)) {
+                    classSelect.value = previousValue;
+                } else {
+                    classSelect.value = '';
+                }
+
+                selectedClass = classSelect.value;
+            }
+
+            let filteredStudents = searchMatches;
+            if (selectedClass) {
+                filteredStudents = filteredStudents.filter(s => s.className === selectedClass);
+            }
+
+            let filteredAssignments;
+            if (selectedClass) {
+                filteredAssignments = data.assignments.filter(a => a.className === selectedClass);
+            } else {
+                const classFilterSet = new Set(matchingClasses);
+                filteredAssignments = data.assignments.filter(a => classFilterSet.has(a.className));
+            }
+
             if (filteredStudents.length === 0 || filteredAssignments.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-center py-8">' + 
-                    (selectedClass ? `Aucun élève ou devoir pour la classe "${selectedClass}".` : 'Ajoutez des élèves et des devoirs pour voir le récapitulatif.') + 
-                    '</p>';
+                let emptyMessage = '';
+                if (selectedClass) {
+                    emptyMessage = `Aucun élève ou devoir pour la classe "${selectedClass}".`;
+                } else if (searchTerm) {
+                    emptyMessage = 'Aucun résultat ne correspond à votre recherche.';
+                } else {
+                    emptyMessage = 'Ajoutez des élèves et des devoirs pour voir le récapitulatif.';
+                }
+                container.innerHTML = `<p class="text-gray-500 text-center py-8">${emptyMessage}</p>`;
                 return;
             }
-            
-            // Appliquer le tri
+
             if (summarySort.key === 'name') {
                 filteredStudents.sort((a, b) => {
                     const na = (a.name || '').toLowerCase();
@@ -1245,9 +1294,9 @@
                     return 0;
                 });
             }
-            
+
             let headers = '<th class="p-3 text-left bg-gray-100 sticky left-0 z-10 cursor-pointer select-none" onclick="toggleSummarySort(\'name\')">Élève</th>';
-            
+
             for (const a of filteredAssignments) {
                 if (showDetails) {
                     for (const ex of a.exercises) {
@@ -1257,13 +1306,13 @@
                 }
                 headers += `<th class="p-3 text-center bg-blue-100 font-bold cursor-pointer select-none" onclick=\"toggleSummarySort('assignment-${a.id}')\">${a.name}<br><span class="text-xs">/${getAssignmentMaxPoints(a)}</span></th>`;
             }
-            
+
             let rows = filteredStudents.map(s => {
                 let row = `<td class="p-3 font-medium bg-gray-50 sticky left-0">${s.name}${s.className ? '<div class=\"text-xs text-gray-500\">' + s.className + '</div>' : ''}</td>`;
-                
+
                 for (const a of filteredAssignments) {
                     const studentGrades = data.grades[s.id]?.[a.id] || {};
-                    
+
                     if (showDetails) {
                         for (const ex of a.exercises) {
                             const exTotal = getStudentExerciseTotal(studentGrades, ex);
@@ -1273,17 +1322,17 @@
                             row += `<td class="p-2 text-center ${color}">${exTotal}</td>`;
                         }
                     }
-                    
+
                     const total = getStudentAssignmentTotal(s.id, a.id);
                     const max = getAssignmentMaxPoints(a);
                     const pct = max > 0 ? (total / max * 100) : 0;
                     const bgColor = pct >= 70 ? 'bg-green-100' : pct >= 50 ? 'bg-orange-100' : 'bg-red-100';
                     row += `<td class="p-3 text-center font-bold ${bgColor}">${total}</td>`;
                 }
-                
+
                 return `<tr class="border-b hover:bg-gray-50">${row}</tr>`;
             }).join('');
-            
+
             container.innerHTML = `
                 <table class="w-full border-collapse">
                     <thead><tr class="border-b-2">${headers}</tr></thead>
