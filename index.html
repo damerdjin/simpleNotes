@@ -326,6 +326,12 @@
                     const letters = 'abcdefghijklmnopqrstuvwxyz';
                     const letter = letters[q.subQuestions.length] || '?';
                     q.subQuestions.push({ id: genId(), name: letter, maxPoints: 0 });
+                    
+                    // Effacer les points directs de la question quand on ajoute des sous-questions
+                    if (q.subQuestions.length === 1) {
+                        q.maxPoints = 0;
+                    }
+                    
                     renderExercisesBuilder();
                 }
             }
@@ -344,6 +350,12 @@
                 
                 if (q) {
                     q.subQuestions = q.subQuestions.filter(sq => sq.id !== sqId);
+                    
+                    // Si plus de sous-questions, réinitialiser les points
+                    if (q.subQuestions.length === 0) {
+                        q.maxPoints = q.maxPoints || 0;
+                    }
+                    
                     renderExercisesBuilder();
                 }
             }
@@ -415,20 +427,26 @@
 
         function renderQuestionBuilder(q, exId, partId = null) {
             const partParam = partId ? `'${partId}'` : 'null';
+            const hasSubQuestions = q.subQuestions && q.subQuestions.length > 0;
+            
             return `
                 <div class="border border-green-200 rounded p-3 bg-green-50">
                     <div class="flex items-center gap-2 mb-2 flex-wrap">
                         <input type="text" placeholder="Q1, Q2..." value="${q.name}"
                             onchange="updateQuestionField('${exId}','${q.id}',${partParam},'name',this.value)"
                             class="w-20 p-1 border rounded text-sm font-semibold text-green-700 bg-white">
-                        <input type="number" placeholder="Pts" value="${q.maxPoints || ''}" min="0" step="0.25"
-                            onchange="updateQuestionField('${exId}','${q.id}',${partParam},'maxPoints',this.value)"
-                            class="w-16 p-1 border rounded text-sm" title="Points (si pas de sous-questions)">
+                        ${!hasSubQuestions ? `
+                            <input type="number" placeholder="Pts" value="${q.maxPoints || ''}" min="0" step="0.25"
+                                onchange="updateQuestionField('${exId}','${q.id}',${partParam},'maxPoints',this.value)"
+                                class="w-16 p-1 border rounded text-sm" title="Points de la question">
+                        ` : `
+                            <span class="text-xs text-gray-500 px-2">Total: ${getQuestionMaxPoints(q)} pts</span>
+                        `}
                         <button onclick="addSubQuestion('${exId}','${q.id}',${partParam})" class="text-blue-500 hover:text-blue-700 text-sm px-2 py-1 bg-blue-50 rounded">+a,b,c</button>
                         <button onclick="removeQuestion('${exId}','${q.id}',${partParam})" class="text-red-500 hover:text-red-700 ml-auto">✕</button>
                     </div>
                     
-                    ${q.subQuestions.length > 0 ? `
+                    ${hasSubQuestions ? `
                         <div class="flex flex-wrap gap-2 ml-4">
                             ${q.subQuestions.map(sq => `
                                 <div class="flex items-center gap-1 bg-white px-2 py-1 rounded border">
@@ -442,6 +460,9 @@
                                     <button onclick="removeSubQuestion('${exId}','${q.id}','${sq.id}',${partParam})" class="text-red-400 hover:text-red-600 text-xs">✕</button>
                                 </div>
                             `).join('')}
+                        </div>
+                        <div class="text-xs text-gray-500 mt-2 ml-4">
+                            Total automatique: ${getQuestionMaxPoints(q)} points (somme des sous-questions)
                         </div>
                     ` : ''}
                 </div>
@@ -461,6 +482,8 @@
                 if (!ex.parts) ex.parts = [];
                 if (!ex.questions) ex.questions = [];
                 
+                const exerciseTotal = getExerciseMaxPoints(ex);
+                
                 return `
                 <div class="border-2 border-blue-200 rounded-lg p-4 bg-blue-50">
                     <div class="flex items-center gap-2 mb-3 flex-wrap">
@@ -468,10 +491,14 @@
                         <input type="text" placeholder="Nom (optionnel)" value="${ex.name}" 
                             onchange="updateExerciseField('${ex.id}','name',this.value)"
                             class="flex-1 min-w-32 p-2 border rounded text-sm">
-                        <input type="number" placeholder="Points" value="${ex.maxPoints || ''}" min="0" step="0.5"
-                            onchange="updateExerciseField('${ex.id}','maxPoints',this.value)"
-                            class="w-20 p-2 border rounded text-sm" title="Points max (si note directe sans questions)">
+                        <span class="text-sm font-semibold text-blue-600 px-2">Total: ${exerciseTotal} points</span>
                         <button onclick="removeExercise('${ex.id}')" class="text-red-500 hover:text-red-700 text-lg">✕</button>
+                    </div>
+                    
+                    <div class="text-xs text-gray-500 mb-3">
+                        ${ex.questions.length === 0 && ex.parts.length === 0 ? 
+                            'Exercice sans questions - note directe uniquement' : 
+                            `Calcul automatique: ${exerciseTotal} points (somme des questions)`}
                     </div>
                     
                     <!-- Direct Questions (without parts) -->
@@ -587,8 +614,12 @@
         }
 
         function getQuestionMaxPoints(q) {
-            if (!q.subQuestions || q.subQuestions.length === 0) return q.maxPoints || 0;
-            return q.subQuestions.reduce((sum, sq) => sum + (sq.maxPoints || 0), 0);
+            // Si la question a des sous-questions, le total est la somme des sous-questions
+            if (q.subQuestions && q.subQuestions.length > 0) {
+                return q.subQuestions.reduce((sum, sq) => sum + (sq.maxPoints || 0), 0);
+            }
+            // Sinon, utiliser les points directs de la question
+            return q.maxPoints || 0;
         }
 
         function renderAssignments() {
@@ -733,6 +764,7 @@
                 
                 const directQuestions = ex.questions || [];
                 const parts = ex.parts || [];
+                const hasQuestions = directQuestions.length > 0 || parts.length > 0;
                 
                 let exHtml = `<div class="border rounded-lg overflow-hidden">
                     <div class="bg-blue-100 p-3 flex justify-between items-center">
@@ -740,6 +772,19 @@
                         <span class="text-blue-700 font-semibold" id="ex-total-${ex.id}">0 / ${getExerciseMaxPoints(ex)}</span>
                     </div>
                     <div class="p-3 space-y-3">`;
+                
+                // Option de note finale pour l'exercice
+                if (hasQuestions) {
+                    const finalGrade = data.grades[studentId][assignmentId][ex.id]?.['final']?.['final']?.['final'] || '';
+                    exHtml += `<div class="flex items-center gap-3 mb-4 p-2 bg-yellow-50 rounded border border-yellow-200">
+                        <span class="font-medium text-yellow-700">Note finale de l'exercice (optionnel):</span>
+                        <input type="number" min="0" max="${getExerciseMaxPoints(ex)}" step="0.25" value="${finalGrade}"
+                            onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
+                            class="grade-input w-20 p-2 border rounded text-center font-bold bg-white">
+                        <span class="text-yellow-600">/ ${getExerciseMaxPoints(ex)}</span>
+                        <span class="text-xs text-yellow-500 ml-2">(Remplit automatiquement si laissé vide)</span>
+                    </div>`;
+                }
                 
                 if (directQuestions.length === 0 && parts.length === 0) {
                     // Direct exercise grade
@@ -802,10 +847,19 @@
                 const exGrades = studentGrades[ex.id] || {};
                 const directQuestions = ex.questions || [];
                 const parts = ex.parts || [];
+                const hasQuestions = directQuestions.length > 0 || parts.length > 0;
                 
-                if (directQuestions.length === 0 && parts.length === 0) {
+                // Vérifier si une note finale a été saisie
+                const finalGrade = exGrades['final']?.['final']?.['final'];
+                
+                if (finalGrade !== undefined && finalGrade !== '') {
+                    // Utiliser la note finale si elle est définie
+                    exTotal = parseFloat(finalGrade) || 0;
+                } else if (directQuestions.length === 0 && parts.length === 0) {
+                    // Exercice sans questions
                     exTotal = exGrades['direct']?.['direct']?.['direct'] || 0;
                 } else {
+                    // Calculer à partir des questions détaillées
                     // Direct questions
                     for (const q of directQuestions) {
                         let qTotal = 0;
@@ -870,6 +924,12 @@
             const exGrades = studentGrades[ex.id] || {};
             const directQuestions = ex.questions || [];
             const parts = ex.parts || [];
+            
+            // Vérifier si une note finale a été saisie
+            const finalGrade = exGrades['final']?.['final']?.['final'];
+            if (finalGrade !== undefined && finalGrade !== '') {
+                return parseFloat(finalGrade) || 0;
+            }
             
             if (directQuestions.length === 0 && parts.length === 0) {
                 return exGrades['direct']?.['direct']?.['direct'] || 0;
