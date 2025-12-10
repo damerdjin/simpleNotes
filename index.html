@@ -1062,6 +1062,7 @@
         }
 
         function addQuestion(exId, partId = null) {
+            const t = translations[currentLanguage];
             const ex = tempExercises.find(e => e.id === exId);
             if (ex) {
                 const newQuestion = { id: genId(), name: '', maxPoints: 0, subQuestions: [] };
@@ -1070,12 +1071,12 @@
                     const part = ex.parts.find(p => p.id === partId);
                     if (part) {
                         const qNum = part.questions.length + 1;
-                        newQuestion.name = `Q${qNum}`;
+                        newQuestion.name = `${t.questionPrefix}${qNum}`;
                         part.questions.push(newQuestion);
                     }
                 } else {
                     const qNum = ex.questions.length + 1;
-                    newQuestion.name = `Q${qNum}`;
+                    newQuestion.name = `${t.questionPrefix}${qNum}`;
                     ex.questions.push(newQuestion);
                 }
                 renderExercisesBuilder();
@@ -1098,6 +1099,7 @@
         }
 
         function addSubQuestion(exId, qId, partId = null) {
+            const t = translations[currentLanguage];
             const ex = tempExercises.find(e => e.id === exId);
             if (ex) {
                 let q;
@@ -1109,8 +1111,7 @@
                 }
 
                 if (q) {
-                    const t = translations[currentLanguage];
-                    const letters = 'abcdefghijklmnopqrstuvwxyz';
+                    const letters = t.subQuestionLetters;
                     const letter = letters[q.subQuestions.length] || '?';
                     q.subQuestions.push({ id: genId(), name: letter, maxPoints: 0 });
 
@@ -1123,7 +1124,6 @@
                 }
             }
         }
-
         function removeSubQuestion(exId, qId, sqId, partId = null) {
             const ex = tempExercises.find(e => e.id === exId);
             if (ex) {
@@ -1220,7 +1220,7 @@
             return `
                 <div class="border border-green-200 rounded p-3 bg-green-50">
                     <div class="flex items-center gap-2 mb-2 flex-wrap">
-                        <input type="text" placeholder="Q1, Q2..." value="${q.name}"
+                        <input type="text" placeholder="${t.questionPrefix}1, ${t.questionPrefix}2..." value="${q.name}"
                             onchange="updateQuestionField('${exId}','${q.id}',${partParam},'name',this.value)"
                             class="w-20 p-1 border rounded text-sm font-semibold text-green-700 bg-white">
                         ${!hasSubQuestions ? `

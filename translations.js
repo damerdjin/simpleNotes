@@ -50,6 +50,7 @@ const translations = {
         duplicate: "Dupliquer",
         edit: "Modifier",
         delete: "Supprimer",
+
         
         // Exercices et questions
         exercise: "Exercice",
@@ -71,6 +72,8 @@ const translations = {
         sumSubQuestions: "somme des sous-questions",
         questionPoints: "Points de la question",
         sumQuestions: "somme des questions",
+        questionPrefix: 'Q',
+        subQuestionLetters: 'abcdefghijklmnopqrstuvwxyz',
         
         // Notes
         gradesEntry: "Saisie des Notes",
@@ -185,6 +188,8 @@ const translations = {
         sumSubQuestions: "sum of sub-questions",
         questionPoints: "Question points",
         sumQuestions: "sum of questions",
+        questionPrefix: 'Q',
+        subQuestionLetters: 'abcdefghijklmnopqrstuvwxyz',
         
         // Notes
         gradesEntry: "Grade Entry",
@@ -305,6 +310,8 @@ const translations = {
         sumSubQuestions: "مجموع الأسئلة الفرعية",
         questionPoints: "نقاط السؤال",
         sumQuestions: "مجموع الأسئلة",
+        questionPrefix: 'س',
+        subQuestionLetters: 'أبتثجحخدذرزسشصضطظعغفقكلمنهوي',
         
         // Notes
         gradesEntry: "إدخال الدرجات",
