@@ -10,10 +10,10 @@
         .modal { display: none; }
         .modal.active { display: flex; }
         .grade-input::-webkit-inner-spin-button { -webkit-appearance: none; }
-        .expandable-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
-        .expandable-content.open { max-height: 2000px; }
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .accordion-content.open { max-height: 5000px; transition: max-height 0.5s ease-in; }
         .rotate-icon { transition: transform 0.3s ease; }
-        .rotate-icon.open { transform: rotate(90deg); }
+        .rotate-icon.open { transform: rotate(180deg); }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -806,14 +806,18 @@
             return q.maxPoints || 0;
         }
 
+        function toggleAccordion(id) {
+            const content = document.getElementById('accordion-' + id);
+            const icon = document.getElementById('icon-' + id);
+            content.classList.toggle('open');
+            icon.classList.toggle('open');
+        }
+
         function renderAssignments() {
             const container = document.getElementById('assignments-list');
-            
-            // Get filter values
             const filterClass = document.getElementById('filter-class-assignments')?.value || '';
             const filterName = document.getElementById('filter-name-assignments')?.value.toLowerCase() || '';
             
-            // Filter assignments
             let filteredAssignments = data.assignments.filter(a => {
                 const matchClass = !filterClass || a.className === filterClass;
                 const matchName = !filterName || a.name.toLowerCase().includes(filterName);
@@ -831,60 +835,52 @@
             }
             
             container.innerHTML = filteredAssignments.map(a => `
-                <div class="border rounded-lg p-4 bg-gray-50">
-                    <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-                        <div>
-                            <h3 class="font-bold text-lg">${a.name}</h3>
-                            <span class="text-sm text-gray-500">
-                                ${a.className ? `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded mr-2">${a.className}</span>` : ''}
-                                Total: ${getAssignmentMaxPoints(a)} points • ${a.exercises.length} exercice(s)
-                            </span>
+                <div class="border rounded-lg bg-white overflow-hidden shadow-sm">
+                    <div class="flex items-center justify-between p-4 bg-gray-50 cursor-pointer hover:bg-gray-100" onclick="toggleAccordion('${a.id}')">
+                        <div class="flex items-center gap-3">
+                            <span id="icon-${a.id}" class="rotate-icon text-gray-400">▼</span>
+                            <div>
+                                <h3 class="font-bold text-lg">${a.name}</h3>
+                                <span class="text-sm text-gray-500">
+                                    ${a.className ? `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded mr-2 text-xs font-semibold uppercase">${a.className}</span>` : ''}
+                                    ${getAssignmentMaxPoints(a)} pts • ${a.exercises.length} ex.
+                                </span>
+                            </div>
                         </div>
-                        <div class="flex gap-2">
-                            <button onclick="openAssignmentModal('${a.id}')" class="text-blue-500 hover:text-blue-700 px-3 py-1 bg-blue-100 rounded">✏️ Modifier</button>
-                            <button onclick="duplicateAssignment('${a.id}')" class="text-green-500 hover:text-green-700 px-3 py-1 bg-green-100 rounded">⎘ Dupliquer</button>
-                            <button onclick="deleteAssignment('${a.id}')" class="text-red-500 hover:text-red-700 px-3 py-1 bg-red-100 rounded">🗑️ Supprimer</button>
+                        <div class="flex gap-2" onclick="event.stopPropagation()">
+                            <button onclick="openAssignmentModal('${a.id}')" class="p-2 text-blue-500 hover:bg-blue-50 rounded" title="Modifier">✏️</button>
+                            <button onclick="duplicateAssignment('${a.id}')" class="p-2 text-green-500 hover:bg-green-50 rounded" title="Dupliquer">⎘</button>
+                            <button onclick="deleteAssignment('${a.id}')" class="p-2 text-red-500 hover:bg-red-50 rounded" title="Supprimer">🗑️</button>
                         </div>
                     </div>
-                    <div class="space-y-2 text-sm">
-                        ${a.exercises.map((ex, i) => {
-                            const parts = ex.parts || [];
-                            const directQuestions = ex.questions || [];
-                            
-                            let exContent = '';
-                            
-                            // Direct questions
-                            if (directQuestions.length > 0) {
-                                exContent += `<div class="ml-4 text-gray-600">
-                                    ${directQuestions.map(q => `
-                                        <span class="inline-block mr-2">${q.name || 'Q?'}: ${getQuestionMaxPoints(q)} pts
-                                        ${q.subQuestions && q.subQuestions.length > 0 ? `(${q.subQuestions.map(sq => sq.name + ':' + sq.maxPoints).join(', ')})` : ''}</span>
-                                    `).join('')}
-                                </div>`;
-                            }
-                            
-                            // Parts
-                            if (parts.length > 0) {
-                                exContent += parts.map(part => `
-                                    <div class="ml-4 mt-1">
-                                        <span class="text-purple-600 font-medium">${part.name}:</span>
-                                        <span class="text-gray-600">
-                                            ${(part.questions || []).map(q => `
-                                                ${q.name || 'Q?'}: ${getQuestionMaxPoints(q)} pts
-                                                ${q.subQuestions && q.subQuestions.length > 0 ? `(${q.subQuestions.map(sq => sq.name + ':' + sq.maxPoints).join(', ')})` : ''}
-                                            `).join(' • ')}
-                                        </span>
+                    
+                    <div id="accordion-${a.id}" class="accordion-content">
+                        <div class="p-4 border-t space-y-3 bg-white text-sm">
+                            ${a.exercises.map((ex, i) => {
+                                const parts = ex.parts || [];
+                                const directQuestions = ex.questions || [];
+                                let exContent = '';
+                                if (directQuestions.length > 0) {
+                                    exContent += `<div class="ml-4 text-gray-600 mt-1">
+                                        ${directQuestions.map(q => `<span class="inline-block mr-2">${q.name || 'Q?'}: ${getQuestionMaxPoints(q)} pts</span>`).join(' • ')}
+                                    </div>`;
+                                }
+                                if (parts.length > 0) {
+                                    exContent += parts.map(part => `
+                                        <div class="ml-4 mt-1 border-l pl-2">
+                                            <span class="text-purple-600 font-medium">${part.name}:</span>
+                                            <span class="text-gray-500 italic">(${(part.questions || []).map(q => q.name || 'Q?').join(', ')})</span>
+                                        </div>
+                                    `).join('');
+                                }
+                                return `
+                                    <div class="bg-gray-50 p-2 rounded border-l-4 border-blue-400">
+                                        <strong>Exercice ${i + 1}${ex.name ? ' - ' + ex.name : ''}</strong> (${getExerciseMaxPoints(ex)} pts)
+                                        ${exContent}
                                     </div>
-                                `).join('');
-                            }
-                            
-                            return `
-                                <div class="bg-white p-2 rounded border-l-4 border-blue-400">
-                                    <strong>Exercice ${i + 1}${ex.name ? ' - ' + ex.name : ''}</strong> (${getExerciseMaxPoints(ex)} pts)
-                                    ${exContent}
-                                </div>
-                            `;
-                        }).join('')}
+                                `;
+                            }).join('')}
+                        </div>
                     </div>
                 </div>
             `).join('');
@@ -990,56 +986,69 @@
                 const parts = ex.parts || [];
                 const hasQuestions = directQuestions.length > 0 || parts.length > 0;
                 
-                let exHtml = `<div class="border rounded-lg overflow-hidden">
-                    <div class="bg-blue-100 p-3 flex justify-between items-center">
-                        <span class="font-bold">Exercice ${exIndex + 1}${ex.name ? ' - ' + ex.name : ''}</span>
-                        <span class="text-blue-700 font-semibold" id="ex-total-${ex.id}">0 / ${getExerciseMaxPoints(ex)}</span>
-                    </div>
-                    <div class="p-3 space-y-3">`;
+                const accordionId = `grade-ex-${ex.id}`;
                 
-                // Option de note finale pour l'exercice
+                let exHtml = `
+                <div class="border rounded-lg overflow-hidden bg-white mb-3">
+                    <div class="bg-gray-100 p-4 flex justify-between items-center cursor-pointer hover:bg-gray-200 transition-colors" 
+                         onclick="toggleAccordion('${accordionId}')">
+                        <div class="flex items-center gap-3">
+                            <span id="icon-${accordionId}" class="rotate-icon text-gray-400">▼</span>
+                            <span class="font-bold">Exercice ${exIndex + 1}${ex.name ? ' - ' + ex.name : ''}</span>
+                        </div>
+                        <span class="text-blue-700 font-bold bg-white px-3 py-1 rounded-full shadow-sm text-sm" id="ex-total-${ex.id}">0 / ${getExerciseMaxPoints(ex)}</span>
+                    </div>
+                    
+                    <div id="accordion-${accordionId}" class="accordion-content">
+                        <div class="p-4 space-y-4 border-t">`;
+                
+                // Note finale optionnelle
                 if (hasQuestions) {
                     const finalGrade = data.grades[studentId][assignmentId][ex.id]?.['final']?.['final']?.['final'] || '';
-                    exHtml += `<div class="flex items-center gap-3 mb-4 p-2 bg-yellow-50 rounded border border-yellow-200">
-                        <span class="font-medium text-yellow-700">Note finale de l'exercice (optionnel):</span>
-                        <input type="number" min="0" max="${getExerciseMaxPoints(ex)}" step="0.25" value="${finalGrade}"
-                            onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
-                            class="grade-input w-20 p-2 border rounded text-center font-bold bg-white">
-                        <span class="text-yellow-600">/ ${getExerciseMaxPoints(ex)}</span>
-                        <span class="text-xs text-yellow-500 ml-2">(Remplit automatiquement si laissé vide)</span>
-                    </div>`;
+                    exHtml += `
+                        <div class="flex items-center gap-3 mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-100">
+                            <span class="text-sm font-semibold text-yellow-800">Note globale (force le total):</span>
+                            <input type="number" min="0" max="${getExerciseMaxPoints(ex)}" step="0.25" value="${finalGrade}"
+                                onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
+                                class="grade-input w-20 p-2 border rounded text-center font-bold bg-white" onclick="event.stopPropagation()">
+                            <span class="text-xs text-yellow-600 italic">Si rempli, ignore le détail des questions ci-dessous.</span>
+                        </div>`;
                 }
                 
                 if (directQuestions.length === 0 && parts.length === 0) {
-                    // Direct exercise grade
+                    // Pas de questions : note directe
                     const val = data.grades[studentId][assignmentId][ex.id]?.['direct']?.['direct']?.['direct'] || '';
-                    exHtml += `<div class="flex items-center gap-3">
-                        <span>Note:</span>
-                        <input type="number" min="0" max="${ex.maxPoints}" step="0.25" value="${val}"
-                            onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','direct','direct','direct',this.value)"
-                            class="grade-input w-20 p-2 border rounded text-center font-bold">
-                        <span>/ ${ex.maxPoints}</span>
-                    </div>`;
+                    exHtml += `
+                        <div class="flex items-center gap-4 bg-blue-50 p-4 rounded-lg">
+                            <span class="font-semibold">Note :</span>
+                            <input type="number" min="0" max="${ex.maxPoints}" step="0.25" value="${val}"
+                                onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','direct','direct','direct',this.value)"
+                                class="grade-input w-24 p-2 border rounded text-center font-bold text-lg" onclick="event.stopPropagation()">
+                            <span class="text-gray-500 text-lg">/ ${ex.maxPoints}</span>
+                        </div>`;
                 } else {
-                    // Direct questions
+                    // Questions directes
                     if (directQuestions.length > 0) {
-                        exHtml += directQuestions.map(q => renderGradeQuestion(q, studentId, assignmentId, ex.id, null)).join('');
+                        exHtml += `<div class="space-y-3">` + directQuestions.map(q => renderGradeQuestion(q, studentId, assignmentId, ex.id, null)).join('') + `</div>`;
                     }
                     
-                    // Parts
+                    // Parties
                     if (parts.length > 0) {
                         exHtml += parts.map(part => {
-                            let partHtml = `<div class="border-l-4 border-purple-400 pl-3 mt-3">
-                                <h4 class="font-semibold text-purple-700 mb-2">${part.name}</h4>
-                                <div class="space-y-2">`;
-                            partHtml += (part.questions || []).map(q => renderGradeQuestion(q, studentId, assignmentId, ex.id, part.id)).join('');
-                            partHtml += `</div></div>`;
-                            return partHtml;
+                            return `
+                            <div class="mt-4 pt-4 border-t">
+                                <h4 class="font-bold text-purple-700 mb-3 flex items-center gap-2">
+                                    <span class="w-2 h-2 bg-purple-400 rounded-full"></span> ${part.name}
+                                </h4>
+                                <div class="space-y-3 pl-4">
+                                    ${(part.questions || []).map(q => renderGradeQuestion(q, studentId, assignmentId, ex.id, part.id)).join('')}
+                                </div>
+                            </div>`;
                         }).join('');
                     }
                 }
                 
-                exHtml += `</div></div>`;
+                exHtml += `</div></div></div>`;
                 return exHtml;
             }).join('');
             
