@@ -653,10 +653,11 @@
                     <div class="flex items-center gap-2 flex-wrap">
                         <label
                             class="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-lg border cursor-pointer text-sm">
-                            <span class="text-gray-700">Importer (.xlsx)</span>
+                            <span class="text-gray-700" data-translate="importExcel">Importer (.xlsx)</span>
                             <input type="file" id="student-import" accept=".xlsx,.xls" class="hidden"
                                 onchange="handleStudentImport(event)">
                         </label>
+
                         <button onclick="openStudentModal()"
                             class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition">
                             + Ajouter un élève
@@ -845,6 +846,13 @@
         function translatePage() {
             const t = translations[currentLanguage];
 
+            // Traduire les éléments avec data-translate
+            document.querySelectorAll('[data-translate]').forEach(element => {
+                const key = element.getAttribute('data-translate');
+                if (t[key]) {
+                    element.textContent = t[key];
+                }
+            });
             // Titre et sous-titre
             setTextContent('h1', t.appTitle);
             setTextContent('header p', t.appSubtitle);
