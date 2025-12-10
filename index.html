@@ -2277,7 +2277,8 @@
         function renderSummary() {
             const t = translations[currentLanguage];
             const container = document.getElementById('summary-table');
-            const showDetails = document.getElementById('show-details').checked;
+            const detailsCheckbox = document.getElementById('show-details');
+            let showDetails = detailsCheckbox ? detailsCheckbox.checked : false;
             const classSelect = document.getElementById('select-class-summary');
             const searchInput = document.getElementById('summary-search');
             const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
@@ -2324,6 +2325,17 @@
             let filteredStudents = searchMatches;
             if (selectedClass) {
                 filteredStudents = filteredStudents.filter(s => s.className === selectedClass);
+            }
+
+            const isAllStudents = !selectedClass && !searchTerm && filteredStudents.length === data.students.length;
+            if (detailsCheckbox) {
+                if (isAllStudents) {
+                    detailsCheckbox.checked = false;
+                    detailsCheckbox.disabled = true;
+                } else {
+                    detailsCheckbox.disabled = false;
+                }
+                showDetails = detailsCheckbox.checked;
             }
 
             let filteredAssignments;
