@@ -2255,7 +2255,7 @@
                 loadGradeSelectors();
                 renderSummary();
 
-                alert(t.importSuccess + ' ' + added + t.newStudentsAdded);
+                alert(`${t.importSuccess} ${added}`);
                 event.target.value = '';
             };
             reader.readAsArrayBuffer(file);

@@ -114,7 +114,10 @@ const translations = {
         grade: "Note :",
         // Import
         importCompleted: "Import terminé. Nouveaux élèves ajoutés :",
-        emptyFile: "Fichier vide ou sans données."
+        emptyFile: "Fichier vide ou sans données.",
+        importSuccess: "Import terminé. Nouveaux élèves ajoutés :",
+        newStudentsAdded: "", // Vide car déjà inclus dans importSuccess
+
     },
     
     en: {
@@ -232,12 +235,10 @@ const translations = {
         // Import
         importCompleted: "Import completed. New students added:",
         emptyFile: "Empty file or no data.",
+        importSuccess: "Import completed. New students added: ",
+        newStudentsAdded: "", // Vide car déjà inclus dans importSuccess
+
         
-        // Import
-        importCompleted: "Import completed. New students added:",
-        
-        // Import
-        importCompleted: "Import completed. New students added:"
     },
     
     ar: {
@@ -353,6 +354,8 @@ const translations = {
         
         // Import
         importCompleted: "تم الاستيراد. طلاب جدد مضافون:",
-        emptyFile: "ملف فارغ أو بدون بيانات."
+        emptyFile: "ملف فارغ أو بدون بيانات.",
+        importSuccess: "تم الاستيراد. طلاب جدد مضافون:",
+        newStudentsAdded: "", // Vide car déjà inclus dans importSuccess
     }
 };
