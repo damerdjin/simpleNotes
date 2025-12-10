@@ -125,23 +125,36 @@
             order: 1 !important;
         }
 
-        /* ===== CLASSES ===== */
+        /* ===== CLASSES - FIX COMPLET ===== */
         .rtl-layout #class-list {
             display: flex !important;
-            flex-direction: row-reverse !important;
             flex-wrap: wrap !important;
-            justify-content: flex-start !important;
+            flex-direction: row-reverse !important;
+            justify-content: flex-end !important;
             gap: 0.5rem !important;
         }
 
-        .rtl-layout #class-list .inline-flex {
-            display: inline-flex !important;
+        .rtl-layout #class-list>* {
+            order: unset !important;
         }
 
-        .rtl-layout #class-list .ml-1 {
-            margin-left: 0 !important;
-            margin-right: 0.25rem !important;
+        /* Annule les règles générales .flex qui interfèrent */
+        .rtl-layout .flex.flex-wrap.gap-2:has(#class-list) {
+            flex-direction: row-reverse !important;
+            justify-content: flex-end !important;
         }
+
+        /* Force sur les conteneurs directs */
+        #class-list.flex {
+            display: flex !important;
+        }
+
+        /* En LTR (français/anglais), laisse la flexbox normale */
+        .ltr-layout #class-list {
+            flex-direction: row;
+            justify-content: flex-start;
+        }
+
 
         /* ===== EXERCICES DES DEVOIRS - COMPLÈT ===== */
         .rtl-layout [id*="exercise"],
@@ -565,11 +578,12 @@
             display: flex;
             gap: 0.25rem;
         }
+
         .student-item:hover .student-actions {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-}
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
 
         .rtl-layout .student-actions {
             right: auto;
@@ -601,6 +615,57 @@
 
         .rtl-layout #students-list.student-grid .student-meta {
             justify-content: flex-end;
+        }
+
+        /* SEULE LA VERSION QUI MARCHE */
+        .rtl-layout #class-list {
+            display: flex !important;
+            flex-direction: row-reverse !important;
+            flex-wrap: wrap !important;
+            justify-content: flex-end !important;
+            gap: 0.5rem !important;
+        }
+
+
+        /* Annule les styles qui posaient problème */
+        .rtl-layout #class-list .inline-flex {
+            display: inline-flex !important;
+            flex-direction: row-reverse !important;
+        }
+
+        .rtl-layout #class-list>* {
+            order: unset !important;
+            margin-left: 0 !important;
+            margin-right: auto !important;
+        }
+
+        /* ===== NUCLEAR OPTION - CLASSES RTL ===== */
+        html[dir="rtl"] #class-list,
+        html[dir="rtl"] .rtl-layout #class-list,
+        .rtl-layout #class-list {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            flex-direction: row-reverse !important;
+            justify-content: flex-end !important;
+            align-items: flex-start !important;
+            gap: 0.5rem !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
+        html[dir="rtl"] #class-list>div,
+        .rtl-layout #class-list>div {
+            flex-basis: auto !important;
+            order: unset !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+
+        /* Annule TOUS les autres flex qui pourraient interferer */
+        html[dir="rtl"] #class-list.flex,
+        .rtl-layout #class-list.flex {
+            flex-direction: row-reverse !important;
+            justify-content: flex-end !important;
         }
     </style>
 </head>
