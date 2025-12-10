@@ -848,30 +848,52 @@
         class="modal fixed inset-0 bg-black/50 items-center justify-center z-50 overflow-y-auto py-8 hidden">
         <div class="bg-white rounded-xl p-6 w-full max-w-5xl mx-4 my-auto">
             <h3 id="assignment-modal-title" class="text-xl font-bold mb-4">Créer un Devoir</h3>
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <input type="text" id="assignment-name" placeholder="Nom du devoir (ex: Devoir 1)"
+                <input type="text" id="assignment-name" placeholder="Nom du devoir ex: Devoir 1"
                     class="w-full p-3 border rounded-lg">
                 <select id="assignment-class" class="w-full p-3 border rounded-lg">
                     <option value="" data-translate="selectClass">-- Sélectionner une classe --</option>
                 </select>
+            </div>
 
+            <!-- AJOUT : switch mode global -->
+            <div class="mb-4 flex items-center gap-2">
+                <input type="checkbox" id="assignment-global-only" class="w-4 h-4"
+                    onchange="toggleGlobalAssignmentMode(this.checked)">
+                <label for="assignment-global-only" class="text-sm text-gray-700">
+                    Note globale uniquement (sans exercices détaillés)
+                </label>
+            </div>
+
+            <!-- AJOUT : note maximale globale -->
+            <div id="global-maxpoints-container" class="mb-4 hidden">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Note maximale du devoir
+                </label>
+                <input type="number" id="assignment-global-maxpoints" class="w-32 p-2 border rounded" min="0"
+                    step="0.25" value="20">
             </div>
 
             <div id="exercises-builder" class="space-y-4 mb-4 max-h-[60vh] overflow-y-auto pr-2"></div>
 
-            <button onclick="addExercise()"
-                class="w-full p-3 border-2 border-dashed border-blue-400 text-blue-600 rounded-lg hover:bg-blue-50 mb-4">
-                + Ajouter un exercice
+            <button id="add-exercise-btn" onclick="addExercise()"
+                class="w-full p-3 border-2 border-dashed border-blue-400 text-blue-600 rounded-lg hover:bg-blue-50 mb-4"
+                data-translate="addExercise">
+                Ajouter un exercice
             </button>
 
             <div class="flex gap-3 justify-end">
-                <button onclick="closeAssignmentModal()"
-                    class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">Annuler</button>
-                <button onclick="saveAssignment()"
-                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Enregistrer</button>
+                <button onclick="closeAssignmentModal()" class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
+                    data-translate="cancel">Annuler</button>
+                <button onclick="saveAssignment()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    data-translate="save">Enregistrer</button>
             </div>
         </div>
     </div>
+
+
+
     <script src="translations.js"></script>
     <script>
         // Language Management
@@ -1044,6 +1066,10 @@
         // Current editing state
         let editingAssignmentId = null;
         let tempExercises = [];
+        // AJOUT : mode devoir global (note unique)
+        let isGlobalAssignment = false;
+        let globalMaxPoints = 20;
+
 
         // Load from localStorage
         function loadData() {
@@ -1299,20 +1325,51 @@
             editingAssignmentId = assignmentId;
             loadClassSelectors();
 
+            const globalCheckbox = document.getElementById('assignment-global-only');
+            const globalMaxInput = document.getElementById('assignment-global-maxpoints');
+
             if (assignmentId) {
-                // Edit mode
+                // Mode édition
                 const assignment = data.assignments.find(a => a.id === assignmentId);
+                if (!assignment) return;
+
                 document.getElementById('assignment-modal-title').textContent = t.editAssignment;
                 document.getElementById('assignment-name').value = assignment.name;
-                document.getElementById('assignment-class').value = assignment.className || '';
-                tempExercises = JSON.parse(JSON.stringify(assignment.exercises));
+                document.getElementById('assignment-class').value = assignment.className;
+
+                const exs = assignment.exercises || [];
+
+                // Détection d’un devoir "global" : un seul exercice sans questions ni parties
+                if (
+                    exs.length === 1 &&
+                    (!exs[0].questions || exs[0].questions.length === 0) &&
+                    (!exs[0].parts || exs[0].parts.length === 0)
+                ) {
+                    isGlobalAssignment = true;
+                    if (globalCheckbox) globalCheckbox.checked = true;
+                    globalMaxPoints = exs[0].maxPoints || 20;
+                    if (globalMaxInput) globalMaxInput.value = globalMaxPoints;
+                    tempExercises = []; // on n’édite pas d’exercices détaillés dans ce mode
+                } else {
+                    isGlobalAssignment = false;
+                    if (globalCheckbox) globalCheckbox.checked = false;
+                    tempExercises = JSON.parse(JSON.stringify(exs));
+                }
             } else {
-                // Create mode
+                // Mode création
                 document.getElementById('assignment-modal-title').textContent = t.createAssignment;
                 document.getElementById('assignment-name').value = '';
                 document.getElementById('assignment-class').value = '';
                 tempExercises = [];
+
+                isGlobalAssignment = false;
+                if (globalCheckbox) globalCheckbox.checked = false;
+                globalMaxPoints = 20;
+                if (globalMaxInput) globalMaxInput.value = 20;
             }
+
+            // Appliquer l’état visuel (afficher/cacher la zone exercices)
+            toggleGlobalAssignmentMode(isGlobalAssignment);
 
             document.getElementById('assignment-modal').classList.add('active');
             renderExercisesBuilder();
@@ -1321,6 +1378,24 @@
         function closeAssignmentModal() {
             document.getElementById('assignment-modal').classList.remove('active');
             editingAssignmentId = null;
+        }
+        // AJOUT : activer/désactiver le mode "note globale"
+        function toggleGlobalAssignmentMode(isGlobal) {
+            isGlobalAssignment = isGlobal;
+
+            const globalContainer = document.getElementById('global-maxpoints-container');
+            const exercisesBuilder = document.getElementById('exercises-builder');
+            const addExerciseBtn = document.getElementById('add-exercise-btn');
+
+            if (isGlobalAssignment) {
+                if (globalContainer) globalContainer.classList.remove('hidden');
+                if (exercisesBuilder) exercisesBuilder.classList.add('hidden');
+                if (addExerciseBtn) addExerciseBtn.classList.add('hidden');
+            } else {
+                if (globalContainer) globalContainer.classList.add('hidden');
+                if (exercisesBuilder) exercisesBuilder.classList.remove('hidden');
+                if (addExerciseBtn) addExerciseBtn.classList.remove('hidden');
+            }
         }
 
         function addExercise() {
@@ -1632,25 +1707,57 @@
             const t = translations[currentLanguage];
             const name = document.getElementById('assignment-name').value.trim();
             const className = document.getElementById('assignment-class').value.trim();
+            const globalCheckbox = document.getElementById('assignment-global-only');
+            const globalMaxInput = document.getElementById('assignment-global-maxpoints');
+
             if (!name) return alert(t.enterAssignmentName);
             if (!className) return alert(t.selectAssignmentClass);
-            if (tempExercises.length === 0) return alert(t.addExerciseFirst);
+
+            // Mettre à jour l’état global
+            isGlobalAssignment = globalCheckbox && globalCheckbox.checked;
+
+            if (isGlobalAssignment) {
+                globalMaxPoints = parseFloat(globalMaxInput.value) || 0;
+                if (globalMaxPoints <= 0) {
+                    alert('Note maximale invalide');
+                    return;
+                }
+            } else {
+                if (tempExercises.length === 0) {
+                    return alert(t.addExerciseFirst);
+                }
+            }
+
+            let exercisesToSave;
+
+            if (isGlobalAssignment) {
+                // On crée un seul exercice "virtuel" sans questions
+                exercisesToSave = [{
+                    id: genId(),
+                    name: '',          // tu peux mettre 'Global' si tu veux l’afficher
+                    maxPoints: globalMaxPoints,
+                    questions: [],
+                    parts: []
+                }];
+            } else {
+                exercisesToSave = JSON.parse(JSON.stringify(tempExercises));
+            }
 
             if (editingAssignmentId) {
-                // Update existing assignment
+                // Mise à jour
                 const assignment = data.assignments.find(a => a.id === editingAssignmentId);
                 if (assignment) {
                     assignment.name = name;
                     assignment.className = className;
-                    assignment.exercises = JSON.parse(JSON.stringify(tempExercises));
+                    assignment.exercises = exercisesToSave;
                 }
             } else {
-                // Create new assignment
+                // Création
                 data.assignments.push({
                     id: genId(),
                     name,
                     className,
-                    exercises: JSON.parse(JSON.stringify(tempExercises))
+                    exercises: exercisesToSave
                 });
             }
 
