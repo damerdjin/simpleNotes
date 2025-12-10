@@ -558,12 +558,18 @@
         }
 
         .student-actions {
+            opacity: 0;
             position: absolute;
             top: 8px;
             right: 8px;
             display: flex;
             gap: 0.25rem;
         }
+        .student-item:hover .student-actions {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
 
         .rtl-layout .student-actions {
             right: auto;
