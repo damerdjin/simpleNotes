@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion des Corrections</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         .modal { display: none; }
         .modal.active { display: flex; }
@@ -43,17 +42,11 @@
         <!-- Students Tab -->
         <div id="content-students" class="tab-content">
             <div class="bg-white rounded-xl shadow-lg p-6">
-                <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
+                <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-bold text-gray-800">Liste des Élèves</h2>
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <label class="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-lg border cursor-pointer text-sm">
-                            <span class="text-gray-700">Importer (.xlsx)</span>
-                            <input type="file" id="student-import" accept=".xlsx,.xls" class="hidden" onchange="handleStudentImport(event)">
-                        </label>
-                        <button onclick="openStudentModal()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition">
-                            + Ajouter un élève
-                        </button>
-                    </div>
+                    <button onclick="openStudentModal()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition">
+                        + Ajouter un élève
+                    </button>
                 </div>
                 <div id="students-list" class="space-y-2"></div>
             </div>
@@ -107,12 +100,7 @@
     <div id="student-modal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-50">
         <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
             <h3 class="text-xl font-bold mb-4">Ajouter un élève</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                <input type="text" id="student-lastname" placeholder="Nom" class="w-full p-3 border rounded-lg">
-                <input type="text" id="student-firstname" placeholder="Prénom" class="w-full p-3 border rounded-lg">
-                <input type="text" id="student-class" placeholder="Classe" class="w-full p-3 border rounded-lg">
-                <input type="text" id="student-nin" placeholder="NIN (optionnel)" class="w-full p-3 border rounded-lg">
-            </div>
+            <input type="text" id="student-name" placeholder="Nom de l'élève" class="w-full p-3 border rounded-lg mb-4">
             <div class="flex gap-3 justify-end">
                 <button onclick="closeStudentModal()" class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">Annuler</button>
                 <button onclick="addStudent()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Ajouter</button>
@@ -142,7 +130,7 @@
     <script>
         // Data Store
         let data = {
-            students: [], // { id, name, className, nin, firstName, sex, birthDate, regNumber }
+            students: [],
             assignments: [],
             grades: {}
         };
@@ -189,11 +177,8 @@
         // ===== STUDENTS =====
         function openStudentModal() {
             document.getElementById('student-modal').classList.add('active');
-            document.getElementById('student-lastname').value = '';
-            document.getElementById('student-firstname').value = '';
-            document.getElementById('student-class').value = '';
-            document.getElementById('student-nin').value = '';
-            document.getElementById('student-lastname').focus();
+            document.getElementById('student-name').value = '';
+            document.getElementById('student-name').focus();
         }
 
         function closeStudentModal() {
@@ -201,14 +186,10 @@
         }
 
         function addStudent() {
-            const lastName = document.getElementById('student-lastname').value.trim();
-            const firstName = document.getElementById('student-firstname').value.trim();
-            const className = document.getElementById('student-class').value.trim();
-            const nin = document.getElementById('student-nin').value.trim();
-            if (!lastName && !firstName) return alert('Veuillez entrer au moins un nom ou prénom');
-            const name = (lastName + ' ' + firstName).trim();
+            const name = document.getElementById('student-name').value.trim();
+            if (!name) return alert('Veuillez entrer un nom');
             
-            data.students.push({ id: genId(), name, className, nin, firstName, lastName });
+            data.students.push({ id: genId(), name });
             saveData();
             renderStudents();
             closeStudentModal();
@@ -231,10 +212,7 @@
             
             container.innerHTML = data.students.map((s, i) => `
                 <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100">
-                    <div>
-                        <div class="font-medium"><span class="text-gray-400 mr-3">${i + 1}.</span>${s.name}</div>
-                        ${s.className ? `<div class="text-xs text-gray-500 mt-1">Classe : ${s.className}</div>` : ''}
-                    </div>
+                    <span class="font-medium"><span class="text-gray-400 mr-3">${i + 1}.</span>${s.name}</span>
                     <button onclick="deleteStudent('${s.id}')" class="text-red-500 hover:text-red-700 px-3 py-1">🗑️</button>
                 </div>
             `).join('');
@@ -716,7 +694,7 @@
                 data.assignments.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
             
             studentSelect.innerHTML = '<option value="">-- Sélectionner un élève --</option>' +
-                data.students.map(s => `<option value="${s.id}">${s.name}${s.className ? ' (' + s.className + ')' : ''}</option>`).join('');
+                data.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
         }
 
         function renderGradeQuestion(q, studentId, assignmentId, exId, partId = null) {
@@ -1011,7 +989,7 @@
             }
             
             let rows = data.students.map(s => {
-                let row = `<td class="p-3 font-medium bg-gray-50 sticky left-0">${s.name}${s.className ? '<div class=\"text-xs text-gray-500\">' + s.className + '</div>' : ''}</td>`;
+                let row = `<td class="p-3 font-medium bg-gray-50 sticky left-0">${s.name}</td>`;
                 
                 for (const a of data.assignments) {
                     const studentGrades = data.grades[s.id]?.[a.id] || {};
@@ -1042,88 +1020,6 @@
                     <tbody>${rows}</tbody>
                 </table>
             `;
-        }
-
-        function handleStudentImport(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const dataBinary = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(dataBinary, { type: 'array' });
-                const firstSheetName = workbook.SheetNames[0];
-                const sheet = workbook.Sheets[firstSheetName];
-                const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-                if (json.length < 2) {
-                    alert('Fichier vide ou sans données.');
-                    return;
-                }
-                const headers = json[1];
-                const rows = json.slice(2); // à partir de la 3ème ligne (index 2)
-                const getIndex = (label) => headers.findIndex(h => (h || '').toString().trim() === label);
-                const idxNIN = getIndex('رقم التعريف');
-                const idxNom = getIndex('اللقب');
-                const idxPrenom = getIndex('الاسم');
-                const idxClasse = getIndex('الفوج التربوي');
-                const idxSexe = getIndex('الجنس');
-                const idxBirth = getIndex('تاريخ الميلاد');
-                const idxReg = getIndex('رقم التسجيل');
-
-                let added = 0;
-                rows.forEach(row => {
-                    if (!row || row.length === 0) return;
-                    const nin = idxNIN >= 0 ? (row[idxNIN] || '').toString().trim() : '';
-                    const lastName = idxNom >= 0 ? (row[idxNom] || '').toString().trim() : '';
-                    const firstName = idxPrenom >= 0 ? (row[idxPrenom] || '').toString().trim() : '';
-                    const className = idxClasse >= 0 ? (row[idxClasse] || '').toString().trim() : '';
-                    const sex = idxSexe >= 0 ? (row[idxSexe] || '').toString().trim() : '';
-                    const birthDate = idxBirth >= 0 ? (row[idxBirth] || '').toString().trim() : '';
-                    const regNumber = idxReg >= 0 ? (row[idxReg] || '').toString().trim() : '';
-                    if (!lastName && !firstName) return;
-                    const name = (lastName + ' ' + firstName).trim();
-
-                    let existing = null;
-                    if (nin) {
-                        existing = data.students.find(s => s.nin === nin);
-                    }
-                    if (!existing) {
-                        existing = data.students.find(s => s.name === name && s.className === className);
-                    }
-
-                    if (existing) {
-                        existing.name = name;
-                        existing.className = className;
-                        existing.nin = nin;
-                        existing.firstName = firstName;
-                        existing.lastName = lastName;
-                        existing.sex = sex;
-                        existing.birthDate = birthDate;
-                        existing.regNumber = regNumber;
-                    } else {
-                        data.students.push({
-                            id: genId(),
-                            name,
-                            className,
-                            nin,
-                            firstName,
-                            lastName,
-                            sex,
-                            birthDate,
-                            regNumber
-                        });
-                        added++;
-                    }
-                });
-
-                saveData();
-                renderStudents();
-                loadGradeSelectors();
-                renderSummary();
-
-                alert('Import terminé. Nouveaux élèves ajoutés : ' + added);
-                event.target.value = '';
-            };
-            reader.readAsArrayBuffer(file);
         }
 
         // Initialize
