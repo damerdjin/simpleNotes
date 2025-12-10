@@ -667,6 +667,21 @@
             flex-direction: row-reverse !important;
             justify-content: flex-end !important;
         }
+        .summary-grade-input {
+            width: 64px;
+            padding: 4px 6px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: #ffffff;
+        }
+        .summary-grade-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #bfdbfe;
+            border-color: #60a5fa;
+        }
     </style>
 </head>
 
@@ -2201,6 +2216,10 @@
             if (!assignment) return 0;
             const studentGrades = data.grades[studentId]?.[assignmentId] || {};
 
+            if (studentGrades.global !== undefined && studentGrades.global !== '') {
+                return parseFloat(studentGrades.global) || 0;
+            }
+
             let total = 0;
             for (const ex of assignment.exercises) {
                 total += getStudentExerciseTotal(studentGrades, ex);
@@ -2369,9 +2388,10 @@
                         for (const ex of a.exercises) {
                             const exTotal = getStudentExerciseTotal(studentGrades, ex);
                             const max = getExerciseMaxPoints(ex);
-                            const pct = max > 0 ? (exTotal / max * 100) : 0;
-                            const color = pct >= 70 ? 'text-green-600' : pct >= 50 ? 'text-orange-500' : 'text-red-500';
-                            row += `<td class="px-3 py-2 text-center ${color}">${exTotal.toFixed(1)}</td>`;
+                            const existingFinal = studentGrades[ex.id]?.['final']?.['final']?.['final'];
+                            row += `<td class="px-2 py-1 text-center">
+                                <input type="number" min="0" max="${max}" step="0.25" value="${existingFinal !== undefined && existingFinal !== '' ? existingFinal : exTotal.toFixed(2)}" oninput="clampExerciseInput(this, ${max})" onchange="setExerciseFinalGrade('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" class="summary-grade-input">
+                            </td>`;
                         }
                     }
 
@@ -2386,13 +2406,13 @@
             }).join('');
 
             const colgroupHtml = (() => {
-                let cols = '<col class="w-56">';
+                let cols = '<col style="width:220px">';
                 for (const a of filteredAssignments) {
                     if (showDetails) {
                         const exCount = (a.exercises || []).length;
-                        for (let i = 0; i < exCount; i++) cols += '<col class="w-20">';
+                        for (let i = 0; i < exCount; i++) cols += '<col style="width:70px">';
                     }
-                    cols += '<col class="w-24">';
+                    cols += '<col style="width:84px">';
                 }
                 return `<colgroup>${cols}</colgroup>`;
             })();
@@ -2405,6 +2425,37 @@
                 </table>
             `;
             translatePage();
+        }
+
+        function setGlobalAssignmentGrade(studentId, assignmentId, value) {
+            if (!data.grades[studentId]) data.grades[studentId] = {};
+            if (!data.grades[studentId][assignmentId]) data.grades[studentId][assignmentId] = {};
+            data.grades[studentId][assignmentId].global = value === '' ? '' : (parseFloat(value) || 0);
+            saveData();
+            renderSummary();
+        }
+
+        function setExerciseFinalGrade(studentId, assignmentId, exId, max, value) {
+            if (!data.grades[studentId]) data.grades[studentId] = {};
+            if (!data.grades[studentId][assignmentId]) data.grades[studentId][assignmentId] = {};
+            if (!data.grades[studentId][assignmentId][exId]) data.grades[studentId][assignmentId][exId] = {};
+            if (!data.grades[studentId][assignmentId][exId]['final']) data.grades[studentId][assignmentId][exId]['final'] = {};
+            if (!data.grades[studentId][assignmentId][exId]['final']['final']) data.grades[studentId][assignmentId][exId]['final']['final'] = {};
+            let v = value === '' ? '' : (parseFloat(value) || 0);
+            if (v !== '' && v > max) v = max;
+            if (v !== '' && v < 0) v = 0;
+            data.grades[studentId][assignmentId][exId]['final']['final']['final'] = v;
+            saveData();
+            renderSummary();
+        }
+
+        function clampExerciseInput(el, max) {
+            if (el.value === '') return;
+            let v = parseFloat(el.value);
+            if (isNaN(v)) return;
+            if (v < 0) v = 0;
+            if (v > max) v = max;
+            el.value = v;
         }
 
         function toggleSummarySort(key) {
