@@ -847,21 +847,25 @@
             const classSelect = document.getElementById('select-class-grades');
             const selectedClass = classSelect.value;
             
+            // Si aucune classe n'est sélectionnée, vider les listes
+            if (!selectedClass) {
+                assignmentSelect.innerHTML = '<option value="">-- Sélectionner d\'abord une classe --</option>';
+                studentSelect.innerHTML = '<option value="">-- Sélectionner d\'abord une classe --</option>';
+                document.getElementById('grade-entry').innerHTML = '<p class="text-gray-500 text-center py-8">Sélectionnez une classe pour commencer.</p>';
+                return;
+            }
+            
             // Filtrer les devoirs par classe sélectionnée
-            const filteredAssignments = selectedClass ? 
-                data.assignments.filter(a => a.className === selectedClass) : 
-                data.assignments;
+            const filteredAssignments = data.assignments.filter(a => a.className === selectedClass);
             
             assignmentSelect.innerHTML = '<option value="">-- Sélectionner un devoir --</option>' +
                 filteredAssignments.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
             
             // Filtrer les élèves par classe sélectionnée
-            const filteredStudents = selectedClass ?
-                data.students.filter(s => s.className === selectedClass) :
-                data.students;
+            const filteredStudents = data.students.filter(s => s.className === selectedClass);
             
             studentSelect.innerHTML = '<option value="">-- Sélectionner un élève --</option>' +
-                filteredStudents.map(s => `<option value="${s.id}">${s.name}${s.className ? ' (' + s.className + ')' : ''}</option>`).join('');
+                filteredStudents.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
             
             // Vider la zone de saisie de notes
             document.getElementById('grade-entry').innerHTML = '<p class="text-gray-500 text-center py-8">Sélectionnez un devoir et un élève pour saisir les notes.</p>';
