@@ -557,23 +557,29 @@
         }
 
         .student-actions {
+            position: absolute;
+            top: 8px;
+            right: 8px;
             display: flex;
-            align-items: center;
             gap: 0.25rem;
         }
 
+        .rtl-layout .student-actions {
+            right: auto;
+            left: 8px;
+        }
+
         .student-actions button {
-            width: 34px;
-            height: 34px;
+            width: 32px;
+            height: 32px;
             border-radius: 10px;
             background: #fee2e2;
             color: #b91c1c;
-            font-size: 16px;
+            font-size: 15px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             transition: background 0.12s ease, transform 0.08s ease;
-            order: 0 !important;
         }
 
         .student-actions button:hover {
@@ -1161,24 +1167,24 @@
                 const levelClass = sex.startsWith('f') || sex.includes('أنث') || sex.includes('fille') ? 'girl'
                     : sex.startsWith('m') || sex.includes('ذكر') || sex.includes('garçon') ? 'boy'
                         : 'neutral';
-                const birth = (s.birthDate || '').trim();
+                const birth = formatDate(parseDateMaybeExcel(s.birthDate || ''));
 
                 return `
-        <div class="student-item">
-            <div class="student-level ${levelClass}" title="Niveau">${level}</div>
-            <div class="student-info">
-                <div class="student-name">${displayName}</div>
-                <div class="student-meta">
-                    <span class="student-chip gray">#${i + 1}</span>
-                    ${s.className ? `<span class="student-chip">${s.className}</span>` : ''}
-                    ${s.nin ? `<span class="student-chip gray">NIN ${s.nin}</span>` : ''}
-                    ${birth ? `<span class="student-chip birth">🎂 ${birth}</span>` : ''}
-                </div>
-            </div>
-            <div class="student-actions">
-                <button onclick="deleteStudent('${s.id}')" title="${t.delete}">🗑️</button>
-            </div>
-        </div>`;
+                <div class="student-item">
+                    <div class="student-level ${levelClass}" title="Niveau">${level}</div>
+                    <div class="student-info">
+                        <div class="student-name">${displayName}</div>
+                        <div class="student-meta">
+                            <span class="student-chip gray">#${i + 1}</span>
+                            ${s.className ? `<span class="student-chip">${s.className}</span>` : ''}
+                            ${s.nin ? `<span class="student-chip gray">NIN ${s.nin}</span>` : ''}
+                            ${birth ? `<span class="student-chip birth">🎂 ${birth}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="student-actions">
+                        <button onclick="deleteStudent('${s.id}')" title="${t.delete}">🗑️</button>
+                    </div>
+                </div>`;
             }).join('');
 
             container.innerHTML = items;
@@ -2254,7 +2260,37 @@
             };
             reader.readAsArrayBuffer(file);
         }
+        // Convertit un éventuel numéro de série Excel en Date
+        function parseDateMaybeExcel(value) {
+            if (value === undefined || value === null) return null;
+            // Si déjà objet Date
+            if (value instanceof Date && !isNaN(value)) return value;
 
+            // Si chaîne vide
+            const v = String(value).trim();
+            if (!v) return null;
+
+            // Si nombre (ex: 38962)
+            const num = Number(v);
+            if (!isNaN(num) && num > 10000) { // seuil pour distinguer des années simples
+                // Origine Excel : 1899-12-30
+                const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+                return new Date(excelEpoch.getTime() + num * 86400 * 1000);
+            }
+
+            // Sinon, tenter un parse normal
+            const d = new Date(v);
+            return isNaN(d) ? null : d;
+        }
+
+        // Formate en jj/mm/aaaa
+        function formatDate(d) {
+            if (!d) return '';
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const yyyy = d.getFullYear();
+            return `${dd}/${mm}/${yyyy}`;
+        }
 
         // Initialize
         loadData();
