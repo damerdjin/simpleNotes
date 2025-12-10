@@ -662,6 +662,8 @@
                             class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition">
                             + Ajouter un élève
                         </button>
+                        <input type="text" id="student-search" placeholder="Rechercher (nom, prénom, classe)"
+                            oninput="renderStudents()" class="flex-1 min-w-48 p-3 border rounded-lg">
                     </div>
                 </div>
 
@@ -848,7 +850,6 @@
             const t = translations[currentLanguage];
 
             // Traduire les éléments avec data-translate
-            // Traduire les éléments avec data-translate
             document.querySelectorAll('[data-translate]').forEach(element => {
                 const key = element.getAttribute('data-translate');
                 if (t[key]) {
@@ -859,6 +860,11 @@
                     }
                 }
             });
+            // Mettre à jour le placeholder du champ de recherche avec la même traduction
+            const searchInput = document.getElementById('student-search');
+            if (searchInput) {
+                searchInput.placeholder = t.search; // Utilise la même clé que dans Récapitulatif
+            }
             // Titre et sous-titre
             setTextContent('h1', t.appTitle);
             setTextContent('header p', t.appSubtitle);
@@ -1149,6 +1155,15 @@
         function renderStudents() {
             const t = translations[currentLanguage];
             const container = document.getElementById('students-list');
+            const searchTerm = document.getElementById('student-search')?.value.trim().toLowerCase() || '';
+
+            let filteredStudents = data.students.slice();
+            if (searchTerm) {
+                filteredStudents = filteredStudents.filter(s => {
+                    const haystack = `${s.name || ''} ${s.firstName || ''} ${s.lastName || ''} ${s.className || ''}`.toLowerCase();
+                    return haystack.includes(searchTerm);
+                });
+            }
 
             if (data.students.length === 0) {
                 container.className = '';
@@ -1158,7 +1173,6 @@
 
             container.className = 'student-grid';
 
-            // Helper: extraire niveau du premier mot de la classe
             const levelFromClass = (className = '') => {
                 const first = className.trim().split(/\s+/)[0] || '';
                 const map = {
@@ -1173,7 +1187,7 @@
                 return map[key] || '?';
             };
 
-            const items = data.students.map((s, i) => {
+            const items = filteredStudents.map((s, i) => {
                 const first = (s.firstName || '').trim();
                 const last = (s.lastName || '').trim();
                 const displayName = (s.name || `${last} ${first}`).trim();
@@ -1185,21 +1199,21 @@
                 const birth = formatDate(parseDateMaybeExcel(s.birthDate || ''));
 
                 return `
-                <div class="student-item">
-                    <div class="student-level ${levelClass}" title="Niveau">${level}</div>
-                    <div class="student-info">
-                        <div class="student-name">${displayName}</div>
-                        <div class="student-meta">
-                            <span class="student-chip gray">#${i + 1}</span>
-                            ${s.className ? `<span class="student-chip">${s.className}</span>` : ''}
-                            ${s.nin ? `<span class="student-chip gray">NIN ${s.nin}</span>` : ''}
-                            ${birth ? `<span class="student-chip birth">🎂 ${birth}</span>` : ''}
-                        </div>
+            <div class="student-item">
+                <div class="student-level ${levelClass}" title="Niveau">${level}</div>
+                <div class="student-info">
+                    <div class="student-name">${displayName}</div>
+                    <div class="student-meta">
+                        <span class="student-chip gray">#${i + 1}</span>
+                        ${s.className ? `<span class="student-chip">${s.className}</span>` : ''}
+                        ${s.nin ? `<span class="student-chip gray">NIN ${s.nin}</span>` : ''}
+                        ${birth ? `<span class="student-chip birth">🎂 ${birth}</span>` : ''}
                     </div>
-                    <div class="student-actions">
-                        <button onclick="deleteStudent('${s.id}')" title="${t.delete}">🗑️</button>
-                    </div>
-                </div>`;
+                </div>
+                <div class="student-actions">
+                    <button onclick="deleteStudent('${s.id}')" title="${t.delete}">🗑️</button>
+                </div>
+            </div>`;
             }).join('');
 
             container.innerHTML = items;
