@@ -8,77 +8,201 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
-        /* RTL Support */
+        /* ===== RTL SUPPORT COMPLET ET OPTIMISÉ ===== */
         .rtl-layout {
             direction: rtl;
             text-align: right;
         }
 
+        /* ===== FLEX & LAYOUT GÉNÉRAUX ===== */
         .rtl-layout .flex {
             flex-direction: row-reverse;
         }
 
+        .rtl-layout .justify-between {
+            justify-content: space-between;
+        }
+
+        .rtl-layout .flex-wrap {
+            flex-direction: row-reverse;
+        }
+
+        /* ===== MARGINS INVERSÉS ===== */
         .rtl-layout .ml-auto {
-            margin-left: 0;
-            margin-right: auto;
+            margin-left: 0 !important;
+            margin-right: auto !important;
         }
 
         .rtl-layout .ml-2 {
-            margin-left: 0;
-            margin-right: 0.5rem;
+            margin-left: 0 !important;
+            margin-right: 0.5rem !important;
         }
 
         .rtl-layout .ml-3 {
-            margin-left: 0;
-            margin-right: 0.75rem;
+            margin-left: 0 !important;
+            margin-right: 0.75rem !important;
         }
 
         .rtl-layout .ml-4 {
-            margin-left: 0;
-            margin-right: 1rem;
+            margin-left: 0 !important;
+            margin-right: 1rem !important;
         }
 
         .rtl-layout .mr-2 {
-            margin-right: 0;
-            margin-left: 0.5rem;
+            margin-right: 0 !important;
+            margin-left: 0.5rem !important;
         }
 
         .rtl-layout .mr-3 {
-            margin-right: 0;
-            margin-left: 0.75rem;
+            margin-right: 0 !important;
+            margin-left: 0.75rem !important;
         }
 
+        .rtl-layout .mr-auto {
+            margin-right: auto !important;
+            margin-left: 0 !important;
+        }
+
+        /* ===== TEXT ALIGNMENT ===== */
         .rtl-layout .text-left {
-            text-align: right;
+            text-align: right !important;
         }
 
         .rtl-layout .text-right {
-            text-align: left;
+            text-align: left !important;
         }
 
+        /* ===== BORDERS & PADDING ===== */
         .rtl-layout .border-l {
-            border-left: none;
-            border-right: 1px solid;
+            border-left: none !important;
+            border-right: 1px solid !important;
         }
 
         .rtl-layout .border-l-4 {
-            border-left: none;
-            border-right-width: 4px;
-            border-right-style: solid;
+            border-left: none !important;
+            border-right: 4px solid !important;
         }
 
         .rtl-layout .pl-2 {
-            padding-left: 0;
-            padding-right: 0.5rem;
+            padding-left: 0 !important;
+            padding-right: 0.5rem !important;
         }
 
-        /* Responsive adjustments for RTL */
-        @media (max-width: 768px) {
-            .rtl-layout .flex-wrap {
-                flex-direction: row-reverse;
-            }
+        /* ===== ÉLÈVES - LISTE PRINCIPALE ===== */
+        .rtl-layout #students-list>div {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
         }
 
+        .rtl-layout #students-list .flex {
+            flex-direction: row-reverse !important;
+        }
+
+        .rtl-layout #students-list button {
+            order: 1 !important;
+        }
+
+        .rtl-layout #students-list .font-medium {
+            order: 2 !important;
+        }
+
+        .rtl-layout #students-list .text-gray-400 {
+            order: 3 !important;
+            margin-right: 0.75rem !important;
+        }
+
+        /* ===== EN-TÊTE ÉLÈVES ===== */
+        .rtl-layout #content-students .flex.justify-between {
+            flex-direction: row-reverse !important;
+        }
+
+        .rtl-layout #content-students .flex.justify-between>div:first-child {
+            order: 2 !important;
+        }
+
+        .rtl-layout #content-students .flex.justify-between>div:last-child {
+            order: 1 !important;
+        }
+
+        /* ===== CLASSES ===== */
+        .rtl-layout #class-list {
+            display: flex !important;
+            flex-direction: row-reverse !important;
+            flex-wrap: wrap !important;
+            justify-content: flex-start !important;
+            gap: 0.5rem !important;
+        }
+
+        .rtl-layout #class-list .inline-flex {
+            display: inline-flex !important;
+        }
+
+        .rtl-layout #class-list .ml-1 {
+            margin-left: 0 !important;
+            margin-right: 0.25rem !important;
+        }
+
+        /* ===== EXERCICES DES DEVOIRS - COMPLÈT ===== */
+        .rtl-layout [id*="exercise"],
+        .rtl-layout [id*="exercises"],
+        .rtl-layout .exercise,
+        .rtl-layout .exercice,
+        .rtl-layout .exercise-item,
+        .rtl-layout .hw-exercise {
+            direction: rtl !important;
+        }
+
+        /* Tous les conteneurs exercices */
+        .rtl-layout .exercises-list,
+        .rtl-layout #exercises-list,
+        .rtl-layout #homework-exercises,
+        .rtl-layout #exercises-container,
+        .rtl-layout #homework-exercises-list {
+            flex-direction: row-reverse !important;
+        }
+
+        /* ACTIONS/ICÔNES TOUJOURS À GAUCHE */
+        .rtl-layout .exercise-actions,
+        .rtl-layout .exercise-item button,
+        .rtl-layout .delete-exercise-btn,
+        .rtl-layout .edit-exercise-btn,
+        .rtl-layout .btn-delete-exercise,
+        .rtl-layout .btn-edit-exercise {
+            order: 1 !important;
+            margin-right: 0 !important;
+            margin-left: 0.75rem !important;
+        }
+
+        /* CONTENU EXERCICE À DROITE */
+        .rtl-layout .exercise-info,
+        .rtl-layout .exercise-content,
+        .rtl-layout .exercise-details,
+        .rtl-layout .exercise-name {
+            order: 2 !important;
+            text-align: right !important;
+        }
+
+        /* MODALES EXERCICES SPÉCIFIQUES */
+        .rtl-layout #exercises-container .flex,
+        .rtl-layout #homework-exercises-list .flex,
+        .rtl-layout .exercise-item .flex {
+            flex-direction: row-reverse !important;
+            justify-content: space-between !important;
+        }
+
+        /* ===== TABLEAUX ===== */
+        .rtl-layout table th,
+        .rtl-layout table td {
+            text-align: right !important;
+        }
+
+        .rtl-layout table .sticky.left-0 {
+            left: auto !important;
+            right: 0 !important;
+        }
+
+        /* ===== MODALES & UI ===== */
         .modal {
             display: none;
         }
@@ -87,10 +211,7 @@
             display: flex;
         }
 
-        .grade-input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-        }
-
+        /* ===== ACCORDÉON ===== */
         .accordion-content {
             max-height: 0;
             overflow: hidden;
@@ -108,6 +229,11 @@
 
         .rotate-icon.open {
             transform: rotate(180deg);
+        }
+
+        /* ===== NOTES - GRILLE ===== */
+        .grade-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
         }
 
         .grade-question-grid {
@@ -195,6 +321,108 @@
 
         .subquestion-chip .grade-input {
             width: 100%;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .rtl-layout #students-list .flex {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 1rem !important;
+            }
+
+            .rtl-layout #students-list button {
+                align-self: flex-start !important;
+                order: 1 !important;
+            }
+
+            .rtl-layout .flex-wrap {
+                flex-direction: row-reverse !important;
+            }
+        }
+
+        /* ===== RÉAJUSTEMENTS RTL SPÉCIFIQUES ===== */
+        /* 1. Titre principal et header à droite en RTL */
+        .rtl-layout header .flex>div:first-child {
+            order: 2 !important;
+            /* Pousse le titre à droite */
+            text-align: right !important;
+            margin-left: auto !important;
+            margin-right: 0 !important;
+        }
+
+        .rtl-layout header .flex>div:last-child {
+            order: 1 !important;
+            /* Boutons langues à gauche */
+        }
+
+        .rtl-layout header h1,
+        .rtl-layout header p {
+            text-align: right !important;
+        }
+
+        /* 2. Boutons tabs : Ordre Élèves (droite) → Devoirs → Notes → Récap (gauche) */
+        .rtl-layout .flex.flex-wrap.gap-2.mb-6 {
+            /* Cible précis le conteneur des tabs */
+            justify-content: flex-end !important;
+            /* Bloc poussé à droite */
+            flex-direction: row !important;
+            /* Flux naturel RTL : droite-gauche, garde ordre HTML */
+            gap: 0.5rem !important;
+            /* Espace uniforme */
+        }
+
+        /* 3. Icônes actions dans cartes Devoirs à gauche en RTL */
+        .rtl-layout .flex.items-center.justify-between[onclick*="toggleAccordion"] {
+            flex-direction: row-reverse !important;
+            /* Inverse pour RTL */
+        }
+
+        .rtl-layout .flex.items-center.justify-between[onclick*="toggleAccordion"]>div:first-child {
+            order: 2 !important;
+            /* Contenu (icône + titre) à droite */
+            text-align: right !important;
+        }
+
+        .rtl-layout .flex.items-center.justify-between[onclick*="toggleAccordion"]>div:last-child {
+            order: 1 !important;
+            /* Actions (boutons) à gauche */
+            margin-left: 0.75rem !important;
+            /* Espace à droite du contenu */
+        }
+
+        /* Extension pour tous les titres (h1-h6) en RTL */
+        .rtl-layout h1,
+        .rtl-layout h2,
+        .rtl-layout h3,
+        .rtl-layout h4,
+        .rtl-layout h5,
+        .rtl-layout h6 {
+            text-align: right !important;
+            margin-left: auto !important;
+            margin-right: 0 !important;
+        }
+
+        /* Ajustement général flex en RTL (évite double-inversion) */
+        .rtl-layout .flex {
+            flex-direction: row !important;
+            /* Naturel en RTL */
+        }
+
+        /* Pour headers de sections (ex. dans devoirs, notes) : Inverser ordre */
+        .rtl-layout .flex.justify-between {
+            flex-direction: row-reverse !important;
+            justify-content: space-between !important;
+        }
+
+        .rtl-layout .flex.justify-between>*:first-child {
+            order: 2 !important;
+            /* Titre à droite */
+        }
+
+        .rtl-layout .flex.justify-between>*:last-child {
+            order: 1 !important;
+            /* Boutons/ajouts à gauche */
         }
     </style>
 </head>
@@ -662,12 +890,12 @@
             container.innerHTML = classes.map(c => {
                 const count = data.students.filter(s => s.className === c).length;
                 return `
-                    <div class="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-2 rounded-lg">
-                        <span class="font-medium">${c}</span>
-                        <span class="text-xs bg-blue-200 px-2 py-1 rounded">${count} ${t.students}</span>
-                        <button onclick="deleteClass('${c}')" class="text-red-600 hover:text-red-800 ml-1">✕</button>
-                    </div>
-                `;
+            <div class="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-2 rounded-lg hover:bg-blue-200 transition-all">
+                <button onclick="deleteClass('${c}')" class="text-red-600 hover:text-red-800 text-lg font-bold p-1 rounded hover:bg-red-100 transition-all">✕</button>
+                <span class="font-medium">${c}</span>
+                <span class="text-xs bg-blue-200 px-2 py-1 rounded font-medium">${count} ${t.students}</span>
+            </div>
+        `;
             }).join('');
         }
 
