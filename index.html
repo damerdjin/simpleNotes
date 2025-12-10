@@ -597,6 +597,7 @@
                 loadClassSelectorsForAssignments();
                 renderAssignments();
             }
+            translatePage();
         }
 
         // ===== CLASSES =====
@@ -750,6 +751,7 @@
             `).join('');
 
             renderClassList();
+            translatePage();
         }
 
         // ===== ASSIGNMENTS =====
@@ -1267,6 +1269,7 @@
             </div>
         </div>
     `).join('');
+            translatePage();
         }
         // ===== GRADES =====
         function loadGradeSelectors() {
@@ -1441,6 +1444,7 @@
             container.innerHTML = html;
             saveData();
             recalculateTotals(assignmentId, studentId);
+            translatePage();
         }
         function updateGrade(studentId, assignmentId, exId, partKey, qId, sqId, value) {
             if (!data.grades[studentId]) data.grades[studentId] = {};
@@ -1721,6 +1725,7 @@
                     <tbody>${rows}</tbody>
                 </table>
             `;
+            translatePage();
         }
 
         function toggleSummarySort(key) {
