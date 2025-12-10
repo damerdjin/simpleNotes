@@ -2371,7 +2371,7 @@
                             const max = getExerciseMaxPoints(ex);
                             const pct = max > 0 ? (exTotal / max * 100) : 0;
                             const color = pct >= 70 ? 'text-green-600' : pct >= 50 ? 'text-orange-500' : 'text-red-500';
-                            row += `<td class="p-2 text-center ${color}">${exTotal}</td>`;
+                            row += `<td class="px-3 py-2 text-center ${color}">${exTotal.toFixed(1)}</td>`;
                         }
                     }
 
@@ -2379,14 +2379,27 @@
                     const max = getAssignmentMaxPoints(a);
                     const pct = max > 0 ? (total / max * 100) : 0;
                     const bgColor = pct >= 70 ? 'bg-green-100' : pct >= 50 ? 'bg-orange-100' : 'bg-red-100';
-                    row += `<td class="p-3 text-center font-bold ${bgColor}">${total}</td>`;
+                    row += `<td class="p-3 text-center font-bold ${bgColor}">${total.toFixed(1)}</td>`;
                 }
 
                 return `<tr class="border-b hover:bg-gray-50">${row}</tr>`;
             }).join('');
 
+            const colgroupHtml = (() => {
+                let cols = '<col class="w-56">';
+                for (const a of filteredAssignments) {
+                    if (showDetails) {
+                        const exCount = (a.exercises || []).length;
+                        for (let i = 0; i < exCount; i++) cols += '<col class="w-20">';
+                    }
+                    cols += '<col class="w-24">';
+                }
+                return `<colgroup>${cols}</colgroup>`;
+            })();
+
             container.innerHTML = `
-                <table class="w-full border-collapse">
+                <table class="w-full table-fixed border-collapse">
+                    ${colgroupHtml}
                     <thead><tr class="border-b-2">${headers}</tr></thead>
                     <tbody>${rows}</tbody>
                 </table>
