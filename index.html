@@ -181,6 +181,9 @@
             assignments: [], // { id, name, className, exercises }
             grades: {}
         };
+        
+        // Tri du récapitulatif
+        let summarySort = { key: 'name', direction: 'asc' };
 
         // Current editing state
         let editingAssignmentId = null;
@@ -1207,14 +1210,14 @@
             const selectedClass = classSelect.value;
             
             // Filtrer les élèves par classe sélectionnée
-            const filteredStudents = selectedClass ?
+            let filteredStudents = selectedClass ?
                 data.students.filter(s => s.className === selectedClass) :
-                data.students;
+                data.students.slice();
             
             // Filtrer les devoirs par classe sélectionnée
-            const filteredAssignments = selectedClass ?
+            let filteredAssignments = selectedClass ?
                 data.assignments.filter(a => a.className === selectedClass) :
-                data.assignments;
+                data.assignments.slice();
             
             if (filteredStudents.length === 0 || filteredAssignments.length === 0) {
                 container.innerHTML = '<p class="text-gray-500 text-center py-8">' + 
@@ -1223,7 +1226,27 @@
                 return;
             }
             
-            let headers = '<th class="p-3 text-left bg-gray-100 sticky left-0 z-10">Élève</th>';
+            // Appliquer le tri
+            if (summarySort.key === 'name') {
+                filteredStudents.sort((a, b) => {
+                    const na = (a.name || '').toLowerCase();
+                    const nb = (b.name || '').toLowerCase();
+                    if (na < nb) return summarySort.direction === 'asc' ? -1 : 1;
+                    if (na > nb) return summarySort.direction === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            } else if (summarySort.key.startsWith('assignment-')) {
+                const assignmentId = summarySort.key.split('assignment-')[1];
+                filteredStudents.sort((a, b) => {
+                    const ta = getStudentAssignmentTotal(a.id, assignmentId);
+                    const tb = getStudentAssignmentTotal(b.id, assignmentId);
+                    if (ta < tb) return summarySort.direction === 'asc' ? -1 : 1;
+                    if (ta > tb) return summarySort.direction === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            }
+            
+            let headers = '<th class="p-3 text-left bg-gray-100 sticky left-0 z-10 cursor-pointer select-none" onclick="toggleSummarySort(\'name\')">Élève</th>';
             
             for (const a of filteredAssignments) {
                 if (showDetails) {
@@ -1232,7 +1255,7 @@
                         headers += `<th class="p-2 text-center bg-blue-50 text-sm">Ex${exIndex}<br><span class="text-xs text-gray-500">/${getExerciseMaxPoints(ex)}</span></th>`;
                     }
                 }
-                headers += `<th class="p-3 text-center bg-blue-100 font-bold">${a.name}<br><span class="text-xs">/${getAssignmentMaxPoints(a)}</span></th>`;
+                headers += `<th class="p-3 text-center bg-blue-100 font-bold cursor-pointer select-none" onclick=\"toggleSummarySort('assignment-${a.id}')\">${a.name}<br><span class="text-xs">/${getAssignmentMaxPoints(a)}</span></th>`;
             }
             
             let rows = filteredStudents.map(s => {
@@ -1267,6 +1290,18 @@
                     <tbody>${rows}</tbody>
                 </table>
             `;
+        }
+
+        function toggleSummarySort(key) {
+            if (summarySort.key === key) {
+                // Inverser le sens
+                summarySort.direction = summarySort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                summarySort.key = key;
+                // Élève : A→Z par défaut, Devoir : max→0 par défaut
+                summarySort.direction = key === 'name' ? 'asc' : 'desc';
+            }
+            renderSummary();
         }
 
         function handleStudentImport(event) {
