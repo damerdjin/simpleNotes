@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Corrections</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        .modal { display: none; }
+        .modal.active { display: flex; }
+        .grade-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+        .expandable-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+        .expandable-content.open { max-height: 2000px; }
+        .rotate-icon { transition: transform 0.3s ease; }
+        .rotate-icon.open { transform: rotate(90deg); }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto p-4 max-w-7xl">
+        <!-- Header -->
+        <header class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 rounded-xl shadow-lg mb-6">
+            <h1 class="text-3xl font-bold">📝 Gestion des Corrections</h1>
+            <p class="text-blue-100 mt-2">Gérez vos élèves, devoirs et notes en toute simplicité</p>
+        </header>
+
+        <!-- Tabs -->
+        <div class="flex gap-2 mb-6">
+            <button onclick="showTab('students')" id="tab-students" class="tab-btn px-6 py-3 rounded-lg font-semibold transition-all bg-white text-blue-600 shadow">
+                👥 Élèves
+            </button>
+            <button onclick="showTab('assignments')" id="tab-assignments" class="tab-btn px-6 py-3 rounded-lg font-semibold transition-all bg-gray-200 text-gray-600 hover:bg-gray-300">
+                📋 Devoirs
+            </button>
+            <button onclick="showTab('grades')" id="tab-grades" class="tab-btn px-6 py-3 rounded-lg font-semibold transition-all bg-gray-200 text-gray-600 hover:bg-gray-300">
+                🎯 Notes
+            </button>
+            <button onclick="showTab('summary')" id="tab-summary" class="tab-btn px-6 py-3 rounded-lg font-semibold transition-all bg-gray-200 text-gray-600 hover:bg-gray-300">
+                📊 Récapitulatif
+            </button>
+        </div>
+
+        <!-- Students Tab -->
+        <div id="content-students" class="tab-content">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Liste des Élèves</h2>
+                    <button onclick="openStudentModal()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition">
+                        + Ajouter un élève
+                    </button>
+                </div>
+                <div id="students-list" class="space-y-2"></div>
+            </div>
+        </div>
+
+        <!-- Assignments Tab -->
+        <div id="content-assignments" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Gestion des Devoirs</h2>
+                    <button onclick="openAssignmentModal()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition">
+                        + Créer un devoir
+                    </button>
+                </div>
+                <div id="assignments-list" class="space-y-4"></div>
+            </div>
+        </div>
+
+        <!-- Grades Tab -->
+        <div id="content-grades" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Saisie des Notes</h2>
+                <div class="flex gap-4 mb-6">
+                    <select id="select-assignment" onchange="loadGradeEntry()" class="flex-1 p-3 border rounded-lg">
+                        <option value="">-- Sélectionner un devoir --</option>
+                    </select>
+                    <select id="select-student" onchange="loadGradeEntry()" class="flex-1 p-3 border rounded-lg">
+                        <option value="">-- Sélectionner un élève --</option>
+                    </select>
+                </div>
+                <div id="grade-entry" class="space-y-4"></div>
+            </div>
+        </div>
+
+        <!-- Summary Tab -->
+        <div id="content-summary" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6 overflow-x-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Récapitulatif des Notes</h2>
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" id="show-details" onchange="renderSummary()" class="w-5 h-5">
+                        <span>Afficher les détails (exercices)</span>
+                    </label>
+                </div>
+                <div id="summary-table"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Modal -->
+    <div id="student-modal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+            <h3 class="text-xl font-bold mb-4">Ajouter un élève</h3>
+            <input type="text" id="student-name" placeholder="Nom de l'élève" class="w-full p-3 border rounded-lg mb-4">
+            <div class="flex gap-3 justify-end">
+                <button onclick="closeStudentModal()" class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">Annuler</button>
+                <button onclick="addStudent()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Ajouter</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assignment Modal -->
+    <div id="assignment-modal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-50 overflow-y-auto py-8">
+        <div class="bg-white rounded-xl p-6 w-full max-w-4xl mx-4 my-auto">
+            <h3 class="text-xl font-bold mb-4">Créer un Devoir</h3>
+            <input type="text" id="assignment-name" placeholder="Nom du devoir (ex: Devoir 1)" class="w-full p-3 border rounded-lg mb-4">
+            
+            <div id="exercises-builder" class="space-y-4 mb-4 max-h-96 overflow-y-auto"></div>
+            
+            <button onclick="addExercise()" class="w-full p-3 border-2 border-dashed border-blue-400 text-blue-600 rounded-lg hover:bg-blue-50 mb-4">
+                + Ajouter un exercice
+            </button>
+            
+            <div class="flex gap-3 justify-end">
+                <button onclick="closeAssignmentModal()" class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">Annuler</button>
+                <button onclick="saveAssignment()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Store
+        let data = {
+            students: [],
+            assignments: [],
+            grades: {}
+        };
+
+        // Load from localStorage
+        function loadData() {
+            const saved = localStorage.getItem('corrections-data');
+            if (saved) {
+                data = JSON.parse(saved);
+            }
+        }
+
+        // Save to localStorage
+        function saveData() {
+            localStorage.setItem('corrections-data', JSON.stringify(data));
+        }
+
+        // Generate unique ID
+        function genId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        // Tab Navigation
+        function showTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('bg-white', 'text-blue-600', 'shadow');
+                el.classList.add('bg-gray-200', 'text-gray-600');
+            });
+            
+            document.getElementById('content-' + tab).classList.remove('hidden');
+            const btn = document.getElementById('tab-' + tab);
+            btn.classList.remove('bg-gray-200', 'text-gray-600');
+            btn.classList.add('bg-white', 'text-blue-600', 'shadow');
+            
+            if (tab === 'grades') loadGradeSelectors();
+            if (tab === 'summary') renderSummary();
+        }
+
+        // ===== STUDENTS =====
+        function openStudentModal() {
+            document.getElementById('student-modal').classList.add('active');
+            document.getElementById('student-name').value = '';
+            document.getElementById('student-name').focus();
+        }
+
+        function closeStudentModal() {
+            document.getElementById('student-modal').classList.remove('active');
+        }
+
+        function addStudent() {
+            const name = document.getElementById('student-name').value.trim();
+            if (!name) return alert('Veuillez entrer un nom');
+            
+            data.students.push({ id: genId(), name });
+            saveData();
+            renderStudents();
+            closeStudentModal();
+        }
+
+        function deleteStudent(id) {
+            if (!confirm('Supprimer cet élève et toutes ses notes ?')) return;
+            data.students = data.students.filter(s => s.id !== id);
+            delete data.grades[id];
+            saveData();
+            renderStudents();
+        }
+
+        function renderStudents() {
+            const container = document.getElementById('students-list');
+            if (data.students.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">Aucun élève. Ajoutez votre premier élève !</p>';
+                return;
+            }
+            
+            container.innerHTML = data.students.map((s, i) => `
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100">
+                    <span class="font-medium"><span class="text-gray-400 mr-3">${i + 1}.</span>${s.name}</span>
+                    <button onclick="deleteStudent('${s.id}')" class="text-red-500 hover:text-red-700 px-3 py-1">🗑️</button>
+                </div>
+            `).join('');
+        }
+
+        // ===== ASSIGNMENTS =====
+        let tempExercises = [];
+
+        function openAssignmentModal() {
+            tempExercises = [];
+            document.getElementById('assignment-modal').classList.add('active');
+            document.getElementById('assignment-name').value = '';
+            document.getElementById('exercises-builder').innerHTML = '';
+        }
+
+        function closeAssignmentModal() {
+            document.getElementById('assignment-modal').classList.remove('active');
+        }
+
+        function addExercise() {
+            const exId = genId();
+            tempExercises.push({ id: exId, name: '', maxPoints: 0, questions: [] });
+            renderExercisesBuilder();
+        }
+
+        function removeExercise(exId) {
+            tempExercises = tempExercises.filter(e => e.id !== exId);
+            renderExercisesBuilder();
+        }
+
+        function addQuestion(exId) {
+            const ex = tempExercises.find(e => e.id === exId);
+            if (ex) {
+                ex.questions.push({ id: genId(), name: '', maxPoints: 0, subQuestions: [] });
+                renderExercisesBuilder();
+            }
+        }
+
+        function removeQuestion(exId, qId) {
+            const ex = tempExercises.find(e => e.id === exId);
+            if (ex) {
+                ex.questions = ex.questions.filter(q => q.id !== qId);
+                renderExercisesBuilder();
+            }
+        }
+
+        function addSubQuestion(exId, qId) {
+            const ex = tempExercises.find(e => e.id === exId);
+            if (ex) {
+                const q = ex.questions.find(q => q.id === qId);
+                if (q) {
+                    const letters = 'abcdefghijklmnopqrstuvwxyz';
+                    const letter = letters[q.subQuestions.length] || '?';
+                    q.subQuestions.push({ id: genId(), name: letter, maxPoints: 0 });
+                    renderExercisesBuilder();
+                }
+            }
+        }
+
+        function removeSubQuestion(exId, qId, sqId) {
+            const ex = tempExercises.find(e => e.id === exId);
+            if (ex) {
+                const q = ex.questions.find(q => q.id === qId);
+                if (q) {
+                    q.subQuestions = q.subQuestions.filter(sq => sq.id !== sqId);
+                    renderExercisesBuilder();
+                }
+            }
+        }
+
+        function renderExercisesBuilder() {
+            const container = document.getElementById('exercises-builder');
+            container.innerHTML = tempExercises.map((ex, exIndex) => `
+                <div class="border-2 border-blue-200 rounded-lg p-4 bg-blue-50">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="font-bold text-blue-700">Exercice ${exIndex + 1}</span>
+                        <input type="text" placeholder="Nom (optionnel)" value="${ex.name}" 
+                            onchange="tempExercises.find(e=>e.id==='${ex.id}').name=this.value"
+                            class="flex-1 p-2 border rounded text-sm">
+                        <input type="number" placeholder="Points" value="${ex.maxPoints || ''}" min="0" step="0.5"
+                            onchange="tempExercises.find(e=>e.id==='${ex.id}').maxPoints=parseFloat(this.value)||0"
+                            class="w-20 p-2 border rounded text-sm" title="Points max (si note directe)">
+                        <button onclick="removeExercise('${ex.id}')" class="text-red-500 hover:text-red-700">✕</button>
+                    </div>
+                    
+                    <div class="space-y-2 ml-4">
+                        ${ex.questions.map((q, qIndex) => `
+                            <div class="border border-green-200 rounded p-3 bg-green-50">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="font-semibold text-green-700">Q${qIndex + 1}</span>
+                                    <input type="text" placeholder="Intitulé" value="${q.name}"
+                                        onchange="tempExercises.find(e=>e.id==='${ex.id}').questions.find(x=>x.id==='${q.id}').name=this.value"
+                                        class="flex-1 p-1 border rounded text-sm">
+                                    <input type="number" placeholder="Pts" value="${q.maxPoints || ''}" min="0" step="0.25"
+                                        onchange="tempExercises.find(e=>e.id==='${ex.id}').questions.find(x=>x.id==='${q.id}').maxPoints=parseFloat(this.value)||0"
+                                        class="w-16 p-1 border rounded text-sm" title="Points (si pas de sous-questions)">
+                                    <button onclick="addSubQuestion('${ex.id}','${q.id}')" class="text-blue-500 hover:text-blue-700 text-sm">+a,b,c</button>
+                                    <button onclick="removeQuestion('${ex.id}','${q.id}')" class="text-red-500 hover:text-red-700">✕</button>
+                                </div>
+                                
+                                ${q.subQuestions.length > 0 ? `
+                                    <div class="flex flex-wrap gap-2 ml-4">
+                                        ${q.subQuestions.map(sq => `
+                                            <div class="flex items-center gap-1 bg-white px-2 py-1 rounded border">
+                                                <span class="text-orange-600 font-medium">${sq.name})</span>
+                                                <input type="number" placeholder="Pts" value="${sq.maxPoints || ''}" min="0" step="0.25"
+                                                    onchange="tempExercises.find(e=>e.id==='${ex.id}').questions.find(x=>x.id==='${q.id}').subQuestions.find(s=>s.id==='${sq.id}').maxPoints=parseFloat(this.value)||0"
+                                                    class="w-14 p-1 border rounded text-sm">
+                                                <button onclick="removeSubQuestion('${ex.id}','${q.id}','${sq.id}')" class="text-red-400 hover:text-red-600 text-xs">✕</button>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <button onclick="addQuestion('${ex.id}')" class="mt-2 ml-4 text-sm text-green-600 hover:text-green-800">
+                        + Ajouter une question
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function saveAssignment() {
+            const name = document.getElementById('assignment-name').value.trim();
+            if (!name) return alert('Veuillez entrer un nom pour le devoir');
+            if (tempExercises.length === 0) return alert('Ajoutez au moins un exercice');
+            
+            data.assignments.push({
+                id: genId(),
+                name,
+                exercises: JSON.parse(JSON.stringify(tempExercises))
+            });
+            saveData();
+            renderAssignments();
+            closeAssignmentModal();
+        }
+
+        function deleteAssignment(id) {
+            if (!confirm('Supprimer ce devoir et toutes les notes associées ?')) return;
+            data.assignments = data.assignments.filter(a => a.id !== id);
+            // Clean grades
+            for (let studentId in data.grades) {
+                delete data.grades[studentId][id];
+            }
+            saveData();
+            renderAssignments();
+        }
+
+        function getAssignmentMaxPoints(assignment) {
+            let total = 0;
+            for (const ex of assignment.exercises) {
+                total += getExerciseMaxPoints(ex);
+            }
+            return total;
+        }
+
+        function getExerciseMaxPoints(ex) {
+            if (ex.questions.length === 0) return ex.maxPoints || 0;
+            let total = 0;
+            for (const q of ex.questions) {
+                total += getQuestionMaxPoints(q);
+            }
+            return total;
+        }
+
+        function getQuestionMaxPoints(q) {
+            if (q.subQuestions.length === 0) return q.maxPoints || 0;
+            return q.subQuestions.reduce((sum, sq) => sum + (sq.maxPoints || 0), 0);
+        }
+
+        function renderAssignments() {
+            const container = document.getElementById('assignments-list');
+            if (data.assignments.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">Aucun devoir. Créez votre premier devoir !</p>';
+                return;
+            }
+            
+            container.innerHTML = data.assignments.map(a => `
+                <div class="border rounded-lg p-4 bg-gray-50">
+                    <div class="flex items-center justify-between mb-3">
+                        <div>
+                            <h3 class="font-bold text-lg">${a.name}</h3>
+                            <span class="text-sm text-gray-500">Total: ${getAssignmentMaxPoints(a)} points • ${a.exercises.length} exercice(s)</span>
+                        </div>
+                        <button onclick="deleteAssignment('${a.id}')" class="text-red-500 hover:text-red-700 px-3 py-1">🗑️</button>
+                    </div>
+                    <div class="space-y-2 text-sm">
+                        ${a.exercises.map((ex, i) => `
+                            <div class="bg-white p-2 rounded border-l-4 border-blue-400">
+                                <strong>Exercice ${i + 1}${ex.name ? ' - ' + ex.name : ''}</strong> (${getExerciseMaxPoints(ex)} pts)
+                                ${ex.questions.length > 0 ? `
+                                    <div class="ml-4 text-gray-600">
+                                        ${ex.questions.map((q, qi) => `
+                                            Q${qi + 1}${q.name ? ' ' + q.name : ''}: ${getQuestionMaxPoints(q)} pts
+                                            ${q.subQuestions.length > 0 ? `(${q.subQuestions.map(sq => sq.name + ':' + sq.maxPoints).join(', ')})` : ''}
+                                        `).join(' • ')}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ===== GRADES =====
+        function loadGradeSelectors() {
+            const assignmentSelect = document.getElementById('select-assignment');
+            const studentSelect = document.getElementById('select-student');
+            
+            assignmentSelect.innerHTML = '<option value="">-- Sélectionner un devoir --</option>' +
+                data.assignments.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+            
+            studentSelect.innerHTML = '<option value="">-- Sélectionner un élève --</option>' +
+                data.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+        }
+
+        function loadGradeEntry() {
+            const assignmentId = document.getElementById('select-assignment').value;
+            const studentId = document.getElementById('select-student').value;
+            const container = document.getElementById('grade-entry');
+            
+            if (!assignmentId || !studentId) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">Sélectionnez un devoir et un élève pour saisir les notes.</p>';
+                return;
+            }
+            
+            const assignment = data.assignments.find(a => a.id === assignmentId);
+            const student = data.students.find(s => s.id === studentId);
+            
+            if (!data.grades[studentId]) data.grades[studentId] = {};
+            if (!data.grades[studentId][assignmentId]) data.grades[studentId][assignmentId] = {};
+            
+            const studentGrades = data.grades[studentId][assignmentId];
+            
+            let html = `<div class="bg-blue-50 p-4 rounded-lg mb-4">
+                <h3 class="font-bold text-xl">${student.name} - ${assignment.name}</h3>
+                <p class="text-2xl font-bold text-blue-600 mt-2">Total: <span id="grade-total">0</span> / ${getAssignmentMaxPoints(assignment)}</p>
+            </div>`;
+            
+            html += assignment.exercises.map((ex, exIndex) => {
+                if (!studentGrades[ex.id]) studentGrades[ex.id] = {};
+                
+                let exHtml = `<div class="border rounded-lg overflow-hidden">
+                    <div class="bg-blue-100 p-3 flex justify-between items-center">
+                        <span class="font-bold">Exercice ${exIndex + 1}${ex.name ? ' - ' + ex.name : ''}</span>
+                        <span class="text-blue-700 font-semibold" id="ex-total-${ex.id}">0 / ${getExerciseMaxPoints(ex)}</span>
+                    </div>
+                    <div class="p-3 space-y-3">`;
+                
+                if (ex.questions.length === 0) {
+                    // Direct exercise grade
+                    const val = studentGrades[ex.id]['direct'] || '';
+                    exHtml += `<div class="flex items-center gap-3">
+                        <span>Note:</span>
+                        <input type="number" min="0" max="${ex.maxPoints}" step="0.25" value="${val}"
+                            onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','direct','direct',this.value)"
+                            class="grade-input w-20 p-2 border rounded text-center font-bold">
+                        <span>/ ${ex.maxPoints}</span>
+                    </div>`;
+                } else {
+                    exHtml += ex.questions.map((q, qIndex) => {
+                        if (!studentGrades[ex.id][q.id]) studentGrades[ex.id][q.id] = {};
+                        
+                        let qHtml = `<div class="bg-green-50 p-2 rounded">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="font-semibold text-green-700">Q${qIndex + 1}${q.name ? ' ' + q.name : ''}</span>
+                                <span class="text-sm text-green-600" id="q-total-${q.id}">0 / ${getQuestionMaxPoints(q)}</span>
+                            </div>`;
+                        
+                        if (q.subQuestions.length === 0) {
+                            const val = studentGrades[ex.id][q.id]['direct'] || '';
+                            qHtml += `<div class="flex items-center gap-2 ml-4">
+                                <input type="number" min="0" max="${q.maxPoints}" step="0.25" value="${val}"
+                                    onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','${q.id}','direct',this.value)"
+                                    class="grade-input w-16 p-1 border rounded text-center">
+                                <span class="text-sm text-gray-500">/ ${q.maxPoints}</span>
+                            </div>`;
+                        } else {
+                            qHtml += `<div class="flex flex-wrap gap-3 ml-4">`;
+                            qHtml += q.subQuestions.map(sq => {
+                                const val = studentGrades[ex.id][q.id][sq.id] || '';
+                                return `<div class="flex items-center gap-1 bg-white px-2 py-1 rounded border">
+                                    <span class="text-orange-600 font-medium">${sq.name})</span>
+                                    <input type="number" min="0" max="${sq.maxPoints}" step="0.25" value="${val}"
+                                        onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','${q.id}','${sq.id}',this.value)"
+                                        class="grade-input w-14 p-1 border rounded text-center text-sm">
+                                    <span class="text-xs text-gray-400">/${sq.maxPoints}</span>
+                                </div>`;
+                            }).join('');
+                            qHtml += `</div>`;
+                        }
+                        
+                        qHtml += `</div>`;
+                        return qHtml;
+                    }).join('');
+                }
+                
+                exHtml += `</div></div>`;
+                return exHtml;
+            }).join('');
+            
+            container.innerHTML = html;
+            saveData();
+            recalculateTotals(assignmentId, studentId);
+        }
+
+        function updateGrade(studentId, assignmentId, exId, qId, sqId, value) {
+            if (!data.grades[studentId]) data.grades[studentId] = {};
+            if (!data.grades[studentId][assignmentId]) data.grades[studentId][assignmentId] = {};
+            if (!data.grades[studentId][assignmentId][exId]) data.grades[studentId][assignmentId][exId] = {};
+            if (!data.grades[studentId][assignmentId][exId][qId]) data.grades[studentId][assignmentId][exId][qId] = {};
+            
+            data.grades[studentId][assignmentId][exId][qId][sqId] = parseFloat(value) || 0;
+            saveData();
+            recalculateTotals(assignmentId, studentId);
+        }
+
+        function recalculateTotals(assignmentId, studentId) {
+            const assignment = data.assignments.find(a => a.id === assignmentId);
+            const studentGrades = data.grades[studentId]?.[assignmentId] || {};
+            
+            let grandTotal = 0;
+            
+            for (const ex of assignment.exercises) {
+                let exTotal = 0;
+                const exGrades = studentGrades[ex.id] || {};
+                
+                if (ex.questions.length === 0) {
+                    exTotal = exGrades['direct']?.['direct'] || 0;
+                } else {
+                    for (const q of ex.questions) {
+                        let qTotal = 0;
+                        const qGrades = exGrades[q.id] || {};
+                        
+                        if (q.subQuestions.length === 0) {
+                            qTotal = qGrades['direct'] || 0;
+                        } else {
+                            for (const sq of q.subQuestions) {
+                                qTotal += qGrades[sq.id] || 0;
+                            }
+                        }
+                        
+                        const qEl = document.getElementById('q-total-' + q.id);
+                        if (qEl) qEl.textContent = qTotal + ' / ' + getQuestionMaxPoints(q);
+                        exTotal += qTotal;
+                    }
+                }
+                
+                const exEl = document.getElementById('ex-total-' + ex.id);
+                if (exEl) exEl.textContent = exTotal + ' / ' + getExerciseMaxPoints(ex);
+                grandTotal += exTotal;
+            }
+            
+            const totalEl = document.getElementById('grade-total');
+            if (totalEl) totalEl.textContent = grandTotal;
+        }
+
+        function getStudentAssignmentTotal(studentId, assignmentId) {
+            const assignment = data.assignments.find(a => a.id === assignmentId);
+            if (!assignment) return 0;
+            const studentGrades = data.grades[studentId]?.[assignmentId] || {};
+            
+            let total = 0;
+            for (const ex of assignment.exercises) {
+                total += getStudentExerciseTotal(studentGrades, ex);
+            }
+            return total;
+        }
+
+        function getStudentExerciseTotal(studentGrades, ex) {
+            const exGrades = studentGrades[ex.id] || {};
+            
+            if (ex.questions.length === 0) {
+                return exGrades['direct']?.['direct'] || 0;
+            }
+            
+            let total = 0;
+            for (const q of ex.questions) {
+                const qGrades = exGrades[q.id] || {};
+                if (q.subQuestions.length === 0) {
+                    total += qGrades['direct'] || 0;
+                } else {
+                    for (const sq of q.subQuestions) {
+                        total += qGrades[sq.id] || 0;
+                    }
+                }
+            }
+            return total;
+        }
+
+        // ===== SUMMARY =====
+        function renderSummary() {
+            const container = document.getElementById('summary-table');
+            const showDetails = document.getElementById('show-details').checked;
+            
+            if (data.students.length === 0 || data.assignments.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">Ajoutez des élèves et des devoirs pour voir le récapitulatif.</p>';
+                return;
+            }
+            
+            let headers = '<th class="p-3 text-left bg-gray-100 sticky left-0">Élève</th>';
+            
+            for (const a of data.assignments) {
+                if (showDetails) {
+                    for (const ex of a.exercises) {
+                        headers += `<th class="p-2 text-center bg-blue-50 text-sm">Ex${a.exercises.indexOf(ex) + 1}<br><span class="text-xs text-gray-500">/${getExerciseMaxPoints(ex)}</span></th>`;
+                    }
+                }
+                headers += `<th class="p-3 text-center bg-blue-100 font-bold">${a.name}<br><span class="text-xs">/${getAssignmentMaxPoints(a)}</span></th>`;
+            }
+            
+            let rows = data.students.map(s => {
+                let row = `<td class="p-3 font-medium bg-gray-50 sticky left-0">${s.name}</td>`;
+                
+                for (const a of data.assignments) {
+                    const studentGrades = data.grades[s.id]?.[a.id] || {};
+                    
+                    if (showDetails) {
+                        for (const ex of a.exercises) {
+                            const exTotal = getStudentExerciseTotal(studentGrades, ex);
+                            const max = getExerciseMaxPoints(ex);
+                            const pct = max > 0 ? (exTotal / max * 100) : 0;
+                            const color = pct >= 70 ? 'text-green-600' : pct >= 50 ? 'text-orange-500' : 'text-red-500';
+                            row += `<td class="p-2 text-center ${color}">${exTotal}</td>`;
+                        }
+                    }
+                    
+                    const total = getStudentAssignmentTotal(s.id, a.id);
+                    const max = getAssignmentMaxPoints(a);
+                    const pct = max > 0 ? (total / max * 100) : 0;
+                    const bgColor = pct >= 70 ? 'bg-green-100' : pct >= 50 ? 'bg-orange-100' : 'bg-red-100';
+                    row += `<td class="p-3 text-center font-bold ${bgColor}">${total}</td>`;
+                }
+                
+                return `<tr class="border-b hover:bg-gray-50">${row}</tr>`;
+            }).join('');
+            
+            container.innerHTML = `
+                <table class="w-full border-collapse">
+                    <thead><tr class="border-b-2">${headers}</tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            `;
+        }
+
+        // Initialize
+        loadData();
+        renderStudents();
+        renderAssignments();
+    </script>
+</body>
+</html>
