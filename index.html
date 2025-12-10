@@ -55,6 +55,13 @@
                         </button>
                     </div>
                 </div>
+                
+                <!-- Class Management -->
+                <div class="mb-4 p-4 bg-gray-50 rounded-lg">
+                    <h3 class="font-semibold mb-2">Gestion des Classes</h3>
+                    <div class="flex flex-wrap gap-2" id="class-list"></div>
+                </div>
+                
                 <div id="students-list" class="space-y-2"></div>
             </div>
         </div>
@@ -77,6 +84,9 @@
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <h2 class="text-2xl font-bold text-gray-800 mb-6">Saisie des Notes</h2>
                 <div class="flex gap-4 mb-6 flex-wrap">
+                    <select id="select-class-grades" onchange="loadGradeSelectors()" class="flex-1 min-w-48 p-3 border rounded-lg">
+                        <option value="">-- Sélectionner une classe --</option>
+                    </select>
                     <select id="select-assignment" onchange="loadGradeEntry()" class="flex-1 min-w-48 p-3 border rounded-lg">
                         <option value="">-- Sélectionner un devoir --</option>
                     </select>
@@ -93,10 +103,15 @@
             <div class="bg-white rounded-xl shadow-lg p-6 overflow-x-auto">
                 <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
                     <h2 class="text-2xl font-bold text-gray-800">Récapitulatif des Notes</h2>
-                    <label class="flex items-center gap-2">
-                        <input type="checkbox" id="show-details" onchange="renderSummary()" class="w-5 h-5">
-                        <span>Afficher les détails (exercices)</span>
-                    </label>
+                    <div class="flex items-center gap-4 flex-wrap">
+                        <select id="select-class-summary" onchange="renderSummary()" class="p-3 border rounded-lg">
+                            <option value="">-- Sélectionner une classe --</option>
+                        </select>
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" id="show-details" onchange="renderSummary()" class="w-5 h-5">
+                            <span>Afficher les détails (exercices)</span>
+                        </label>
+                    </div>
                 </div>
                 <div id="summary-table"></div>
             </div>
@@ -124,7 +139,12 @@
     <div id="assignment-modal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-50 overflow-y-auto py-8">
         <div class="bg-white rounded-xl p-6 w-full max-w-5xl mx-4 my-auto">
             <h3 id="assignment-modal-title" class="text-xl font-bold mb-4">Créer un Devoir</h3>
-            <input type="text" id="assignment-name" placeholder="Nom du devoir (ex: Devoir 1)" class="w-full p-3 border rounded-lg mb-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <input type="text" id="assignment-name" placeholder="Nom du devoir (ex: Devoir 1)" class="w-full p-3 border rounded-lg">
+                <select id="assignment-class" class="w-full p-3 border rounded-lg">
+                    <option value="">-- Sélectionner une classe --</option>
+                </select>
+            </div>
             
             <div id="exercises-builder" class="space-y-4 mb-4 max-h-[60vh] overflow-y-auto pr-2"></div>
             
@@ -143,7 +163,7 @@
         // Data Store
         let data = {
             students: [], // { id, name, className, nin, firstName, sex, birthDate, regNumber }
-            assignments: [],
+            assignments: [], // { id, name, className, exercises }
             grades: {}
         };
 
@@ -182,8 +202,92 @@
             btn.classList.remove('bg-gray-200', 'text-gray-600');
             btn.classList.add('bg-white', 'text-blue-600', 'shadow');
             
-            if (tab === 'grades') loadGradeSelectors();
-            if (tab === 'summary') renderSummary();
+            if (tab === 'grades') {
+                loadClassSelectors();
+                loadGradeSelectors();
+            }
+            if (tab === 'summary') {
+                loadClassSelectors();
+                renderSummary();
+            }
+        }
+
+        // ===== CLASSES =====
+        function getClasses() {
+            const classes = new Set();
+            data.students.forEach(s => {
+                if (s.className) classes.add(s.className);
+            });
+            return Array.from(classes).sort();
+        }
+
+        function loadClassSelectors() {
+            const classes = getClasses();
+            
+            // For grades tab
+            const gradesSelect = document.getElementById('select-class-grades');
+            if (gradesSelect) {
+                const currentValue = gradesSelect.value;
+                gradesSelect.innerHTML = '<option value="">-- Sélectionner une classe --</option>' +
+                    classes.map(c => `<option value="${c}" ${c === currentValue ? 'selected' : ''}>${c}</option>`).join('');
+            }
+            
+            // For summary tab
+            const summarySelect = document.getElementById('select-class-summary');
+            if (summarySelect) {
+                const currentValue = summarySelect.value;
+                summarySelect.innerHTML = '<option value="">-- Sélectionner une classe --</option>' +
+                    classes.map(c => `<option value="${c}" ${c === currentValue ? 'selected' : ''}>${c}</option>`).join('');
+            }
+            
+            // For assignment modal
+            const assignmentSelect = document.getElementById('assignment-class');
+            if (assignmentSelect) {
+                const currentValue = assignmentSelect.value;
+                assignmentSelect.innerHTML = '<option value="">-- Sélectionner une classe --</option>' +
+                    classes.map(c => `<option value="${c}" ${c === currentValue ? 'selected' : ''}>${c}</option>`).join('');
+            }
+        }
+
+        function renderClassList() {
+            const container = document.getElementById('class-list');
+            const classes = getClasses();
+            
+            if (classes.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-sm">Aucune classe. Les classes sont créées automatiquement lors de l\'ajout d\'élèves.</p>';
+                return;
+            }
+            
+            container.innerHTML = classes.map(c => {
+                const count = data.students.filter(s => s.className === c).length;
+                return `
+                    <div class="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-2 rounded-lg">
+                        <span class="font-medium">${c}</span>
+                        <span class="text-xs bg-blue-200 px-2 py-1 rounded">${count} élève(s)</span>
+                        <button onclick="deleteClass('${c}')" class="text-red-600 hover:text-red-800 ml-1">✕</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function deleteClass(className) {
+            const count = data.students.filter(s => s.className === className).length;
+            if (!confirm(`Supprimer la classe "${className}" et ses ${count} élève(s) ?`)) return;
+            
+            // Remove students from this class
+            const studentIds = data.students.filter(s => s.className === className).map(s => s.id);
+            data.students = data.students.filter(s => s.className !== className);
+            
+            // Remove their grades
+            studentIds.forEach(id => {
+                delete data.grades[id];
+            });
+            
+            saveData();
+            renderStudents();
+            renderClassList();
+            loadClassSelectors();
+            renderSummary();
         }
 
         // ===== STUDENTS =====
@@ -238,22 +342,27 @@
                     <button onclick="deleteStudent('${s.id}')" class="text-red-500 hover:text-red-700 px-3 py-1">🗑️</button>
                 </div>
             `).join('');
+            
+            renderClassList();
         }
 
         // ===== ASSIGNMENTS =====
         function openAssignmentModal(assignmentId = null) {
             editingAssignmentId = assignmentId;
+            loadClassSelectors();
             
             if (assignmentId) {
                 // Edit mode
                 const assignment = data.assignments.find(a => a.id === assignmentId);
                 document.getElementById('assignment-modal-title').textContent = 'Modifier le Devoir';
                 document.getElementById('assignment-name').value = assignment.name;
+                document.getElementById('assignment-class').value = assignment.className || '';
                 tempExercises = JSON.parse(JSON.stringify(assignment.exercises));
             } else {
                 // Create mode
                 document.getElementById('assignment-modal-title').textContent = 'Créer un Devoir';
                 document.getElementById('assignment-name').value = '';
+                document.getElementById('assignment-class').value = '';
                 tempExercises = [];
             }
             
@@ -567,7 +676,9 @@
 
         function saveAssignment() {
             const name = document.getElementById('assignment-name').value.trim();
+            const className = document.getElementById('assignment-class').value.trim();
             if (!name) return alert('Veuillez entrer un nom pour le devoir');
+            if (!className) return alert('Veuillez sélectionner une classe pour ce devoir');
             if (tempExercises.length === 0) return alert('Ajoutez au moins un exercice');
             
             if (editingAssignmentId) {
@@ -575,6 +686,7 @@
                 const assignment = data.assignments.find(a => a.id === editingAssignmentId);
                 if (assignment) {
                     assignment.name = name;
+                    assignment.className = className;
                     assignment.exercises = JSON.parse(JSON.stringify(tempExercises));
                 }
             } else {
@@ -582,6 +694,7 @@
                 data.assignments.push({
                     id: genId(),
                     name,
+                    className,
                     exercises: JSON.parse(JSON.stringify(tempExercises))
                 });
             }
@@ -656,7 +769,10 @@
                     <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
                         <div>
                             <h3 class="font-bold text-lg">${a.name}</h3>
-                            <span class="text-sm text-gray-500">Total: ${getAssignmentMaxPoints(a)} points • ${a.exercises.length} exercice(s)</span>
+                            <span class="text-sm text-gray-500">
+                                ${a.className ? `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded mr-2">${a.className}</span>` : ''}
+                                Total: ${getAssignmentMaxPoints(a)} points • ${a.exercises.length} exercice(s)
+                            </span>
                         </div>
                         <div class="flex gap-2">
                             <button onclick="openAssignmentModal('${a.id}')" class="text-blue-500 hover:text-blue-700 px-3 py-1 bg-blue-100 rounded">✏️ Modifier</button>
@@ -1061,13 +1177,13 @@
                 const headers = json[1];
                 const rows = json.slice(2); // à partir de la 3ème ligne (index 2)
                 const getIndex = (label) => headers.findIndex(h => (h || '').toString().trim() === label);
-                const idxNIN = getIndex('رقم التعريف');
-                const idxNom = getIndex('اللقب');
-                const idxPrenom = getIndex('الاسم');
-                const idxClasse = getIndex('الفوج التربوي');
-                const idxSexe = getIndex('الجنس');
-                const idxBirth = getIndex('تاريخ الميلاد');
-                const idxReg = getIndex('رقم التسجيل');
+                const idxNIN = getIndex('NIN');
+                const idxNom = getIndex('Nom');
+                const idxPrenom = getIndex('Prenom');
+                const idxClasse = getIndex('classe');
+                const idxSexe = getIndex('Sexe');
+                const idxBirth = getIndex('Date_de_naissance');
+                const idxReg = getIndex('num_enregistrement');
 
                 let added = 0;
                 rows.forEach(row => {
