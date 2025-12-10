@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,47 +8,240 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
-        .modal { display: none; }
-        .modal.active { display: flex; }
-        .grade-input::-webkit-inner-spin-button { -webkit-appearance: none; }
-        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
-        .accordion-content.open { max-height: 5000px; transition: max-height 0.5s ease-in; }
-        .rotate-icon { transition: transform 0.3s ease; }
-        .rotate-icon.open { transform: rotate(180deg); }
-        .grade-question-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
-        .grade-question-card { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 0.75rem; padding: 1rem; min-height: 130px; display: flex; flex-direction: column; gap: 0.75rem; }
-        .question-header { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; }
-        .question-title { font-weight: 700; color: #166534; font-size: 1rem; }
-        .question-score { font-size: 0.9rem; font-weight: 600; color: #15803d; background: #ffffff; border-radius: 9999px; padding: 0.15rem 0.75rem; border: 1px solid #bbf7d0; }
-        .question-direct-entry { display: flex; align-items: center; gap: 0.5rem; }
-        .question-direct-entry .grade-input { flex: 1; min-width: 0; }
-        .question-max { font-size: 0.85rem; color: #4b5563; font-weight: 500; }
-        .subquestion-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 0.6rem; }
-        .subquestion-chip { background: #ffffff; border: 1px solid #fecdd3; border-radius: 0.75rem; padding: 0.5rem 0.75rem; display: flex; flex-direction: column; gap: 0.4rem; }
-        .subquestion-chip-header { display: flex; align-items: center; justify-content: space-between; font-weight: 600; font-size: 0.85rem; color: #c2410c; }
-        .subquestion-chip .grade-input { width: 100%; }
+        /* RTL Support */
+        .rtl-layout {
+            direction: rtl;
+            text-align: right;
+        }
+
+        .rtl-layout .flex {
+            flex-direction: row-reverse;
+        }
+
+        .rtl-layout .ml-auto {
+            margin-left: 0;
+            margin-right: auto;
+        }
+
+        .rtl-layout .ml-2 {
+            margin-left: 0;
+            margin-right: 0.5rem;
+        }
+
+        .rtl-layout .ml-3 {
+            margin-left: 0;
+            margin-right: 0.75rem;
+        }
+
+        .rtl-layout .ml-4 {
+            margin-left: 0;
+            margin-right: 1rem;
+        }
+
+        .rtl-layout .mr-2 {
+            margin-right: 0;
+            margin-left: 0.5rem;
+        }
+
+        .rtl-layout .mr-3 {
+            margin-right: 0;
+            margin-left: 0.75rem;
+        }
+
+        .rtl-layout .text-left {
+            text-align: right;
+        }
+
+        .rtl-layout .text-right {
+            text-align: left;
+        }
+
+        .rtl-layout .border-l {
+            border-left: none;
+            border-right: 1px solid;
+        }
+
+        .rtl-layout .border-l-4 {
+            border-left: none;
+            border-right-width: 4px;
+            border-right-style: solid;
+        }
+
+        .rtl-layout .pl-2 {
+            padding-left: 0;
+            padding-right: 0.5rem;
+        }
+
+        /* Responsive adjustments for RTL */
+        @media (max-width: 768px) {
+            .rtl-layout .flex-wrap {
+                flex-direction: row-reverse;
+            }
+        }
+
+        .modal {
+            display: none;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .grade-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .accordion-content.open {
+            max-height: 5000px;
+            transition: max-height 0.5s ease-in;
+        }
+
+        .rotate-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .rotate-icon.open {
+            transform: rotate(180deg);
+        }
+
+        .grade-question-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1rem;
+        }
+
+        .grade-question-card {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            min-height: 130px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .question-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .question-title {
+            font-weight: 700;
+            color: #166534;
+            font-size: 1rem;
+        }
+
+        .question-score {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #15803d;
+            background: #ffffff;
+            border-radius: 9999px;
+            padding: 0.15rem 0.75rem;
+            border: 1px solid #bbf7d0;
+        }
+
+        .question-direct-entry {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .question-direct-entry .grade-input {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .question-max {
+            font-size: 0.85rem;
+            color: #4b5563;
+            font-weight: 500;
+        }
+
+        .subquestion-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 0.6rem;
+        }
+
+        .subquestion-chip {
+            background: #ffffff;
+            border: 1px solid #fecdd3;
+            border-radius: 0.75rem;
+            padding: 0.5rem 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .subquestion-chip-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #c2410c;
+        }
+
+        .subquestion-chip .grade-input {
+            width: 100%;
+        }
     </style>
 </head>
+
 <body class="bg-gray-100 min-h-screen">
     <div class="container mx-auto p-4 max-w-7xl">
         <!-- Header -->
+        <!-- Header -->
         <header class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 rounded-xl shadow-lg mb-6">
-            <h1 class="text-3xl font-bold">📝 Gestion des Corrections</h1>
-            <p class="text-blue-100 mt-2">Gérez vos élèves, devoirs et notes en toute simplicité</p>
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold">📝 Gestion des Corrections</h1>
+                    <p class="text-blue-100 mt-2">Gérez vos élèves, devoirs et notes en toute simplicité</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="changeLanguage('fr')"
+                        class="lang-btn px-3 py-1 rounded-lg font-semibold transition-all bg-white text-blue-600">
+                        FR
+                    </button>
+                    <button onclick="changeLanguage('en')"
+                        class="lang-btn px-3 py-1 rounded-lg font-semibold transition-all bg-gray-200 text-gray-600 hover:bg-gray-300">
+                        EN
+                    </button>
+                    <button onclick="changeLanguage('ar')"
+                        class="lang-btn px-3 py-1 rounded-lg font-semibold transition-all bg-gray-200 text-gray-600 hover:bg-gray-300">
+                        AR
+                    </button>
+                </div>
+            </div>
         </header>
 
         <!-- Tabs -->
         <div class="flex flex-wrap gap-2 mb-6">
-            <button onclick="showTab('students')" id="tab-students" class="tab-btn px-6 py-3 rounded-lg font-semibold transition-all bg-white text-blue-600 shadow">
+            <button onclick="showTab('students')" id="tab-students"
+                class="tab-btn px-6 py-3 rounded-lg font-semibold transition-all bg-white text-blue-600 shadow">
                 👥 Élèves
             </button>
-            <button onclick="showTab('assignments')" id="tab-assignments" class="tab-btn px-6 py-3 rounded-lg font-semibold transition-all bg-gray-200 text-gray-600 hover:bg-gray-300">
+            <button onclick="showTab('assignments')" id="tab-assignments"
+                class="tab-btn px-6 py-3 rounded-lg font-semibold transition-all bg-gray-200 text-gray-600 hover:bg-gray-300">
                 📋 Devoirs
             </button>
-            <button onclick="showTab('grades')" id="tab-grades" class="tab-btn px-6 py-3 rounded-lg font-semibold transition-all bg-gray-200 text-gray-600 hover:bg-gray-300">
+            <button onclick="showTab('grades')" id="tab-grades"
+                class="tab-btn px-6 py-3 rounded-lg font-semibold transition-all bg-gray-200 text-gray-600 hover:bg-gray-300">
                 🎯 Notes
             </button>
-            <button onclick="showTab('summary')" id="tab-summary" class="tab-btn px-6 py-3 rounded-lg font-semibold transition-all bg-gray-200 text-gray-600 hover:bg-gray-300">
+            <button onclick="showTab('summary')" id="tab-summary"
+                class="tab-btn px-6 py-3 rounded-lg font-semibold transition-all bg-gray-200 text-gray-600 hover:bg-gray-300">
                 📊 Récapitulatif
             </button>
         </div>
@@ -58,22 +252,25 @@
                 <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
                     <h2 class="text-2xl font-bold text-gray-800">Liste des Élèves</h2>
                     <div class="flex items-center gap-2 flex-wrap">
-                        <label class="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-lg border cursor-pointer text-sm">
+                        <label
+                            class="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-lg border cursor-pointer text-sm">
                             <span class="text-gray-700">Importer (.xlsx)</span>
-                            <input type="file" id="student-import" accept=".xlsx,.xls" class="hidden" onchange="handleStudentImport(event)">
+                            <input type="file" id="student-import" accept=".xlsx,.xls" class="hidden"
+                                onchange="handleStudentImport(event)">
                         </label>
-                        <button onclick="openStudentModal()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition">
+                        <button onclick="openStudentModal()"
+                            class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition">
                             + Ajouter un élève
                         </button>
                     </div>
                 </div>
-                
+
                 <!-- Class Management -->
                 <div class="mb-4 p-4 bg-gray-50 rounded-lg">
                     <h3 class="font-semibold mb-2">Gestion des Classes</h3>
                     <div class="flex flex-wrap gap-2" id="class-list"></div>
                 </div>
-                
+
                 <div id="students-list" class="space-y-2"></div>
             </div>
         </div>
@@ -83,25 +280,28 @@
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
                     <h2 class="text-2xl font-bold text-gray-800">Gestion des Devoirs</h2>
-                    <button onclick="openAssignmentModal()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition">
+                    <button onclick="openAssignmentModal()"
+                        class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition">
                         + Créer un devoir
                     </button>
                 </div>
-                
+
                 <!-- Filters -->
                 <div class="mb-6 p-4 bg-gray-50 rounded-lg flex gap-4 flex-wrap">
                     <div class="flex-1 min-w-48">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Filtrer par classe</label>
-                        <select id="filter-class-assignments" onchange="renderAssignments()" class="w-full p-3 border rounded-lg">
+                        <select id="filter-class-assignments" onchange="renderAssignments()"
+                            class="w-full p-3 border rounded-lg">
                             <option value="">-- Toutes les classes --</option>
                         </select>
                     </div>
                     <div class="flex-1 min-w-48">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Filtrer par nom de devoir</label>
-                        <input type="text" id="filter-name-assignments" placeholder="Rechercher un devoir..." onkeyup="renderAssignments()" class="w-full p-3 border rounded-lg">
+                        <input type="text" id="filter-name-assignments" placeholder="Rechercher un devoir..."
+                            onkeyup="renderAssignments()" class="w-full p-3 border rounded-lg">
                     </div>
                 </div>
-                
+
                 <div id="assignments-list" class="space-y-4"></div>
             </div>
         </div>
@@ -111,13 +311,16 @@
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <h2 class="text-2xl font-bold text-gray-800 mb-6">Saisie des Notes</h2>
                 <div class="flex gap-4 mb-6 flex-wrap">
-                    <select id="select-class-grades" onchange="loadGradeSelectors()" class="flex-1 min-w-48 p-3 border rounded-lg">
+                    <select id="select-class-grades" onchange="loadGradeSelectors()"
+                        class="flex-1 min-w-48 p-3 border rounded-lg">
                         <option value="">-- Sélectionner une classe --</option>
                     </select>
-                    <select id="select-assignment" onchange="loadGradeEntry()" class="flex-1 min-w-48 p-3 border rounded-lg">
+                    <select id="select-assignment" onchange="loadGradeEntry()"
+                        class="flex-1 min-w-48 p-3 border rounded-lg">
                         <option value="">-- Sélectionner un devoir --</option>
                     </select>
-                    <select id="select-student" onchange="loadGradeEntry()" class="flex-1 min-w-48 p-3 border rounded-lg">
+                    <select id="select-student" onchange="loadGradeEntry()"
+                        class="flex-1 min-w-48 p-3 border rounded-lg">
                         <option value="">-- Sélectionner un élève --</option>
                     </select>
                 </div>
@@ -131,7 +334,8 @@
                 <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
                     <h2 class="text-2xl font-bold text-gray-800">Récapitulatif des Notes</h2>
                     <div class="flex items-center gap-4 flex-wrap">
-                        <input type="text" id="summary-search" placeholder="Rechercher (nom, prénom, classe)" oninput="renderSummary()" class="p-3 border rounded-lg min-w-60">
+                        <input type="text" id="summary-search" placeholder="Rechercher (nom, prénom, classe)"
+                            oninput="renderSummary()" class="p-3 border rounded-lg min-w-60">
                         <select id="select-class-summary" onchange="renderSummary()" class="p-3 border rounded-lg">
                             <option value="">-- Sélectionner une classe --</option>
                         </select>
@@ -157,44 +361,192 @@
                 <input type="text" id="student-nin" placeholder="NIN (optionnel)" class="w-full p-3 border rounded-lg">
             </div>
             <div class="flex gap-3 justify-end">
-                <button onclick="closeStudentModal()" class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">Annuler</button>
-                <button onclick="addStudent()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Ajouter</button>
+                <button onclick="closeStudentModal()"
+                    class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">Annuler</button>
+                <button onclick="addStudent()"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Ajouter</button>
             </div>
         </div>
     </div>
 
     <!-- Assignment Modal -->
-    <div id="assignment-modal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-50 overflow-y-auto py-8">
+    <div id="assignment-modal"
+        class="modal fixed inset-0 bg-black/50 items-center justify-center z-50 overflow-y-auto py-8">
         <div class="bg-white rounded-xl p-6 w-full max-w-5xl mx-4 my-auto">
             <h3 id="assignment-modal-title" class="text-xl font-bold mb-4">Créer un Devoir</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <input type="text" id="assignment-name" placeholder="Nom du devoir (ex: Devoir 1)" class="w-full p-3 border rounded-lg">
+                <input type="text" id="assignment-name" placeholder="Nom du devoir (ex: Devoir 1)"
+                    class="w-full p-3 border rounded-lg">
                 <select id="assignment-class" class="w-full p-3 border rounded-lg">
                     <option value="">-- Sélectionner une classe --</option>
                 </select>
             </div>
-            
+
             <div id="exercises-builder" class="space-y-4 mb-4 max-h-[60vh] overflow-y-auto pr-2"></div>
-            
-            <button onclick="addExercise()" class="w-full p-3 border-2 border-dashed border-blue-400 text-blue-600 rounded-lg hover:bg-blue-50 mb-4">
+
+            <button onclick="addExercise()"
+                class="w-full p-3 border-2 border-dashed border-blue-400 text-blue-600 rounded-lg hover:bg-blue-50 mb-4">
                 + Ajouter un exercice
             </button>
-            
+
             <div class="flex gap-3 justify-end">
-                <button onclick="closeAssignmentModal()" class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">Annuler</button>
-                <button onclick="saveAssignment()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Enregistrer</button>
+                <button onclick="closeAssignmentModal()"
+                    class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">Annuler</button>
+                <button onclick="saveAssignment()"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Enregistrer</button>
             </div>
         </div>
     </div>
-
+    <script src="translations.js"></script>
     <script>
+        // Language Management
+        let currentLanguage = 'fr';
+        let isRTL = false;
+
+        function initLanguage() {
+            // Récupérer la langue sauvegardée ou détecter celle du navigateur
+            const savedLang = localStorage.getItem('corrections-language');
+            if (savedLang) {
+                currentLanguage = savedLang;
+            } else {
+                // Détection automatique
+                const browserLang = navigator.language || navigator.userLanguage;
+                if (browserLang.startsWith('ar')) {
+                    currentLanguage = 'ar';
+                } else if (browserLang.startsWith('en')) {
+                    currentLanguage = 'en';
+                }
+            }
+            applyLanguage();
+        }
+
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            localStorage.setItem('corrections-language', lang);
+            applyLanguage();
+        }
+
+        function applyLanguage() {
+            isRTL = currentLanguage === 'ar';
+
+            // Appliquer la direction
+            document.body.dir = isRTL ? 'rtl' : 'ltr';
+            document.body.className = isRTL ? 'rtl-layout' : 'ltr-layout';
+
+            // Traduire tous les éléments
+            translatePage();
+
+            // Re-rendre les composants dynamiques
+            if (typeof renderStudents === 'function') renderStudents();
+            if (typeof renderAssignments === 'function') renderAssignments();
+            if (typeof renderSummary === 'function') renderSummary();
+            if (typeof loadGradeSelectors === 'function') loadGradeSelectors();
+        }
+
+        function translatePage() {
+            const t = translations[currentLanguage];
+
+            // Titre et sous-titre
+            setTextContent('h1', t.appTitle);
+            setTextContent('header p', t.appSubtitle);
+
+            // Navigation
+            setTextContent('#tab-students', t.studentsTab);
+            setTextContent('#tab-assignments', t.assignmentsTab);
+            setTextContent('#tab-grades', t.gradesTab);
+            setTextContent('#tab-summary', t.summaryTab);
+
+            // Onglet Étudiants
+            setTextContent('#content-students h2', t.studentsList);
+            setTextContent('#student-import + span', t.importExcel);
+            setTextContent('button[onclick="openStudentModal()"]', t.addStudent);
+            setTextContent('#content-students h3', t.classManagement);
+
+            // Modal étudiant
+            setTextContent('#student-modal h3', t.addStudentTitle);
+            setAttribute('#student-lastname', 'placeholder', t.lastName);
+            setAttribute('#student-firstname', 'placeholder', t.firstName);
+            setAttribute('#student-class', 'placeholder', t.className);
+            setAttribute('#student-nin', 'placeholder', t.nin);
+            setTextContent('.modal button:first-child', t.cancel);
+            setTextContent('.modal button:last-child', t.add);
+
+            // Onglet Devoirs
+            setTextContent('#content-assignments h2', t.assignmentsManagement);
+            setTextContent('button[onclick="openAssignmentModal()"]', t.createAssignment);
+            setTextContent('#filter-class-assignments + label', t.filterByClass);
+            setTextContent('#filter-class-assignments option:first-child', t.allClasses);
+            const filterClassLabel = document.querySelector('#filter-class-assignments').previousElementSibling;
+            const filterNameLabel = document.querySelector('#filter-name-assignments').previousElementSibling;
+            if (filterClassLabel) filterClassLabel.textContent = t.filterByClass;
+            if (filterNameLabel) filterNameLabel.textContent = t.filterByName;
+            setTextContent('#filter-class-assignments option:first-child', t.allClasses);
+            setAttribute('#filter-name-assignments', 'placeholder', t.searchAssignment);
+
+            setTextContent('#filter-name-assignments + label', t.filterByName);
+            setAttribute('#filter-name-assignments', 'placeholder', t.searchAssignment);
+
+            // Modal devoir
+            setTextContent('#assignment-modal-title', editingAssignmentId ? t.editAssignment : t.createAssignmentTitle);
+            setAttribute('#assignment-name', 'placeholder', t.assignmentName);
+            setTextContent('#assignment-class option:first-child', t.selectClass);
+            setTextContent('button[onclick="addExercise()"]', t.addExercise);
+            setTextContent('.modal button:first-child', t.cancel);
+            setTextContent('.modal button:last-child', t.save);
+
+            // Onglet Notes
+            setTextContent('#content-grades h2', t.gradesEntry);
+            setTextContent('#select-class-grades option:first-child', t.selectClass);
+            setTextContent('#select-assignment option:first-child', t.selectAssignment);
+            setTextContent('#select-student option:first-child', t.selectStudent);
+
+            // Onglet Récapitulatif
+            setTextContent('#content-summary h2', t.summaryTitle);
+            setAttribute('#summary-search', 'placeholder', t.search);
+            setTextContent('#show-details + span', t.showDetails);
+            setTextContent('th[onclick="toggleSummarySort(\'name\')"]', t.student);
+
+            // Mettre à jour les tooltips et autres textes
+            updateDynamicTexts();
+        }
+
+        function setTextContent(selector, text) {
+            const element = document.querySelector(selector);
+            if (element) element.textContent = text;
+        }
+
+        function setAttribute(selector, attr, value) {
+            const element = document.querySelector(selector);
+            if (element) element.setAttribute(attr, value);
+        }
+
+        function updateDynamicTexts() {
+            const t = translations[currentLanguage];
+
+            // Mettre à jour les tooltips
+            const editButtons = document.querySelectorAll('button[onclick*="openAssignmentModal"]');
+            editButtons.forEach(btn => {
+                btn.title = t.edit;
+            });
+
+            const deleteButtons = document.querySelectorAll('button[onclick*="deleteAssignment"]');
+            deleteButtons.forEach(btn => {
+                btn.title = t.delete;
+            });
+
+            const duplicateButtons = document.querySelectorAll('button[onclick*="duplicateAssignment"]');
+            duplicateButtons.forEach(btn => {
+                btn.title = t.duplicate;
+            });
+        }
+
         // Data Store
         let data = {
             students: [], // { id, name, className, nin, firstName, sex, birthDate, regNumber }
             assignments: [], // { id, name, className, exercises }
             grades: {}
         };
-        
+
         // Tri du récapitulatif
         let summarySort = { key: 'name', direction: 'asc' };
 
@@ -227,12 +579,12 @@
                 el.classList.remove('bg-white', 'text-blue-600', 'shadow');
                 el.classList.add('bg-gray-200', 'text-gray-600');
             });
-            
+
             document.getElementById('content-' + tab).classList.remove('hidden');
             const btn = document.getElementById('tab-' + tab);
             btn.classList.remove('bg-gray-200', 'text-gray-600');
             btn.classList.add('bg-white', 'text-blue-600', 'shadow');
-            
+
             if (tab === 'grades') {
                 loadClassSelectors();
                 loadGradeSelectors();
@@ -258,7 +610,7 @@
 
         function loadClassSelectors() {
             const classes = getClasses();
-            
+
             // For grades tab
             const gradesSelect = document.getElementById('select-class-grades');
             if (gradesSelect) {
@@ -266,7 +618,7 @@
                 gradesSelect.innerHTML = '<option value="">-- Sélectionner une classe --</option>' +
                     classes.map(c => `<option value="${c}" ${c === currentValue ? 'selected' : ''}>${c}</option>`).join('');
             }
-            
+
             // For summary tab
             const summarySelect = document.getElementById('select-class-summary');
             if (summarySelect) {
@@ -274,7 +626,7 @@
                 summarySelect.innerHTML = '<option value="">-- Sélectionner une classe --</option>' +
                     classes.map(c => `<option value="${c}" ${c === currentValue ? 'selected' : ''}>${c}</option>`).join('');
             }
-            
+
             // For assignment modal
             const assignmentSelect = document.getElementById('assignment-class');
             if (assignmentSelect) {
@@ -286,7 +638,7 @@
 
         function loadClassSelectorsForAssignments() {
             const classes = getClasses();
-            
+
             // For assignments filter
             const filterSelect = document.getElementById('filter-class-assignments');
             if (filterSelect) {
@@ -297,20 +649,21 @@
         }
 
         function renderClassList() {
+            const t = translations[currentLanguage];
             const container = document.getElementById('class-list');
             const classes = getClasses();
-            
+
             if (classes.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-sm">Aucune classe. Les classes sont créées automatiquement lors de l\'ajout d\'élèves.</p>';
+                container.innerHTML = `<p class="text-gray-500 text-sm">${t.noClassesAutoCreated}</p>`;
                 return;
             }
-            
+
             container.innerHTML = classes.map(c => {
                 const count = data.students.filter(s => s.className === c).length;
                 return `
                     <div class="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-2 rounded-lg">
                         <span class="font-medium">${c}</span>
-                        <span class="text-xs bg-blue-200 px-2 py-1 rounded">${count} élève(s)</span>
+                        <span class="text-xs bg-blue-200 px-2 py-1 rounded">${count} ${t.students}</span>
                         <button onclick="deleteClass('${c}')" class="text-red-600 hover:text-red-800 ml-1">✕</button>
                     </div>
                 `;
@@ -318,18 +671,19 @@
         }
 
         function deleteClass(className) {
+            const t = translations[currentLanguage];
             const count = data.students.filter(s => s.className === className).length;
-            if (!confirm(`Supprimer la classe "${className}" et ses ${count} élève(s) ?`)) return;
-            
+            if (!confirm(`${t.deleteClassConfirm} "${className}" ${t.andStudents} ${count} ${t.students}`)) return;
+
             // Remove students from this class
             const studentIds = data.students.filter(s => s.className === className).map(s => s.id);
             data.students = data.students.filter(s => s.className !== className);
-            
+
             // Remove their grades
             studentIds.forEach(id => {
                 delete data.grades[id];
             });
-            
+
             saveData();
             renderStudents();
             renderClassList();
@@ -354,13 +708,14 @@
         }
 
         function addStudent() {
+            const t = translations[currentLanguage];
             const lastName = document.getElementById('student-lastname').value.trim();
             const firstName = document.getElementById('student-firstname').value.trim();
             const className = document.getElementById('student-class').value.trim();
             const nin = document.getElementById('student-nin').value.trim();
-            if (!lastName && !firstName) return alert('Veuillez entrer au moins un nom ou prénom');
+            if (!lastName && !firstName) return alert(t.enterName);
             const name = (lastName + ' ' + firstName).trim();
-            
+
             data.students.push({ id: genId(), name, className, nin, firstName, lastName });
             saveData();
             renderStudents();
@@ -368,7 +723,8 @@
         }
 
         function deleteStudent(id) {
-            if (!confirm('Supprimer cet élève et toutes ses notes ?')) return;
+            const t = translations[currentLanguage];
+            if (!confirm(t.deleteStudent)) return;
             data.students = data.students.filter(s => s.id !== id);
             delete data.grades[id];
             saveData();
@@ -376,12 +732,13 @@
         }
 
         function renderStudents() {
+            const t = translations[currentLanguage];
             const container = document.getElementById('students-list');
             if (data.students.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-center py-8">Aucun élève. Ajoutez votre premier élève !</p>';
+                container.innerHTML = `<p class="text-gray-500 text-center py-8">${t.noStudentsAddFirst}</p>`;
                 return;
             }
-            
+
             container.innerHTML = data.students.map((s, i) => `
                 <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100">
                     <div>
@@ -391,30 +748,31 @@
                     <button onclick="deleteStudent('${s.id}')" class="text-red-500 hover:text-red-700 px-3 py-1">🗑️</button>
                 </div>
             `).join('');
-            
+
             renderClassList();
         }
 
         // ===== ASSIGNMENTS =====
         function openAssignmentModal(assignmentId = null) {
+            const t = translations[currentLanguage];
             editingAssignmentId = assignmentId;
             loadClassSelectors();
-            
+
             if (assignmentId) {
                 // Edit mode
                 const assignment = data.assignments.find(a => a.id === assignmentId);
-                document.getElementById('assignment-modal-title').textContent = 'Modifier le Devoir';
+                document.getElementById('assignment-modal-title').textContent = t.editAssignment;
                 document.getElementById('assignment-name').value = assignment.name;
                 document.getElementById('assignment-class').value = assignment.className || '';
                 tempExercises = JSON.parse(JSON.stringify(assignment.exercises));
             } else {
                 // Create mode
-                document.getElementById('assignment-modal-title').textContent = 'Créer un Devoir';
+                document.getElementById('assignment-modal-title').textContent = t.createAssignment;
                 document.getElementById('assignment-name').value = '';
                 document.getElementById('assignment-class').value = '';
                 tempExercises = [];
             }
-            
+
             document.getElementById('assignment-modal').classList.add('active');
             renderExercisesBuilder();
         }
@@ -431,23 +789,26 @@
         }
 
         function removeExercise(exId) {
-            if (!confirm('Supprimer cet exercice ?')) return;
+            const t = translations[currentLanguage];
+            if (!confirm(t.deleteExercise)) return;
             tempExercises = tempExercises.filter(e => e.id !== exId);
             renderExercisesBuilder();
         }
 
         function addPart(exId) {
+            const t = translations[currentLanguage];
             const ex = tempExercises.find(e => e.id === exId);
             if (ex) {
                 if (!ex.parts) ex.parts = [];
                 const partNum = ex.parts.length + 1;
-                ex.parts.push({ id: genId(), name: `Partie ${partNum}`, questions: [] });
+                ex.parts.push({ id: genId(), name: `${t.part} ${partNum}`, questions: [] });
                 renderExercisesBuilder();
             }
         }
 
         function removePart(exId, partId) {
-            if (!confirm('Supprimer cette partie ?')) return;
+            const t = translations[currentLanguage];
+            if (!confirm(t.deletePart)) return;
             const ex = tempExercises.find(e => e.id === exId);
             if (ex && ex.parts) {
                 ex.parts = ex.parts.filter(p => p.id !== partId);
@@ -459,7 +820,7 @@
             const ex = tempExercises.find(e => e.id === exId);
             if (ex) {
                 const newQuestion = { id: genId(), name: '', maxPoints: 0, subQuestions: [] };
-                
+
                 if (partId) {
                     const part = ex.parts.find(p => p.id === partId);
                     if (part) {
@@ -501,17 +862,18 @@
                 } else {
                     q = ex.questions.find(x => x.id === qId);
                 }
-                
+
                 if (q) {
+                    const t = translations[currentLanguage];
                     const letters = 'abcdefghijklmnopqrstuvwxyz';
                     const letter = letters[q.subQuestions.length] || '?';
                     q.subQuestions.push({ id: genId(), name: letter, maxPoints: 0 });
-                    
+
                     // Effacer les points directs de la question quand on ajoute des sous-questions
                     if (q.subQuestions.length === 1) {
                         q.maxPoints = 0;
                     }
-                    
+
                     renderExercisesBuilder();
                 }
             }
@@ -527,15 +889,15 @@
                 } else {
                     q = ex.questions.find(x => x.id === qId);
                 }
-                
+
                 if (q) {
                     q.subQuestions = q.subQuestions.filter(sq => sq.id !== sqId);
-                    
+
                     // Si plus de sous-questions, réinitialiser les points
                     if (q.subQuestions.length === 0) {
                         q.maxPoints = q.maxPoints || 0;
                     }
-                    
+
                     renderExercisesBuilder();
                 }
             }
@@ -570,7 +932,7 @@
                 } else {
                     q = ex.questions.find(x => x.id === qId);
                 }
-                
+
                 if (q) {
                     if (field === 'maxPoints') {
                         q[field] = parseFloat(value) || 0;
@@ -591,7 +953,7 @@
                 } else {
                     q = ex.questions.find(x => x.id === qId);
                 }
-                
+
                 if (q) {
                     const sq = q.subQuestions.find(s => s.id === sqId);
                     if (sq) {
@@ -606,9 +968,10 @@
         }
 
         function renderQuestionBuilder(q, exId, partId = null) {
+            const t = translations[currentLanguage];
             const partParam = partId ? `'${partId}'` : 'null';
             const hasSubQuestions = q.subQuestions && q.subQuestions.length > 0;
-            
+
             return `
                 <div class="border border-green-200 rounded p-3 bg-green-50">
                     <div class="flex items-center gap-2 mb-2 flex-wrap">
@@ -616,11 +979,11 @@
                             onchange="updateQuestionField('${exId}','${q.id}',${partParam},'name',this.value)"
                             class="w-20 p-1 border rounded text-sm font-semibold text-green-700 bg-white">
                         ${!hasSubQuestions ? `
-                            <input type="number" placeholder="Pts" value="${q.maxPoints || ''}" min="0" step="0.25"
+                            <input type="number" placeholder="${t.points}" value="${q.maxPoints || ''}" min="0" step="0.25"
                                 onchange="updateQuestionField('${exId}','${q.id}',${partParam},'maxPoints',this.value)"
-                                class="w-16 p-1 border rounded text-sm" title="Points de la question">
+                                class="w-16 p-1 border rounded text-sm" title="${t.questionPoints}">
                         ` : `
-                            <span class="text-xs text-gray-500 px-2">Total: ${getQuestionMaxPoints(q)} pts</span>
+                            <span class="text-xs text-gray-500 px-2">${t.totalPoints}: ${getQuestionMaxPoints(q)} ${t.points}</span>
                         `}
                         <button onclick="addSubQuestion('${exId}','${q.id}',${partParam})" class="text-blue-500 hover:text-blue-700 text-sm px-2 py-1 bg-blue-50 rounded">+a,b,c</button>
                         <button onclick="removeQuestion('${exId}','${q.id}',${partParam})" class="text-red-500 hover:text-red-700 ml-auto">✕</button>
@@ -642,7 +1005,7 @@
                             `).join('')}
                         </div>
                         <div class="text-xs text-gray-500 mt-2 ml-4">
-                            Total automatique: ${getQuestionMaxPoints(q)} points (somme des sous-questions)
+                            ${t.autoTotalPoints}: ${getQuestionMaxPoints(q)} ${t.points} (${t.sumSubQuestions})
                         </div>
                     ` : ''}
                 </div>
@@ -650,35 +1013,36 @@
         }
 
         function renderExercisesBuilder() {
+            const t = translations[currentLanguage];
             const container = document.getElementById('exercises-builder');
-            
+
             if (tempExercises.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-center py-4">Aucun exercice. Cliquez sur "+ Ajouter un exercice" pour commencer.</p>';
+                container.innerHTML = `<p class="text-gray-500 text-center py-4">${t.noExercises}. ${t.clickAddExercise}.</p>`;
                 return;
             }
-            
+
             container.innerHTML = tempExercises.map((ex, exIndex) => {
                 // Ensure parts array exists
                 if (!ex.parts) ex.parts = [];
                 if (!ex.questions) ex.questions = [];
-                
+
                 const exerciseTotal = getExerciseMaxPoints(ex);
-                
+
                 return `
                 <div class="border-2 border-blue-200 rounded-lg p-4 bg-blue-50">
                     <div class="flex items-center gap-2 mb-3 flex-wrap">
-                        <span class="font-bold text-blue-700 text-lg">Exercice ${exIndex + 1}</span>
-                        <input type="text" placeholder="Nom (optionnel)" value="${ex.name}" 
+                        <span class="font-bold text-blue-700 text-lg">${t.exercise} ${exIndex + 1}</span>
+                        <input type="text" placeholder="${t.exerciseName}" value="${ex.name}" 
                             onchange="updateExerciseField('${ex.id}','name',this.value)"
                             class="flex-1 min-w-32 p-2 border rounded text-sm">
-                        <span class="text-sm font-semibold text-blue-600 px-2">Total: ${exerciseTotal} points</span>
+                        <span class="text-sm font-semibold text-blue-600 px-2">${t.totalPoints}: ${exerciseTotal} ${t.points}</span>
                         <button onclick="removeExercise('${ex.id}')" class="text-red-500 hover:text-red-700 text-lg">✕</button>
                     </div>
                     
                     <div class="text-xs text-gray-500 mb-3">
-                        ${ex.questions.length === 0 && ex.parts.length === 0 ? 
-                            'Exercice sans questions - note directe uniquement' : 
-                            `Calcul automatique: ${exerciseTotal} points (somme des questions)`}
+                        ${ex.questions.length === 0 && ex.parts.length === 0 ?
+                        `${t.noQuestions} - ${t.directPointsOnly}` :
+                        `${t.autoTotalPoints}: ${exerciseTotal} ${t.points} (${t.sumQuestions})`}
                     </div>
                     
                     <!-- Direct Questions (without parts) -->
@@ -687,7 +1051,7 @@
                             ${ex.questions.map(q => renderQuestionBuilder(q, ex.id, null)).join('')}
                         </div>
                         <button onclick="addQuestion('${ex.id}', null)" class="ml-4 text-sm text-green-600 hover:text-green-800 px-3 py-1 bg-green-100 rounded">
-                            + Question
+                             ${t.addQuestion}
                         </button>
                     ` : ''}
                     
@@ -708,7 +1072,7 @@
                                     </div>
                                     
                                     <button onclick="addQuestion('${ex.id}', '${part.id}')" class="mt-2 ml-4 text-sm text-green-600 hover:text-green-800 px-3 py-1 bg-green-100 rounded">
-                                        + Question
+                                         ${t.addQuestion}
                                     </button>
                                 </div>
                             `).join('')}
@@ -717,19 +1081,20 @@
                     
                     <!-- Add Part Button -->
                     <button onclick="addPart('${ex.id}')" class="mt-3 ml-4 text-sm text-purple-600 hover:text-purple-800 px-3 py-1 bg-purple-100 rounded">
-                        + Ajouter une Partie
+                        + ${t.addPart}
                     </button>
                 </div>
             `}).join('');
         }
 
         function saveAssignment() {
+            const t = translations[currentLanguage];
             const name = document.getElementById('assignment-name').value.trim();
             const className = document.getElementById('assignment-class').value.trim();
-            if (!name) return alert('Veuillez entrer un nom pour le devoir');
-            if (!className) return alert('Veuillez sélectionner une classe pour ce devoir');
-            if (tempExercises.length === 0) return alert('Ajoutez au moins un exercice');
-            
+            if (!name) return alert(t.enterAssignmentName);
+            if (!className) return alert(t.selectAssignmentClass);
+            if (tempExercises.length === 0) return alert(t.addExerciseFirst);
+
             if (editingAssignmentId) {
                 // Update existing assignment
                 const assignment = data.assignments.find(a => a.id === editingAssignmentId);
@@ -747,14 +1112,15 @@
                     exercises: JSON.parse(JSON.stringify(tempExercises))
                 });
             }
-            
+
             saveData();
             renderAssignments();
             closeAssignmentModal();
         }
 
         function deleteAssignment(id) {
-            if (!confirm('Supprimer ce devoir et toutes les notes associées ?')) return;
+            const t = translations[currentLanguage];
+            if (!confirm(t.deleteAssignment)) return;
             data.assignments = data.assignments.filter(a => a.id !== id);
             // Clean grades
             for (let studentId in data.grades) {
@@ -767,14 +1133,14 @@
         function duplicateAssignment(id) {
             const original = data.assignments.find(a => a.id === id);
             if (!original) return;
-            
+
             const newAssignment = {
                 id: genId(),
                 name: original.name + ' (copie)',
                 className: original.className,
                 exercises: JSON.parse(JSON.stringify(original.exercises))
             };
-            
+
             data.assignments.push(newAssignment);
             saveData();
             renderAssignments();
@@ -791,25 +1157,25 @@
         function getExerciseMaxPoints(ex) {
             const directQuestions = ex.questions || [];
             const parts = ex.parts || [];
-            
+
             if (directQuestions.length === 0 && parts.length === 0) {
                 return ex.maxPoints || 0;
             }
-            
+
             let total = 0;
-            
+
             // Direct questions
             for (const q of directQuestions) {
                 total += getQuestionMaxPoints(q);
             }
-            
+
             // Parts
             for (const part of parts) {
                 for (const q of (part.questions || [])) {
                     total += getQuestionMaxPoints(q);
                 }
             }
-            
+
             return total;
         }
 
@@ -830,107 +1196,108 @@
         }
 
         function renderAssignments() {
+            const t = translations[currentLanguage];
             const container = document.getElementById('assignments-list');
             const filterClass = document.getElementById('filter-class-assignments')?.value || '';
             const filterName = document.getElementById('filter-name-assignments')?.value.toLowerCase() || '';
-            
+
             let filteredAssignments = data.assignments.filter(a => {
                 const matchClass = !filterClass || a.className === filterClass;
                 const matchName = !filterName || a.name.toLowerCase().includes(filterName);
                 return matchClass && matchName;
             });
-            
+
             if (data.assignments.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-center py-8">Aucun devoir. Créez votre premier devoir !</p>';
+                container.innerHTML = `<p class="text-gray-500 text-center py-8">${t.noAssignments}</p>`;
                 return;
             }
-            
+
             if (filteredAssignments.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-center py-8">Aucun devoir ne correspond aux filtres appliqués.</p>';
+                container.innerHTML = `<p class="text-gray-500 text-center py-8">${t.noFilteredAssignments}</p>`;
                 return;
             }
-            
+
             container.innerHTML = filteredAssignments.map(a => `
-                <div class="border rounded-lg bg-white overflow-hidden shadow-sm">
-                    <div class="flex items-center justify-between p-4 bg-gray-50 cursor-pointer hover:bg-gray-100" onclick="toggleAccordion('${a.id}')">
-                        <div class="flex items-center gap-3">
-                            <span id="icon-${a.id}" class="rotate-icon text-gray-400">▼</span>
-                            <div>
-                                <h3 class="font-bold text-lg">${a.name}</h3>
-                                <span class="text-sm text-gray-500">
-                                    ${a.className ? `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded mr-2 text-xs font-semibold uppercase">${a.className}</span>` : ''}
-                                    ${getAssignmentMaxPoints(a)} pts • ${a.exercises.length} ex.
-                                </span>
-                            </div>
-                        </div>
-                        <div class="flex gap-2" onclick="event.stopPropagation()">
-                            <button onclick="openAssignmentModal('${a.id}')" class="p-2 text-blue-500 hover:bg-blue-50 rounded" title="Modifier">✏️</button>
-                            <button onclick="duplicateAssignment('${a.id}')" class="p-2 text-green-500 hover:bg-green-50 rounded" title="Dupliquer">⎘</button>
-                            <button onclick="deleteAssignment('${a.id}')" class="p-2 text-red-500 hover:bg-red-50 rounded" title="Supprimer">🗑️</button>
-                        </div>
-                    </div>
-                    
-                    <div id="accordion-${a.id}" class="accordion-content">
-                        <div class="p-4 border-t space-y-3 bg-white text-sm">
-                            ${a.exercises.map((ex, i) => {
-                                const parts = ex.parts || [];
-                                const directQuestions = ex.questions || [];
-                                let exContent = '';
-                                if (directQuestions.length > 0) {
-                                    exContent += `<div class="ml-4 text-gray-600 mt-1">
-                                        ${directQuestions.map(q => `<span class="inline-block mr-2">${q.name || 'Q?'}: ${getQuestionMaxPoints(q)} pts</span>`).join(' • ')}
-                                    </div>`;
-                                }
-                                if (parts.length > 0) {
-                                    exContent += parts.map(part => `
-                                        <div class="ml-4 mt-1 border-l pl-2">
-                                            <span class="text-purple-600 font-medium">${part.name}:</span>
-                                            <span class="text-gray-500 italic">(${(part.questions || []).map(q => q.name || 'Q?').join(', ')})</span>
-                                        </div>
-                                    `).join('');
-                                }
-                                return `
-                                    <div class="bg-gray-50 p-2 rounded border-l-4 border-blue-400">
-                                        <strong>Exercice ${i + 1}${ex.name ? ' - ' + ex.name : ''}</strong> (${getExerciseMaxPoints(ex)} pts)
-                                        ${exContent}
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
+        <div class="border rounded-lg bg-white overflow-hidden shadow-sm">
+            <div class="flex items-center justify-between p-4 bg-gray-50 cursor-pointer hover:bg-gray-100" onclick="toggleAccordion('${a.id}')">
+                <div class="flex items-center gap-3">
+                    <span id="icon-${a.id}" class="rotate-icon text-gray-400">▼</span>
+                    <div>
+                        <h3 class="font-bold text-lg">${a.name}</h3>
+                        <span class="text-sm text-gray-500">
+                            ${a.className ? `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded mr-2 text-xs font-semibold uppercase">${a.className}</span>` : ''}
+                            ${getAssignmentMaxPoints(a)} ${t.points} • ${a.exercises.length} ${t.exerciseAbbr}
+                        </span>
                     </div>
                 </div>
-            `).join('');
+                <div class="flex gap-2" onclick="event.stopPropagation()">
+                    <button onclick="openAssignmentModal('${a.id}')" class="p-2 text-blue-500 hover:bg-blue-50 rounded" title="${t.edit}">✏️</button>
+                    <button onclick="duplicateAssignment('${a.id}')" class="p-2 text-green-500 hover:bg-green-50 rounded" title="${t.duplicate}">⎘</button>
+                    <button onclick="deleteAssignment('${a.id}')" class="p-2 text-red-500 hover:bg-red-50 rounded" title="${t.delete}">🗑️</button>
+                </div>
+            </div>
+            
+            <div id="accordion-${a.id}" class="accordion-content">
+                <div class="p-4 border-t space-y-3 bg-white text-sm">
+                    ${a.exercises.map((ex, i) => {
+                const parts = ex.parts || [];
+                const directQuestions = ex.questions || [];
+                let exContent = '';
+                if (directQuestions.length > 0) {
+                    exContent += `<div class="ml-4 text-gray-600 mt-1">
+                                    ${directQuestions.map(q => `<span class="inline-block mr-2">${q.name || 'Q?'}: ${getQuestionMaxPoints(q)} ${t.points}</span>`).join(' • ')}
+                                </div>`;
+                }
+                if (parts.length > 0) {
+                    exContent += parts.map(part => `
+                                    <div class="ml-4 mt-1 border-l pl-2">
+                                        <span class="text-purple-600 font-medium">${part.name}:</span>
+                                        <span class="text-gray-500 italic">(${(part.questions || []).map(q => q.name || 'Q?').join(', ')})</span>
+                                    </div>
+                                `).join('');
+                }
+                return `
+                                <div class="bg-gray-50 p-2 rounded border-l-4 border-blue-400">
+                                    <strong>${t.exercise} ${i + 1}${ex.name ? ' - ' + ex.name : ''}</strong> (${getExerciseMaxPoints(ex)} ${t.points})
+                                    ${exContent}
+                                </div>
+                            `;
+            }).join('')}
+                </div>
+            </div>
+        </div>
+    `).join('');
         }
-
         // ===== GRADES =====
         function loadGradeSelectors() {
+            const t = translations[currentLanguage];
             const assignmentSelect = document.getElementById('select-assignment');
             const studentSelect = document.getElementById('select-student');
             const classSelect = document.getElementById('select-class-grades');
             const selectedClass = classSelect.value;
-            
+
             // Si aucune classe n'est sélectionnée, vider les listes
             if (!selectedClass) {
-                assignmentSelect.innerHTML = '<option value="">-- Sélectionner d\'abord une classe --</option>';
-                studentSelect.innerHTML = '<option value="">-- Sélectionner d\'abord une classe --</option>';
-                document.getElementById('grade-entry').innerHTML = '<p class="text-gray-500 text-center py-8">Sélectionnez une classe pour commencer.</p>';
+                assignmentSelect.innerHTML = `<option value="">-- ${t.selectClassFirst} --</option>`;
+                studentSelect.innerHTML = `<option value="">-- ${t.selectClassFirst} --</option>`;
+                document.getElementById('grade-entry').innerHTML = `<p class="text-gray-500 text-center py-8">${t.selectClassToStart}</p>`;
                 return;
             }
-            
+
             // Filtrer les devoirs par classe sélectionnée
             const filteredAssignments = data.assignments.filter(a => a.className === selectedClass);
-            
-            assignmentSelect.innerHTML = '<option value="">-- Sélectionner un devoir --</option>' +
+
+            assignmentSelect.innerHTML = `<option value="">-- ${t.selectAssignment} --</option>` +
                 filteredAssignments.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
-            
+
             // Filtrer les élèves par classe sélectionnée
             const filteredStudents = data.students.filter(s => s.className === selectedClass);
-            
-            studentSelect.innerHTML = '<option value="">-- Sélectionner un élève --</option>' +
+
+            studentSelect.innerHTML = `<option value="">-- ${t.selectStudent} --</option>` +
                 filteredStudents.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-            
+
             // Vider la zone de saisie de notes
-            document.getElementById('grade-entry').innerHTML = '<p class="text-gray-500 text-center py-8">Sélectionnez un devoir et un élève pour saisir les notes.</p>';
+            document.getElementById('grade-entry').innerHTML = `<p class="text-gray-500 text-center py-8">${t.selectAssignmentAndStudentToGrade}</p>`;
         }
 
         function renderGradeQuestion(q, studentId, assignmentId, exId, partId = null) {
@@ -938,13 +1305,13 @@
             const partKey = partId || 'direct';
             if (!studentGrades[partKey]) studentGrades[partKey] = {};
             const qGrades = studentGrades[partKey][q.id] || {};
-            
+
             let qHtml = `<div class="grade-question-card">
                 <div class="question-header">
                     <span class="question-title">${q.name || 'Q?'}</span>
                     <span class="question-score" id="q-total-${q.id}">0 / ${getQuestionMaxPoints(q)}</span>
                 </div>`;
-            
+
             if (!q.subQuestions || q.subQuestions.length === 0) {
                 const val = qGrades['direct'] || '';
                 qHtml += `<div class="question-direct-entry">
@@ -969,119 +1336,119 @@
                 }).join('');
                 qHtml += `</div>`;
             }
-            
+
             qHtml += `</div>`;
             return qHtml;
         }
 
         function loadGradeEntry() {
+            const t = translations[currentLanguage];
             const assignmentId = document.getElementById('select-assignment').value;
             const studentId = document.getElementById('select-student').value;
             const container = document.getElementById('grade-entry');
-            
+
             if (!assignmentId || !studentId) {
-                container.innerHTML = '<p class="text-gray-500 text-center py-8">Sélectionnez un devoir et un élève pour saisir les notes.</p>';
+                container.innerHTML = `<p class="text-gray-500 text-center py-8">${t.selectAssignmentAndStudentToGrade}</p>`;
                 return;
             }
-            
+
             const assignment = data.assignments.find(a => a.id === assignmentId);
             const student = data.students.find(s => s.id === studentId);
-            
+
             if (!data.grades[studentId]) data.grades[studentId] = {};
             if (!data.grades[studentId][assignmentId]) data.grades[studentId][assignmentId] = {};
-            
+
             let html = `<div class="bg-blue-50 p-4 rounded-lg mb-4">
-                <h3 class="font-bold text-xl">${student.name} - ${assignment.name}</h3>
-                <p class="text-2xl font-bold text-blue-600 mt-2">Total: <span id="grade-total">0</span> / ${getAssignmentMaxPoints(assignment)}</p>
-            </div>`;
-            
+        <h3 class="font-bold text-xl">${student.name} - ${assignment.name}</h3>
+        <p class="text-2xl font-bold text-blue-600 mt-2">${t.total}: <span id="grade-total">0</span> / ${getAssignmentMaxPoints(assignment)}</p>
+    </div>`;
+
             html += assignment.exercises.map((ex, exIndex) => {
                 if (!data.grades[studentId][assignmentId][ex.id]) {
                     data.grades[studentId][assignmentId][ex.id] = {};
                 }
-                
+
                 const directQuestions = ex.questions || [];
                 const parts = ex.parts || [];
                 const hasQuestions = directQuestions.length > 0 || parts.length > 0;
-                
+
                 const accordionId = `grade-ex-${ex.id}`;
-                
+
                 let exHtml = `
-                <div class="border rounded-lg overflow-hidden bg-white mb-3">
-                    <div class="bg-gray-100 p-4 flex justify-between items-center cursor-pointer hover:bg-gray-200 transition-colors" 
-                         onclick="toggleAccordion('${accordionId}')">
-                        <div class="flex items-center gap-3">
-                            <span id="icon-${accordionId}" class="rotate-icon text-gray-400">▼</span>
-                            <span class="font-bold">Exercice ${exIndex + 1}${ex.name ? ' - ' + ex.name : ''}</span>
-                        </div>
-                        <span class="text-blue-700 font-bold bg-white px-3 py-1 rounded-full shadow-sm text-sm" id="ex-total-${ex.id}">0 / ${getExerciseMaxPoints(ex)}</span>
-                    </div>
-                    
-                    <div id="accordion-${accordionId}" class="accordion-content">
-                        <div class="p-4 space-y-4 border-t">`;
-                
+        <div class="border rounded-lg overflow-hidden bg-white mb-3">
+            <div class="bg-gray-100 p-4 flex justify-between items-center cursor-pointer hover:bg-gray-200 transition-colors" 
+                 onclick="toggleAccordion('${accordionId}')">
+                <div class="flex items-center gap-3">
+                    <span id="icon-${accordionId}" class="rotate-icon text-gray-400">▼</span>
+                    <span class="font-bold">${t.exercise} ${exIndex + 1}${ex.name ? ' - ' + ex.name : ''}</span>
+                </div>
+                <span class="text-blue-700 font-bold bg-white px-3 py-1 rounded-full shadow-sm text-sm" id="ex-total-${ex.id}">0 / ${getExerciseMaxPoints(ex)}</span>
+            </div>
+            
+            <div id="accordion-${accordionId}" class="accordion-content">
+                <div class="p-4 space-y-4 border-t">`;
+
                 // Note finale optionnelle
                 if (hasQuestions) {
                     const finalGrade = data.grades[studentId][assignmentId][ex.id]?.['final']?.['final']?.['final'] || '';
                     exHtml += `
-                        <div class="flex items-center gap-3 mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-100">
-                            <span class="text-sm font-semibold text-yellow-800">Note globale (force le total):</span>
-                            <input type="number" min="0" max="${getExerciseMaxPoints(ex)}" step="0.25" value="${finalGrade}"
-                                onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
-                                class="grade-input w-20 p-2 border rounded text-center font-bold bg-white" onclick="event.stopPropagation()">
-                            <span class="text-xs text-yellow-600 italic">Si rempli, ignore le détail des questions ci-dessous.</span>
-                        </div>`;
+                <div class="flex items-center gap-3 mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-100">
+                    <span class="text-sm font-semibold text-yellow-800">${t.globalGrade}</span>
+                    <input type="number" min="0" max="${getExerciseMaxPoints(ex)}" step="0.25" value="${finalGrade}"
+                        onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
+                        class="grade-input w-20 p-2 border rounded text-center font-bold bg-white" onclick="event.stopPropagation()">
+                    <span class="text-xs text-yellow-600 italic">${t.ignoresDetails}</span>
+                </div>`;
                 }
-                
+
                 if (directQuestions.length === 0 && parts.length === 0) {
                     // Pas de questions : note directe
                     const val = data.grades[studentId][assignmentId][ex.id]?.['direct']?.['direct']?.['direct'] || '';
                     exHtml += `
-                        <div class="flex items-center gap-4 bg-blue-50 p-4 rounded-lg">
-                            <span class="font-semibold">Note :</span>
-                            <input type="number" min="0" max="${ex.maxPoints}" step="0.25" value="${val}"
-                                onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','direct','direct','direct',this.value)"
-                                class="grade-input w-24 p-2 border rounded text-center font-bold text-lg" onclick="event.stopPropagation()">
-                            <span class="text-gray-500 text-lg">/ ${ex.maxPoints}</span>
-                        </div>`;
+                <div class="flex items-center gap-4 bg-blue-50 p-4 rounded-lg">
+                    <span class="font-semibold">${t.grade}</span>
+                    <input type="number" min="0" max="${ex.maxPoints}" step="0.25" value="${val}"
+                        onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','direct','direct','direct',this.value)"
+                        class="grade-input w-24 p-2 border rounded text-center font-bold text-lg" onclick="event.stopPropagation()">
+                    <span class="text-gray-500 text-lg">/ ${ex.maxPoints}</span>
+                </div>`;
                 } else {
                     // Questions directes
                     if (directQuestions.length > 0) {
                         exHtml += `<div class="grade-question-grid">` + directQuestions.map(q => renderGradeQuestion(q, studentId, assignmentId, ex.id, null)).join('') + `</div>`;
                     }
-                    
+
                     // Parties
                     if (parts.length > 0) {
                         exHtml += parts.map(part => {
                             return `
-                            <div class="mt-4 pt-4 border-t">
-                                <h4 class="font-bold text-purple-700 mb-3 flex items-center gap-2">
-                                    <span class="w-2 h-2 bg-purple-400 rounded-full"></span> ${part.name}
-                                </h4>
-                                <div class="grade-question-grid">
-                                    ${(part.questions || []).map(q => renderGradeQuestion(q, studentId, assignmentId, ex.id, part.id)).join('')}
-                                </div>
-                            </div>`;
+                    <div class="mt-4 pt-4 border-t">
+                        <h4 class="font-bold text-purple-700 mb-3 flex items-center gap-2">
+                            <span class="w-2 h-2 bg-purple-400 rounded-full"></span> ${part.name}
+                        </h4>
+                        <div class="grade-question-grid">
+                            ${(part.questions || []).map(q => renderGradeQuestion(q, studentId, assignmentId, ex.id, part.id)).join('')}
+                        </div>
+                    </div>`;
                         }).join('');
                     }
                 }
-                
+
                 exHtml += `</div></div></div>`;
                 return exHtml;
             }).join('');
-            
+
             container.innerHTML = html;
             saveData();
             recalculateTotals(assignmentId, studentId);
         }
-
         function updateGrade(studentId, assignmentId, exId, partKey, qId, sqId, value) {
             if (!data.grades[studentId]) data.grades[studentId] = {};
             if (!data.grades[studentId][assignmentId]) data.grades[studentId][assignmentId] = {};
             if (!data.grades[studentId][assignmentId][exId]) data.grades[studentId][assignmentId][exId] = {};
             if (!data.grades[studentId][assignmentId][exId][partKey]) data.grades[studentId][assignmentId][exId][partKey] = {};
             if (!data.grades[studentId][assignmentId][exId][partKey][qId]) data.grades[studentId][assignmentId][exId][partKey][qId] = {};
-            
+
             data.grades[studentId][assignmentId][exId][partKey][qId][sqId] = parseFloat(value) || 0;
             saveData();
             recalculateTotals(assignmentId, studentId);
@@ -1090,19 +1457,19 @@
         function recalculateTotals(assignmentId, studentId) {
             const assignment = data.assignments.find(a => a.id === assignmentId);
             const studentGrades = data.grades[studentId]?.[assignmentId] || {};
-            
+
             let grandTotal = 0;
-            
+
             for (const ex of assignment.exercises) {
                 let exTotal = 0;
                 const exGrades = studentGrades[ex.id] || {};
                 const directQuestions = ex.questions || [];
                 const parts = ex.parts || [];
                 const hasQuestions = directQuestions.length > 0 || parts.length > 0;
-                
+
                 // Vérifier si une note finale a été saisie
                 const finalGrade = exGrades['final']?.['final']?.['final'];
-                
+
                 if (finalGrade !== undefined && finalGrade !== '') {
                     // Utiliser la note finale si elle est définie
                     exTotal = parseFloat(finalGrade) || 0;
@@ -1115,7 +1482,7 @@
                     for (const q of directQuestions) {
                         let qTotal = 0;
                         const qGrades = exGrades['direct']?.[q.id] || {};
-                        
+
                         if (!q.subQuestions || q.subQuestions.length === 0) {
                             qTotal = qGrades['direct'] || 0;
                         } else {
@@ -1123,18 +1490,18 @@
                                 qTotal += qGrades[sq.id] || 0;
                             }
                         }
-                        
+
                         const qEl = document.getElementById('q-total-' + q.id);
                         if (qEl) qEl.textContent = qTotal + ' / ' + getQuestionMaxPoints(q);
                         exTotal += qTotal;
                     }
-                    
+
                     // Parts
                     for (const part of parts) {
                         for (const q of (part.questions || [])) {
                             let qTotal = 0;
                             const qGrades = exGrades[part.id]?.[q.id] || {};
-                            
+
                             if (!q.subQuestions || q.subQuestions.length === 0) {
                                 qTotal = qGrades['direct'] || 0;
                             } else {
@@ -1142,19 +1509,19 @@
                                     qTotal += qGrades[sq.id] || 0;
                                 }
                             }
-                            
+
                             const qEl = document.getElementById('q-total-' + q.id);
                             if (qEl) qEl.textContent = qTotal + ' / ' + getQuestionMaxPoints(q);
                             exTotal += qTotal;
                         }
                     }
                 }
-                
+
                 const exEl = document.getElementById('ex-total-' + ex.id);
                 if (exEl) exEl.textContent = exTotal + ' / ' + getExerciseMaxPoints(ex);
                 grandTotal += exTotal;
             }
-            
+
             const totalEl = document.getElementById('grade-total');
             if (totalEl) totalEl.textContent = grandTotal;
         }
@@ -1163,7 +1530,7 @@
             const assignment = data.assignments.find(a => a.id === assignmentId);
             if (!assignment) return 0;
             const studentGrades = data.grades[studentId]?.[assignmentId] || {};
-            
+
             let total = 0;
             for (const ex of assignment.exercises) {
                 total += getStudentExerciseTotal(studentGrades, ex);
@@ -1175,19 +1542,19 @@
             const exGrades = studentGrades[ex.id] || {};
             const directQuestions = ex.questions || [];
             const parts = ex.parts || [];
-            
+
             // Vérifier si une note finale a été saisie
             const finalGrade = exGrades['final']?.['final']?.['final'];
             if (finalGrade !== undefined && finalGrade !== '') {
                 return parseFloat(finalGrade) || 0;
             }
-            
+
             if (directQuestions.length === 0 && parts.length === 0) {
                 return exGrades['direct']?.['direct']?.['direct'] || 0;
             }
-            
+
             let total = 0;
-            
+
             // Direct questions
             for (const q of directQuestions) {
                 const qGrades = exGrades['direct']?.[q.id] || {};
@@ -1199,7 +1566,7 @@
                     }
                 }
             }
-            
+
             // Parts
             for (const part of parts) {
                 for (const q of (part.questions || [])) {
@@ -1213,12 +1580,13 @@
                     }
                 }
             }
-            
+
             return total;
         }
 
         // ===== SUMMARY =====
         function renderSummary() {
+            const t = translations[currentLanguage];
             const container = document.getElementById('summary-table');
             const showDetails = document.getElementById('show-details').checked;
             const classSelect = document.getElementById('select-class-summary');
@@ -1243,7 +1611,7 @@
 
             if (classSelect) {
                 const previousValue = selectedClass;
-                classSelect.innerHTML = '<option value="">-- Sélectionner une classe --</option>' +
+                classSelect.innerHTML = `<option value="">-- ${t.selectClass} --</option>` +
                     matchingClasses.map(c => `<option value="${c}">${c}</option>`).join('');
 
                 let autoSelectedClass = '';
@@ -1280,11 +1648,11 @@
             if (filteredStudents.length === 0 || filteredAssignments.length === 0) {
                 let emptyMessage = '';
                 if (selectedClass) {
-                    emptyMessage = `Aucun élève ou devoir pour la classe "${selectedClass}".`;
+                    emptyMessage = `${t.noStudentOrAssignmentForClass} "${selectedClass}".`;
                 } else if (searchTerm) {
-                    emptyMessage = 'Aucun résultat ne correspond à votre recherche.';
+                    emptyMessage = t.noResultForSearch;
                 } else {
-                    emptyMessage = 'Ajoutez des élèves et des devoirs pour voir le récapitulatif.';
+                    emptyMessage = t.addStudentsAndAssignmentsToSeeSummary;
                 }
                 container.innerHTML = `<p class="text-gray-500 text-center py-8">${emptyMessage}</p>`;
                 return;
@@ -1309,7 +1677,7 @@
                 });
             }
 
-            let headers = '<th class="p-3 text-left bg-gray-100 sticky left-0 z-10 cursor-pointer select-none" onclick="toggleSummarySort(\'name\')">Élève</th>';
+            let headers = `<th class="p-3 text-left bg-gray-100 sticky left-0 z-10 cursor-pointer select-none" onclick="toggleSummarySort(\'name\')">${t.student}</th>`;
 
             for (const a of filteredAssignments) {
                 if (showDetails) {
@@ -1371,7 +1739,7 @@
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 const dataBinary = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(dataBinary, { type: 'array' });
                 const firstSheetName = workbook.SheetNames[0];
@@ -1449,10 +1817,13 @@
             reader.readAsArrayBuffer(file);
         }
 
+
         // Initialize
         loadData();
+        initLanguage(); // Ajoutez cette ligne
         renderStudents();
         renderAssignments();
     </script>
 </body>
+
 </html>
