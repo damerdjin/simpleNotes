@@ -14,6 +14,18 @@
         .accordion-content.open { max-height: 5000px; transition: max-height 0.5s ease-in; }
         .rotate-icon { transition: transform 0.3s ease; }
         .rotate-icon.open { transform: rotate(180deg); }
+        .grade-question-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+        .grade-question-card { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 0.75rem; padding: 1rem; min-height: 130px; display: flex; flex-direction: column; gap: 0.75rem; }
+        .question-header { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; }
+        .question-title { font-weight: 700; color: #166534; font-size: 1rem; }
+        .question-score { font-size: 0.9rem; font-weight: 600; color: #15803d; background: #ffffff; border-radius: 9999px; padding: 0.15rem 0.75rem; border: 1px solid #bbf7d0; }
+        .question-direct-entry { display: flex; align-items: center; gap: 0.5rem; }
+        .question-direct-entry .grade-input { flex: 1; min-width: 0; }
+        .question-max { font-size: 0.85rem; color: #4b5563; font-weight: 500; }
+        .subquestion-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 0.6rem; }
+        .subquestion-chip { background: #ffffff; border: 1px solid #fecdd3; border-radius: 0.75rem; padding: 0.5rem 0.75rem; display: flex; flex-direction: column; gap: 0.4rem; }
+        .subquestion-chip-header { display: flex; align-items: center; justify-content: space-between; font-weight: 600; font-size: 0.85rem; color: #c2410c; }
+        .subquestion-chip .grade-input { width: 100%; }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -927,30 +939,32 @@
             if (!studentGrades[partKey]) studentGrades[partKey] = {};
             const qGrades = studentGrades[partKey][q.id] || {};
             
-            let qHtml = `<div class="bg-green-50 p-2 rounded">
-                <div class="flex items-center gap-2 mb-2 flex-wrap">
-                    <span class="font-semibold text-green-700">${q.name || 'Q?'}</span>
-                    <span class="text-sm text-green-600" id="q-total-${q.id}">0 / ${getQuestionMaxPoints(q)}</span>
+            let qHtml = `<div class="grade-question-card">
+                <div class="question-header">
+                    <span class="question-title">${q.name || 'Q?'}</span>
+                    <span class="question-score" id="q-total-${q.id}">0 / ${getQuestionMaxPoints(q)}</span>
                 </div>`;
             
             if (!q.subQuestions || q.subQuestions.length === 0) {
                 const val = qGrades['direct'] || '';
-                qHtml += `<div class="flex items-center gap-2 ml-4">
+                qHtml += `<div class="question-direct-entry">
                     <input type="number" min="0" max="${q.maxPoints}" step="0.25" value="${val}"
                         onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','direct',this.value)"
-                        class="grade-input w-16 p-1 border rounded text-center">
-                    <span class="text-sm text-gray-500">/ ${q.maxPoints}</span>
+                        class="grade-input p-2 border rounded text-center font-semibold">
+                    <span class="question-max">/ ${q.maxPoints}</span>
                 </div>`;
             } else {
-                qHtml += `<div class="flex flex-wrap gap-3 ml-4">`;
+                qHtml += `<div class="subquestion-grid">`;
                 qHtml += q.subQuestions.map(sq => {
                     const val = qGrades[sq.id] || '';
-                    return `<div class="flex items-center gap-1 bg-white px-2 py-1 rounded border">
-                        <span class="text-orange-600 font-medium">${sq.name})</span>
+                    return `<div class="subquestion-chip">
+                        <div class="subquestion-chip-header">
+                            <span>${sq.name})</span>
+                            <span class="text-xs text-gray-500">/${sq.maxPoints}</span>
+                        </div>
                         <input type="number" min="0" max="${sq.maxPoints}" step="0.25" value="${val}"
                             onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','${sq.id}',this.value)"
-                            class="grade-input w-14 p-1 border rounded text-center text-sm">
-                        <span class="text-xs text-gray-400">/${sq.maxPoints}</span>
+                            class="grade-input p-2 border rounded text-center font-semibold">
                     </div>`;
                 }).join('');
                 qHtml += `</div>`;
@@ -1033,7 +1047,7 @@
                 } else {
                     // Questions directes
                     if (directQuestions.length > 0) {
-                        exHtml += `<div class="space-y-3">` + directQuestions.map(q => renderGradeQuestion(q, studentId, assignmentId, ex.id, null)).join('') + `</div>`;
+                        exHtml += `<div class="grade-question-grid">` + directQuestions.map(q => renderGradeQuestion(q, studentId, assignmentId, ex.id, null)).join('') + `</div>`;
                     }
                     
                     // Parties
@@ -1044,7 +1058,7 @@
                                 <h4 class="font-bold text-purple-700 mb-3 flex items-center gap-2">
                                     <span class="w-2 h-2 bg-purple-400 rounded-full"></span> ${part.name}
                                 </h4>
-                                <div class="space-y-3 pl-4">
+                                <div class="grade-question-grid">
                                     ${(part.questions || []).map(q => renderGradeQuestion(q, studentId, assignmentId, ex.id, part.id)).join('')}
                                 </div>
                             </div>`;
