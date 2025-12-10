@@ -778,8 +778,9 @@
                 <input type="text" id="assignment-name" placeholder="Nom du devoir (ex: Devoir 1)"
                     class="w-full p-3 border rounded-lg">
                 <select id="assignment-class" class="w-full p-3 border rounded-lg">
-                    <option value="">-- Sélectionner une classe --</option>
+                    <option value="" data-translate="selectClass">-- Sélectionner une classe --</option>
                 </select>
+
             </div>
 
             <div id="exercises-builder" class="space-y-4 mb-4 max-h-[60vh] overflow-y-auto pr-2"></div>
@@ -847,10 +848,15 @@
             const t = translations[currentLanguage];
 
             // Traduire les éléments avec data-translate
+            // Traduire les éléments avec data-translate
             document.querySelectorAll('[data-translate]').forEach(element => {
                 const key = element.getAttribute('data-translate');
                 if (t[key]) {
-                    element.textContent = t[key];
+                    if (element.tagName === 'OPTION') {
+                        element.textContent = t[key];
+                    } else {
+                        element.textContent = t[key];
+                    }
                 }
             });
             // Titre et sous-titre
@@ -1018,6 +1024,7 @@
 
         function loadClassSelectors() {
             const classes = getClasses();
+            const t = translations[currentLanguage];
 
             // For grades tab
             const gradesSelect = document.getElementById('select-class-grades');
@@ -1039,7 +1046,7 @@
             const assignmentSelect = document.getElementById('assignment-class');
             if (assignmentSelect) {
                 const currentValue = assignmentSelect.value;
-                assignmentSelect.innerHTML = '<option value="">-- Sélectionner une classe --</option>' +
+                assignmentSelect.innerHTML = `<option value="">${t.selectClass}</option>` +
                     classes.map(c => `<option value="${c}" ${c === currentValue ? 'selected' : ''}>${c}</option>`).join('');
             }
         }
