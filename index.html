@@ -682,6 +682,20 @@
             box-shadow: 0 0 0 2px #bfdbfe;
             border-color: #60a5fa;
         }
+        .assignment-tag {
+            padding: 0.25rem 0.6rem;
+            border: 1px solid #d1d5db;
+            border-radius: 9999px;
+            font-size: 12px;
+            background: #f3f4f6;
+            color: #374151;
+        }
+        .assignment-tag.selected {
+            background: #dbeafe;
+            color: #1d4ed8;
+            border-color: #93c5fd;
+            font-weight: 600;
+        }
     </style>
 </head>
 
@@ -832,6 +846,7 @@
                             <input type="checkbox" id="show-details" onchange="renderSummary()" class="w-5 h-5">
                             <span>Afficher les détails (exercices)</span>
                         </label>
+                        <div id="summary-assignment-tags" class="flex flex-wrap gap-2"></div>
                     </div>
                 </div>
                 <div id="summary-table"></div>
@@ -1077,6 +1092,7 @@
 
         // Tri du récapitulatif
         let summarySort = { key: 'name', direction: 'asc' };
+        let summaryAssignmentFilter = new Set();
 
         // Current editing state
         let editingAssignmentId = null;
@@ -2327,9 +2343,23 @@
                 filteredStudents = filteredStudents.filter(s => s.className === selectedClass);
             }
 
+            let filteredAssignments = data.assignments.slice();
+            if (selectedClass) {
+                filteredAssignments = filteredAssignments.filter(a => a.className === selectedClass);
+            } else {
+                const classFilterSet = new Set(matchingClasses);
+                filteredAssignments = filteredAssignments.filter(a => classFilterSet.has(a.className));
+            }
+
+            if (summaryAssignmentFilter && summaryAssignmentFilter.size > 0) {
+                filteredAssignments = filteredAssignments.filter(a => summaryAssignmentFilter.has(a.id));
+            }
+
             const isAllStudents = !selectedClass && !searchTerm && filteredStudents.length === data.students.length;
+            const assignmentsFiltered = (summaryAssignmentFilter && summaryAssignmentFilter.size > 0) || filteredAssignments.length < data.assignments.length;
             if (detailsCheckbox) {
-                if (isAllStudents) {
+                const shouldDisableDetails = isAllStudents && !assignmentsFiltered;
+                if (shouldDisableDetails) {
                     detailsCheckbox.checked = false;
                     detailsCheckbox.disabled = true;
                 } else {
@@ -2338,13 +2368,7 @@
                 showDetails = detailsCheckbox.checked;
             }
 
-            let filteredAssignments;
-            if (selectedClass) {
-                filteredAssignments = data.assignments.filter(a => a.className === selectedClass);
-            } else {
-                const classFilterSet = new Set(matchingClasses);
-                filteredAssignments = data.assignments.filter(a => classFilterSet.has(a.className));
-            }
+            // filteredAssignments computed above
 
             if (filteredStudents.length === 0 || filteredAssignments.length === 0) {
                 let emptyMessage = '';
@@ -2379,6 +2403,15 @@
             }
 
             let headers = `<th class="p-3 text-left bg-gray-100 sticky left-0 z-10 cursor-pointer select-none" onclick="toggleSummarySort(\'name\')">${t.student}</th>`;
+
+            const tagContainer = document.getElementById('summary-assignment-tags');
+            if (tagContainer) {
+                const tagHtml = filteredAssignments.map(a => {
+                    const selected = summaryAssignmentFilter.has(a.id);
+                    return `<button class="assignment-tag ${selected ? 'selected' : ''}" onclick="toggleSummaryAssignmentTag('${a.id}')">${a.name}</button>`;
+                }).join('');
+                tagContainer.innerHTML = tagHtml;
+            }
 
             for (const a of filteredAssignments) {
                 if (showDetails) {
@@ -2478,6 +2511,15 @@
                 summarySort.key = key;
                 // Élève : A→Z par défaut, Devoir : max→0 par défaut
                 summarySort.direction = key === 'name' ? 'asc' : 'desc';
+            }
+            renderSummary();
+        }
+
+        function toggleSummaryAssignmentTag(assignmentId) {
+            if (summaryAssignmentFilter.has(assignmentId)) {
+                summaryAssignmentFilter.delete(assignmentId);
+            } else {
+                summaryAssignmentFilter.add(assignmentId);
             }
             renderSummary();
         }
