@@ -439,6 +439,156 @@
             /* Pousse tout le bloc à droite si besoin */
             margin-right: 0 !important;
         }
+
+        /* Liste d'élèves compacte en grille */
+        #students-list.student-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 0.75rem;
+        }
+
+        #students-list.student-grid .student-item {
+            display: flex !important;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.9rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+            transition: transform 0.08s ease, box-shadow 0.12s ease;
+        }
+
+        #students-list.student-grid .student-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+        }
+
+        .student-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        /* Badge niveau (remplace l’avatar) */
+        .student-level {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            color: #fff;
+            font-weight: 800;
+            font-size: 1.1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+        }
+
+        /* Variantes garçon/fille */
+        .student-level.boy {
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+        }
+
+        .student-level.girl {
+            background: linear-gradient(135deg, #ec4899, #d946ef);
+        }
+
+        .student-level.neutral {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+        }
+
+        .student-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .student-name {
+            font-weight: 700;
+            color: #111827;
+            line-height: 1.2;
+        }
+
+        .student-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            margin-top: 0.25rem;
+            color: #6b7280;
+            font-size: 12px;
+        }
+
+        .student-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #e0f2fe;
+            color: #075985;
+            border: 1px solid #bfdbfe;
+            white-space: nowrap;
+        }
+
+        .student-chip.gray {
+            background: #f3f4f6;
+            color: #374151;
+            border-color: #e5e7eb;
+        }
+
+        .student-chip.birth {
+            background: #fef3c7;
+            color: #92400e;
+            border-color: #fde68a;
+        }
+
+        .student-index {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .student-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .student-actions button {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: #fee2e2;
+            color: #b91c1c;
+            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.12s ease, transform 0.08s ease;
+            order: 0 !important;
+        }
+
+        .student-actions button:hover {
+            background: #fecdd3;
+            transform: translateY(-1px);
+        }
+
+        /* RTL ajustements */
+        .rtl-layout #students-list.student-grid .student-item {
+            flex-direction: row-reverse !important;
+        }
+
+        .rtl-layout #students-list.student-grid .student-meta {
+            justify-content: flex-end;
+        }
     </style>
 </head>
 
@@ -978,25 +1128,64 @@
         function renderStudents() {
             const t = translations[currentLanguage];
             const container = document.getElementById('students-list');
+
             if (data.students.length === 0) {
+                container.className = '';
                 container.innerHTML = `<p class="text-gray-500 text-center py-8">${t.noStudentsAddFirst}</p>`;
                 return;
             }
 
-            container.innerHTML = data.students.map((s, i) => `
-                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100">
-                    <div>
-                        <div class="font-medium"><span class="text-gray-400 mr-3">${i + 1}.</span>${s.name}</div>
-                        ${s.className ? `<div class="text-xs text-gray-500 mt-1">Classe : ${s.className}</div>` : ''}
-                    </div>
-                    <button onclick="deleteStudent('${s.id}')" class="text-red-500 hover:text-red-700 px-3 py-1">🗑️</button>
+            container.className = 'student-grid';
+
+            // Helper: extraire niveau du premier mot de la classe
+            const levelFromClass = (className = '') => {
+                const first = className.trim().split(/\s+/)[0] || '';
+                const map = {
+                    'أولى': 1, 'اولى': 1, '1ere': 1, '1ère': 1, '1': 1,
+                    'ثانية': 2, '2nde': 2, '2': 2,
+                    'ثالثة': 3, '3eme': 3, '3ème': 3, '3': 3,
+                    'رابعة': 4, '4eme': 4, '4ème': 4, '4': 4,
+                    'خامسة': 5, '5eme': 5, '5ème': 5, '5': 5,
+                    'سادسة': 6, '6eme': 6, '6ème': 6, '6': 6
+                };
+                const key = first.toLowerCase();
+                return map[key] || '?';
+            };
+
+            const items = data.students.map((s, i) => {
+                const first = (s.firstName || '').trim();
+                const last = (s.lastName || '').trim();
+                const displayName = (s.name || `${last} ${first}`).trim();
+                const level = levelFromClass(s.className || '');
+                const sex = (s.sex || '').toLowerCase();
+                const levelClass = sex.startsWith('f') || sex.includes('أنث') || sex.includes('fille') ? 'girl'
+                    : sex.startsWith('m') || sex.includes('ذكر') || sex.includes('garçon') ? 'boy'
+                        : 'neutral';
+                const birth = (s.birthDate || '').trim();
+
+                return `
+        <div class="student-item">
+            <div class="student-level ${levelClass}" title="Niveau">${level}</div>
+            <div class="student-info">
+                <div class="student-name">${displayName}</div>
+                <div class="student-meta">
+                    <span class="student-chip gray">#${i + 1}</span>
+                    ${s.className ? `<span class="student-chip">${s.className}</span>` : ''}
+                    ${s.nin ? `<span class="student-chip gray">NIN ${s.nin}</span>` : ''}
+                    ${birth ? `<span class="student-chip birth">🎂 ${birth}</span>` : ''}
                 </div>
-            `).join('');
+            </div>
+            <div class="student-actions">
+                <button onclick="deleteStudent('${s.id}')" title="${t.delete}">🗑️</button>
+            </div>
+        </div>`;
+            }).join('');
+
+            container.innerHTML = items;
 
             renderClassList();
             translatePage();
         }
-
         // ===== ASSIGNMENTS =====
         function openAssignmentModal(assignmentId = null) {
             const t = translations[currentLanguage];
