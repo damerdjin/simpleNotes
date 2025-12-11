@@ -7,6 +7,7 @@
     <title>Gestion des Corrections</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
     <style>
         /* ===== RTL SUPPORT COMPLET ET OPTIMISÉ ===== */
         .rtl-layout {
@@ -2812,7 +2813,8 @@
         }
 
 
-        function exportSummaryToExcel() {
+
+        async function exportSummaryToExcel() {
             const t = translations[currentLanguage];
             const selectedClass = document.getElementById('select-class-summary')?.value || '';
             const searchTerm = (document.getElementById('summary-search')?.value || '').toLowerCase().trim();
@@ -2834,7 +2836,6 @@
                 if (!selectedClass && searchTerm && !matchingClasses.has(s.className)) return false;
                 return true;
             }).sort((a, b) => {
-                // Tri par nom puis prénom
                 const nameA = `${a.lastName || ''} ${a.firstName || ''}`.toLowerCase();
                 const nameB = `${b.lastName || ''} ${b.firstName || ''}`.toLowerCase();
                 return nameA.localeCompare(nameB);
@@ -2859,7 +2860,9 @@
                 return;
             }
 
-            const wb = XLSX.utils.book_new();
+            // ✅ Utiliser ExcelJS au lieu de SheetJS
+            const workbook = new ExcelJS.Workbook();
+
             const sanitizeSheetName = name => (name || '').toString().replace(/[\\\/\?\*\[\]]/g, '').slice(0, 31) || 'Feuille';
             const studentsByClass = new Map();
             for (const s of filteredStudents) {
@@ -2867,39 +2870,64 @@
                 studentsByClass.get(s.className).push(s);
             }
             const classes = selectedClass ? [selectedClass] : Array.from(studentsByClass.keys());
-
-            // En-têtes en arabe
             const headerBase = ['رقم التعريف', 'اللقب', 'الاسم', 'تاريخ الميلاد'];
 
             for (const cls of classes) {
                 const stu = studentsByClass.get(cls) || [];
                 const assigns = filteredAssignments.filter(a => a.className === cls);
                 if (stu.length === 0 || assigns.length === 0) continue;
+
+                // ✅ Créer une feuille RTL
+                const worksheet = workbook.addWorksheet(sanitizeSheetName(cls), {
+                    views: [{ rightToLeft: true }]
+                });
+
                 const header = headerBase.concat(assigns.map(a => a.name));
-                const rows = [header];
+
+                // Ajouter l'en-tête
+                const headerRow = worksheet.addRow(header);
+                headerRow.font = { bold: true };
+                headerRow.alignment = { horizontal: 'right' };
+
                 for (const s of stu) {
                     const birthDate = formatDate(parseDateMaybeExcel(s.birthDate || ''));
-                    const row = [
+                    const rowData = [
                         s.nin || '',
                         s.lastName || '',
                         s.firstName || '',
                         birthDate
                     ];
-                    for (const a of assigns) {
+
+                    const assignmentGrades = assigns.map(a => {
                         const v = getStudentAssignmentTotal(s.id, a.id);
-                        row.push(typeof v === 'number' ? v : '');
-                    }
-                    rows.push(row);
+                        return typeof v === 'number' ? v : '';
+                    });
+
+                    const row = worksheet.addRow(rowData.concat(assignmentGrades));
+                    row.alignment = { horizontal: 'right' };
                 }
-                const ws = XLSX.utils.aoa_to_sheet(rows);
-                XLSX.utils.book_append_sheet(wb, ws, sanitizeSheetName(cls));
+
+                // Ajuster la largeur des colonnes
+                worksheet.columns.forEach(column => {
+                    column.width = 15;
+                });
             }
+
+            // ✅ Exporter le fichier
             const now = new Date();
             const pad = n => String(n).padStart(2, '0');
             const fname = `recap-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.xlsx`;
-            XLSX.writeFile(wb, fname);
-        }
 
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], {
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            });
+
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = fname;
+            link.click();
+        }
         // Convertit un éventuel numéro de série Excel en Date
         function parseDateMaybeExcel(value) {
             if (value === undefined || value === null) return null;
