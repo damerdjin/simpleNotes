@@ -864,6 +864,7 @@
                             <span>Afficher les détails (exercices)</span>
                         </label>
                         <div id="summary-assignment-tags" class="flex flex-wrap gap-2"></div>
+                        <button id="btn-export-excel" onclick="exportSummaryToExcel()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition">Exporter Excel</button>
                     </div>
                 </div>
                 <div id="summary-table"></div>
@@ -1101,6 +1102,9 @@
 
             const exportBtn = document.querySelector('#btn-export-json');
             if (exportBtn) exportBtn.textContent = t.exportJson;
+
+            const exportExcelBtn = document.querySelector('#btn-export-excel');
+            if (exportExcelBtn) exportExcelBtn.textContent = t.exportExcel;
         }
 
         // Data Store
@@ -2798,6 +2802,78 @@
                 event.target.value = '';
             };
             reader.readAsText(file);
+        }
+
+        function exportSummaryToExcel() {
+            const t = translations[currentLanguage];
+            const selectedClass = document.getElementById('select-class-summary')?.value || '';
+            const searchTerm = (document.getElementById('summary-search')?.value || '').toLowerCase().trim();
+
+            const matchingClasses = new Set();
+            for (const s of data.students) {
+                const n = (s.name || '').toLowerCase();
+                const cn = (s.className || '').toLowerCase();
+                if (!searchTerm || n.includes(searchTerm) || cn.includes(searchTerm)) {
+                    matchingClasses.add(s.className);
+                }
+            }
+            let filteredStudents = data.students.filter(s => {
+                const n = (s.name || '').toLowerCase();
+                const cn = (s.className || '').toLowerCase();
+                if (searchTerm && !(n.includes(searchTerm) || cn.includes(searchTerm))) return false;
+                if (selectedClass && s.className !== selectedClass) return false;
+                if (!selectedClass && searchTerm && !matchingClasses.has(s.className)) return false;
+                return true;
+            });
+            let filteredAssignments = data.assignments.slice();
+            if (selectedClass) {
+                filteredAssignments = filteredAssignments.filter(a => a.className === selectedClass);
+            } else {
+                const classFilterSet = new Set(matchingClasses);
+                filteredAssignments = filteredAssignments.filter(a => classFilterSet.has(a.className));
+            }
+            if (summaryAssignmentFilter && summaryAssignmentFilter.size > 0) {
+                filteredAssignments = filteredAssignments.filter(a => summaryAssignmentFilter.has(a.id));
+            }
+            if (summaryAssignmentFilter && summaryAssignmentFilter.size > 0 && !selectedClass) {
+                const allowedClasses = new Set(filteredAssignments.map(a => (a.className || '').trim()).filter(c => c.length > 0));
+                filteredStudents = filteredStudents.filter(s => allowedClasses.has((s.className || '').trim()));
+            }
+            if (filteredStudents.length === 0 || filteredAssignments.length === 0) {
+                alert(t.noResultForSearch || 'Aucun résultat');
+                return;
+            }
+
+            const wb = XLSX.utils.book_new();
+            const sanitizeSheetName = name => (name || '').toString().replace(/[\\\/\?\*\[\]]/g, '').slice(0, 31) || 'Feuille';
+            const studentsByClass = new Map();
+            for (const s of filteredStudents) {
+                if (!studentsByClass.has(s.className)) studentsByClass.set(s.className, []);
+                studentsByClass.get(s.className).push(s);
+            }
+            const classes = selectedClass ? [selectedClass] : Array.from(studentsByClass.keys());
+            const headerBase = ['NIN', 'Nom', 'Prenom', 'date_de_naissance'];
+            for (const cls of classes) {
+                const stu = studentsByClass.get(cls) || [];
+                const assigns = filteredAssignments.filter(a => a.className === cls);
+                if (stu.length === 0 || assigns.length === 0) continue;
+                const header = headerBase.concat(assigns.map(a => a.name));
+                const rows = [header];
+                for (const s of stu) {
+                    const row = [s.nin || '', s.lastName || '', s.firstName || '', s.birthDate || ''];
+                    for (const a of assigns) {
+                        const v = getStudentAssignmentTotal(s.id, a.id);
+                        row.push(typeof v === 'number' ? v : '');
+                    }
+                    rows.push(row);
+                }
+                const ws = XLSX.utils.aoa_to_sheet(rows);
+                XLSX.utils.book_append_sheet(wb, ws, sanitizeSheetName(cls));
+            }
+            const now = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            const fname = `recap-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.xlsx`;
+            XLSX.writeFile(wb, fname);
         }
         // Convertit un éventuel numéro de série Excel en Date
         function parseDateMaybeExcel(value) {
