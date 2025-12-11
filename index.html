@@ -2788,30 +2788,110 @@
             URL.revokeObjectURL(url);
         }
 
-        function handleJsonImportData(event) {
-            const t = translations[currentLanguage];
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                try {
-                    const obj = JSON.parse(e.target.result);
-                    if (!obj || typeof obj !== 'object') throw new Error('invalid');
-                    if (!Array.isArray(obj.students) || !Array.isArray(obj.assignments) || typeof obj.grades !== 'object') throw new Error('invalid');
-                    data = obj;
-                    saveData();
-                    renderStudents();
-                    renderAssignments();
-                    loadGradeSelectors();
-                    renderSummary();
-                } catch (err) {
-                    alert('Fichier JSON invalide');
+function handleJsonImportData(event) {
+    const t = translations[currentLanguage];
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        try {
+            const imported = JSON.parse(e.target.result);
+
+            if (
+                !imported ||
+                !Array.isArray(imported.students) ||
+                !Array.isArray(imported.assignments) ||
+                typeof imported.grades !== 'object'
+            ) {
+                throw new Error('invalid');
+            }
+
+            const messages = [];
+            const existingStudents = new Map(data.students.map(s => [s.id, s]));
+            const existingAssignments = new Map(
+                data.assignments.map(a => [`${a.className}||${a.name}`, a])
+            );
+
+            /* =========================
+               1️⃣ IMPORT DES ÉLÈVES
+               ========================= */
+            for (const s of imported.students) {
+                if (!existingStudents.has(s.id)) {
+                    data.students.push(s);
+                    existingStudents.set(s.id, s);
                 }
-                event.target.value = '';
-            };
-            reader.readAsText(file);
+            }
+
+            /* =========================
+               2️⃣ IMPORT DES DEVOIRS
+               ========================= */
+            const assignmentIdMap = new Map(); // ancienId → nouvelId
+
+            for (const a of imported.assignments) {
+                const key = `${a.className}||${a.name}`;
+
+                if (existingAssignments.has(key)) {
+                    // Devoir déjà existant pour la même classe
+                    messages.push(
+                        `⛔ Devoir ignoré : "${a.name}" (${a.className}) déjà existant`
+                    );
+                    continue;
+                }
+
+                // Nouveau devoir → on l'ajoute
+                data.assignments.push(a);
+                existingAssignments.set(key, a);
+                assignmentIdMap.set(a.id, a.id);
+            }
+
+            /* =========================
+               3️⃣ IMPORT DES NOTES
+               ========================= */
+            for (const [studentId, studentGrades] of Object.entries(imported.grades)) {
+                if (!existingStudents.has(studentId)) continue;
+
+                if (!data.grades[studentId]) {
+                    data.grades[studentId] = {};
+                }
+
+                for (const [assignmentId, value] of Object.entries(studentGrades)) {
+                    if (!assignmentIdMap.has(assignmentId)) continue;
+
+                    // Ne pas écraser une note existante
+                    if (data.grades[studentId][assignmentId] === undefined) {
+                        data.grades[studentId][assignmentId] = value;
+                    }
+                }
+            }
+
+            saveData();
+            renderStudents();
+            renderAssignments();
+            loadGradeSelectors();
+            renderSummary();
+
+            /* =========================
+               4️⃣ MESSAGE FINAL
+               ========================= */
+            if (messages.length > 0) {
+                alert(
+                    'Import terminé avec avertissements :\n\n' +
+                    messages.join('\n')
+                );
+            } else {
+                alert('Import terminé avec succès ✅');
+            }
+
+        } catch (err) {
+            alert('Fichier JSON invalide');
         }
 
+        event.target.value = '';
+    };
+
+    reader.readAsText(file);
+}
 
 
         async function exportSummaryToExcel() {
