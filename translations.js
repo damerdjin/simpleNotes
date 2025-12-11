@@ -74,6 +74,8 @@ const translations = {
         sumQuestions: "somme des questions",
         questionPrefix: 'Q',
         subQuestionLetters: 'abcdefghijklmnopqrstuvwxyz',
+        detailMode: 'Détail',
+        globalMode: 'Globale',
         
         // Notes
         gradesEntry: "Saisie des Notes",
@@ -113,8 +115,12 @@ const translations = {
         total: "Total",
         grade: "Note :",
         // Import
+        importExcel: "Importer (.xlsx)",
         importCompleted: "Import terminé. Nouveaux élèves ajoutés :",
-        emptyFile: "Fichier vide ou sans données."
+        emptyFile: "Fichier vide ou sans données.",
+        importSuccess: "Import terminé. Nouveaux élèves ajoutés :",
+        newStudentsAdded: "", // Vide car déjà inclus dans importSuccess
+
     },
     
     en: {
@@ -190,6 +196,8 @@ const translations = {
         sumQuestions: "sum of questions",
         questionPrefix: 'Q',
         subQuestionLetters: 'abcdefghijklmnopqrstuvwxyz',
+        detailMode: 'Detail',
+        globalMode: 'Global',
         
         // Notes
         gradesEntry: "Grade Entry",
@@ -230,20 +238,19 @@ const translations = {
         grade: "Grade:",
 
         // Import
+        importExcel: "Import (.xlsx)",
         importCompleted: "Import completed. New students added:",
         emptyFile: "Empty file or no data.",
+        importSuccess: "Import completed. New students added: ",
+        newStudentsAdded: "", // Vide car déjà inclus dans importSuccess
+
         
-        // Import
-        importCompleted: "Import completed. New students added:",
-        
-        // Import
-        importCompleted: "Import completed. New students added:"
     },
     
     ar: {
         // Interface générale
         appTitle: "📝 إدارة التصحيح",
-        appSubtitle: "إدارة طلابك، واجباتك ودرجاتك بكل سهولة",
+        appSubtitle: "إدارة طلابك، واجباتك و نقاطك بكل سهولة",
         
         // Navigation
         studentsTab: "👥 الطلاب",
@@ -257,7 +264,7 @@ const translations = {
         importExcel: "استيراد (.xlsx)",
         classManagement: "إدارة الفصول",
         noStudents: "لا يوجد طلاب. أضف طالبك الأول!",
-        deleteStudent: "حذف هذا الطالب وجميع درجاته؟",
+        deleteStudent: "حذف هذا الطالب وجميع نقاطه ؟",
         student: "الطالب",
         students: "طالب",
         
@@ -305,13 +312,15 @@ const translations = {
         noExercises: "لا توجد تمارين",
         clickAddExercise: "انقر على '+ إضافة تمرين' للبدء.",
         noQuestions: "تمرين بدون أسئلة",
-        directPointsOnly: "درجة مباشرة فقط",
+        directPointsOnly: "نقاط مباشرة فقط",
         autoTotalPoints: "المجموع التلقائي",
         sumSubQuestions: "مجموع الأسئلة الفرعية",
         questionPoints: "نقاط السؤال",
         sumQuestions: "مجموع الأسئلة",
         questionPrefix: 'س',
         subQuestionLetters: 'أبتثجحخدذرزسشصضطظعغفقكلمنهوي',
+        detailMode: 'تفصيلي',
+        globalMode: 'إجمالي',
         
         // Notes
         gradesEntry: "إدخال النقط",
@@ -320,9 +329,9 @@ const translations = {
         selectStudent: "-- اختر طالبا --",
         selectClassFirst: "-- اختر فصلا أولا --",
         selectAssignmentAndStudentToGrade: "اختر واجبا وطالبا لإدخال النقاط.",
-        globalGrade: "الدرجة العامة (تتجاوز المجموع):",
+        globalGrade: "النقطة العامة (تتجاوز المجموع):",
         ignoresDetails: "إذا تم ملؤه، يتجاهل التفاصيل أدناه.",
-        grade: "الدرجة:",
+        grade: "النقطة:",
         
         // Récapitulatif
         summaryTitle: "ملخص النقط",
@@ -346,13 +355,16 @@ const translations = {
         noClassesAutoCreated: "لا توجد فصول. يتم إنشاء الفصول تلقائيًا عند إضافة الطلاب.",
         exerciseAbbr: "تمرين",
         selectClassToStart: "اختر فصلاً للبدء",
-        globalGrade: "الدرجة العامة (تتجاوز المجموع):",
+        globalGrade: "النقطة العامة (تتجاوز المجموع):",
         ignoresDetails: "إذا تم ملؤه، يتجاهل التفاصيل أدناه.",
         total: "المجموع",
-        grade: "الدرجة:",
+        grade: "النقطة:",
         
         // Import
+        importExcel: "استيراد (.xlsx)",
         importCompleted: "تم الاستيراد. طلاب جدد مضافون:",
-        emptyFile: "ملف فارغ أو بدون بيانات."
+        emptyFile: "ملف فارغ أو بدون بيانات.",
+        importSuccess: "تم الاستيراد. طلاب جدد مضافون:",
+        newStudentsAdded: "", // Vide car déjà inclus dans importSuccess
     }
 };
