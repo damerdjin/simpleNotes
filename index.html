@@ -676,11 +676,17 @@
             border: 1px solid #d1d5db;
             border-radius: 6px;
             background: #ffffff;
+            -moz-appearance: textfield;
         }
         .summary-grade-input:focus {
             outline: none;
             box-shadow: 0 0 0 2px #bfdbfe;
             border-color: #60a5fa;
+        }
+        .summary-grade-input::-webkit-outer-spin-button,
+        .summary-grade-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
         }
         .assignment-tag {
             padding: 0.25rem 0.6rem;
@@ -2442,7 +2448,7 @@
                                 const max = getExerciseMaxPoints(ex);
                                 const existingFinal = studentGrades[ex.id]?.['final']?.['final']?.['final'];
                                 row += `<td class="px-2 py-1 text-center">
-                                    <input type="number" min="0" max="${max}" step="0.25" value="${existingFinal !== undefined && existingFinal !== '' ? existingFinal : exTotal.toFixed(2)}" oninput="clampExerciseInput(this, ${max})" onchange="setExerciseFinalGrade('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" class="summary-grade-input">
+                                    <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" value="${existingFinal !== undefined && existingFinal !== '' ? existingFinal : exTotal.toFixed(2)}" oninput="sanitizeAndClamp(this, ${max})" onblur="commitSummaryInput('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" onkeydown="handleSummaryInputKey(event, '${s.id}','${a.id}','${ex.id}', ${max})" class="summary-grade-input">
                                 </td>`;
                             } else {
                                 row += `<td class="px-2 py-1 text-center text-gray-300 bg-gray-50">-</td>`;
@@ -2515,6 +2521,35 @@
             if (v < 0) v = 0;
             if (v > max) v = max;
             el.value = v;
+        }
+
+        function sanitizeAndClamp(el, max) {
+            let val = (el.value || '').toString();
+            val = val.replace(',', '.');
+            val = val.replace(/[^0-9.]/g, '');
+            const parts = val.split('.');
+            if (parts.length > 2) {
+                val = parts[0] + '.' + parts.slice(1).join('');
+            }
+            el.value = val;
+            clampExerciseInput(el, max);
+        }
+
+        function commitSummaryInput(studentId, assignmentId, exId, max, value) {
+            setExerciseFinalGrade(studentId, assignmentId, exId, max, value);
+        }
+
+        function handleSummaryInputKey(e, studentId, assignmentId, exId, max) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                commitSummaryInput(studentId, assignmentId, exId, max, e.target.value);
+                const inputs = Array.from(document.querySelectorAll('.summary-grade-input'));
+                const idx = inputs.indexOf(e.target);
+                if (idx >= 0 && idx < inputs.length - 1) {
+                    inputs[idx + 1].focus();
+                    inputs[idx + 1].select?.();
+                }
+            }
         }
 
         function toggleSummarySort(key) {
