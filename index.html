@@ -2157,6 +2157,16 @@
             if (!data.grades[studentId][assignmentId][exId][partKey][qId]) data.grades[studentId][assignmentId][exId][partKey][qId] = {};
 
             data.grades[studentId][assignmentId][exId][partKey][qId][sqId] = parseFloat(value) || 0;
+
+            // Si une note finale de l'exercice existait et qu'on modifie une question,
+            // on la désactive pour revenir au calcul détaillé.
+            if (!(partKey === 'final' && qId === 'final' && sqId === 'final')) {
+                const exGrades = data.grades[studentId][assignmentId][exId];
+                if (exGrades && exGrades.final && exGrades.final.final && typeof exGrades.final.final.final !== 'undefined') {
+                    exGrades.final.final.final = '';
+                }
+            }
+
             saveData();
             recalculateTotals(assignmentId, studentId);
         }
