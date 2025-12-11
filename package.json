@@ -1,0 +1,13 @@
+{
+  "name": "simple-notes",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "node build.js"
+  },
+  "devDependencies": {
+    "fs-extra": "^11.2.0",
+    "html-minifier-terser": "^7.2.0",
+    "javascript-obfuscator": "^4.1.0"
+  }
+}
