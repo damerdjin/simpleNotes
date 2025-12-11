@@ -74,6 +74,8 @@ const translations = {
         sumQuestions: "somme des questions",
         questionPrefix: 'Q',
         subQuestionLetters: 'abcdefghijklmnopqrstuvwxyz',
+        detailMode: 'Détail',
+        globalMode: 'Globale',
         
         // Notes
         gradesEntry: "Saisie des Notes",
@@ -194,6 +196,8 @@ const translations = {
         sumQuestions: "sum of questions",
         questionPrefix: 'Q',
         subQuestionLetters: 'abcdefghijklmnopqrstuvwxyz',
+        detailMode: 'Detail',
+        globalMode: 'Global',
         
         // Notes
         gradesEntry: "Grade Entry",
@@ -315,6 +319,8 @@ const translations = {
         sumQuestions: "مجموع الأسئلة",
         questionPrefix: 'س',
         subQuestionLetters: 'أبتثجحخدذرزسشصضطظعغفقكلمنهوي',
+        detailMode: 'تفصيلي',
+        globalMode: 'إجمالي',
         
         // Notes
         gradesEntry: "إدخال النقط",
