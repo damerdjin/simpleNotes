@@ -7,6 +7,7 @@
     <title>Gestion des Corrections</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
     <style>
         /* ===== RTL SUPPORT COMPLET ET OPTIMISÉ ===== */
         .rtl-layout {
@@ -667,6 +668,7 @@
             flex-direction: row-reverse !important;
             justify-content: flex-end !important;
         }
+
         .summary-grade-input {
             width: 64px;
             padding: 4px 6px;
@@ -678,16 +680,19 @@
             background: #ffffff;
             -moz-appearance: textfield;
         }
+
         .summary-grade-input:focus {
             outline: none;
             box-shadow: 0 0 0 2px #bfdbfe;
             border-color: #60a5fa;
         }
+
         .summary-grade-input::-webkit-outer-spin-button,
         .summary-grade-input::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
+
         .assignment-tag {
             padding: 0.25rem 0.6rem;
             border: 1px solid #d1d5db;
@@ -696,6 +701,7 @@
             background: #f3f4f6;
             color: #374151;
         }
+
         .assignment-tag.selected {
             background: #dbeafe;
             color: #1d4ed8;
@@ -764,6 +770,17 @@
                             <input type="file" id="student-import" accept=".xlsx,.xls" class="hidden"
                                 onchange="handleStudentImport(event)">
                         </label>
+
+                        <label
+                            class="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-lg border cursor-pointer text-sm">
+                            <span class="text-gray-700" data-translate="importJson">Importer (.json)</span>
+                            <input type="file" id="json-import" accept=".json" class="hidden"
+                                onchange="handleJsonImportData(event)">
+                        </label>
+
+                        <button id="btn-export-json" onclick="handleJsonExportData()"
+                            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold transition"
+                            data-translate="exportJson">Exporter JSON</button>
 
                         <button onclick="openStudentModal()"
                             class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition">
@@ -853,6 +870,9 @@
                             <span>Afficher les détails (exercices)</span>
                         </label>
                         <div id="summary-assignment-tags" class="flex flex-wrap gap-2"></div>
+                        <button id="btn-export-excel" onclick="exportSummaryToExcel()"
+                            class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition">Exporter
+                            Excel</button>
                     </div>
                 </div>
                 <div id="summary-table"></div>
@@ -1087,6 +1107,12 @@
             duplicateButtons.forEach(btn => {
                 btn.title = t.duplicate;
             });
+
+            const exportBtn = document.querySelector('#btn-export-json');
+            if (exportBtn) exportBtn.textContent = t.exportJson;
+
+            const exportExcelBtn = document.querySelector('#btn-export-excel');
+            if (exportExcelBtn) exportExcelBtn.textContent = t.exportExcel;
         }
 
         // Data Store
@@ -1932,27 +1958,27 @@
                             <div id="accordion-${a.id}" class="accordion-content">
                                 <div class="p-4 border-t space-y-3 bg-white text-sm">
                                     ${a.exercises.map((ex, i) => {
-                                        const parts = ex.parts || [];
-                                        const directQuestions = ex.questions || [];
-                                        let exContent = '';
-                                        if (directQuestions.length > 0) {
-                                            exContent += `<div class=\"ml-4 text-gray-600 mt-1\">${directQuestions.map(q => `<span class=\"inline-block mr-2\">${q.name || 'Q?'}: ${getQuestionMaxPoints(q)} ${t.points}</span>`).join(' • ')}</div>`;
-                                        }
-                                        if (parts.length > 0) {
-                                            exContent += parts.map(part => `
+                        const parts = ex.parts || [];
+                        const directQuestions = ex.questions || [];
+                        let exContent = '';
+                        if (directQuestions.length > 0) {
+                            exContent += `<div class=\"ml-4 text-gray-600 mt-1\">${directQuestions.map(q => `<span class=\"inline-block mr-2\">${q.name || 'Q?'}: ${getQuestionMaxPoints(q)} ${t.points}</span>`).join(' • ')}</div>`;
+                        }
+                        if (parts.length > 0) {
+                            exContent += parts.map(part => `
                                                 <div class=\"ml-4 mt-1 border-l pl-2\">
                                                     <span class=\"text-purple-600 font-medium\">${part.name}:</span>
                                                     <span class=\"text-gray-500 italic\">(${(part.questions || []).map(q => q.name || 'Q?').join(', ')})</span>
                                                 </div>
                                             `).join('');
-                                        }
-                                        return `
+                        }
+                        return `
                                             <div class=\"bg-gray-50 p-2 rounded border-l-4 border-blue-400\">
                                                 <strong>${t.exercise} ${i + 1}${ex.name ? ' - ' + ex.name : ''}</strong> (${getExerciseMaxPoints(ex)} ${t.points})
                                                 ${exContent}
                                             </div>
                                         `;
-                                    }).join('')}
+                    }).join('')}
                                 </div>
                             </div>
                         </div>
@@ -2515,7 +2541,7 @@
                                 const max = getExerciseMaxPoints(ex);
                                 const existingFinal = studentGrades[ex.id]?.['final']?.['final']?.['final'];
                                 row += `<td class="px-2 py-1 text-center">
-                                    <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" value="${existingFinal !== undefined && existingFinal !== '' ? existingFinal : exTotal.toFixed(2)}" oninput="sanitizeAndClamp(this, ${max})" onblur="commitSummaryInput('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" onkeydown="handleSummaryInputKey(event, '${s.id}','${a.id}','${ex.id}', ${max})" onfocus="this.select()" id="sum-input-${s.id}-${a.id}-${ex.id}" name="sum-input-${s.id}-${a.id}-${ex.id}" aria-label="Note Ex${a.exercises.indexOf(ex)+1} pour ${s.name} - ${a.name}" class="summary-grade-input">
+                                    <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" value="${existingFinal !== undefined && existingFinal !== '' ? existingFinal : exTotal.toFixed(2)}" oninput="sanitizeAndClamp(this, ${max})" onblur="commitSummaryInput('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" onkeydown="handleSummaryInputKey(event, '${s.id}','${a.id}','${ex.id}', ${max})" onfocus="this.select()" id="sum-input-${s.id}-${a.id}-${ex.id}" name="sum-input-${s.id}-${a.id}-${ex.id}" aria-label="Note Ex${a.exercises.indexOf(ex) + 1} pour ${s.name} - ${a.name}" class="summary-grade-input">
                                 </td>`;
                             } else {
                                 row += `<td class="px-2 py-1 text-center text-gray-300 bg-gray-50">-</td>`;
@@ -2744,6 +2770,243 @@
                 event.target.value = '';
             };
             reader.readAsArrayBuffer(file);
+        }
+
+        function handleJsonExportData() {
+            const t = translations[currentLanguage];
+            const now = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            const fname = `simpleNotes-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.json`;
+            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fname;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+function handleJsonImportData(event) {
+    const t = translations[currentLanguage];
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        try {
+            const imported = JSON.parse(e.target.result);
+
+            if (
+                !imported ||
+                !Array.isArray(imported.students) ||
+                !Array.isArray(imported.assignments) ||
+                typeof imported.grades !== 'object'
+            ) {
+                throw new Error('invalid');
+            }
+
+            const messages = [];
+            const existingStudents = new Map(data.students.map(s => [s.id, s]));
+            const existingAssignments = new Map(
+                data.assignments.map(a => [`${a.className}||${a.name}`, a])
+            );
+
+            /* =========================
+               1️⃣ IMPORT DES ÉLÈVES
+               ========================= */
+            for (const s of imported.students) {
+                if (!existingStudents.has(s.id)) {
+                    data.students.push(s);
+                    existingStudents.set(s.id, s);
+                }
+            }
+
+            /* =========================
+               2️⃣ IMPORT DES DEVOIRS
+               ========================= */
+            const assignmentIdMap = new Map(); // ancienId → nouvelId
+
+            for (const a of imported.assignments) {
+                const key = `${a.className}||${a.name}`;
+
+                if (existingAssignments.has(key)) {
+                    // Devoir déjà existant pour la même classe
+                    messages.push(
+                        `⛔ Devoir ignoré : "${a.name}" (${a.className}) déjà existant`
+                    );
+                    continue;
+                }
+
+                // Nouveau devoir → on l'ajoute
+                data.assignments.push(a);
+                existingAssignments.set(key, a);
+                assignmentIdMap.set(a.id, a.id);
+            }
+
+            /* =========================
+               3️⃣ IMPORT DES NOTES
+               ========================= */
+            for (const [studentId, studentGrades] of Object.entries(imported.grades)) {
+                if (!existingStudents.has(studentId)) continue;
+
+                if (!data.grades[studentId]) {
+                    data.grades[studentId] = {};
+                }
+
+                for (const [assignmentId, value] of Object.entries(studentGrades)) {
+                    if (!assignmentIdMap.has(assignmentId)) continue;
+
+                    // Ne pas écraser une note existante
+                    if (data.grades[studentId][assignmentId] === undefined) {
+                        data.grades[studentId][assignmentId] = value;
+                    }
+                }
+            }
+
+            saveData();
+            renderStudents();
+            renderAssignments();
+            loadGradeSelectors();
+            renderSummary();
+
+            /* =========================
+               4️⃣ MESSAGE FINAL
+               ========================= */
+            if (messages.length > 0) {
+                alert(
+                    'Import terminé avec avertissements :\n\n' +
+                    messages.join('\n')
+                );
+            } else {
+                alert('Import terminé avec succès ✅');
+            }
+
+        } catch (err) {
+            alert('Fichier JSON invalide');
+        }
+
+        event.target.value = '';
+    };
+
+    reader.readAsText(file);
+}
+
+
+        async function exportSummaryToExcel() {
+            const t = translations[currentLanguage];
+            const selectedClass = document.getElementById('select-class-summary')?.value || '';
+            const searchTerm = (document.getElementById('summary-search')?.value || '').toLowerCase().trim();
+
+            const matchingClasses = new Set();
+            for (const s of data.students) {
+                const n = (s.name || '').toLowerCase();
+                const cn = (s.className || '').toLowerCase();
+                if (!searchTerm || n.includes(searchTerm) || cn.includes(searchTerm)) {
+                    matchingClasses.add(s.className);
+                }
+            }
+
+            let filteredStudents = data.students.filter(s => {
+                const n = (s.name || '').toLowerCase();
+                const cn = (s.className || '').toLowerCase();
+                if (searchTerm && !(n.includes(searchTerm) || cn.includes(searchTerm))) return false;
+                if (selectedClass && s.className !== selectedClass) return false;
+                if (!selectedClass && searchTerm && !matchingClasses.has(s.className)) return false;
+                return true;
+            }).sort((a, b) => {
+                const nameA = `${a.lastName || ''} ${a.firstName || ''}`.toLowerCase();
+                const nameB = `${b.lastName || ''} ${b.firstName || ''}`.toLowerCase();
+                return nameA.localeCompare(nameB);
+            });
+
+            let filteredAssignments = data.assignments.slice();
+            if (selectedClass) {
+                filteredAssignments = filteredAssignments.filter(a => a.className === selectedClass);
+            } else {
+                const classFilterSet = new Set(matchingClasses);
+                filteredAssignments = filteredAssignments.filter(a => classFilterSet.has(a.className));
+            }
+            if (summaryAssignmentFilter && summaryAssignmentFilter.size > 0) {
+                filteredAssignments = filteredAssignments.filter(a => summaryAssignmentFilter.has(a.id));
+            }
+            if (summaryAssignmentFilter && summaryAssignmentFilter.size > 0 && !selectedClass) {
+                const allowedClasses = new Set(filteredAssignments.map(a => (a.className || '').trim()).filter(c => c.length > 0));
+                filteredStudents = filteredStudents.filter(s => allowedClasses.has((s.className || '').trim()));
+            }
+            if (filteredStudents.length === 0 || filteredAssignments.length === 0) {
+                alert(t.noResultForSearch || 'Aucun résultat');
+                return;
+            }
+
+            // ✅ Utiliser ExcelJS au lieu de SheetJS
+            const workbook = new ExcelJS.Workbook();
+
+            const sanitizeSheetName = name => (name || '').toString().replace(/[\\\/\?\*\[\]]/g, '').slice(0, 31) || 'Feuille';
+            const studentsByClass = new Map();
+            for (const s of filteredStudents) {
+                if (!studentsByClass.has(s.className)) studentsByClass.set(s.className, []);
+                studentsByClass.get(s.className).push(s);
+            }
+            const classes = selectedClass ? [selectedClass] : Array.from(studentsByClass.keys());
+            const headerBase = ['رقم التعريف', 'اللقب', 'الاسم', 'تاريخ الميلاد'];
+
+            for (const cls of classes) {
+                const stu = studentsByClass.get(cls) || [];
+                const assigns = filteredAssignments.filter(a => a.className === cls);
+                if (stu.length === 0 || assigns.length === 0) continue;
+
+                // ✅ Créer une feuille RTL
+                const worksheet = workbook.addWorksheet(sanitizeSheetName(cls), {
+                    views: [{ rightToLeft: true }]
+                });
+
+                const header = headerBase.concat(assigns.map(a => a.name));
+
+                // Ajouter l'en-tête
+                const headerRow = worksheet.addRow(header);
+                headerRow.font = { bold: true };
+                headerRow.alignment = { horizontal: 'right' };
+
+                for (const s of stu) {
+                    const birthDate = formatDate(parseDateMaybeExcel(s.birthDate || ''));
+                    const rowData = [
+                        s.nin || '',
+                        s.lastName || '',
+                        s.firstName || '',
+                        birthDate
+                    ];
+
+                    const assignmentGrades = assigns.map(a => {
+                        const v = getStudentAssignmentTotal(s.id, a.id);
+                        return typeof v === 'number' ? v : '';
+                    });
+
+                    const row = worksheet.addRow(rowData.concat(assignmentGrades));
+                    row.alignment = { horizontal: 'right' };
+                }
+
+                // Ajuster la largeur des colonnes
+                worksheet.columns.forEach(column => {
+                    column.width = 15;
+                });
+            }
+
+            // ✅ Exporter le fichier
+            const now = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            const fname = `recap-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.xlsx`;
+
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], {
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            });
+
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = fname;
+            link.click();
         }
         // Convertit un éventuel numéro de série Excel en Date
         function parseDateMaybeExcel(value) {
