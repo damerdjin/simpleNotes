@@ -2011,6 +2011,7 @@
             const partKey = partId || 'direct';
             if (!studentGrades[partKey]) studentGrades[partKey] = {};
             const qGrades = studentGrades[partKey][q.id] || {};
+            const mode = studentGrades.mode || ((studentGrades['final']?.['final']?.['final'] || '') !== '' ? 'global' : 'detail');
 
             let qHtml = `<div class="grade-question-card">
                 <div class="question-header">
@@ -2020,24 +2021,26 @@
 
             if (!q.subQuestions || q.subQuestions.length === 0) {
                 const val = qGrades['direct'] || '';
-                qHtml += `<div class="question-direct-entry">
+                qHtml += `<div class="question-direct-entry ${mode === 'global' ? 'opacity-50 pointer-events-none' : ''}">
                     <input type="number" min="0" max="${q.maxPoints}" step="0.25" value="${val}"
+                        ${mode === 'global' ? 'disabled' : ''}
                         onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','direct',this.value)"
-                        class="grade-input p-2 border rounded text-center font-semibold">
+                        class="grade-input p-2 border rounded text-center font-semibold" title="La note globale désactive la saisie détaillée">
                     <span class="question-max">/ ${q.maxPoints}</span>
                 </div>`;
             } else {
                 qHtml += `<div class="subquestion-grid">`;
                 qHtml += q.subQuestions.map(sq => {
                     const val = qGrades[sq.id] || '';
-                    return `<div class="subquestion-chip">
+                    return `<div class="subquestion-chip ${mode === 'global' ? 'opacity-50 pointer-events-none' : ''}">
                         <div class="subquestion-chip-header">
                             <span>${sq.name})</span>
                             <span class="text-xs text-gray-500">/${sq.maxPoints}</span>
                         </div>
                         <input type="number" min="0" max="${sq.maxPoints}" step="0.25" value="${val}"
+                            ${mode === 'global' ? 'disabled' : ''}
                             onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','${sq.id}',this.value)"
-                            class="grade-input p-2 border rounded text-center font-semibold">
+                            class="grade-input p-2 border rounded text-center font-semibold" title="La note globale désactive la saisie détaillée">
                     </div>`;
                 }).join('');
                 qHtml += `</div>`;
@@ -2078,6 +2081,10 @@
                 const parts = ex.parts || [];
                 const hasQuestions = directQuestions.length > 0 || parts.length > 0;
 
+                const exGradesCur = data.grades[studentId][assignmentId][ex.id] || {};
+                const finalGradeCur = exGradesCur['final']?.['final']?.['final'] || '';
+                const modeCur = exGradesCur.mode || (finalGradeCur !== '' ? 'global' : 'detail');
+
                 const accordionId = `grade-ex-${ex.id}`;
 
                 let exHtml = `
@@ -2092,7 +2099,13 @@
             </div>
             
             <div id="accordion-${accordionId}" class="accordion-content">
-                <div class="p-4 space-y-4 border-t">`;
+                <div class="p-4 space-y-4 border-t">
+                    <div class="flex items-center gap-3">
+                        <div class="inline-flex border rounded overflow-hidden text-sm">
+                            <button type="button" class="px-3 py-1 ${modeCur === 'detail' ? 'bg-blue-600 text-white' : 'bg-white'}" onclick="setExerciseMode('${studentId}','${assignmentId}','${ex.id}','detail')">Σ Détail</button>
+                            <button type="button" class="px-3 py-1 ${modeCur === 'global' ? 'bg-yellow-500 text-white' : 'bg-white'}" onclick="setExerciseMode('${studentId}','${assignmentId}','${ex.id}','global')">★ Globale</button>
+                        </div>
+                    </div>`;
 
                 // Note finale optionnelle
                 if (hasQuestions) {
@@ -2101,8 +2114,10 @@
                 <div class="flex items-center gap-3 mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-100">
                     <span class="text-sm font-semibold text-yellow-800">${t.globalGrade}</span>
                     <input type="number" min="0" max="${getExerciseMaxPoints(ex)}" step="0.25" value="${finalGrade}"
+                        ${modeCur === 'detail' ? 'disabled' : ''}
+                        title="La note globale désactive la saisie détaillée"
                         onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
-                        class="grade-input w-20 p-2 border rounded text-center font-bold bg-white" onclick="event.stopPropagation()">
+                        class="grade-input w-20 p-2 border rounded text-center font-bold bg-white ${modeCur === 'detail' ? 'opacity-50' : ''}" onclick="event.stopPropagation()">
                     <span class="text-xs text-yellow-600 italic">${t.ignoresDetails}</span>
                 </div>`;
                 }
@@ -2157,11 +2172,9 @@
             if (!data.grades[studentId][assignmentId][exId][partKey][qId]) data.grades[studentId][assignmentId][exId][partKey][qId] = {};
 
             data.grades[studentId][assignmentId][exId][partKey][qId][sqId] = parseFloat(value) || 0;
-
-            // Si une note finale de l'exercice existait et qu'on modifie une question,
-            // on la désactive pour revenir au calcul détaillé.
             if (!(partKey === 'final' && qId === 'final' && sqId === 'final')) {
                 const exGrades = data.grades[studentId][assignmentId][exId];
+                exGrades.mode = 'detail';
                 if (exGrades && exGrades.final && exGrades.final.final && typeof exGrades.final.final.final !== 'undefined') {
                     exGrades.final.final.final = '';
                 }
@@ -2169,6 +2182,22 @@
 
             saveData();
             recalculateTotals(assignmentId, studentId);
+        }
+
+        function setExerciseMode(studentId, assignmentId, exId, mode) {
+            if (!data.grades[studentId]) data.grades[studentId] = {};
+            if (!data.grades[studentId][assignmentId]) data.grades[studentId][assignmentId] = {};
+            if (!data.grades[studentId][assignmentId][exId]) data.grades[studentId][assignmentId][exId] = {};
+            const exGrades = data.grades[studentId][assignmentId][exId];
+            exGrades.mode = mode;
+            if (mode === 'detail') {
+                if (!exGrades.final) exGrades.final = {};
+                if (!exGrades.final.final) exGrades.final.final = {};
+                exGrades.final.final.final = '';
+            }
+            saveData();
+            recalculateTotals(assignmentId, studentId);
+            loadGradeEntry();
         }
 
         function recalculateTotals(assignmentId, studentId) {
