@@ -2448,7 +2448,7 @@
                                 const max = getExerciseMaxPoints(ex);
                                 const existingFinal = studentGrades[ex.id]?.['final']?.['final']?.['final'];
                                 row += `<td class="px-2 py-1 text-center">
-                                    <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" value="${existingFinal !== undefined && existingFinal !== '' ? existingFinal : exTotal.toFixed(2)}" oninput="sanitizeAndClamp(this, ${max})" onkeydown="handleSummaryInputKey(event, '${s.id}','${a.id}','${ex.id}', ${max})" onfocus="this.select()" id="sum-input-${s.id}-${a.id}-${ex.id}" name="sum-input-${s.id}-${a.id}-${ex.id}" aria-label="Note Ex${a.exercises.indexOf(ex)+1} pour ${s.name} - ${a.name}" class="summary-grade-input">
+                                    <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" value="${existingFinal !== undefined && existingFinal !== '' ? existingFinal : exTotal.toFixed(2)}" oninput="sanitizeAndClamp(this, ${max})" onblur="commitSummaryInput('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" onkeydown="handleSummaryInputKey(event, '${s.id}','${a.id}','${ex.id}', ${max})" onfocus="this.select()" id="sum-input-${s.id}-${a.id}-${ex.id}" name="sum-input-${s.id}-${a.id}-${ex.id}" aria-label="Note Ex${a.exercises.indexOf(ex)+1} pour ${s.name} - ${a.name}" class="summary-grade-input">
                                 </td>`;
                             } else {
                                 row += `<td class="px-2 py-1 text-center text-gray-300 bg-gray-50">-</td>`;
@@ -2461,7 +2461,7 @@
                         const max = getAssignmentMaxPoints(a);
                         const pct = max > 0 ? (total / max * 100) : 0;
                         const bgColor = pct >= 70 ? 'bg-green-100' : pct >= 50 ? 'bg-orange-100' : 'bg-red-100';
-                        row += `<td class="p-3 text-center font-bold ${bgColor}" id="sum-total-${s.id}-${a.id}">${total.toFixed(1)}</td>`;
+                        row += `<td class="p-3 text-center font-bold ${bgColor}" id="sum-total-${s.id}-${a.id}">${total.toFixed(2)}</td>`;
                     } else {
                         row += `<td class="p-3 text-center text-gray-400 bg-gray-50">-</td>`;
                     }
@@ -2501,6 +2501,10 @@
         }
 
         function setExerciseFinalGrade(studentId, assignmentId, exId, max, value) {
+            applyExerciseFinalGrade(studentId, assignmentId, exId, max, value, true);
+        }
+
+        function applyExerciseFinalGrade(studentId, assignmentId, exId, max, value, rerender) {
             if (!data.grades[studentId]) data.grades[studentId] = {};
             if (!data.grades[studentId][assignmentId]) data.grades[studentId][assignmentId] = {};
             if (!data.grades[studentId][assignmentId][exId]) data.grades[studentId][assignmentId][exId] = {};
@@ -2511,7 +2515,11 @@
             if (v !== '' && v < 0) v = 0;
             data.grades[studentId][assignmentId][exId]['final']['final']['final'] = v;
             saveData();
-            renderSummary();
+            if (rerender) {
+                renderSummary();
+            } else {
+                updateSummaryTotalsInline(studentId, assignmentId);
+            }
         }
 
         function clampExerciseInput(el, max) {
@@ -2526,6 +2534,7 @@
         function sanitizeAndClamp(el, max) {
             let val = (el.value || '').toString();
             val = val.replace(',', '.');
+            val = val.replace(/[٫٬]/g, '.');
             val = val.replace(/[^0-9.]/g, '');
             const parts = val.split('.');
             if (parts.length > 2) {
@@ -2536,7 +2545,7 @@
         }
 
         function commitSummaryInput(studentId, assignmentId, exId, max, value) {
-            setExerciseFinalGrade(studentId, assignmentId, exId, max, value);
+            applyExerciseFinalGrade(studentId, assignmentId, exId, max, value, false);
         }
 
         function handleSummaryInputKey(e, studentId, assignmentId, exId, max) {
@@ -2545,11 +2554,25 @@
                 commitSummaryInput(studentId, assignmentId, exId, max, e.target.value);
                 const inputs = Array.from(document.querySelectorAll('.summary-grade-input'));
                 const idx = inputs.indexOf(e.target);
-                if (idx >= 0 && idx < inputs.length - 1) {
-                    inputs[idx + 1].focus();
-                    inputs[idx + 1].select?.();
+                const nextIdx = idx + 1;
+                if (nextIdx >= 0 && nextIdx < inputs.length) {
+                    inputs[nextIdx].focus();
+                    inputs[nextIdx].select?.();
                 }
             }
+        }
+
+        function updateSummaryTotalsInline(studentId, assignmentId) {
+            const totalCell = document.getElementById(`sum-total-${studentId}-${assignmentId}`);
+            if (!totalCell) return;
+            const total = getStudentAssignmentTotal(studentId, assignmentId);
+            const assignment = data.assignments.find(a => a.id === assignmentId);
+            const max = assignment ? getAssignmentMaxPoints(assignment) : 0;
+            const pct = max > 0 ? (total / max * 100) : 0;
+            let bgColor = 'bg-red-100';
+            if (pct >= 70) bgColor = 'bg-green-100'; else if (pct >= 50) bgColor = 'bg-orange-100';
+            totalCell.textContent = total.toFixed(2);
+            totalCell.className = `p-3 text-center font-bold ${bgColor}`;
         }
 
         function toggleSummarySort(key) {
