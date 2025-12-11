@@ -2448,7 +2448,7 @@
                                 const max = getExerciseMaxPoints(ex);
                                 const existingFinal = studentGrades[ex.id]?.['final']?.['final']?.['final'];
                                 row += `<td class="px-2 py-1 text-center">
-                                    <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" value="${existingFinal !== undefined && existingFinal !== '' ? existingFinal : exTotal.toFixed(2)}" oninput="sanitizeAndClamp(this, ${max})" onblur="commitSummaryInput('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" onkeydown="handleSummaryInputKey(event, '${s.id}','${a.id}','${ex.id}', ${max})" class="summary-grade-input">
+                                    <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" value="${existingFinal !== undefined && existingFinal !== '' ? existingFinal : exTotal.toFixed(2)}" oninput="sanitizeAndClamp(this, ${max})" onkeydown="handleSummaryInputKey(event, '${s.id}','${a.id}','${ex.id}', ${max})" onfocus="this.select()" id="sum-input-${s.id}-${a.id}-${ex.id}" name="sum-input-${s.id}-${a.id}-${ex.id}" aria-label="Note Ex${a.exercises.indexOf(ex)+1} pour ${s.name} - ${a.name}" class="summary-grade-input">
                                 </td>`;
                             } else {
                                 row += `<td class="px-2 py-1 text-center text-gray-300 bg-gray-50">-</td>`;
@@ -2461,7 +2461,7 @@
                         const max = getAssignmentMaxPoints(a);
                         const pct = max > 0 ? (total / max * 100) : 0;
                         const bgColor = pct >= 70 ? 'bg-green-100' : pct >= 50 ? 'bg-orange-100' : 'bg-red-100';
-                        row += `<td class="p-3 text-center font-bold ${bgColor}">${total.toFixed(1)}</td>`;
+                        row += `<td class="p-3 text-center font-bold ${bgColor}" id="sum-total-${s.id}-${a.id}">${total.toFixed(1)}</td>`;
                     } else {
                         row += `<td class="p-3 text-center text-gray-400 bg-gray-50">-</td>`;
                     }
