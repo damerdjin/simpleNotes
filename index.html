@@ -2759,89 +2759,136 @@
             } catch (e) { }
         }
 
-        function handleStudentImport(event) {
-            const t = translations[currentLanguage];
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                const dataBinary = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(dataBinary, { type: 'array' });
-                const firstSheetName = workbook.SheetNames[0];
-                const sheet = workbook.Sheets[firstSheetName];
-                const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-                if (json.length < 2) {
-                    alert(t.emptyFile);
-                    return;
-                }
-                const headers = json[1];
-                const rows = json.slice(2); // à partir de la 3ème ligne (index 2)
-                const getIndex = (label) => headers.findIndex(h => (h || '').toString().trim() === label);
-                const idxNIN = getIndex('رقم التعريف');
-                const idxNom = getIndex('اللقب');
-                const idxPrenom = getIndex('الاسم');
-                const idxClasse = getIndex('الفوج التربوي');
-                const idxSexe = getIndex('الجنس');
-                const idxBirth = getIndex('تاريخ الميلاد');
-                const idxReg = getIndex('رقم التسجيل');
+function handleStudentImport(event) {
+    const t = translations[currentLanguage];
+    const file = event.target.files[0];
+    if (!file) return;
 
-                let added = 0;
-                rows.forEach(row => {
-                    if (!row || row.length === 0) return;
-                    const nin = idxNIN >= 0 ? (row[idxNIN] || '').toString().trim() : '';
-                    const lastName = idxNom >= 0 ? (row[idxNom] || '').toString().trim() : '';
-                    const firstName = idxPrenom >= 0 ? (row[idxPrenom] || '').toString().trim() : '';
-                    const className = idxClasse >= 0 ? (row[idxClasse] || '').toString().trim() : '';
-                    const sex = idxSexe >= 0 ? (row[idxSexe] || '').toString().trim() : '';
-                    const birthDate = idxBirth >= 0 ? (row[idxBirth] || '').toString().trim() : '';
-                    const regNumber = idxReg >= 0 ? (row[idxReg] || '').toString().trim() : '';
-                    if (!lastName && !firstName) return;
-                    const name = (lastName + ' ' + firstName).trim();
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const dataBinary = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(dataBinary, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[firstSheetName];
+        const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-                    let existing = null;
-                    if (nin) {
-                        existing = data.students.find(s => s.nin === nin);
-                    }
-                    if (!existing) {
-                        existing = data.students.find(s => s.name === name && s.className === className);
-                    }
-
-                    if (existing) {
-                        existing.name = name;
-                        existing.className = className;
-                        existing.nin = nin;
-                        existing.firstName = firstName;
-                        existing.lastName = lastName;
-                        existing.sex = sex;
-                        existing.birthDate = birthDate;
-                        existing.regNumber = regNumber;
-                    } else {
-                        data.students.push({
-                            id: genId(),
-                            name,
-                            className,
-                            nin,
-                            firstName,
-                            lastName,
-                            sex,
-                            birthDate,
-                            regNumber
-                        });
-                        added++;
-                    }
-                });
-
-                saveData();
-                renderStudents();
-                loadGradeSelectors();
-                renderSummary();
-
-                alert(`${t.importSuccess} ${added}`);
-                event.target.value = '';
-            };
-            reader.readAsArrayBuffer(file);
+        if (json.length < 2) {
+            alert(t.emptyFile);
+            return;
         }
 
+        const headers = json[1];
+        const rows = json.slice(2); // à partir de la 3ème ligne
+
+        // Fonction utilitaire pour nettoyer les chaines (enlever les espaces inutiles)
+        const cleanStr = (val) => (val || '').toString().trim();
+
+        const getIndex = (label) => headers.findIndex(h => cleanStr(h) === label);
+
+        // Index des colonnes d'identification
+        const idxNIN = getIndex('رقم التعريف');
+        const idxNom = getIndex('اللقب');
+        const idxPrenom = getIndex('الاسم');
+        const idxClasse = getIndex('الفوج التربوي');
+        const idxSexe = getIndex('الجنس');
+        const idxBirth = getIndex('تاريخ الميلاد');
+        const idxReg = getIndex('رقم التسجيل');
+
+        // Liste des index connus (infos élèves) pour identifier les colonnes de NOTES
+        const knownIndices = [idxNIN, idxNom, idxPrenom, idxClasse, idxSexe, idxBirth, idxReg];
+
+        let added = 0;
+        let updated = 0;
+
+        rows.forEach(row => {
+            if (!row || row.length === 0) return;
+
+            // Extraction des données de base
+            const nin = idxNIN >= 0 ? cleanStr(row[idxNIN]) : '';
+            const lastName = idxNom >= 0 ? cleanStr(row[idxNom]) : '';
+            const firstName = idxPrenom >= 0 ? cleanStr(row[idxPrenom]) : '';
+            const className = idxClasse >= 0 ? cleanStr(row[idxClasse]) : '';
+            const sex = idxSexe >= 0 ? cleanStr(row[idxSexe]) : '';
+            const birthDate = idxBirth >= 0 ? cleanStr(row[idxBirth]) : '';
+            const regNumber = idxReg >= 0 ? cleanStr(row[idxReg]) : '';
+
+            if (!lastName && !firstName) return;
+            const name = (lastName + ' ' + firstName).trim();
+
+            // --- CORRECTION 1 : LOGIQUE DE RECHERCHE AMÉLIORÉE ---
+            let existing = null;
+
+            // A. Essayer par Numéro d'Inscription (le plus fiable)
+            if (regNumber) {
+                existing = data.students.find(s => s.regNumber == regNumber);
+            }
+            // B. Si pas trouvé, essayer par NIN
+            if (!existing && nin) {
+                existing = data.students.find(s => s.nin == nin);
+            }
+            // C. Si pas trouvé, essayer Nom + Prénom + Classe (Comparaison stricte sans espaces)
+            if (!existing) {
+                existing = data.students.find(s => 
+                    s.name.trim() === name && 
+                    s.className.trim() === className
+                );
+            }
+
+            // Objet contenant les données à sauvegarder
+            const studentData = {
+                name,
+                className,
+                nin,
+                firstName,
+                lastName,
+                sex,
+                birthDate,
+                regNumber
+            };
+
+            // --- CORRECTION 2 : IMPORTATION DES NOTES (Colonnes supplémentaires) ---
+            // On initialise un objet 'grades' s'il n'existe pas
+            const importedGrades = {}; 
+            headers.forEach((header, index) => {
+                // Si la colonne n'est pas une info élève et qu'elle a un titre
+                if (!knownIndices.includes(index) && header && row[index] !== undefined) {
+                    // On enregistre la note associée au nom de la colonne (ex: "Devoir 1")
+                    importedGrades[cleanStr(header)] = row[index];
+                }
+            });
+
+            if (existing) {
+                // MISE A JOUR de l'élève existant
+                Object.assign(existing, studentData); // Met à jour infos perso
+                
+                // Fusionner les notes
+                if (!existing.grades) existing.grades = {};
+                Object.assign(existing.grades, importedGrades); // Ajoute/Met à jour les notes
+                
+                updated++;
+            } else {
+                // CRÉATION d'un nouvel élève
+                data.students.push({
+                    id: genId(), // Assurez-vous que genId() existe
+                    ...studentData,
+                    grades: importedGrades // On ajoute les notes dès la création
+                });
+                added++;
+            }
+        });
+
+        saveData();
+        renderStudents();
+        
+        // Si vous avez une fonction spécifique pour rafraichir les tableaux de notes :
+        if (typeof renderSummary === 'function') renderSummary();
+        if (typeof loadGradeSelectors === 'function') loadGradeSelectors();
+
+        alert(`${t.importSuccess}\nAjoutés: ${added}\nMis à jour: ${updated}`);
+        event.target.value = '';
+    };
+    reader.readAsArrayBuffer(file);
+}
         function handleJsonExportData() {
             const t = translations[currentLanguage];
             const now = new Date();
