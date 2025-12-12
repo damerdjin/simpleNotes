@@ -2459,6 +2459,26 @@
                 filteredStudents = filteredStudents.filter(s => allowedClasses.has((s.className || '').trim()));
             }
 
+            if (!window.summaryAssignmentOrder) {
+                try {
+                    window.summaryAssignmentOrder = JSON.parse(localStorage.getItem('summary-assignment-order') || '[]');
+                } catch (e) { window.summaryAssignmentOrder = []; }
+            }
+            const ensureOrderIds = () => {
+                const ids = filteredAssignments.map(a => a.id);
+                const set = new Set(window.summaryAssignmentOrder);
+                ids.forEach(id => { if (!set.has(id)) window.summaryAssignmentOrder.push(id); });
+            };
+            ensureOrderIds();
+            filteredAssignments.sort((a, b) => {
+                const oa = window.summaryAssignmentOrder.indexOf(a.id);
+                const ob = window.summaryAssignmentOrder.indexOf(b.id);
+                if (oa === -1 && ob === -1) return 0;
+                if (oa === -1) return 1;
+                if (ob === -1) return -1;
+                return oa - ob;
+            });
+
             const isAllStudents = !selectedClass && !searchTerm && filteredStudents.length === data.students.length;
             const assignmentsFiltered = (summaryAssignmentFilter && summaryAssignmentFilter.size > 0) || filteredAssignments.length < data.assignments.length;
             if (detailsCheckbox) {
@@ -2512,7 +2532,11 @@
             if (tagContainer) {
                 const tagHtml = filteredAssignments.map(a => {
                     const selected = summaryAssignmentFilter.has(a.id);
-                    return `<button class="assignment-tag ${selected ? 'selected' : ''}" onclick="toggleSummaryAssignmentTag('${a.id}')">${a.name}</button>`;
+                    return `<div class="flex items-center gap-1">
+                        <button class="assignment-tag ${selected ? 'selected' : ''}" onclick="toggleSummaryAssignmentTag('${a.id}')">${a.name}</button>
+                        <button class="px-2 py-1 text-xs bg-gray-100 rounded" onclick="moveSummaryAssignmentLeft('${a.id}')">◀</button>
+                        <button class="px-2 py-1 text-xs bg-gray-100 rounded" onclick="moveSummaryAssignmentRight('${a.id}')">▶</button>
+                    </div>`;
                 }).join('');
                 tagContainer.innerHTML = tagHtml;
             }
@@ -2687,6 +2711,30 @@
                 summaryAssignmentFilter.add(assignmentId);
             }
             renderSummary();
+        }
+
+        function moveSummaryAssignmentLeft(id) {
+            try {
+                const arr = window.summaryAssignmentOrder || [];
+                const i = arr.indexOf(id);
+                if (i > 0) {
+                    [arr[i - 1], arr[i]] = [arr[i], arr[i - 1]];
+                    localStorage.setItem('summary-assignment-order', JSON.stringify(arr));
+                    renderSummary();
+                }
+            } catch (e) {}
+        }
+
+        function moveSummaryAssignmentRight(id) {
+            try {
+                const arr = window.summaryAssignmentOrder || [];
+                const i = arr.indexOf(id);
+                if (i >= 0 && i < arr.length - 1) {
+                    [arr[i + 1], arr[i]] = [arr[i], arr[i + 1]];
+                    localStorage.setItem('summary-assignment-order', JSON.stringify(arr));
+                    renderSummary();
+                }
+            } catch (e) {}
         }
 
         function handleStudentImport(event) {
@@ -2939,10 +2987,24 @@ function handleJsonImportData(event) {
                 alert(t.noResultForSearch || 'Aucun résultat');
                 return;
             }
+            if (!window.summaryAssignmentOrder) {
+                try {
+                    window.summaryAssignmentOrder = JSON.parse(localStorage.getItem('summary-assignment-order') || '[]');
+                } catch (e) { window.summaryAssignmentOrder = []; }
+            }
+            const ids = filteredAssignments.map(a => a.id);
+            const set = new Set(window.summaryAssignmentOrder);
+            ids.forEach(id => { if (!set.has(id)) window.summaryAssignmentOrder.push(id); });
+            filteredAssignments = filteredAssignments.slice().sort((a, b) => {
+                const oa = window.summaryAssignmentOrder.indexOf(a.id);
+                const ob = window.summaryAssignmentOrder.indexOf(b.id);
+                if (oa === -1 && ob === -1) return 0;
+                if (oa === -1) return 1;
+                if (ob === -1) return -1;
+                return oa - ob;
+            });
 
-            // ✅ Utiliser ExcelJS au lieu de SheetJS
-            const workbook = new ExcelJS.Workbook();
-
+            const wb = XLSX.utils.book_new();
             const sanitizeSheetName = name => (name || '').toString().replace(/[\\\/\?\*\[\]]/g, '').slice(0, 31) || 'Feuille';
             const studentsByClass = new Map();
             for (const s of filteredStudents) {
@@ -2957,18 +3019,8 @@ function handleJsonImportData(event) {
                 const assigns = filteredAssignments.filter(a => a.className === cls);
                 if (stu.length === 0 || assigns.length === 0) continue;
 
-                // ✅ Créer une feuille RTL
-                const worksheet = workbook.addWorksheet(sanitizeSheetName(cls), {
-                    views: [{ rightToLeft: true }]
-                });
-
                 const header = headerBase.concat(assigns.map(a => a.name));
-
-                // Ajouter l'en-tête
-                const headerRow = worksheet.addRow(header);
-                headerRow.font = { bold: true };
-                headerRow.alignment = { horizontal: 'right' };
-
+                const rows = [header];
                 for (const s of stu) {
                     const birthDate = formatDate(parseDateMaybeExcel(s.birthDate || ''));
                     const rowData = [
@@ -2977,36 +3029,20 @@ function handleJsonImportData(event) {
                         s.firstName || '',
                         birthDate
                     ];
-
-                    const assignmentGrades = assigns.map(a => {
+                    for (const a of assigns) {
                         const v = getStudentAssignmentTotal(s.id, a.id);
-                        return typeof v === 'number' ? v : '';
-                    });
-
-                    const row = worksheet.addRow(rowData.concat(assignmentGrades));
-                    row.alignment = { horizontal: 'right' };
+                        rowData.push(typeof v === 'number' ? v : '');
+                    }
+                    rows.push(rowData);
                 }
-
-                // Ajuster la largeur des colonnes
-                worksheet.columns.forEach(column => {
-                    column.width = 15;
-                });
+                const ws = XLSX.utils.aoa_to_sheet(rows);
+                XLSX.utils.book_append_sheet(wb, ws, sanitizeSheetName(cls));
             }
 
-            // ✅ Exporter le fichier
             const now = new Date();
             const pad = n => String(n).padStart(2, '0');
             const fname = `recap-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.xlsx`;
-
-            const buffer = await workbook.xlsx.writeBuffer();
-            const blob = new Blob([buffer], {
-                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-            });
-
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = fname;
-            link.click();
+            XLSX.writeFile(wb, fname);
         }
         // Convertit un éventuel numéro de série Excel en Date
         function parseDateMaybeExcel(value) {
