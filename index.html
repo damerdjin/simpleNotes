@@ -2913,104 +2913,78 @@
             const reader = new FileReader();
             reader.onload = function (e) {
                 try {
-                    const imported = JSON.parse(e.target.result);
+                    const importedData = JSON.parse(e.target.result);
 
-                    if (
-                        !imported ||
-                        !Array.isArray(imported.students) ||
-                        !Array.isArray(imported.assignments) ||
-                        typeof imported.grades !== 'object'
-                    ) {
-                        throw new Error('invalid');
-                    }
+                    // Fonction pour nettoyer
+                    const clean = (val) => String(val || '').trim();
 
-                    const messages = [];
-                    const existingStudents = new Map(data.students.map(s => [s.id, s]));
-                    const existingAssignments = new Map(
-                        data.assignments.map(a => [`${a.className}||${a.name}`, a])
-                    );
+                    let added = 0;
+                    let updated = 0;
 
-                    /* =========================
-                       1️⃣ IMPORT DES ÉLÈVES
-                       ========================= */
-                    for (const s of imported.students) {
-                        if (!existingStudents.has(s.id)) {
-                            data.students.push(s);
-                            existingStudents.set(s.id, s);
-                        }
-                    }
+                    // ========== FUSION DES ÉLÈVES ==========
+                    if (importedData.students && Array.isArray(importedData.students)) {
+                        importedData.students.forEach(importedStudent => {
+                            const nin = clean(importedStudent.nin);
 
-                    /* =========================
-                       2️⃣ IMPORT DES DEVOIRS
-                       ========================= */
-                    const assignmentIdMap = new Map(); // ancienId → nouvelId
-
-                    for (const a of imported.assignments) {
-                        const key = `${a.className}||${a.name}`;
-
-                        if (existingAssignments.has(key)) {
-                            // Devoir déjà existant pour la même classe
-                            messages.push(
-                                `⛔ Devoir ignoré : "${a.name}" (${a.className}) déjà existant`
-                            );
-                            continue;
-                        }
-
-                        // Nouveau devoir → on l'ajoute
-                        data.assignments.push(a);
-                        existingAssignments.set(key, a);
-                        assignmentIdMap.set(a.id, a.id);
-                    }
-
-                    /* =========================
-                       3️⃣ IMPORT DES NOTES
-                       ========================= */
-                    for (const [studentId, studentGrades] of Object.entries(imported.grades)) {
-                        if (!existingStudents.has(studentId)) continue;
-
-                        if (!data.grades[studentId]) {
-                            data.grades[studentId] = {};
-                        }
-
-                        for (const [assignmentId, value] of Object.entries(studentGrades)) {
-                            if (!assignmentIdMap.has(assignmentId)) continue;
-
-                            // Ne pas écraser une note existante
-                            if (data.grades[studentId][assignmentId] === undefined) {
-                                data.grades[studentId][assignmentId] = value;
+                            // Recherche par NIN
+                            let existing = null;
+                            if (nin) {
+                                existing = data.students.find(s => clean(s.nin) === nin);
                             }
-                        }
+
+                            if (existing) {
+                                // Garder l'ancien ID, mettre à jour le reste
+                                const oldId = existing.id;
+                                Object.assign(existing, importedStudent);
+                                existing.id = oldId; // Conserver l'ID original !
+                                updated++;
+
+                                // Si l'ID importé est différent, transférer les notes
+                                if (importedStudent.id !== oldId && importedData.grades && importedData.grades[importedStudent.id]) {
+                                    if (!data.grades[oldId]) {
+                                        data.grades[oldId] = {};
+                                    }
+                                    // Fusionner les notes
+                                    Object.assign(data.grades[oldId], importedData.grades[importedStudent.id]);
+                                }
+                            } else {
+                                // Nouvel élève
+                                data.students.push(importedStudent);
+                                added++;
+
+                                // Copier ses notes aussi
+                                if (importedData.grades && importedData.grades[importedStudent.id]) {
+                                    data.grades[importedStudent.id] = importedData.grades[importedStudent.id];
+                                }
+                            }
+                        });
+                    }
+
+                    // ========== FUSION DES DEVOIRS ==========
+                    if (importedData.assignments && Array.isArray(importedData.assignments)) {
+                        importedData.assignments.forEach(importedAssignment => {
+                            const existingAssignment = data.assignments.find(a => a.id === importedAssignment.id);
+                            if (!existingAssignment) {
+                                data.assignments.push(importedAssignment);
+                            }
+                        });
                     }
 
                     saveData();
                     renderStudents();
-                    renderAssignments();
-                    loadGradeSelectors();
-                    renderSummary();
+                    if (typeof loadGradeSelectors === 'function') loadGradeSelectors();
+                    if (typeof renderSummary === 'function') renderSummary();
 
-                    /* =========================
-                       4️⃣ MESSAGE FINAL
-                       ========================= */
-                    if (messages.length > 0) {
-                        alert(
-                            'Import terminé avec avertissements :\n\n' +
-                            messages.join('\n')
-                        );
-                    } else {
-                        alert('Import terminé avec succès ✅');
-                    }
+                    alert(`Importation réussie !\nÉlèves mis à jour: ${updated}\nÉlèves ajoutés: ${added}`);
+                    event.target.value = '';
 
-                } catch (err) {
-                    alert('Fichier JSON invalide');
+                } catch (error) {
+                    console.error('Erreur importation JSON:', error);
+                    alert('Erreur lors de l\'importation du fichier JSON');
                 }
-
-                event.target.value = '';
             };
-
             reader.readAsText(file);
         }
-
-
         async function exportSummaryToExcel() {
             const t = translations[currentLanguage];
             const selectedClass = document.getElementById('select-class-summary')?.value || '';
