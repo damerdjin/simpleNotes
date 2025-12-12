@@ -2389,248 +2389,248 @@
         }
 
         // ===== SUMMARY =====
-function renderSummary() {
-    const t = translations[currentLanguage];
-    const container = document.getElementById('summary-table');
-    const detailsCheckbox = document.getElementById('show-details');
-    let showDetails = detailsCheckbox ? detailsCheckbox.checked : false;
-    const classSelect = document.getElementById('select-class-summary');
-    const searchInput = document.getElementById('summary-search');
-    const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
+        function renderSummary() {
+            const t = translations[currentLanguage];
+            const container = document.getElementById('summary-table');
+            const detailsCheckbox = document.getElementById('show-details');
+            let showDetails = detailsCheckbox ? detailsCheckbox.checked : false;
+            const classSelect = document.getElementById('select-class-summary');
+            const searchInput = document.getElementById('summary-search');
+            const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
 
-    let selectedClass = classSelect ? classSelect.value : '';
-    let searchMatches = data.students.slice();
+            let selectedClass = classSelect ? classSelect.value : '';
+            let searchMatches = data.students.slice();
 
-    if (searchTerm) {
-        searchMatches = searchMatches.filter(s => {
-            const haystack = `${s.name || ''} ${s.firstName || ''} ${s.lastName || ''} ${s.className || ''}`.toLowerCase();
-            return haystack.includes(searchTerm);
-        });
-    }
+            if (searchTerm) {
+                searchMatches = searchMatches.filter(s => {
+                    const haystack = `${s.name || ''} ${s.firstName || ''} ${s.lastName || ''} ${s.className || ''}`.toLowerCase();
+                    return haystack.includes(searchTerm);
+                });
+            }
 
-    const matchingClasses = Array.from(new Set(
-        searchMatches
-            .map(s => (s.className || '').trim())
-            .filter(c => c.length > 0)
-    )).sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
+            const matchingClasses = Array.from(new Set(
+                searchMatches
+                    .map(s => (s.className || '').trim())
+                    .filter(c => c.length > 0)
+            )).sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
 
-    if (classSelect) {
-        const previousValue = selectedClass;
-        classSelect.innerHTML = `<option value="">-- ${t.selectClass} --</option>` +
-            matchingClasses.map(c => `<option value="${c}" ${c === previousValue ? 'selected' : ''}>${c}</option>`).join('');
+            if (classSelect) {
+                const previousValue = selectedClass;
+                classSelect.innerHTML = `<option value="">-- ${t.selectClass} --</option>` +
+                    matchingClasses.map(c => `<option value="${c}" ${c === previousValue ? 'selected' : ''}>${c}</option>`).join('');
 
-        let autoSelectedClass = '';
-        if (searchMatches.length === 1 && searchMatches[0].className) {
-            autoSelectedClass = searchMatches[0].className;
-        } else if (matchingClasses.length === 1) {
-            autoSelectedClass = matchingClasses[0];
-        }
+                let autoSelectedClass = '';
+                if (searchMatches.length === 1 && searchMatches[0].className) {
+                    autoSelectedClass = searchMatches[0].className;
+                } else if (matchingClasses.length === 1) {
+                    autoSelectedClass = matchingClasses[0];
+                }
 
-        if (autoSelectedClass) {
-            classSelect.value = autoSelectedClass;
-        } else if (matchingClasses.includes(previousValue)) {
-            classSelect.value = previousValue;
-        } else {
-            classSelect.value = '';
-        }
+                if (autoSelectedClass) {
+                    classSelect.value = autoSelectedClass;
+                } else if (matchingClasses.includes(previousValue)) {
+                    classSelect.value = previousValue;
+                } else {
+                    classSelect.value = '';
+                }
 
-        selectedClass = classSelect.value;
-    }
+                selectedClass = classSelect.value;
+            }
 
-    let filteredStudents = searchMatches;
-    if (selectedClass) {
-        filteredStudents = filteredStudents.filter(s => s.className === selectedClass);
-    }
+            let filteredStudents = searchMatches;
+            if (selectedClass) {
+                filteredStudents = filteredStudents.filter(s => s.className === selectedClass);
+            }
 
-    let filteredAssignments = data.assignments.slice();
-    if (selectedClass) {
-        filteredAssignments = filteredAssignments.filter(a => a.className === selectedClass);
-    } else {
-        const classFilterSet = new Set(matchingClasses);
-        filteredAssignments = filteredAssignments.filter(a => classFilterSet.has(a.className));
-    }
+            let filteredAssignments = data.assignments.slice();
+            if (selectedClass) {
+                filteredAssignments = filteredAssignments.filter(a => a.className === selectedClass);
+            } else {
+                const classFilterSet = new Set(matchingClasses);
+                filteredAssignments = filteredAssignments.filter(a => classFilterSet.has(a.className));
+            }
 
-    if (summaryAssignmentFilter && summaryAssignmentFilter.size > 0) {
-        filteredAssignments = filteredAssignments.filter(a => summaryAssignmentFilter.has(a.id));
-    }
+            if (summaryAssignmentFilter && summaryAssignmentFilter.size > 0) {
+                filteredAssignments = filteredAssignments.filter(a => summaryAssignmentFilter.has(a.id));
+            }
 
-    if (summaryAssignmentFilter && summaryAssignmentFilter.size > 0 && !selectedClass) {
-        const allowedClasses = new Set(filteredAssignments.map(a => (a.className || '').trim()).filter(c => c.length > 0));
-        filteredStudents = filteredStudents.filter(s => allowedClasses.has((s.className || '').trim()));
-    }
+            if (summaryAssignmentFilter && summaryAssignmentFilter.size > 0 && !selectedClass) {
+                const allowedClasses = new Set(filteredAssignments.map(a => (a.className || '').trim()).filter(c => c.length > 0));
+                filteredStudents = filteredStudents.filter(s => allowedClasses.has((s.className || '').trim()));
+            }
 
-    if (!window.summaryAssignmentOrder) {
-        try {
-            window.summaryAssignmentOrder = JSON.parse(localStorage.getItem('summary-assignment-order') || '[]');
-        } catch (e) { window.summaryAssignmentOrder = []; }
-    }
-    const ensureOrderIds = () => {
-        const ids = filteredAssignments.map(a => a.id);
-        const set = new Set(window.summaryAssignmentOrder);
-        ids.forEach(id => { if (!set.has(id)) window.summaryAssignmentOrder.push(id); });
-    };
-    ensureOrderIds();
-    filteredAssignments.sort((a, b) => {
-        const oa = window.summaryAssignmentOrder.indexOf(a.id);
-        const ob = window.summaryAssignmentOrder.indexOf(b.id);
-        if (oa === -1 && ob === -1) return 0;
-        if (oa === -1) return 1;
-        if (ob === -1) return -1;
-        return oa - ob;
-    });
+            if (!window.summaryAssignmentOrder) {
+                try {
+                    window.summaryAssignmentOrder = JSON.parse(localStorage.getItem('summary-assignment-order') || '[]');
+                } catch (e) { window.summaryAssignmentOrder = []; }
+            }
+            const ensureOrderIds = () => {
+                const ids = filteredAssignments.map(a => a.id);
+                const set = new Set(window.summaryAssignmentOrder);
+                ids.forEach(id => { if (!set.has(id)) window.summaryAssignmentOrder.push(id); });
+            };
+            ensureOrderIds();
+            filteredAssignments.sort((a, b) => {
+                const oa = window.summaryAssignmentOrder.indexOf(a.id);
+                const ob = window.summaryAssignmentOrder.indexOf(b.id);
+                if (oa === -1 && ob === -1) return 0;
+                if (oa === -1) return 1;
+                if (ob === -1) return -1;
+                return oa - ob;
+            });
 
-    const isAllStudents = !selectedClass && !searchTerm && filteredStudents.length === data.students.length;
-    const assignmentsFiltered = (summaryAssignmentFilter && summaryAssignmentFilter.size > 0) || filteredAssignments.length < data.assignments.length;
-    if (detailsCheckbox) {
-        const shouldDisableDetails = isAllStudents && !assignmentsFiltered;
-        if (shouldDisableDetails) {
-            detailsCheckbox.checked = false;
-            detailsCheckbox.disabled = true;
-        } else {
-            detailsCheckbox.disabled = false;
-        }
-        showDetails = detailsCheckbox.checked;
-    }
+            const isAllStudents = !selectedClass && !searchTerm && filteredStudents.length === data.students.length;
+            const assignmentsFiltered = (summaryAssignmentFilter && summaryAssignmentFilter.size > 0) || filteredAssignments.length < data.assignments.length;
+            if (detailsCheckbox) {
+                const shouldDisableDetails = isAllStudents && !assignmentsFiltered;
+                if (shouldDisableDetails) {
+                    detailsCheckbox.checked = false;
+                    detailsCheckbox.disabled = true;
+                } else {
+                    detailsCheckbox.disabled = false;
+                }
+                showDetails = detailsCheckbox.checked;
+            }
 
-    if (filteredStudents.length === 0 || filteredAssignments.length === 0) {
-        let emptyMessage = '';
-        if (selectedClass) {
-            emptyMessage = `${t.noStudentOrAssignmentForClass} "${selectedClass}".`;
-        } else if (searchTerm) {
-            emptyMessage = t.noResultForSearch;
-        } else {
-            emptyMessage = t.addStudentsAndAssignmentsToSeeSummary;
-        }
-        container.innerHTML = `<p class="text-gray-500 text-center py-8">${emptyMessage}</p>`;
-        return;
-    }
+            if (filteredStudents.length === 0 || filteredAssignments.length === 0) {
+                let emptyMessage = '';
+                if (selectedClass) {
+                    emptyMessage = `${t.noStudentOrAssignmentForClass} "${selectedClass}".`;
+                } else if (searchTerm) {
+                    emptyMessage = t.noResultForSearch;
+                } else {
+                    emptyMessage = t.addStudentsAndAssignmentsToSeeSummary;
+                }
+                container.innerHTML = `<p class="text-gray-500 text-center py-8">${emptyMessage}</p>`;
+                return;
+            }
 
-    // TRI PAR CLASSE PUIS PAR NOM/NOTE
-    filteredStudents.sort((a, b) => {
-        // 1. Tri par classe d'abord
-        const classA = (a.className || '').toLowerCase();
-        const classB = (b.className || '').toLowerCase();
-        
-        if (classA !== classB) {
-            return classA.localeCompare(classB, 'fr', { sensitivity: 'base' });
-        }
-        
-        // 2. Ensuite tri selon la colonne choisie
-        if (summarySort.key === 'name') {
-            const na = (a.name || '').toLowerCase();
-            const nb = (b.name || '').toLowerCase();
-            if (na < nb) return summarySort.direction === 'asc' ? -1 : 1;
-            if (na > nb) return summarySort.direction === 'asc' ? 1 : -1;
-            return 0;
-        } else if (summarySort.key.startsWith('assignment-')) {
-            const assignmentId = summarySort.key.split('assignment-')[1];
-            const ta = getStudentAssignmentTotal(a.id, assignmentId);
-            const tb = getStudentAssignmentTotal(b.id, assignmentId);
-            if (ta < tb) return summarySort.direction === 'asc' ? -1 : 1;
-            if (ta > tb) return summarySort.direction === 'asc' ? 1 : -1;
-            return 0;
-        }
-        
-        return 0;
-    });
+            // TRI PAR CLASSE PUIS PAR NOM/NOTE
+            filteredStudents.sort((a, b) => {
+                // 1. Tri par classe d'abord
+                const classA = (a.className || '').toLowerCase();
+                const classB = (b.className || '').toLowerCase();
 
-    let headers = `<th class="p-3 text-left bg-gray-100 sticky left-0 z-10 cursor-pointer select-none" onclick="toggleSummarySort('name')">${t.student}</th>`;
+                if (classA !== classB) {
+                    return classA.localeCompare(classB, 'fr', { sensitivity: 'base' });
+                }
 
-    const tagContainer = document.getElementById('summary-assignment-tags');
-    if (tagContainer) {
-        const tagHtml = filteredAssignments.map(a => {
-            const selected = summaryAssignmentFilter.has(a.id);
-            return `<div class="flex items-center gap-1">
+                // 2. Ensuite tri selon la colonne choisie
+                if (summarySort.key === 'name') {
+                    const na = (a.name || '').toLowerCase();
+                    const nb = (b.name || '').toLowerCase();
+                    if (na < nb) return summarySort.direction === 'asc' ? -1 : 1;
+                    if (na > nb) return summarySort.direction === 'asc' ? 1 : -1;
+                    return 0;
+                } else if (summarySort.key.startsWith('assignment-')) {
+                    const assignmentId = summarySort.key.split('assignment-')[1];
+                    const ta = getStudentAssignmentTotal(a.id, assignmentId);
+                    const tb = getStudentAssignmentTotal(b.id, assignmentId);
+                    if (ta < tb) return summarySort.direction === 'asc' ? -1 : 1;
+                    if (ta > tb) return summarySort.direction === 'asc' ? 1 : -1;
+                    return 0;
+                }
+
+                return 0;
+            });
+
+            let headers = `<th class="p-3 text-left bg-gray-100 sticky left-0 z-10 cursor-pointer select-none" onclick="toggleSummarySort('name')">${t.student}</th>`;
+
+            const tagContainer = document.getElementById('summary-assignment-tags');
+            if (tagContainer) {
+                const tagHtml = filteredAssignments.map(a => {
+                    const selected = summaryAssignmentFilter.has(a.id);
+                    return `<div class="flex items-center gap-1">
                 <button class="assignment-tag ${selected ? 'selected' : ''}" onclick="toggleSummaryAssignmentTag('${a.id}')">${a.name}</button>
                 <button class="px-2 py-1 text-xs bg-gray-100 rounded" onclick="moveSummaryAssignmentLeft('${a.id}')">◀</button>
                 <button class="px-2 py-1 text-xs bg-gray-100 rounded" onclick="moveSummaryAssignmentRight('${a.id}')">▶</button>
             </div>`;
-        }).join('');
-        tagContainer.innerHTML = tagHtml;
-    }
-
-    for (const a of filteredAssignments) {
-        if (showDetails) {
-            for (const ex of a.exercises) {
-                const exIndex = a.exercises.indexOf(ex) + 1;
-                headers += `<th class="p-2 text-center bg-blue-50 text-sm">Ex${exIndex}<br><span class="text-xs text-gray-500">/${getExerciseMaxPoints(ex)}</span></th>`;
+                }).join('');
+                tagContainer.innerHTML = tagHtml;
             }
-        }
-        headers += `<th class="p-3 text-center bg-blue-100 font-bold cursor-pointer select-none" onclick="toggleSummarySort('assignment-${a.id}')">${a.name}<br><span class="text-xs">/${getAssignmentMaxPoints(a)}</span></th>`;
-    }
 
-    // GROUPEMENT PAR CLASSE DANS L'AFFICHAGE
-    let currentClass = '';
-    let rows = filteredStudents.map(s => {
-        let classHeader = '';
-        
-        // Ajouter une ligne de séparation pour chaque nouvelle classe
-        if (s.className !== currentClass) {
-            currentClass = s.className;
-            const colspan = 1 + (showDetails ? filteredAssignments.reduce((sum, a) => sum + (a.exercises || []).length, 0) : 0) + filteredAssignments.length;
-            classHeader = `<tr class="bg-blue-600 text-white font-bold">
+            for (const a of filteredAssignments) {
+                if (showDetails) {
+                    for (const ex of a.exercises) {
+                        const exIndex = a.exercises.indexOf(ex) + 1;
+                        headers += `<th class="p-2 text-center bg-blue-50 text-sm">Ex${exIndex}<br><span class="text-xs text-gray-500">/${getExerciseMaxPoints(ex)}</span></th>`;
+                    }
+                }
+                headers += `<th class="p-3 text-center bg-blue-100 font-bold cursor-pointer select-none" onclick="toggleSummarySort('assignment-${a.id}')">${a.name}<br><span class="text-xs">/${getAssignmentMaxPoints(a)}</span></th>`;
+            }
+
+            // GROUPEMENT PAR CLASSE DANS L'AFFICHAGE
+            let currentClass = '';
+            let rows = filteredStudents.map(s => {
+                let classHeader = '';
+
+                // Ajouter une ligne de séparation pour chaque nouvelle classe
+                if (s.className !== currentClass) {
+                    currentClass = s.className;
+                    const colspan = 1 + (showDetails ? filteredAssignments.reduce((sum, a) => sum + (a.exercises || []).length, 0) : 0) + filteredAssignments.length;
+                    classHeader = `<tr class="bg-blue-600 text-white font-bold">
                 <td colspan="${colspan}" class="p-2 text-center text-lg">
                     ${s.className || '(Sans classe)'}
                 </td>
             </tr>`;
-        }
-        
-        let row = `<td class="p-3 font-medium bg-gray-50 sticky left-0">${s.name}</td>`;
+                }
 
-        for (const a of filteredAssignments) {
-            const studentGrades = data.grades[s.id]?.[a.id] || {};
-            const isCompatible = ((s.className || '').trim() === (a.className || '').trim());
+                let row = `<td class="p-3 font-medium bg-gray-50 sticky left-0">${s.name}</td>`;
 
-            if (showDetails) {
-                for (const ex of a.exercises) {
-                    if (isCompatible) {
-                        const exTotal = getStudentExerciseTotal(studentGrades, ex);
-                        const max = getExerciseMaxPoints(ex);
-                        const existingFinal = studentGrades[ex.id]?.['final']?.['final']?.['final'];
-                        row += `<td class="px-2 py-1 text-center">
+                for (const a of filteredAssignments) {
+                    const studentGrades = data.grades[s.id]?.[a.id] || {};
+                    const isCompatible = ((s.className || '').trim() === (a.className || '').trim());
+
+                    if (showDetails) {
+                        for (const ex of a.exercises) {
+                            if (isCompatible) {
+                                const exTotal = getStudentExerciseTotal(studentGrades, ex);
+                                const max = getExerciseMaxPoints(ex);
+                                const existingFinal = studentGrades[ex.id]?.['final']?.['final']?.['final'];
+                                row += `<td class="px-2 py-1 text-center">
                             <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" value="${existingFinal !== undefined && existingFinal !== '' ? existingFinal : exTotal.toFixed(2)}" oninput="sanitizeAndClamp(this, ${max})" onblur="commitSummaryInput('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" onkeydown="handleSummaryInputKey(event, '${s.id}','${a.id}','${ex.id}', ${max})" onfocus="this.select()" id="sum-input-${s.id}-${a.id}-${ex.id}" name="sum-input-${s.id}-${a.id}-${ex.id}" aria-label="Note Ex${a.exercises.indexOf(ex) + 1} pour ${s.name} - ${a.name}" class="summary-grade-input">
                         </td>`;
+                            } else {
+                                row += `<td class="px-2 py-1 text-center text-gray-300 bg-gray-50">-</td>`;
+                            }
+                        }
+                    }
+
+                    if (isCompatible) {
+                        const total = getStudentAssignmentTotal(s.id, a.id);
+                        const max = getAssignmentMaxPoints(a);
+                        const pct = max > 0 ? (total / max * 100) : 0;
+                        const bgColor = pct >= 70 ? 'bg-green-100' : pct >= 50 ? 'bg-orange-100' : 'bg-red-100';
+                        row += `<td class="p-3 text-center font-bold ${bgColor}" id="sum-total-${s.id}-${a.id}">${total.toFixed(2)}</td>`;
                     } else {
-                        row += `<td class="px-2 py-1 text-center text-gray-300 bg-gray-50">-</td>`;
+                        row += `<td class="p-3 text-center text-gray-400 bg-gray-50">-</td>`;
                     }
                 }
-            }
 
-            if (isCompatible) {
-                const total = getStudentAssignmentTotal(s.id, a.id);
-                const max = getAssignmentMaxPoints(a);
-                const pct = max > 0 ? (total / max * 100) : 0;
-                const bgColor = pct >= 70 ? 'bg-green-100' : pct >= 50 ? 'bg-orange-100' : 'bg-red-100';
-                row += `<td class="p-3 text-center font-bold ${bgColor}" id="sum-total-${s.id}-${a.id}">${total.toFixed(2)}</td>`;
-            } else {
-                row += `<td class="p-3 text-center text-gray-400 bg-gray-50">-</td>`;
-            }
-        }
+                return classHeader + `<tr class="border-b hover:bg-gray-50">${row}</tr>`;
+            }).join('');
 
-        return classHeader + `<tr class="border-b hover:bg-gray-50">${row}</tr>`;
-    }).join('');
+            const colgroupHtml = (() => {
+                let cols = '<col style="width:220px">';
+                for (const a of filteredAssignments) {
+                    if (showDetails) {
+                        const exCount = (a.exercises || []).length;
+                        for (let i = 0; i < exCount; i++) cols += '<col style="width:70px">';
+                    }
+                    cols += '<col style="width:84px">';
+                }
+                return `<colgroup>${cols}</colgroup>`;
+            })();
 
-    const colgroupHtml = (() => {
-        let cols = '<col style="width:220px">';
-        for (const a of filteredAssignments) {
-            if (showDetails) {
-                const exCount = (a.exercises || []).length;
-                for (let i = 0; i < exCount; i++) cols += '<col style="width:70px">';
-            }
-            cols += '<col style="width:84px">';
-        }
-        return `<colgroup>${cols}</colgroup>`;
-    })();
-
-    container.innerHTML = `
+            container.innerHTML = `
         <table class="w-full table-fixed border-collapse">
             ${colgroupHtml}
             <thead><tr class="border-b-2">${headers}</tr></thead>
             <tbody>${rows}</tbody>
         </table>
     `;
-    translatePage();
-}
+            translatePage();
+        }
         function setGlobalAssignmentGrade(studentId, assignmentId, value) {
             if (!data.grades[studentId]) data.grades[studentId] = {};
             if (!data.grades[studentId][assignmentId]) data.grades[studentId][assignmentId] = {};
@@ -2744,7 +2744,7 @@ function renderSummary() {
                     localStorage.setItem('summary-assignment-order', JSON.stringify(arr));
                     renderSummary();
                 }
-            } catch (e) {}
+            } catch (e) { }
         }
 
         function moveSummaryAssignmentRight(id) {
@@ -2756,7 +2756,7 @@ function renderSummary() {
                     localStorage.setItem('summary-assignment-order', JSON.stringify(arr));
                     renderSummary();
                 }
-            } catch (e) {}
+            } catch (e) { }
         }
 
         function handleStudentImport(event) {
@@ -2858,110 +2858,110 @@ function renderSummary() {
             URL.revokeObjectURL(url);
         }
 
-function handleJsonImportData(event) {
-    const t = translations[currentLanguage];
-    const file = event.target.files[0];
-    if (!file) return;
+        function handleJsonImportData(event) {
+            const t = translations[currentLanguage];
+            const file = event.target.files[0];
+            if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = function (e) {
-        try {
-            const imported = JSON.parse(e.target.result);
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
 
-            if (
-                !imported ||
-                !Array.isArray(imported.students) ||
-                !Array.isArray(imported.assignments) ||
-                typeof imported.grades !== 'object'
-            ) {
-                throw new Error('invalid');
-            }
-
-            const messages = [];
-            const existingStudents = new Map(data.students.map(s => [s.id, s]));
-            const existingAssignments = new Map(
-                data.assignments.map(a => [`${a.className}||${a.name}`, a])
-            );
-
-            /* =========================
-               1️⃣ IMPORT DES ÉLÈVES
-               ========================= */
-            for (const s of imported.students) {
-                if (!existingStudents.has(s.id)) {
-                    data.students.push(s);
-                    existingStudents.set(s.id, s);
-                }
-            }
-
-            /* =========================
-               2️⃣ IMPORT DES DEVOIRS
-               ========================= */
-            const assignmentIdMap = new Map(); // ancienId → nouvelId
-
-            for (const a of imported.assignments) {
-                const key = `${a.className}||${a.name}`;
-
-                if (existingAssignments.has(key)) {
-                    // Devoir déjà existant pour la même classe
-                    messages.push(
-                        `⛔ Devoir ignoré : "${a.name}" (${a.className}) déjà existant`
-                    );
-                    continue;
-                }
-
-                // Nouveau devoir → on l'ajoute
-                data.assignments.push(a);
-                existingAssignments.set(key, a);
-                assignmentIdMap.set(a.id, a.id);
-            }
-
-            /* =========================
-               3️⃣ IMPORT DES NOTES
-               ========================= */
-            for (const [studentId, studentGrades] of Object.entries(imported.grades)) {
-                if (!existingStudents.has(studentId)) continue;
-
-                if (!data.grades[studentId]) {
-                    data.grades[studentId] = {};
-                }
-
-                for (const [assignmentId, value] of Object.entries(studentGrades)) {
-                    if (!assignmentIdMap.has(assignmentId)) continue;
-
-                    // Ne pas écraser une note existante
-                    if (data.grades[studentId][assignmentId] === undefined) {
-                        data.grades[studentId][assignmentId] = value;
+                    if (
+                        !imported ||
+                        !Array.isArray(imported.students) ||
+                        !Array.isArray(imported.assignments) ||
+                        typeof imported.grades !== 'object'
+                    ) {
+                        throw new Error('invalid');
                     }
+
+                    const messages = [];
+                    const existingStudents = new Map(data.students.map(s => [s.id, s]));
+                    const existingAssignments = new Map(
+                        data.assignments.map(a => [`${a.className}||${a.name}`, a])
+                    );
+
+                    /* =========================
+                       1️⃣ IMPORT DES ÉLÈVES
+                       ========================= */
+                    for (const s of imported.students) {
+                        if (!existingStudents.has(s.id)) {
+                            data.students.push(s);
+                            existingStudents.set(s.id, s);
+                        }
+                    }
+
+                    /* =========================
+                       2️⃣ IMPORT DES DEVOIRS
+                       ========================= */
+                    const assignmentIdMap = new Map(); // ancienId → nouvelId
+
+                    for (const a of imported.assignments) {
+                        const key = `${a.className}||${a.name}`;
+
+                        if (existingAssignments.has(key)) {
+                            // Devoir déjà existant pour la même classe
+                            messages.push(
+                                `⛔ Devoir ignoré : "${a.name}" (${a.className}) déjà existant`
+                            );
+                            continue;
+                        }
+
+                        // Nouveau devoir → on l'ajoute
+                        data.assignments.push(a);
+                        existingAssignments.set(key, a);
+                        assignmentIdMap.set(a.id, a.id);
+                    }
+
+                    /* =========================
+                       3️⃣ IMPORT DES NOTES
+                       ========================= */
+                    for (const [studentId, studentGrades] of Object.entries(imported.grades)) {
+                        if (!existingStudents.has(studentId)) continue;
+
+                        if (!data.grades[studentId]) {
+                            data.grades[studentId] = {};
+                        }
+
+                        for (const [assignmentId, value] of Object.entries(studentGrades)) {
+                            if (!assignmentIdMap.has(assignmentId)) continue;
+
+                            // Ne pas écraser une note existante
+                            if (data.grades[studentId][assignmentId] === undefined) {
+                                data.grades[studentId][assignmentId] = value;
+                            }
+                        }
+                    }
+
+                    saveData();
+                    renderStudents();
+                    renderAssignments();
+                    loadGradeSelectors();
+                    renderSummary();
+
+                    /* =========================
+                       4️⃣ MESSAGE FINAL
+                       ========================= */
+                    if (messages.length > 0) {
+                        alert(
+                            'Import terminé avec avertissements :\n\n' +
+                            messages.join('\n')
+                        );
+                    } else {
+                        alert('Import terminé avec succès ✅');
+                    }
+
+                } catch (err) {
+                    alert('Fichier JSON invalide');
                 }
-            }
 
-            saveData();
-            renderStudents();
-            renderAssignments();
-            loadGradeSelectors();
-            renderSummary();
+                event.target.value = '';
+            };
 
-            /* =========================
-               4️⃣ MESSAGE FINAL
-               ========================= */
-            if (messages.length > 0) {
-                alert(
-                    'Import terminé avec avertissements :\n\n' +
-                    messages.join('\n')
-                );
-            } else {
-                alert('Import terminé avec succès ✅');
-            }
-
-        } catch (err) {
-            alert('Fichier JSON invalide');
+            reader.readAsText(file);
         }
-
-        event.target.value = '';
-    };
-
-    reader.readAsText(file);
-}
 
 
         async function exportSummaryToExcel() {
@@ -2985,7 +2985,17 @@ function handleJsonImportData(event) {
                 if (selectedClass && s.className !== selectedClass) return false;
                 if (!selectedClass && searchTerm && !matchingClasses.has(s.className)) return false;
                 return true;
-            }).sort((a, b) => {
+            });
+
+            // TRI PAR CLASSE PUIS PAR NOM
+            filteredStudents.sort((a, b) => {
+                const classA = (a.className || '').toLowerCase();
+                const classB = (b.className || '').toLowerCase();
+
+                if (classA !== classB) {
+                    return classA.localeCompare(classB, 'fr', { sensitivity: 'base' });
+                }
+
                 const nameA = `${a.lastName || ''} ${a.firstName || ''}`.toLowerCase();
                 const nameB = `${b.lastName || ''} ${b.firstName || ''}`.toLowerCase();
                 return nameA.localeCompare(nameB);
@@ -3005,10 +3015,12 @@ function handleJsonImportData(event) {
                 const allowedClasses = new Set(filteredAssignments.map(a => (a.className || '').trim()).filter(c => c.length > 0));
                 filteredStudents = filteredStudents.filter(s => allowedClasses.has((s.className || '').trim()));
             }
+
             if (filteredStudents.length === 0 || filteredAssignments.length === 0) {
                 alert(t.noResultForSearch || 'Aucun résultat');
                 return;
             }
+
             if (!window.summaryAssignmentOrder) {
                 try {
                     window.summaryAssignmentOrder = JSON.parse(localStorage.getItem('summary-assignment-order') || '[]');
@@ -3027,22 +3039,95 @@ function handleJsonImportData(event) {
             });
 
             const wb = XLSX.utils.book_new();
-            const sanitizeSheetName = name => (name || '').toString().replace(/[\\\/\?\*\[\]]/g, '').slice(0, 31) || 'Feuille';
+
+            // Fonction pour créer un nom de feuille valide et unique
+            const usedSheetNames = new Set();
+            const sanitizeSheetName = (name) => {
+                let sanitized = (name || '').toString().trim();
+
+                // Remplacements des niveaux arabes par des chiffres
+                const replacements = {
+                    'أولى ثانوي': '1',
+                    'اولى ثانوي': '1',
+                    'ثانية  ثانوي': '2',
+                    'ثالثة  ثانوي': '3',
+                };
+
+                // Appliquer les remplacements
+                for (const [key, value] of Object.entries(replacements)) {
+                    // Créer une regex insensible à la casse pour les variantes
+                    const regex = new RegExp(key, 'gi');
+                    sanitized = sanitized.replace(regex, value);
+                }
+
+                // Remplacer les caractères interdits : \ / ? * [ ] :
+                sanitized = sanitized.replace(/[\\\/\?\*\[\]:]/g, '');
+
+                // Nettoyer les espaces multiples
+                sanitized = sanitized.replace(/\s+/g, ' ').trim();
+
+                // Limiter à 31 caractères (limite Excel)
+                if (sanitized.length > 31) {
+                    sanitized = sanitized.substring(0, 31).trim();
+                }
+
+                // Si vide, utiliser un nom par défaut
+                if (!sanitized) {
+                    sanitized = 'Feuille';
+                }
+
+                // Gérer les doublons en ajoutant un numéro
+                let finalName = sanitized;
+                let counter = 1;
+                while (usedSheetNames.has(finalName)) {
+                    const suffix = `_${counter}`;
+                    const maxLength = 31 - suffix.length;
+                    finalName = sanitized.substring(0, maxLength).trim() + suffix;
+                    counter++;
+                }
+
+                usedSheetNames.add(finalName);
+                return finalName;
+            };
+
+            // Grouper les étudiants par classe
             const studentsByClass = new Map();
             for (const s of filteredStudents) {
-                if (!studentsByClass.has(s.className)) studentsByClass.set(s.className, []);
-                studentsByClass.get(s.className).push(s);
+                const className = (s.className || '').trim() || '(Sans classe)';
+                if (!studentsByClass.has(className)) {
+                    studentsByClass.set(className, []);
+                }
+                studentsByClass.get(className).push(s);
             }
-            const classes = selectedClass ? [selectedClass] : Array.from(studentsByClass.keys());
+
+            // Trier les classes par ordre alphabétique
+            const sortedClasses = Array.from(studentsByClass.keys()).sort((a, b) =>
+                a.localeCompare(b, 'fr', { sensitivity: 'base' })
+            );
+
             const headerBase = ['رقم التعريف', 'اللقب', 'الاسم', 'تاريخ الميلاد'];
 
-            for (const cls of classes) {
+            // Créer une feuille par classe
+            for (const cls of sortedClasses) {
                 const stu = studentsByClass.get(cls) || [];
-                const assigns = filteredAssignments.filter(a => a.className === cls);
-                if (stu.length === 0 || assigns.length === 0) continue;
 
-                const header = headerBase.concat(assigns.map(a => a.name));
+                // Filtrer les devoirs pour cette classe uniquement
+                const assigns = filteredAssignments.filter(a =>
+                    (a.className || '').trim() === cls.trim() ||
+                    (cls === '(Sans classe)' && !(a.className || '').trim())
+                );
+
+                if (stu.length === 0) continue;
+
+                // Créer l'en-tête avec les devoirs de cette classe
+                const header = [...headerBase];
+                if (assigns.length > 0) {
+                    header.push(...assigns.map(a => a.name));
+                }
+
                 const rows = [header];
+
+                // Ajouter les lignes d'étudiants
                 for (const s of stu) {
                     const birthDate = formatDate(parseDateMaybeExcel(s.birthDate || ''));
                     const rowData = [
@@ -3051,21 +3136,33 @@ function handleJsonImportData(event) {
                         s.firstName || '',
                         birthDate
                     ];
+
+                    // Ajouter les notes pour chaque devoir de cette classe
                     for (const a of assigns) {
                         const v = getStudentAssignmentTotal(s.id, a.id);
                         rowData.push(typeof v === 'number' ? v : '');
                     }
+
                     rows.push(rowData);
                 }
+
+                // Créer la feuille
                 const ws = XLSX.utils.aoa_to_sheet(rows);
-                XLSX.utils.book_append_sheet(wb, ws, sanitizeSheetName(cls));
+
+                // Ajouter la feuille avec un nom sécurisé
+                const sheetName = sanitizeSheetName(cls);
+                XLSX.utils.book_append_sheet(wb, ws, sheetName);
             }
 
+            // Générer le nom du fichier avec timestamp
             const now = new Date();
             const pad = n => String(n).padStart(2, '0');
             const fname = `recap-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.xlsx`;
+
+            // Télécharger le fichier
             XLSX.writeFile(wb, fname);
         }
+        
         // Convertit un éventuel numéro de série Excel en Date
         function parseDateMaybeExcel(value) {
             if (value === undefined || value === null) return null;
