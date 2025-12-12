@@ -2389,226 +2389,248 @@
         }
 
         // ===== SUMMARY =====
-        function renderSummary() {
-            const t = translations[currentLanguage];
-            const container = document.getElementById('summary-table');
-            const detailsCheckbox = document.getElementById('show-details');
-            let showDetails = detailsCheckbox ? detailsCheckbox.checked : false;
-            const classSelect = document.getElementById('select-class-summary');
-            const searchInput = document.getElementById('summary-search');
-            const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
+function renderSummary() {
+    const t = translations[currentLanguage];
+    const container = document.getElementById('summary-table');
+    const detailsCheckbox = document.getElementById('show-details');
+    let showDetails = detailsCheckbox ? detailsCheckbox.checked : false;
+    const classSelect = document.getElementById('select-class-summary');
+    const searchInput = document.getElementById('summary-search');
+    const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
 
-            let selectedClass = classSelect ? classSelect.value : '';
-            let searchMatches = data.students.slice();
+    let selectedClass = classSelect ? classSelect.value : '';
+    let searchMatches = data.students.slice();
 
-            if (searchTerm) {
-                searchMatches = searchMatches.filter(s => {
-                    const haystack = `${s.name || ''} ${s.firstName || ''} ${s.lastName || ''} ${s.className || ''}`.toLowerCase();
-                    return haystack.includes(searchTerm);
-                });
-            }
+    if (searchTerm) {
+        searchMatches = searchMatches.filter(s => {
+            const haystack = `${s.name || ''} ${s.firstName || ''} ${s.lastName || ''} ${s.className || ''}`.toLowerCase();
+            return haystack.includes(searchTerm);
+        });
+    }
 
-            const matchingClasses = Array.from(new Set(
-                searchMatches
-                    .map(s => (s.className || '').trim())
-                    .filter(c => c.length > 0)
-            )).sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
+    const matchingClasses = Array.from(new Set(
+        searchMatches
+            .map(s => (s.className || '').trim())
+            .filter(c => c.length > 0)
+    )).sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
 
-            if (classSelect) {
-                const previousValue = selectedClass;
-                classSelect.innerHTML = `<option value="">-- ${t.selectClass} --</option>` +
-                    matchingClasses.map(c => `<option value="${c}">${c}</option>`).join('');
+    if (classSelect) {
+        const previousValue = selectedClass;
+        classSelect.innerHTML = `<option value="">-- ${t.selectClass} --</option>` +
+            matchingClasses.map(c => `<option value="${c}" ${c === previousValue ? 'selected' : ''}>${c}</option>`).join('');
 
-                let autoSelectedClass = '';
-                if (searchMatches.length === 1 && searchMatches[0].className) {
-                    autoSelectedClass = searchMatches[0].className;
-                } else if (matchingClasses.length === 1) {
-                    autoSelectedClass = matchingClasses[0];
-                }
-
-                if (autoSelectedClass) {
-                    classSelect.value = autoSelectedClass;
-                } else if (matchingClasses.includes(previousValue)) {
-                    classSelect.value = previousValue;
-                } else {
-                    classSelect.value = '';
-                }
-
-                selectedClass = classSelect.value;
-            }
-
-            let filteredStudents = searchMatches;
-            if (selectedClass) {
-                filteredStudents = filteredStudents.filter(s => s.className === selectedClass);
-            }
-
-            let filteredAssignments = data.assignments.slice();
-            if (selectedClass) {
-                filteredAssignments = filteredAssignments.filter(a => a.className === selectedClass);
-            } else {
-                const classFilterSet = new Set(matchingClasses);
-                filteredAssignments = filteredAssignments.filter(a => classFilterSet.has(a.className));
-            }
-
-            if (summaryAssignmentFilter && summaryAssignmentFilter.size > 0) {
-                filteredAssignments = filteredAssignments.filter(a => summaryAssignmentFilter.has(a.id));
-            }
-
-            if (summaryAssignmentFilter && summaryAssignmentFilter.size > 0 && !selectedClass) {
-                const allowedClasses = new Set(filteredAssignments.map(a => (a.className || '').trim()).filter(c => c.length > 0));
-                filteredStudents = filteredStudents.filter(s => allowedClasses.has((s.className || '').trim()));
-            }
-
-            if (!window.summaryAssignmentOrder) {
-                try {
-                    window.summaryAssignmentOrder = JSON.parse(localStorage.getItem('summary-assignment-order') || '[]');
-                } catch (e) { window.summaryAssignmentOrder = []; }
-            }
-            const ensureOrderIds = () => {
-                const ids = filteredAssignments.map(a => a.id);
-                const set = new Set(window.summaryAssignmentOrder);
-                ids.forEach(id => { if (!set.has(id)) window.summaryAssignmentOrder.push(id); });
-            };
-            ensureOrderIds();
-            filteredAssignments.sort((a, b) => {
-                const oa = window.summaryAssignmentOrder.indexOf(a.id);
-                const ob = window.summaryAssignmentOrder.indexOf(b.id);
-                if (oa === -1 && ob === -1) return 0;
-                if (oa === -1) return 1;
-                if (ob === -1) return -1;
-                return oa - ob;
-            });
-
-            const isAllStudents = !selectedClass && !searchTerm && filteredStudents.length === data.students.length;
-            const assignmentsFiltered = (summaryAssignmentFilter && summaryAssignmentFilter.size > 0) || filteredAssignments.length < data.assignments.length;
-            if (detailsCheckbox) {
-                const shouldDisableDetails = isAllStudents && !assignmentsFiltered;
-                if (shouldDisableDetails) {
-                    detailsCheckbox.checked = false;
-                    detailsCheckbox.disabled = true;
-                } else {
-                    detailsCheckbox.disabled = false;
-                }
-                showDetails = detailsCheckbox.checked;
-            }
-
-            // filteredAssignments computed above
-
-            if (filteredStudents.length === 0 || filteredAssignments.length === 0) {
-                let emptyMessage = '';
-                if (selectedClass) {
-                    emptyMessage = `${t.noStudentOrAssignmentForClass} "${selectedClass}".`;
-                } else if (searchTerm) {
-                    emptyMessage = t.noResultForSearch;
-                } else {
-                    emptyMessage = t.addStudentsAndAssignmentsToSeeSummary;
-                }
-                container.innerHTML = `<p class="text-gray-500 text-center py-8">${emptyMessage}</p>`;
-                return;
-            }
-
-            if (summarySort.key === 'name') {
-                filteredStudents.sort((a, b) => {
-                    const na = (a.name || '').toLowerCase();
-                    const nb = (b.name || '').toLowerCase();
-                    if (na < nb) return summarySort.direction === 'asc' ? -1 : 1;
-                    if (na > nb) return summarySort.direction === 'asc' ? 1 : -1;
-                    return 0;
-                });
-            } else if (summarySort.key.startsWith('assignment-')) {
-                const assignmentId = summarySort.key.split('assignment-')[1];
-                filteredStudents.sort((a, b) => {
-                    const ta = getStudentAssignmentTotal(a.id, assignmentId);
-                    const tb = getStudentAssignmentTotal(b.id, assignmentId);
-                    if (ta < tb) return summarySort.direction === 'asc' ? -1 : 1;
-                    if (ta > tb) return summarySort.direction === 'asc' ? 1 : -1;
-                    return 0;
-                });
-            }
-
-            let headers = `<th class="p-3 text-left bg-gray-100 sticky left-0 z-10 cursor-pointer select-none" onclick="toggleSummarySort(\'name\')">${t.student}</th>`;
-
-            const tagContainer = document.getElementById('summary-assignment-tags');
-            if (tagContainer) {
-                const tagHtml = filteredAssignments.map(a => {
-                    const selected = summaryAssignmentFilter.has(a.id);
-                    return `<div class="flex items-center gap-1">
-                        <button class="assignment-tag ${selected ? 'selected' : ''}" onclick="toggleSummaryAssignmentTag('${a.id}')">${a.name}</button>
-                        <button class="px-2 py-1 text-xs bg-gray-100 rounded" onclick="moveSummaryAssignmentLeft('${a.id}')">◀</button>
-                        <button class="px-2 py-1 text-xs bg-gray-100 rounded" onclick="moveSummaryAssignmentRight('${a.id}')">▶</button>
-                    </div>`;
-                }).join('');
-                tagContainer.innerHTML = tagHtml;
-            }
-
-            for (const a of filteredAssignments) {
-                if (showDetails) {
-                    for (const ex of a.exercises) {
-                        const exIndex = a.exercises.indexOf(ex) + 1;
-                        headers += `<th class="p-2 text-center bg-blue-50 text-sm">Ex${exIndex}<br><span class="text-xs text-gray-500">/${getExerciseMaxPoints(ex)}</span></th>`;
-                    }
-                }
-                headers += `<th class="p-3 text-center bg-blue-100 font-bold cursor-pointer select-none" onclick=\"toggleSummarySort('assignment-${a.id}')\">${a.name}<br><span class="text-xs">/${getAssignmentMaxPoints(a)}</span></th>`;
-            }
-
-            let rows = filteredStudents.map(s => {
-                let row = `<td class="p-3 font-medium bg-gray-50 sticky left-0">${s.name}${s.className ? '<div class=\"text-xs text-gray-500\">' + s.className + '</div>' : ''}</td>`;
-
-                for (const a of filteredAssignments) {
-                    const studentGrades = data.grades[s.id]?.[a.id] || {};
-                    const isCompatible = ((s.className || '').trim() === (a.className || '').trim());
-
-                    if (showDetails) {
-                        for (const ex of a.exercises) {
-                            if (isCompatible) {
-                                const exTotal = getStudentExerciseTotal(studentGrades, ex);
-                                const max = getExerciseMaxPoints(ex);
-                                const existingFinal = studentGrades[ex.id]?.['final']?.['final']?.['final'];
-                                row += `<td class="px-2 py-1 text-center">
-                                    <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" value="${existingFinal !== undefined && existingFinal !== '' ? existingFinal : exTotal.toFixed(2)}" oninput="sanitizeAndClamp(this, ${max})" onblur="commitSummaryInput('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" onkeydown="handleSummaryInputKey(event, '${s.id}','${a.id}','${ex.id}', ${max})" onfocus="this.select()" id="sum-input-${s.id}-${a.id}-${ex.id}" name="sum-input-${s.id}-${a.id}-${ex.id}" aria-label="Note Ex${a.exercises.indexOf(ex) + 1} pour ${s.name} - ${a.name}" class="summary-grade-input">
-                                </td>`;
-                            } else {
-                                row += `<td class="px-2 py-1 text-center text-gray-300 bg-gray-50">-</td>`;
-                            }
-                        }
-                    }
-
-                    if (isCompatible) {
-                        const total = getStudentAssignmentTotal(s.id, a.id);
-                        const max = getAssignmentMaxPoints(a);
-                        const pct = max > 0 ? (total / max * 100) : 0;
-                        const bgColor = pct >= 70 ? 'bg-green-100' : pct >= 50 ? 'bg-orange-100' : 'bg-red-100';
-                        row += `<td class="p-3 text-center font-bold ${bgColor}" id="sum-total-${s.id}-${a.id}">${total.toFixed(2)}</td>`;
-                    } else {
-                        row += `<td class="p-3 text-center text-gray-400 bg-gray-50">-</td>`;
-                    }
-                }
-
-                return `<tr class="border-b hover:bg-gray-50">${row}</tr>`;
-            }).join('');
-
-            const colgroupHtml = (() => {
-                let cols = '<col style="width:220px">';
-                for (const a of filteredAssignments) {
-                    if (showDetails) {
-                        const exCount = (a.exercises || []).length;
-                        for (let i = 0; i < exCount; i++) cols += '<col style="width:70px">';
-                    }
-                    cols += '<col style="width:84px">';
-                }
-                return `<colgroup>${cols}</colgroup>`;
-            })();
-
-            container.innerHTML = `
-                <table class="w-full table-fixed border-collapse">
-                    ${colgroupHtml}
-                    <thead><tr class="border-b-2">${headers}</tr></thead>
-                    <tbody>${rows}</tbody>
-                </table>
-            `;
-            translatePage();
+        let autoSelectedClass = '';
+        if (searchMatches.length === 1 && searchMatches[0].className) {
+            autoSelectedClass = searchMatches[0].className;
+        } else if (matchingClasses.length === 1) {
+            autoSelectedClass = matchingClasses[0];
         }
 
+        if (autoSelectedClass) {
+            classSelect.value = autoSelectedClass;
+        } else if (matchingClasses.includes(previousValue)) {
+            classSelect.value = previousValue;
+        } else {
+            classSelect.value = '';
+        }
+
+        selectedClass = classSelect.value;
+    }
+
+    let filteredStudents = searchMatches;
+    if (selectedClass) {
+        filteredStudents = filteredStudents.filter(s => s.className === selectedClass);
+    }
+
+    let filteredAssignments = data.assignments.slice();
+    if (selectedClass) {
+        filteredAssignments = filteredAssignments.filter(a => a.className === selectedClass);
+    } else {
+        const classFilterSet = new Set(matchingClasses);
+        filteredAssignments = filteredAssignments.filter(a => classFilterSet.has(a.className));
+    }
+
+    if (summaryAssignmentFilter && summaryAssignmentFilter.size > 0) {
+        filteredAssignments = filteredAssignments.filter(a => summaryAssignmentFilter.has(a.id));
+    }
+
+    if (summaryAssignmentFilter && summaryAssignmentFilter.size > 0 && !selectedClass) {
+        const allowedClasses = new Set(filteredAssignments.map(a => (a.className || '').trim()).filter(c => c.length > 0));
+        filteredStudents = filteredStudents.filter(s => allowedClasses.has((s.className || '').trim()));
+    }
+
+    if (!window.summaryAssignmentOrder) {
+        try {
+            window.summaryAssignmentOrder = JSON.parse(localStorage.getItem('summary-assignment-order') || '[]');
+        } catch (e) { window.summaryAssignmentOrder = []; }
+    }
+    const ensureOrderIds = () => {
+        const ids = filteredAssignments.map(a => a.id);
+        const set = new Set(window.summaryAssignmentOrder);
+        ids.forEach(id => { if (!set.has(id)) window.summaryAssignmentOrder.push(id); });
+    };
+    ensureOrderIds();
+    filteredAssignments.sort((a, b) => {
+        const oa = window.summaryAssignmentOrder.indexOf(a.id);
+        const ob = window.summaryAssignmentOrder.indexOf(b.id);
+        if (oa === -1 && ob === -1) return 0;
+        if (oa === -1) return 1;
+        if (ob === -1) return -1;
+        return oa - ob;
+    });
+
+    const isAllStudents = !selectedClass && !searchTerm && filteredStudents.length === data.students.length;
+    const assignmentsFiltered = (summaryAssignmentFilter && summaryAssignmentFilter.size > 0) || filteredAssignments.length < data.assignments.length;
+    if (detailsCheckbox) {
+        const shouldDisableDetails = isAllStudents && !assignmentsFiltered;
+        if (shouldDisableDetails) {
+            detailsCheckbox.checked = false;
+            detailsCheckbox.disabled = true;
+        } else {
+            detailsCheckbox.disabled = false;
+        }
+        showDetails = detailsCheckbox.checked;
+    }
+
+    if (filteredStudents.length === 0 || filteredAssignments.length === 0) {
+        let emptyMessage = '';
+        if (selectedClass) {
+            emptyMessage = `${t.noStudentOrAssignmentForClass} "${selectedClass}".`;
+        } else if (searchTerm) {
+            emptyMessage = t.noResultForSearch;
+        } else {
+            emptyMessage = t.addStudentsAndAssignmentsToSeeSummary;
+        }
+        container.innerHTML = `<p class="text-gray-500 text-center py-8">${emptyMessage}</p>`;
+        return;
+    }
+
+    // TRI PAR CLASSE PUIS PAR NOM/NOTE
+    filteredStudents.sort((a, b) => {
+        // 1. Tri par classe d'abord
+        const classA = (a.className || '').toLowerCase();
+        const classB = (b.className || '').toLowerCase();
+        
+        if (classA !== classB) {
+            return classA.localeCompare(classB, 'fr', { sensitivity: 'base' });
+        }
+        
+        // 2. Ensuite tri selon la colonne choisie
+        if (summarySort.key === 'name') {
+            const na = (a.name || '').toLowerCase();
+            const nb = (b.name || '').toLowerCase();
+            if (na < nb) return summarySort.direction === 'asc' ? -1 : 1;
+            if (na > nb) return summarySort.direction === 'asc' ? 1 : -1;
+            return 0;
+        } else if (summarySort.key.startsWith('assignment-')) {
+            const assignmentId = summarySort.key.split('assignment-')[1];
+            const ta = getStudentAssignmentTotal(a.id, assignmentId);
+            const tb = getStudentAssignmentTotal(b.id, assignmentId);
+            if (ta < tb) return summarySort.direction === 'asc' ? -1 : 1;
+            if (ta > tb) return summarySort.direction === 'asc' ? 1 : -1;
+            return 0;
+        }
+        
+        return 0;
+    });
+
+    let headers = `<th class="p-3 text-left bg-gray-100 sticky left-0 z-10 cursor-pointer select-none" onclick="toggleSummarySort('name')">${t.student}</th>`;
+
+    const tagContainer = document.getElementById('summary-assignment-tags');
+    if (tagContainer) {
+        const tagHtml = filteredAssignments.map(a => {
+            const selected = summaryAssignmentFilter.has(a.id);
+            return `<div class="flex items-center gap-1">
+                <button class="assignment-tag ${selected ? 'selected' : ''}" onclick="toggleSummaryAssignmentTag('${a.id}')">${a.name}</button>
+                <button class="px-2 py-1 text-xs bg-gray-100 rounded" onclick="moveSummaryAssignmentLeft('${a.id}')">◀</button>
+                <button class="px-2 py-1 text-xs bg-gray-100 rounded" onclick="moveSummaryAssignmentRight('${a.id}')">▶</button>
+            </div>`;
+        }).join('');
+        tagContainer.innerHTML = tagHtml;
+    }
+
+    for (const a of filteredAssignments) {
+        if (showDetails) {
+            for (const ex of a.exercises) {
+                const exIndex = a.exercises.indexOf(ex) + 1;
+                headers += `<th class="p-2 text-center bg-blue-50 text-sm">Ex${exIndex}<br><span class="text-xs text-gray-500">/${getExerciseMaxPoints(ex)}</span></th>`;
+            }
+        }
+        headers += `<th class="p-3 text-center bg-blue-100 font-bold cursor-pointer select-none" onclick="toggleSummarySort('assignment-${a.id}')">${a.name}<br><span class="text-xs">/${getAssignmentMaxPoints(a)}</span></th>`;
+    }
+
+    // GROUPEMENT PAR CLASSE DANS L'AFFICHAGE
+    let currentClass = '';
+    let rows = filteredStudents.map(s => {
+        let classHeader = '';
+        
+        // Ajouter une ligne de séparation pour chaque nouvelle classe
+        if (s.className !== currentClass) {
+            currentClass = s.className;
+            const colspan = 1 + (showDetails ? filteredAssignments.reduce((sum, a) => sum + (a.exercises || []).length, 0) : 0) + filteredAssignments.length;
+            classHeader = `<tr class="bg-blue-600 text-white font-bold">
+                <td colspan="${colspan}" class="p-2 text-center text-lg">
+                    ${s.className || '(Sans classe)'}
+                </td>
+            </tr>`;
+        }
+        
+        let row = `<td class="p-3 font-medium bg-gray-50 sticky left-0">${s.name}</td>`;
+
+        for (const a of filteredAssignments) {
+            const studentGrades = data.grades[s.id]?.[a.id] || {};
+            const isCompatible = ((s.className || '').trim() === (a.className || '').trim());
+
+            if (showDetails) {
+                for (const ex of a.exercises) {
+                    if (isCompatible) {
+                        const exTotal = getStudentExerciseTotal(studentGrades, ex);
+                        const max = getExerciseMaxPoints(ex);
+                        const existingFinal = studentGrades[ex.id]?.['final']?.['final']?.['final'];
+                        row += `<td class="px-2 py-1 text-center">
+                            <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" value="${existingFinal !== undefined && existingFinal !== '' ? existingFinal : exTotal.toFixed(2)}" oninput="sanitizeAndClamp(this, ${max})" onblur="commitSummaryInput('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" onkeydown="handleSummaryInputKey(event, '${s.id}','${a.id}','${ex.id}', ${max})" onfocus="this.select()" id="sum-input-${s.id}-${a.id}-${ex.id}" name="sum-input-${s.id}-${a.id}-${ex.id}" aria-label="Note Ex${a.exercises.indexOf(ex) + 1} pour ${s.name} - ${a.name}" class="summary-grade-input">
+                        </td>`;
+                    } else {
+                        row += `<td class="px-2 py-1 text-center text-gray-300 bg-gray-50">-</td>`;
+                    }
+                }
+            }
+
+            if (isCompatible) {
+                const total = getStudentAssignmentTotal(s.id, a.id);
+                const max = getAssignmentMaxPoints(a);
+                const pct = max > 0 ? (total / max * 100) : 0;
+                const bgColor = pct >= 70 ? 'bg-green-100' : pct >= 50 ? 'bg-orange-100' : 'bg-red-100';
+                row += `<td class="p-3 text-center font-bold ${bgColor}" id="sum-total-${s.id}-${a.id}">${total.toFixed(2)}</td>`;
+            } else {
+                row += `<td class="p-3 text-center text-gray-400 bg-gray-50">-</td>`;
+            }
+        }
+
+        return classHeader + `<tr class="border-b hover:bg-gray-50">${row}</tr>`;
+    }).join('');
+
+    const colgroupHtml = (() => {
+        let cols = '<col style="width:220px">';
+        for (const a of filteredAssignments) {
+            if (showDetails) {
+                const exCount = (a.exercises || []).length;
+                for (let i = 0; i < exCount; i++) cols += '<col style="width:70px">';
+            }
+            cols += '<col style="width:84px">';
+        }
+        return `<colgroup>${cols}</colgroup>`;
+    })();
+
+    container.innerHTML = `
+        <table class="w-full table-fixed border-collapse">
+            ${colgroupHtml}
+            <thead><tr class="border-b-2">${headers}</tr></thead>
+            <tbody>${rows}</tbody>
+        </table>
+    `;
+    translatePage();
+}
         function setGlobalAssignmentGrade(studentId, assignmentId, value) {
             if (!data.grades[studentId]) data.grades[studentId] = {};
             if (!data.grades[studentId][assignmentId]) data.grades[studentId][assignmentId] = {};
