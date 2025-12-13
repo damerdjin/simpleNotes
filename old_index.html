@@ -1,0 +1,3923 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Corrections</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+    <style>
+        /* ===== RTL SUPPORT COMPLET ET OPTIMISÉ ===== */
+        .rtl-layout {
+            direction: rtl;
+            text-align: right;
+        }
+
+        /* ===== FLEX & LAYOUT GÉNÉRAUX ===== */
+        .rtl-layout .flex {
+            flex-direction: row-reverse;
+        }
+
+        .rtl-layout .justify-between {
+            justify-content: space-between;
+        }
+
+        .rtl-layout .flex-wrap {
+            flex-direction: row-reverse;
+        }
+
+        /* ===== MARGINS INVERSÉS ===== */
+        .rtl-layout .ml-auto {
+            margin-left: 0 !important;
+            margin-right: auto !important;
+        }
+
+        .rtl-layout .ml-2 {
+            margin-left: 0 !important;
+            margin-right: 0.5rem !important;
+        }
+
+        .rtl-layout .ml-3 {
+            margin-left: 0 !important;
+            margin-right: 0.75rem !important;
+        }
+
+        .rtl-layout .ml-4 {
+            margin-left: 0 !important;
+            margin-right: 1rem !important;
+        }
+
+        .rtl-layout .mr-2 {
+            margin-right: 0 !important;
+            margin-left: 0.5rem !important;
+        }
+
+        .rtl-layout .mr-3 {
+            margin-right: 0 !important;
+            margin-left: 0.75rem !important;
+        }
+
+        .rtl-layout .mr-auto {
+            margin-right: auto !important;
+            margin-left: 0 !important;
+        }
+
+        /* ===== TEXT ALIGNMENT ===== */
+        .rtl-layout .text-left {
+            text-align: right !important;
+        }
+
+        .rtl-layout .text-right {
+            text-align: left !important;
+        }
+
+        /* ===== BORDERS & PADDING ===== */
+        .rtl-layout .border-l {
+            border-left: none !important;
+            border-right: 1px solid !important;
+        }
+
+        .rtl-layout .border-l-4 {
+            border-left: none !important;
+            border-right: 4px solid !important;
+        }
+
+        .rtl-layout .pl-2 {
+            padding-left: 0 !important;
+            padding-right: 0.5rem !important;
+        }
+
+        /* ===== ÉLÈVES - LISTE PRINCIPALE ===== */
+        .rtl-layout #students-list>div {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+        }
+
+        .rtl-layout #students-list .flex {
+            flex-direction: row-reverse !important;
+        }
+
+        .rtl-layout #students-list button {
+            order: 1 !important;
+        }
+
+        .rtl-layout #students-list .font-medium {
+            order: 2 !important;
+        }
+
+        .rtl-layout #students-list .text-gray-400 {
+            order: 3 !important;
+            margin-right: 0.75rem !important;
+        }
+
+        /* ===== EN-TÊTE ÉLÈVES ===== */
+        .rtl-layout #content-students .flex.justify-between {
+            flex-direction: row-reverse !important;
+        }
+
+        .rtl-layout #content-students .flex.justify-between>div:first-child {
+            order: 2 !important;
+        }
+
+        .rtl-layout #content-students .flex.justify-between>div:last-child {
+            order: 1 !important;
+        }
+
+        /* ===== CLASSES - FIX COMPLET ===== */
+        .rtl-layout #class-list {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            flex-direction: row-reverse !important;
+            justify-content: flex-end !important;
+            gap: 0.5rem !important;
+        }
+
+        .rtl-layout #class-list>* {
+            order: unset !important;
+        }
+
+        /* Annule les règles générales .flex qui interfèrent */
+        .rtl-layout .flex.flex-wrap.gap-2:has(#class-list) {
+            flex-direction: row-reverse !important;
+            justify-content: flex-end !important;
+        }
+
+        /* Force sur les conteneurs directs */
+        #class-list.flex {
+            display: flex !important;
+        }
+
+        /* En LTR (français/anglais), laisse la flexbox normale */
+        .ltr-layout #class-list {
+            flex-direction: row;
+            justify-content: flex-start;
+        }
+
+
+        /* ===== EXERCICES DES DEVOIRS - COMPLÈT ===== */
+        .rtl-layout [id*="exercise"],
+        .rtl-layout [id*="exercises"],
+        .rtl-layout .exercise,
+        .rtl-layout .exercice,
+        .rtl-layout .exercise-item,
+        .rtl-layout .hw-exercise {
+            direction: rtl !important;
+        }
+
+        /* Tous les conteneurs exercices */
+        .rtl-layout .exercises-list,
+        .rtl-layout #exercises-list,
+        .rtl-layout #homework-exercises,
+        .rtl-layout #exercises-container,
+        .rtl-layout #homework-exercises-list {
+            flex-direction: row-reverse !important;
+        }
+
+        /* ACTIONS/ICÔNES TOUJOURS À GAUCHE */
+        .rtl-layout .exercise-actions,
+        .rtl-layout .exercise-item button,
+        .rtl-layout .delete-exercise-btn,
+        .rtl-layout .edit-exercise-btn,
+        .rtl-layout .btn-delete-exercise,
+        .rtl-layout .btn-edit-exercise {
+            order: 1 !important;
+            margin-right: 0 !important;
+            margin-left: 0.75rem !important;
+        }
+
+        /* CONTENU EXERCICE À DROITE */
+        .rtl-layout .exercise-info,
+        .rtl-layout .exercise-content,
+        .rtl-layout .exercise-details,
+        .rtl-layout .exercise-name {
+            order: 2 !important;
+            text-align: right !important;
+        }
+
+        /* MODALES EXERCICES SPÉCIFIQUES */
+        .rtl-layout #exercises-container .flex,
+        .rtl-layout #homework-exercises-list .flex,
+        .rtl-layout .exercise-item .flex {
+            flex-direction: row-reverse !important;
+            justify-content: space-between !important;
+        }
+
+        /* ===== TABLEAUX ===== */
+        .rtl-layout table th,
+        .rtl-layout table td {
+            text-align: right !important;
+        }
+
+        .rtl-layout table .sticky.left-0 {
+            left: auto !important;
+            right: 0 !important;
+        }
+
+        /* ===== MODALES & UI ===== */
+        .modal {
+            display: none;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        /* ===== ACCORDÉON ===== */
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .accordion-content.open {
+            max-height: 5000px;
+            transition: max-height 0.5s ease-in;
+        }
+
+        .rotate-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .rotate-icon.open {
+            transform: rotate(180deg);
+        }
+
+        /* ===== NOTES - GRILLE ===== */
+        .grade-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+        }
+
+        .grade-question-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1rem;
+        }
+
+        .grade-question-card {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            min-height: 130px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .question-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .question-title {
+            font-weight: 700;
+            color: #166534;
+            font-size: 1rem;
+        }
+
+        .question-score {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #15803d;
+            background: #ffffff;
+            border-radius: 9999px;
+            padding: 0.15rem 0.75rem;
+            border: 1px solid #bbf7d0;
+        }
+
+        .question-direct-entry {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .question-direct-entry .grade-input {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .question-max {
+            font-size: 0.85rem;
+            color: #4b5563;
+            font-weight: 500;
+        }
+
+        .subquestion-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 0.6rem;
+        }
+
+        .subquestion-chip {
+            background: #ffffff;
+            border: 1px solid #fecdd3;
+            border-radius: 0.75rem;
+            padding: 0.5rem 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .subquestion-chip-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #c2410c;
+        }
+
+        .subquestion-chip .grade-input {
+            width: 100%;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .rtl-layout #students-list .flex {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 1rem !important;
+            }
+
+            .rtl-layout #students-list button {
+                align-self: flex-start !important;
+                order: 1 !important;
+            }
+
+            .rtl-layout .flex-wrap {
+                flex-direction: row-reverse !important;
+            }
+        }
+
+        /* ===== RÉAJUSTEMENTS RTL SPÉCIFIQUES ===== */
+        /* 1. Titre principal et header à droite en RTL */
+        .rtl-layout header .flex>div:first-child {
+            order: 2 !important;
+            /* Pousse le titre à droite */
+            text-align: right !important;
+            margin-left: auto !important;
+            margin-right: 0 !important;
+        }
+
+        .rtl-layout header .flex>div:last-child {
+            order: 1 !important;
+            /* Boutons langues à gauche */
+        }
+
+        .rtl-layout header h1,
+        .rtl-layout header p {
+            text-align: right !important;
+        }
+
+        /* 2. Boutons tabs : Ordre Élèves (droite) → Devoirs → Notes → Récap (gauche) */
+        .rtl-layout .flex.flex-wrap.gap-2.mb-6 {
+            /* Cible précis le conteneur des tabs */
+            justify-content: flex-end !important;
+            /* Bloc poussé à droite */
+            flex-direction: row !important;
+            /* Flux naturel RTL : droite-gauche, garde ordre HTML */
+            gap: 0.5rem !important;
+            /* Espace uniforme */
+        }
+
+        /* 3. Icônes actions dans cartes Devoirs à gauche en RTL */
+        .rtl-layout .flex.items-center.justify-between[onclick*="toggleAccordion"] {
+            flex-direction: row-reverse !important;
+            /* Inverse pour RTL */
+        }
+
+        .rtl-layout .flex.items-center.justify-between[onclick*="toggleAccordion"]>div:first-child {
+            order: 2 !important;
+            /* Contenu (icône + titre) à droite */
+            text-align: right !important;
+        }
+
+        .rtl-layout .flex.items-center.justify-between[onclick*="toggleAccordion"]>div:last-child {
+            order: 1 !important;
+            /* Actions (boutons) à gauche */
+            margin-left: 0.75rem !important;
+            /* Espace à droite du contenu */
+        }
+
+        /* Extension pour tous les titres (h1-h6) en RTL */
+        .rtl-layout h1,
+        .rtl-layout h2,
+        .rtl-layout h3,
+        .rtl-layout h4,
+        .rtl-layout h5,
+        .rtl-layout h6 {
+            text-align: right !important;
+            margin-left: auto !important;
+            margin-right: 0 !important;
+        }
+
+        /* Ajustement général flex en RTL (évite double-inversion) */
+        .rtl-layout .flex {
+            flex-direction: row !important;
+            /* Naturel en RTL */
+        }
+
+        /* Pour headers de sections (ex. dans devoirs, notes) : Inverser ordre */
+        .rtl-layout .flex.justify-between {
+            flex-direction: row-reverse !important;
+            justify-content: space-between !important;
+        }
+
+        .rtl-layout .flex.justify-between>*:first-child {
+            order: 2 !important;
+            /* Titre à droite */
+        }
+
+        .rtl-layout .flex.justify-between>*:last-child {
+            order: 1 !important;
+            /* Boutons/ajouts à gauche */
+        }
+
+        .rtl-layout .flex.flex-wrap.gap-2.mb-6 {
+            /* Cible le conteneur des tabs */
+            justify-content: flex-start !important;
+            /* Début du flux RTL : à droite */
+            flex-direction: row !important;
+            /* Flux naturel RTL : droite-gauche, garde ordre HTML */
+            text-align: start !important;
+            /* Renforce alignement RTL */
+            gap: 0.5rem !important;
+            /* Espace uniforme */
+            margin-left: auto !important;
+            /* Pousse tout le bloc à droite si besoin */
+            margin-right: 0 !important;
+        }
+
+        /* Liste d'élèves compacte en grille */
+        #students-list.student-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 0.75rem;
+        }
+
+        #students-list.student-grid .student-item {
+            position: relative;
+            display: flex !important;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.9rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+            transition: transform 0.08s ease, box-shadow 0.12s ease;
+        }
+
+        #students-list.student-grid .student-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+        }
+
+        .student-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        /* Badge niveau (remplace l’avatar) */
+        .student-level {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            color: #fff;
+            font-weight: 800;
+            font-size: 1.1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+        }
+
+        /* Variantes garçon/fille */
+        .student-level.boy {
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+        }
+
+        .student-level.girl {
+            background: linear-gradient(135deg, #ec4899, #d946ef);
+        }
+
+        .student-level.neutral {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+        }
+
+        .student-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .student-name {
+            font-weight: 700;
+            color: #111827;
+            line-height: 1.2;
+        }
+
+        .student-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            margin-top: 0.25rem;
+            color: #6b7280;
+            font-size: 12px;
+        }
+
+        .student-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #e0f2fe;
+            color: #075985;
+            border: 1px solid #bfdbfe;
+            white-space: nowrap;
+        }
+
+        .student-chip.gray {
+            background: #f3f4f6;
+            color: #374151;
+            border-color: #e5e7eb;
+        }
+
+        .student-chip.birth {
+            background: #fef3c7;
+            color: #92400e;
+            border-color: #fde68a;
+        }
+
+        .student-index {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .student-actions {
+            opacity: 0;
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .student-item:hover .student-actions {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .rtl-layout .student-actions {
+            right: auto;
+            left: 8px;
+        }
+
+        .student-actions button {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            background: #fee2e2;
+            color: #b91c1c;
+            font-size: 15px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.12s ease, transform 0.08s ease;
+        }
+
+        .student-actions button:hover {
+            background: #fecdd3;
+            transform: translateY(-1px);
+        }
+
+        /* RTL ajustements */
+        .rtl-layout #students-list.student-grid .student-item {
+            flex-direction: row-reverse !important;
+        }
+
+        .rtl-layout #students-list.student-grid .student-meta {
+            justify-content: flex-end;
+        }
+
+        /* SEULE LA VERSION QUI MARCHE */
+        .rtl-layout #class-list {
+            display: flex !important;
+            flex-direction: row-reverse !important;
+            flex-wrap: wrap !important;
+            justify-content: flex-end !important;
+            gap: 0.5rem !important;
+        }
+
+
+        /* Annule les styles qui posaient problème */
+        .rtl-layout #class-list .inline-flex {
+            display: inline-flex !important;
+            flex-direction: row-reverse !important;
+        }
+
+        .rtl-layout #class-list>* {
+            order: unset !important;
+            margin-left: 0 !important;
+            margin-right: auto !important;
+        }
+
+        /* ===== NUCLEAR OPTION - CLASSES RTL ===== */
+        html[dir="rtl"] #class-list,
+        html[dir="rtl"] .rtl-layout #class-list,
+        .rtl-layout #class-list {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            flex-direction: row-reverse !important;
+            justify-content: flex-end !important;
+            align-items: flex-start !important;
+            gap: 0.5rem !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
+        html[dir="rtl"] #class-list>div,
+        .rtl-layout #class-list>div {
+            flex-basis: auto !important;
+            order: unset !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+
+        /* Annule TOUS les autres flex qui pourraient interferer */
+        html[dir="rtl"] #class-list.flex,
+        .rtl-layout #class-list.flex {
+            flex-direction: row-reverse !important;
+            justify-content: flex-end !important;
+        }
+
+        .summary-grade-input {
+            width: 64px;
+            padding: 4px 6px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: #ffffff;
+            -moz-appearance: textfield;
+        }
+
+        .summary-grade-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #bfdbfe;
+            border-color: #60a5fa;
+        }
+
+        .summary-grade-input::-webkit-outer-spin-button,
+        .summary-grade-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .assignment-tag {
+            padding: 0.25rem 0.6rem;
+            border: 1px solid #d1d5db;
+            border-radius: 9999px;
+            font-size: 12px;
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .assignment-tag.selected {
+            background: #dbeafe;
+            color: #1d4ed8;
+            border-color: #93c5fd;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto p-4 max-w-7xl">
+        <!-- Header -->
+        <!-- Header -->
+        <header class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 rounded-xl shadow-lg mb-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold">📝 Gestion des Corrections</h1>
+                    <p class="text-blue-100 mt-2">Gérez vos élèves, devoirs et notes en toute simplicité</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="changeLanguage('fr')"
+                        class="lang-btn px-3 py-1 rounded-lg font-semibold transition-all bg-white text-blue-600">
+                        FR
+                    </button>
+                    <button onclick="changeLanguage('en')"
+                        class="lang-btn px-3 py-1 rounded-lg font-semibold transition-all bg-gray-200 text-gray-600 hover:bg-gray-300">
+                        EN
+                    </button>
+                    <button onclick="changeLanguage('ar')"
+                        class="lang-btn px-3 py-1 rounded-lg font-semibold transition-all bg-gray-200 text-gray-600 hover:bg-gray-300">
+                        AR
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Tabs -->
+        <div class="flex flex-wrap gap-2 mb-6">
+            <button onclick="showTab('students')" id="tab-students"
+                class="tab-btn px-6 py-3 rounded-lg font-semibold transition-all bg-white text-blue-600 shadow">
+                👥 Élèves
+            </button>
+            <button onclick="showTab('assignments')" id="tab-assignments"
+                class="tab-btn px-6 py-3 rounded-lg font-semibold transition-all bg-gray-200 text-gray-600 hover:bg-gray-300">
+                📋 Devoirs
+            </button>
+            <button onclick="showTab('grades')" id="tab-grades"
+                class="tab-btn px-6 py-3 rounded-lg font-semibold transition-all bg-gray-200 text-gray-600 hover:bg-gray-300">
+                🎯 Notes
+            </button>
+            <button onclick="showTab('summary')" id="tab-summary"
+                class="tab-btn px-6 py-3 rounded-lg font-semibold transition-all bg-gray-200 text-gray-600 hover:bg-gray-300">
+                📊 Récapitulatif
+            </button>
+        </div>
+
+        <!-- Students Tab -->
+        <div id="content-students" class="tab-content">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
+                    <h2 class="text-2xl font-bold text-gray-800">Liste des Élèves</h2>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <label
+                            class="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-lg border cursor-pointer text-sm">
+                            <span class="text-gray-700" data-translate="importExcel">Importer (.xlsx)</span>
+                            <input type="file" id="student-import" accept=".xlsx,.xls" class="hidden"
+                                onchange="handleStudentImport(event)">
+                        </label>
+
+                        <label
+                            class="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-lg border cursor-pointer text-sm">
+                            <span class="text-gray-700" data-translate="importJson">Importer (.json)</span>
+                            <input type="file" id="json-import" accept=".json" class="hidden"
+                                onchange="handleJsonImportData(event)">
+                        </label>
+
+                        <button id="btn-export-json" onclick="handleJsonExportData()"
+                            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold transition"
+                            data-translate="exportJson">Exporter JSON</button>
+
+                        <button onclick="openStudentModal()"
+                            class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition">
+                            + Ajouter un élève
+                        </button>
+                        <input type="text" id="student-search" placeholder="Rechercher (nom, prénom, classe)"
+                            oninput="renderStudents()" class="flex-1 min-w-48 p-3 border rounded-lg">
+                    </div>
+                </div>
+
+                <!-- Class Management -->
+                <div class="mb-4 p-4 bg-gray-50 rounded-lg">
+                    <h3 class="font-semibold mb-2">Gestion des Classes</h3>
+                    <div class="flex flex-wrap gap-2" id="class-list"></div>
+                </div>
+
+                <div id="students-list" class="space-y-2"></div>
+            </div>
+        </div>
+
+        <!-- Assignments Tab -->
+        <div id="content-assignments" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+                    <h2 class="text-2xl font-bold text-gray-800">Gestion des Devoirs</h2>
+                    <button onclick="openAssignmentModal()"
+                        class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition">
+                        + Créer un devoir
+                    </button>
+                </div>
+
+                <!-- Filters -->
+                <div class="mb-6 p-4 bg-gray-50 rounded-lg flex gap-4 flex-wrap">
+                    <div class="flex-1 min-w-48">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Filtrer par classe</label>
+                        <select id="filter-class-assignments" onchange="renderAssignments()"
+                            class="w-full p-3 border rounded-lg">
+                            <option value="">-- Toutes les classes --</option>
+                        </select>
+                    </div>
+                    <div class="flex-1 min-w-48">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Filtrer par nom de devoir</label>
+                        <input type="text" id="filter-name-assignments" placeholder="Rechercher un devoir..."
+                            onkeyup="renderAssignments()" class="w-full p-3 border rounded-lg">
+                    </div>
+                </div>
+
+                <div id="assignments-list" class="space-y-4"></div>
+            </div>
+        </div>
+
+        <!-- Grades Tab -->
+        <div id="content-grades" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Saisie des Notes</h2>
+                <div class="flex gap-4 mb-6 flex-wrap">
+                    <select id="select-class-grades" onchange="loadGradeSelectors()"
+                        class="flex-1 min-w-48 p-3 border rounded-lg">
+                        <option value="">-- Sélectionner une classe --</option>
+                    </select>
+                    <select id="select-assignment" onchange="loadGradeEntry()"
+                        class="flex-1 min-w-48 p-3 border rounded-lg">
+                        <option value="">-- Sélectionner un devoir --</option>
+                    </select>
+                    <select id="select-student" onchange="loadGradeEntry()"
+                        class="flex-1 min-w-48 p-3 border rounded-lg">
+                        <option value="">-- Sélectionner un élève --</option>
+                    </select>
+                </div>
+                <div id="grade-entry" class="space-y-4"></div>
+            </div>
+        </div>
+
+        <!-- Summary Tab -->
+        <div id="content-summary" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6 overflow-x-auto">
+                <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+                    <h2 class="text-2xl font-bold text-gray-800">Récapitulatif des Notes</h2>
+                    <div class="flex items-center gap-2 mb-4">
+                        <label class="flex items-center gap-2">
+                            <input type="radio" name="summaryMode" value="default" checked
+                                onchange="setSummaryMode('default')">
+                            <span>Vue par défaut</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="radio" name="summaryMode" value="view1" onchange="setSummaryMode('view1')">
+                            <span>Vue 1</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="radio" name="summaryMode" value="grouped" onchange="setSummaryMode('grouped')">
+                            <span>Vue 2</span>
+                        </label>
+                    </div>
+
+
+                    <div class="flex items-center gap-4 flex-wrap">
+                        <input type="text" id="summary-search" placeholder="Rechercher (nom, prénom, classe)"
+                            oninput="renderSummary()" class="p-3 border rounded-lg min-w-60">
+                        <select id="select-class-summary" onchange="renderSummary()" class="p-3 border rounded-lg">
+                            <option value="">-- Sélectionner une classe --</option>
+                        </select>
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" id="show-details" onchange="renderSummary()" class="w-5 h-5">
+                            <span>Afficher les détails (exercices)</span>
+                        </label>
+                        <div id="summary-assignment-tags" class="flex flex-wrap gap-2"></div>
+                        <button id="btn-export-excel" onclick="exportSummaryToExcel()"
+                            class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition">Exporter
+                            Excel</button>
+                    </div>
+                </div>
+                <div id="summary-table"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Modal -->
+    <div id="student-modal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+            <h3 class="text-xl font-bold mb-4">Ajouter un élève</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                <input type="text" id="student-lastname" placeholder="Nom" class="w-full p-3 border rounded-lg">
+                <input type="text" id="student-firstname" placeholder="Prénom" class="w-full p-3 border rounded-lg">
+                <input type="text" id="student-class" placeholder="Classe" class="w-full p-3 border rounded-lg">
+                <input type="text" id="student-nin" placeholder="NIN (optionnel)" class="w-full p-3 border rounded-lg">
+            </div>
+            <div class="flex gap-3 justify-end">
+                <button onclick="closeStudentModal()"
+                    class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">Annuler</button>
+                <button onclick="addStudent()"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Ajouter</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assignment Modal -->
+    <div id="assignment-modal"
+        class="modal fixed inset-0 bg-black/50 items-center justify-center z-50 overflow-y-auto py-8 hidden">
+        <div class="bg-white rounded-xl p-6 w-full max-w-5xl mx-4 my-auto">
+            <h3 id="assignment-modal-title" class="text-xl font-bold mb-4">Créer un Devoir</h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <input type="text" id="assignment-name" placeholder="Nom du devoir ex: Devoir 1"
+                    class="w-full p-3 border rounded-lg">
+                <select id="assignment-class" class="w-full p-3 border rounded-lg">
+                    <option value="" data-translate="selectClass">-- Sélectionner une classe --</option>
+                </select>
+            </div>
+
+            <!-- AJOUT : switch mode global -->
+            <div class="mb-4 flex items-center gap-2">
+                <input type="checkbox" id="assignment-global-only" class="w-4 h-4"
+                    onchange="toggleGlobalAssignmentMode(this.checked)">
+                <label for="assignment-global-only" class="text-sm text-gray-700">
+                    Note globale uniquement (sans exercices détaillés)
+                </label>
+            </div>
+
+            <!-- AJOUT : note maximale globale -->
+            <div id="global-maxpoints-container" class="mb-4 hidden">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Note maximale du devoir
+                </label>
+                <input type="number" id="assignment-global-maxpoints" class="w-32 p-2 border rounded" min="0"
+                    step="0.25" value="20">
+            </div>
+
+            <div id="exercises-builder" class="space-y-4 mb-4 max-h-[60vh] overflow-y-auto pr-2"></div>
+
+            <button id="add-exercise-btn" onclick="addExercise()"
+                class="w-full p-3 border-2 border-dashed border-blue-400 text-blue-600 rounded-lg hover:bg-blue-50 mb-4"
+                data-translate="addExercise">
+                Ajouter un exercice
+            </button>
+
+            <div class="flex gap-3 justify-end">
+                <button onclick="closeAssignmentModal()" class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
+                    data-translate="cancel">Annuler</button>
+                <button onclick="saveAssignment()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    data-translate="save">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script src="translations.js"></script>
+    <script>
+        // Language Management
+        let currentLanguage = 'fr';
+        let isRTL = false;
+
+        function initLanguage() {
+            // Récupérer la langue sauvegardée ou détecter celle du navigateur
+            const savedLang = localStorage.getItem('corrections-language');
+            if (savedLang) {
+                currentLanguage = savedLang;
+            } else {
+                // Détection automatique
+                const browserLang = navigator.language || navigator.userLanguage;
+                if (browserLang.startsWith('ar')) {
+                    currentLanguage = 'ar';
+                } else if (browserLang.startsWith('en')) {
+                    currentLanguage = 'en';
+                }
+            }
+            applyLanguage();
+        }
+
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            localStorage.setItem('corrections-language', lang);
+            applyLanguage();
+        }
+
+        function applyLanguage() {
+            isRTL = currentLanguage === 'ar';
+
+            // Appliquer la direction
+            document.body.dir = isRTL ? 'rtl' : 'ltr';
+            document.body.className = isRTL ? 'rtl-layout' : 'ltr-layout';
+
+            // Traduire tous les éléments
+            translatePage();
+
+            // Re-rendre les composants dynamiques
+            if (typeof renderStudents === 'function') renderStudents();
+            if (typeof renderAssignments === 'function') renderAssignments();
+            if (typeof renderSummary === 'function') renderSummary();
+            if (typeof loadGradeSelectors === 'function') loadGradeSelectors();
+        }
+
+        function translatePage() {
+            const t = translations[currentLanguage];
+
+            // Traduire les éléments avec data-translate
+            document.querySelectorAll('[data-translate]').forEach(element => {
+                const key = element.getAttribute('data-translate');
+                if (t[key]) {
+                    if (element.tagName === 'OPTION') {
+                        element.textContent = t[key];
+                    } else {
+                        element.textContent = t[key];
+                    }
+                }
+            });
+            // Mettre à jour le placeholder du champ de recherche avec la même traduction
+            const searchInput = document.getElementById('student-search');
+            if (searchInput) {
+                searchInput.placeholder = t.search; // Utilise la même clé que dans Récapitulatif
+            }
+            // Titre et sous-titre
+            setTextContent('h1', t.appTitle);
+            setTextContent('header p', t.appSubtitle);
+
+            // Navigation
+            setTextContent('#tab-students', t.studentsTab);
+            setTextContent('#tab-assignments', t.assignmentsTab);
+            setTextContent('#tab-grades', t.gradesTab);
+            setTextContent('#tab-summary', t.summaryTab);
+
+            // Onglet Étudiants
+            setTextContent('#content-students h2', t.studentsList);
+            setTextContent('#student-import + span', t.importExcel);
+            setTextContent('button[onclick="openStudentModal()"]', t.addStudent);
+            setTextContent('#content-students h3', t.classManagement);
+
+            // Modal étudiant
+            setTextContent('#student-modal h3', t.addStudentTitle);
+            setAttribute('#student-lastname', 'placeholder', t.lastName);
+            setAttribute('#student-firstname', 'placeholder', t.firstName);
+            setAttribute('#student-class', 'placeholder', t.className);
+            setAttribute('#student-nin', 'placeholder', t.nin);
+            setTextContent('.modal button:first-child', t.cancel);
+            setTextContent('.modal button:last-child', t.add);
+
+            // Onglet Devoirs
+            setTextContent('#content-assignments h2', t.assignmentsManagement);
+            setTextContent('button[onclick="openAssignmentModal()"]', t.createAssignment);
+            setTextContent('#filter-class-assignments + label', t.filterByClass);
+            setTextContent('#filter-class-assignments option:first-child', t.allClasses);
+            const filterClassLabel = document.querySelector('#filter-class-assignments').previousElementSibling;
+            const filterNameLabel = document.querySelector('#filter-name-assignments').previousElementSibling;
+            if (filterClassLabel) filterClassLabel.textContent = t.filterByClass;
+            if (filterNameLabel) filterNameLabel.textContent = t.filterByName;
+            setTextContent('#filter-class-assignments option:first-child', t.allClasses);
+            setAttribute('#filter-name-assignments', 'placeholder', t.searchAssignment);
+
+            setTextContent('#filter-name-assignments + label', t.filterByName);
+            setAttribute('#filter-name-assignments', 'placeholder', t.searchAssignment);
+
+            // Modal devoir
+            setTextContent('#assignment-modal-title', editingAssignmentId ? t.editAssignment : t.createAssignmentTitle);
+            setAttribute('#assignment-name', 'placeholder', t.assignmentName);
+            setTextContent('#assignment-class option:first-child', t.selectClass);
+            setTextContent('button[onclick="addExercise()"]', t.addExercise);
+            setTextContent('.modal button:first-child', t.cancel);
+            setTextContent('.modal button:last-child', t.save);
+
+            // Onglet Notes
+            setTextContent('#content-grades h2', t.gradesEntry);
+            setTextContent('#select-class-grades option:first-child', t.selectClass);
+            setTextContent('#select-assignment option:first-child', t.selectAssignment);
+            setTextContent('#select-student option:first-child', t.selectStudent);
+
+            // Onglet Récapitulatif
+            setTextContent('#content-summary h2', t.summaryTitle);
+            setAttribute('#summary-search', 'placeholder', t.search);
+            setTextContent('#show-details + span', t.showDetails);
+            setTextContent('th[onclick="toggleSummarySort(\'name\')"]', t.student);
+
+            // Mettre à jour les tooltips et autres textes
+            updateDynamicTexts();
+        }
+
+        function setTextContent(selector, text) {
+            const element = document.querySelector(selector);
+            if (element) element.textContent = text;
+        }
+
+        function setAttribute(selector, attr, value) {
+            const element = document.querySelector(selector);
+            if (element) element.setAttribute(attr, value);
+        }
+
+        function updateDynamicTexts() {
+            const t = translations[currentLanguage];
+
+            // Mettre à jour les tooltips
+            const editButtons = document.querySelectorAll('button[onclick*="openAssignmentModal"]');
+            editButtons.forEach(btn => {
+                btn.title = t.edit;
+            });
+
+            const deleteButtons = document.querySelectorAll('button[onclick*="deleteAssignment"]');
+            deleteButtons.forEach(btn => {
+                btn.title = t.delete;
+            });
+
+            const duplicateButtons = document.querySelectorAll('button[onclick*="duplicateAssignment"]');
+            duplicateButtons.forEach(btn => {
+                btn.title = t.duplicate;
+            });
+
+            const exportBtn = document.querySelector('#btn-export-json');
+            if (exportBtn) exportBtn.textContent = t.exportJson;
+
+            const exportExcelBtn = document.querySelector('#btn-export-excel');
+            if (exportExcelBtn) exportExcelBtn.textContent = t.exportExcel;
+        }
+
+        // Data Store
+        let data = {
+            students: [], // { id, name, className, nin, firstName, sex, birthDate, regNumber }
+            assignments: [], // { id, name, className, exercises }
+            grades: {}
+        };
+
+        // Tri du récapitulatif
+        let summarySort = { key: 'name', direction: 'asc' };
+        let summaryAssignmentFilter = new Set();
+
+        // Current editing state
+        let editingAssignmentId = null;
+        let tempExercises = [];
+        // AJOUT : mode devoir global (note unique)
+        let isGlobalAssignment = false;
+        let globalMaxPoints = 20;
+
+
+        // Load from localStorage
+        function loadData() {
+            const saved = localStorage.getItem('corrections-data');
+            if (saved) {
+                data = JSON.parse(saved);
+            }
+        }
+
+        // Save to localStorage
+        function saveData() {
+            localStorage.setItem('corrections-data', JSON.stringify(data));
+        }
+
+        // Generate unique ID
+        function genId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        // Tab Navigation
+        function showTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('bg-white', 'text-blue-600', 'shadow');
+                el.classList.add('bg-gray-200', 'text-gray-600');
+            });
+
+            document.getElementById('content-' + tab).classList.remove('hidden');
+            const btn = document.getElementById('tab-' + tab);
+            btn.classList.remove('bg-gray-200', 'text-gray-600');
+            btn.classList.add('bg-white', 'text-blue-600', 'shadow');
+
+            if (tab === 'grades') {
+                loadClassSelectors();
+                loadGradeSelectors();
+            }
+            if (tab === 'summary') {
+                loadClassSelectors();
+                renderSummary();
+            }
+            if (tab === 'assignments') {
+                loadClassSelectorsForAssignments();
+                renderAssignments();
+            }
+            translatePage();
+        }
+
+        // ===== CLASSES =====
+        function getClasses() {
+            const classes = new Set();
+            data.students.forEach(s => {
+                if (s.className) classes.add(s.className);
+            });
+            return Array.from(classes).sort();
+        }
+
+        function loadClassSelectors() {
+            const classes = getClasses();
+            const t = translations[currentLanguage];
+
+            // For grades tab
+            const gradesSelect = document.getElementById('select-class-grades');
+            if (gradesSelect) {
+                const currentValue = gradesSelect.value;
+                gradesSelect.innerHTML = '<option value="">-- Sélectionner une classe --</option>' +
+                    classes.map(c => `<option value="${c}" ${c === currentValue ? 'selected' : ''}>${c}</option>`).join('');
+            }
+
+            // For summary tab
+            const summarySelect = document.getElementById('select-class-summary');
+            if (summarySelect) {
+                const currentValue = summarySelect.value;
+                summarySelect.innerHTML = '<option value="">-- Sélectionner une classe --</option>' +
+                    classes.map(c => `<option value="${c}" ${c === currentValue ? 'selected' : ''}>${c}</option>`).join('');
+            }
+
+            // For assignment modal
+            const assignmentSelect = document.getElementById('assignment-class');
+            if (assignmentSelect) {
+                const currentValue = assignmentSelect.value;
+                assignmentSelect.innerHTML = `<option value="">${t.selectClass}</option>` +
+                    classes.map(c => `<option value="${c}" ${c === currentValue ? 'selected' : ''}>${c}</option>`).join('');
+            }
+        }
+
+        function loadClassSelectorsForAssignments() {
+            const classes = getClasses();
+
+            // For assignments filter
+            const filterSelect = document.getElementById('filter-class-assignments');
+            if (filterSelect) {
+                const currentValue = filterSelect.value;
+                filterSelect.innerHTML = '<option value="">-- Toutes les classes --</option>' +
+                    classes.map(c => `<option value="${c}" ${c === currentValue ? 'selected' : ''}>${c}</option>`).join('');
+            }
+        }
+
+        function renderClassList() {
+            const t = translations[currentLanguage];
+            const container = document.getElementById('class-list');
+            const classes = getClasses();
+
+            if (classes.length === 0) {
+                container.innerHTML = `<p class="text-gray-500 text-sm">${t.noClassesAutoCreated}</p>`;
+                return;
+            }
+
+            container.innerHTML = classes.map(c => {
+                const count = data.students.filter(s => s.className === c).length;
+                return `
+            <div class="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-2 rounded-lg hover:bg-blue-200 transition-all">
+                <button onclick="deleteClass('${c}')" class="text-red-600 hover:text-red-800 text-lg font-bold p-1 rounded hover:bg-red-100 transition-all">✕</button>
+                <span class="font-medium">${c}</span>
+                <span class="text-xs bg-blue-200 px-2 py-1 rounded font-medium">${count} ${t.students}</span>
+            </div>
+        `;
+            }).join('');
+        }
+
+        function deleteClass(className) {
+            const t = translations[currentLanguage];
+            const count = data.students.filter(s => s.className === className).length;
+            if (!confirm(`${t.deleteClassConfirm} "${className}" ${t.andStudents} ${count} ${t.students}`)) return;
+
+            // Remove students from this class
+            const studentIds = data.students.filter(s => s.className === className).map(s => s.id);
+            data.students = data.students.filter(s => s.className !== className);
+
+            // Remove their grades
+            studentIds.forEach(id => {
+                delete data.grades[id];
+            });
+
+            saveData();
+            renderStudents();
+            renderClassList();
+            loadClassSelectors();
+            loadClassSelectorsForAssignments();
+            renderSummary();
+            renderAssignments();
+        }
+
+        // ===== STUDENTS =====
+        function openStudentModal() {
+            document.getElementById('student-modal').classList.add('active');
+            document.getElementById('student-lastname').value = '';
+            document.getElementById('student-firstname').value = '';
+            document.getElementById('student-class').value = '';
+            document.getElementById('student-nin').value = '';
+            document.getElementById('student-lastname').focus();
+        }
+
+        function closeStudentModal() {
+            document.getElementById('student-modal').classList.remove('active');
+        }
+
+        function addStudent() {
+            const t = translations[currentLanguage];
+            const lastName = document.getElementById('student-lastname').value.trim();
+            const firstName = document.getElementById('student-firstname').value.trim();
+            const className = document.getElementById('student-class').value.trim();
+            const nin = document.getElementById('student-nin').value.trim();
+            if (!lastName && !firstName) return alert(t.enterName);
+            const name = (lastName + ' ' + firstName).trim();
+
+            data.students.push({ id: genId(), name, className, nin, firstName, lastName });
+            saveData();
+            renderStudents();
+            closeStudentModal();
+        }
+
+        function deleteStudent(id) {
+            const t = translations[currentLanguage];
+            if (!confirm(t.deleteStudent)) return;
+            data.students = data.students.filter(s => s.id !== id);
+            delete data.grades[id];
+            saveData();
+            renderStudents();
+        }
+
+        function renderStudents() {
+            const t = translations[currentLanguage];
+            const container = document.getElementById('students-list');
+            const searchTerm = document.getElementById('student-search')?.value.trim().toLowerCase() || '';
+
+            let filteredStudents = data.students.slice();
+            if (searchTerm) {
+                filteredStudents = filteredStudents.filter(s => {
+                    const haystack = `${s.name || ''} ${s.firstName || ''} ${s.lastName || ''} ${s.className || ''}`.toLowerCase();
+                    return haystack.includes(searchTerm);
+                });
+            }
+
+            if (data.students.length === 0) {
+                container.className = '';
+                container.innerHTML = `<p class="text-gray-500 text-center py-8">${t.noStudentsAddFirst}</p>`;
+                return;
+            }
+
+            container.className = 'student-grid';
+
+            const levelFromClass = (className = '') => {
+                const first = className.trim().split(/\s+/)[0] || '';
+                const map = {
+                    'أولى': 1, 'اولى': 1, '1ere': 1, '1ère': 1, '1': 1,
+                    'ثانية': 2, '2nde': 2, '2': 2,
+                    'ثالثة': 3, '3eme': 3, '3ème': 3, '3': 3,
+                    'رابعة': 4, '4eme': 4, '4ème': 4, '4': 4,
+                    'خامسة': 5, '5eme': 5, '5ème': 5, '5': 5,
+                    'سادسة': 6, '6eme': 6, '6ème': 6, '6': 6
+                };
+                const key = first.toLowerCase();
+                return map[key] || '?';
+            };
+
+            const items = filteredStudents.map((s, i) => {
+                const first = (s.firstName || '').trim();
+                const last = (s.lastName || '').trim();
+                const displayName = (s.name || `${last} ${first}`).trim();
+                const level = levelFromClass(s.className || '');
+                const sex = (s.sex || '').toLowerCase();
+                const levelClass = sex.startsWith('f') || sex.includes('أنث') || sex.includes('fille') ? 'girl'
+                    : sex.startsWith('m') || sex.includes('ذكر') || sex.includes('garçon') ? 'boy'
+                        : 'neutral';
+                const birth = formatDate(parseDateMaybeExcel(s.birthDate || ''));
+
+                return `
+            <div class="student-item">
+                <div class="student-level ${levelClass}" title="Niveau">${level}</div>
+                <div class="student-info">
+                    <div class="student-name">${displayName}</div>
+                    <div class="student-meta">
+                        <span class="student-chip gray">#${i + 1}</span>
+                        ${s.className ? `<span class="student-chip">${s.className}</span>` : ''}
+                        ${s.nin ? `<span class="student-chip gray">NIN ${s.nin}</span>` : ''}
+                        ${birth ? `<span class="student-chip birth">🎂 ${birth}</span>` : ''}
+                    </div>
+                </div>
+                <div class="student-actions">
+                    <button onclick="deleteStudent('${s.id}')" title="${t.delete}">🗑️</button>
+                </div>
+            </div>`;
+            }).join('');
+
+            container.innerHTML = items;
+
+            renderClassList();
+            translatePage();
+        }
+        // ===== ASSIGNMENTS =====
+        function openAssignmentModal(assignmentId = null) {
+            const t = translations[currentLanguage];
+            editingAssignmentId = assignmentId;
+            loadClassSelectors();
+
+            const globalCheckbox = document.getElementById('assignment-global-only');
+            const globalMaxInput = document.getElementById('assignment-global-maxpoints');
+
+            if (assignmentId) {
+                // Mode édition
+                const assignment = data.assignments.find(a => a.id === assignmentId);
+                if (!assignment) return;
+
+                document.getElementById('assignment-modal-title').textContent = t.editAssignment;
+                document.getElementById('assignment-name').value = assignment.name;
+                document.getElementById('assignment-class').value = assignment.className;
+
+                const exs = assignment.exercises || [];
+
+                // Détection d’un devoir "global" : un seul exercice sans questions ni parties
+                if (
+                    exs.length === 1 &&
+                    (!exs[0].questions || exs[0].questions.length === 0) &&
+                    (!exs[0].parts || exs[0].parts.length === 0)
+                ) {
+                    isGlobalAssignment = true;
+                    if (globalCheckbox) globalCheckbox.checked = true;
+                    globalMaxPoints = exs[0].maxPoints || 20;
+                    if (globalMaxInput) globalMaxInput.value = globalMaxPoints;
+                    tempExercises = []; // on n’édite pas d’exercices détaillés dans ce mode
+                } else {
+                    isGlobalAssignment = false;
+                    if (globalCheckbox) globalCheckbox.checked = false;
+                    tempExercises = JSON.parse(JSON.stringify(exs));
+                }
+            } else {
+                // Mode création
+                document.getElementById('assignment-modal-title').textContent = t.createAssignment;
+                document.getElementById('assignment-name').value = '';
+                document.getElementById('assignment-class').value = '';
+                tempExercises = [];
+
+                isGlobalAssignment = false;
+                if (globalCheckbox) globalCheckbox.checked = false;
+                globalMaxPoints = 20;
+                if (globalMaxInput) globalMaxInput.value = 20;
+            }
+
+            // Appliquer l’état visuel (afficher/cacher la zone exercices)
+            toggleGlobalAssignmentMode(isGlobalAssignment);
+
+            document.getElementById('assignment-modal').classList.add('active');
+            renderExercisesBuilder();
+        }
+
+        function closeAssignmentModal() {
+            document.getElementById('assignment-modal').classList.remove('active');
+            editingAssignmentId = null;
+        }
+        // AJOUT : activer/désactiver le mode "note globale"
+        function toggleGlobalAssignmentMode(isGlobal) {
+            isGlobalAssignment = isGlobal;
+
+            const globalContainer = document.getElementById('global-maxpoints-container');
+            const exercisesBuilder = document.getElementById('exercises-builder');
+            const addExerciseBtn = document.getElementById('add-exercise-btn');
+
+            if (isGlobalAssignment) {
+                if (globalContainer) globalContainer.classList.remove('hidden');
+                if (exercisesBuilder) exercisesBuilder.classList.add('hidden');
+                if (addExerciseBtn) addExerciseBtn.classList.add('hidden');
+            } else {
+                if (globalContainer) globalContainer.classList.add('hidden');
+                if (exercisesBuilder) exercisesBuilder.classList.remove('hidden');
+                if (addExerciseBtn) addExerciseBtn.classList.remove('hidden');
+            }
+        }
+
+        function addExercise() {
+            const exId = genId();
+            tempExercises.push({ id: exId, name: '', maxPoints: 0, parts: [], questions: [] });
+            renderExercisesBuilder();
+        }
+
+        function removeExercise(exId) {
+            const t = translations[currentLanguage];
+            if (!confirm(t.deleteExercise)) return;
+            tempExercises = tempExercises.filter(e => e.id !== exId);
+            renderExercisesBuilder();
+        }
+
+        function addPart(exId) {
+            const t = translations[currentLanguage];
+            const ex = tempExercises.find(e => e.id === exId);
+            if (ex) {
+                if (!ex.parts) ex.parts = [];
+                const partNum = ex.parts.length + 1;
+                ex.parts.push({ id: genId(), name: `${t.part} ${partNum}`, questions: [] });
+                renderExercisesBuilder();
+            }
+        }
+
+        function removePart(exId, partId) {
+            const t = translations[currentLanguage];
+            if (!confirm(t.deletePart)) return;
+            const ex = tempExercises.find(e => e.id === exId);
+            if (ex && ex.parts) {
+                ex.parts = ex.parts.filter(p => p.id !== partId);
+                renderExercisesBuilder();
+            }
+        }
+
+        function addQuestion(exId, partId = null) {
+            const t = translations[currentLanguage];
+            const ex = tempExercises.find(e => e.id === exId);
+            if (ex) {
+                const newQuestion = { id: genId(), name: '', maxPoints: 0, subQuestions: [] };
+
+                if (partId) {
+                    const part = ex.parts.find(p => p.id === partId);
+                    if (part) {
+                        const qNum = part.questions.length + 1;
+                        newQuestion.name = `${t.questionPrefix}${qNum}`;
+                        part.questions.push(newQuestion);
+                    }
+                } else {
+                    const qNum = ex.questions.length + 1;
+                    newQuestion.name = `${t.questionPrefix}${qNum}`;
+                    ex.questions.push(newQuestion);
+                }
+                renderExercisesBuilder();
+            }
+        }
+
+        function removeQuestion(exId, qId, partId = null) {
+            const ex = tempExercises.find(e => e.id === exId);
+            if (ex) {
+                if (partId) {
+                    const part = ex.parts.find(p => p.id === partId);
+                    if (part) {
+                        part.questions = part.questions.filter(q => q.id !== qId);
+                    }
+                } else {
+                    ex.questions = ex.questions.filter(q => q.id !== qId);
+                }
+                renderExercisesBuilder();
+            }
+        }
+
+        function addSubQuestion(exId, qId, partId = null) {
+            const t = translations[currentLanguage];
+            const ex = tempExercises.find(e => e.id === exId);
+            if (ex) {
+                let q;
+                if (partId) {
+                    const part = ex.parts.find(p => p.id === partId);
+                    if (part) q = part.questions.find(x => x.id === qId);
+                } else {
+                    q = ex.questions.find(x => x.id === qId);
+                }
+
+                if (q) {
+                    const letters = t.subQuestionLetters;
+                    const letter = letters[q.subQuestions.length] || '?';
+                    q.subQuestions.push({ id: genId(), name: letter, maxPoints: 0 });
+
+                    // Effacer les points directs de la question quand on ajoute des sous-questions
+                    if (q.subQuestions.length === 1) {
+                        q.maxPoints = 0;
+                    }
+
+                    renderExercisesBuilder();
+                }
+            }
+        }
+        function removeSubQuestion(exId, qId, sqId, partId = null) {
+            const ex = tempExercises.find(e => e.id === exId);
+            if (ex) {
+                let q;
+                if (partId) {
+                    const part = ex.parts.find(p => p.id === partId);
+                    if (part) q = part.questions.find(x => x.id === qId);
+                } else {
+                    q = ex.questions.find(x => x.id === qId);
+                }
+
+                if (q) {
+                    q.subQuestions = q.subQuestions.filter(sq => sq.id !== sqId);
+
+                    // Si plus de sous-questions, réinitialiser les points
+                    if (q.subQuestions.length === 0) {
+                        q.maxPoints = q.maxPoints || 0;
+                    }
+
+                    renderExercisesBuilder();
+                }
+            }
+        }
+
+        function updateExerciseField(exId, field, value) {
+            const ex = tempExercises.find(e => e.id === exId);
+            if (ex) {
+                if (field === 'maxPoints') {
+                    ex[field] = parseFloat(value) || 0;
+                } else {
+                    ex[field] = value;
+                }
+            }
+        }
+
+        function updatePartField(exId, partId, field, value) {
+            const ex = tempExercises.find(e => e.id === exId);
+            if (ex && ex.parts) {
+                const part = ex.parts.find(p => p.id === partId);
+                if (part) part[field] = value;
+            }
+        }
+
+        function updateQuestionField(exId, qId, partId, field, value) {
+            const ex = tempExercises.find(e => e.id === exId);
+            if (ex) {
+                let q;
+                if (partId) {
+                    const part = ex.parts.find(p => p.id === partId);
+                    if (part) q = part.questions.find(x => x.id === qId);
+                } else {
+                    q = ex.questions.find(x => x.id === qId);
+                }
+
+                if (q) {
+                    if (field === 'maxPoints') {
+                        q[field] = parseFloat(value) || 0;
+                    } else {
+                        q[field] = value;
+                    }
+                }
+            }
+        }
+
+        function updateSubQuestionField(exId, qId, sqId, partId, field, value) {
+            const ex = tempExercises.find(e => e.id === exId);
+            if (ex) {
+                let q;
+                if (partId) {
+                    const part = ex.parts.find(p => p.id === partId);
+                    if (part) q = part.questions.find(x => x.id === qId);
+                } else {
+                    q = ex.questions.find(x => x.id === qId);
+                }
+
+                if (q) {
+                    const sq = q.subQuestions.find(s => s.id === sqId);
+                    if (sq) {
+                        if (field === 'maxPoints') {
+                            sq[field] = parseFloat(value) || 0;
+                        } else {
+                            sq[field] = value;
+                        }
+                    }
+                }
+            }
+        }
+
+        function renderQuestionBuilder(q, exId, partId = null) {
+            const t = translations[currentLanguage];
+            const partParam = partId ? `'${partId}'` : 'null';
+            const hasSubQuestions = q.subQuestions && q.subQuestions.length > 0;
+
+            return `
+                <div class="border border-green-200 rounded p-3 bg-green-50">
+                    <div class="flex items-center gap-2 mb-2 flex-wrap">
+                        <input type="text" placeholder="${t.questionPrefix}1, ${t.questionPrefix}2..." value="${q.name}"
+                            onchange="updateQuestionField('${exId}','${q.id}',${partParam},'name',this.value)"
+                            class="w-20 p-1 border rounded text-sm font-semibold text-green-700 bg-white">
+                        ${!hasSubQuestions ? `
+                            <input type="number" placeholder="${t.points}" value="${q.maxPoints || ''}" min="0" step="0.25"
+                                onchange="updateQuestionField('${exId}','${q.id}',${partParam},'maxPoints',this.value)"
+                                class="w-16 p-1 border rounded text-sm" title="${t.questionPoints}">
+                        ` : `
+                            <span class="text-xs text-gray-500 px-2">${t.totalPoints}: ${getQuestionMaxPoints(q)} ${t.points}</span>
+                        `}
+                        <button onclick="addSubQuestion('${exId}','${q.id}',${partParam})" class="text-blue-500 hover:text-blue-700 text-sm px-2 py-1 bg-blue-50 rounded">+a,b,c</button>
+                        <button onclick="removeQuestion('${exId}','${q.id}',${partParam})" class="text-red-500 hover:text-red-700 ml-auto">✕</button>
+                    </div>
+                    
+                    ${hasSubQuestions ? `
+                        <div class="flex flex-wrap gap-2 ml-4">
+                            ${q.subQuestions.map(sq => `
+                                <div class="flex items-center gap-1 bg-white px-2 py-1 rounded border">
+                                    <input type="text" value="${sq.name}" 
+                                        onchange="updateSubQuestionField('${exId}','${q.id}','${sq.id}',${partParam},'name',this.value)"
+                                        class="w-8 p-0 border-0 text-orange-600 font-medium text-center text-sm">
+                                    <span class="text-orange-400">)</span>
+                                    <input type="number" placeholder="Pts" value="${sq.maxPoints || ''}" min="0" step="0.25"
+                                        onchange="updateSubQuestionField('${exId}','${q.id}','${sq.id}',${partParam},'maxPoints',this.value)"
+                                        class="w-14 p-1 border rounded text-sm">
+                                    <button onclick="removeSubQuestion('${exId}','${q.id}','${sq.id}',${partParam})" class="text-red-400 hover:text-red-600 text-xs">✕</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="text-xs text-gray-500 mt-2 ml-4">
+                            ${t.autoTotalPoints}: ${getQuestionMaxPoints(q)} ${t.points} (${t.sumSubQuestions})
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function renderExercisesBuilder() {
+            const t = translations[currentLanguage];
+            const container = document.getElementById('exercises-builder');
+
+            if (tempExercises.length === 0) {
+                container.innerHTML = `<p class="text-gray-500 text-center py-4">${t.noExercises}. ${t.clickAddExercise}.</p>`;
+                return;
+            }
+
+            container.innerHTML = tempExercises.map((ex, exIndex) => {
+                // Ensure parts array exists
+                if (!ex.parts) ex.parts = [];
+                if (!ex.questions) ex.questions = [];
+
+                const exerciseTotal = getExerciseMaxPoints(ex);
+
+                return `
+                <div class="border-2 border-blue-200 rounded-lg p-4 bg-blue-50">
+                    <div class="flex items-center gap-2 mb-3 flex-wrap">
+                        <span class="font-bold text-blue-700 text-lg">${t.exercise} ${exIndex + 1}</span>
+                        <input type="text" placeholder="${t.exerciseName}" value="${ex.name}" 
+                            onchange="updateExerciseField('${ex.id}','name',this.value)"
+                            class="flex-1 min-w-32 p-2 border rounded text-sm">
+                        <span class="text-sm font-semibold text-blue-600 px-2">${t.totalPoints}: ${exerciseTotal} ${t.points}</span>
+                        <button onclick="removeExercise('${ex.id}')" class="text-red-500 hover:text-red-700 text-lg">✕</button>
+                    </div>
+                    
+                    <div class="text-xs text-gray-500 mb-3">
+                        ${ex.questions.length === 0 && ex.parts.length === 0 ?
+                        `${t.noQuestions} - ${t.directPointsOnly}` :
+                        `${t.autoTotalPoints}: ${exerciseTotal} ${t.points} (${t.sumQuestions})`}
+                    </div>
+                    
+                    <!-- Direct Questions (without parts) -->
+                    ${ex.questions.length > 0 || (ex.parts.length === 0) ? `
+                        <div class="space-y-2 ml-4 mb-3">
+                            ${ex.questions.map(q => renderQuestionBuilder(q, ex.id, null)).join('')}
+                        </div>
+                        <button onclick="addQuestion('${ex.id}', null)" class="ml-4 text-sm text-green-600 hover:text-green-800 px-3 py-1 bg-green-100 rounded">
+                             ${t.addQuestion}
+                        </button>
+                    ` : ''}
+                    
+                    <!-- Parts -->
+                    ${ex.parts.length > 0 ? `
+                        <div class="space-y-3 mt-4">
+                            ${ex.parts.map((part, partIndex) => `
+                                <div class="border-2 border-purple-200 rounded-lg p-3 bg-purple-50 ml-2">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <input type="text" value="${part.name}" 
+                                            onchange="updatePartField('${ex.id}','${part.id}','name',this.value)"
+                                            class="font-semibold text-purple-700 p-1 border rounded bg-white">
+                                        <button onclick="removePart('${ex.id}','${part.id}')" class="text-red-500 hover:text-red-700 ml-auto">✕</button>
+                                    </div>
+                                    
+                                    <div class="space-y-2 ml-4">
+                                        ${part.questions.map(q => renderQuestionBuilder(q, ex.id, part.id)).join('')}
+                                    </div>
+                                    
+                                    <button onclick="addQuestion('${ex.id}', '${part.id}')" class="mt-2 ml-4 text-sm text-green-600 hover:text-green-800 px-3 py-1 bg-green-100 rounded">
+                                         ${t.addQuestion}
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                    
+                    <!-- Add Part Button -->
+                    <button onclick="addPart('${ex.id}')" class="mt-3 ml-4 text-sm text-purple-600 hover:text-purple-800 px-3 py-1 bg-purple-100 rounded">
+                        + ${t.addPart}
+                    </button>
+                </div>
+            `}).join('');
+        }
+
+        function saveAssignment() {
+            const t = translations[currentLanguage];
+            const name = document.getElementById('assignment-name').value.trim();
+            const className = document.getElementById('assignment-class').value.trim();
+            const globalCheckbox = document.getElementById('assignment-global-only');
+            const globalMaxInput = document.getElementById('assignment-global-maxpoints');
+
+            if (!name) return alert(t.enterAssignmentName);
+            if (!className) return alert(t.selectAssignmentClass);
+
+            // Mettre à jour l’état global
+            isGlobalAssignment = globalCheckbox && globalCheckbox.checked;
+
+            if (isGlobalAssignment) {
+                globalMaxPoints = parseFloat(globalMaxInput.value) || 0;
+                if (globalMaxPoints <= 0) {
+                    alert('Note maximale invalide');
+                    return;
+                }
+            } else {
+                if (tempExercises.length === 0) {
+                    return alert(t.addExerciseFirst);
+                }
+            }
+
+            let exercisesToSave;
+
+            if (isGlobalAssignment) {
+                // On crée un seul exercice "virtuel" sans questions
+                exercisesToSave = [{
+                    id: genId(),
+                    name: '',          // tu peux mettre 'Global' si tu veux l’afficher
+                    maxPoints: globalMaxPoints,
+                    questions: [],
+                    parts: []
+                }];
+            } else {
+                exercisesToSave = JSON.parse(JSON.stringify(tempExercises));
+            }
+
+            if (editingAssignmentId) {
+                // Mise à jour
+                const assignment = data.assignments.find(a => a.id === editingAssignmentId);
+                if (assignment) {
+                    assignment.name = name;
+                    assignment.className = className;
+                    assignment.exercises = exercisesToSave;
+                }
+            } else {
+                // Création
+                data.assignments.push({
+                    id: genId(),
+                    name,
+                    className,
+                    exercises: exercisesToSave
+                });
+            }
+
+            saveData();
+            renderAssignments();
+            closeAssignmentModal();
+        }
+
+        function deleteAssignment(id) {
+            const t = translations[currentLanguage];
+            if (!confirm(t.deleteAssignment)) return;
+            data.assignments = data.assignments.filter(a => a.id !== id);
+            // Clean grades
+            for (let studentId in data.grades) {
+                delete data.grades[studentId][id];
+            }
+            saveData();
+            renderAssignments();
+        }
+
+        function duplicateAssignment(id) {
+            const original = data.assignments.find(a => a.id === id);
+            if (!original) return;
+
+            const newAssignment = {
+                id: genId(),
+                name: original.name + ' (copie)',
+                className: original.className,
+                exercises: JSON.parse(JSON.stringify(original.exercises))
+            };
+
+            data.assignments.push(newAssignment);
+            saveData();
+            renderAssignments();
+        }
+
+        function getAssignmentMaxPoints(assignment) {
+            let total = 0;
+            for (const ex of assignment.exercises) {
+                total += getExerciseMaxPoints(ex);
+            }
+            return total;
+        }
+
+        function getExerciseMaxPoints(ex) {
+            const directQuestions = ex.questions || [];
+            const parts = ex.parts || [];
+
+            if (directQuestions.length === 0 && parts.length === 0) {
+                return ex.maxPoints || 0;
+            }
+
+            let total = 0;
+
+            // Direct questions
+            for (const q of directQuestions) {
+                total += getQuestionMaxPoints(q);
+            }
+
+            // Parts
+            for (const part of parts) {
+                for (const q of (part.questions || [])) {
+                    total += getQuestionMaxPoints(q);
+                }
+            }
+
+            return total;
+        }
+
+        function getQuestionMaxPoints(q) {
+            // Si la question a des sous-questions, le total est la somme des sous-questions
+            if (q.subQuestions && q.subQuestions.length > 0) {
+                return q.subQuestions.reduce((sum, sq) => sum + (sq.maxPoints || 0), 0);
+            }
+            // Sinon, utiliser les points directs de la question
+            return q.maxPoints || 0;
+        }
+
+        function toggleAccordion(id) {
+            const content = document.getElementById('accordion-' + id);
+            const icon = document.getElementById('icon-' + id);
+            content.classList.toggle('open');
+            icon.classList.toggle('open');
+        }
+
+        function renderAssignments() {
+            const t = translations[currentLanguage];
+            const container = document.getElementById('assignments-list');
+            const filterClass = document.getElementById('filter-class-assignments')?.value || '';
+            const filterName = document.getElementById('filter-name-assignments')?.value.toLowerCase() || '';
+
+            let filteredAssignments = data.assignments.filter(a => {
+                const matchClass = !filterClass || a.className === filterClass;
+                const matchName = !filterName || a.name.toLowerCase().includes(filterName);
+                return matchClass && matchName;
+            });
+
+            if (data.assignments.length === 0) {
+                container.innerHTML = `<p class="text-gray-500 text-center py-8">${t.noAssignments}</p>`;
+                return;
+            }
+
+            if (filteredAssignments.length === 0) {
+                container.innerHTML = `<p class="text-gray-500 text-center py-8">${t.noFilteredAssignments}</p>`;
+                return;
+            }
+            const groups = new Map();
+            filteredAssignments.forEach(a => {
+                const key = a.className && a.className.trim() ? a.className : '(Sans classe)';
+                if (!groups.has(key)) groups.set(key, []);
+                groups.get(key).push(a);
+            });
+
+            const groupHtml = Array.from(groups.entries())
+                .sort((a, b) => a[0].localeCompare(b[0]))
+                .map(([className, list]) => {
+                    const cards = list.map(a => `
+                        <div class="border rounded-lg bg-white overflow-hidden shadow-sm">
+                            <div class="flex items-center justify-between p-4 bg-gray-50 cursor-pointer hover:bg-gray-100" onclick="toggleAccordion('${a.id}')">
+                                <div class="flex items-center gap-3">
+                                    <span id="icon-${a.id}" class="rotate-icon text-gray-400">▼</span>
+                                    <div>
+                                        <h3 class="font-bold">${a.name}</h3>
+                                        <span class="text-xs text-gray-500">
+                                            ${getAssignmentMaxPoints(a)} ${t.points} • ${a.exercises.length} ${t.exerciseAbbr}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="flex gap-2" onclick="event.stopPropagation()">
+                                    <button onclick="openAssignmentModal('${a.id}')" class="p-2 text-blue-500 hover:bg-blue-50 rounded" title="${t.edit}">✏️</button>
+                                    <button onclick="duplicateAssignment('${a.id}')" class="p-2 text-green-500 hover:bg-green-50 rounded" title="${t.duplicate}">⎘</button>
+                                    <button onclick="deleteAssignment('${a.id}')" class="p-2 text-red-500 hover:bg-red-50 rounded" title="${t.delete}">🗑️</button>
+                                </div>
+                            </div>
+                            <div id="accordion-${a.id}" class="accordion-content">
+                                <div class="p-4 border-t space-y-3 bg-white text-sm">
+                                    ${a.exercises.map((ex, i) => {
+                        const parts = ex.parts || [];
+                        const directQuestions = ex.questions || [];
+                        let exContent = '';
+                        if (directQuestions.length > 0) {
+                            exContent += `<div class=\"ml-4 text-gray-600 mt-1\">${directQuestions.map(q => `<span class=\"inline-block mr-2\">${q.name || 'Q?'}: ${getQuestionMaxPoints(q)} ${t.points}</span>`).join(' • ')}</div>`;
+                        }
+                        if (parts.length > 0) {
+                            exContent += parts.map(part => `
+                                                <div class=\"ml-4 mt-1 border-l pl-2\">
+                                                    <span class=\"text-purple-600 font-medium\">${part.name}:</span>
+                                                    <span class=\"text-gray-500 italic\">(${(part.questions || []).map(q => q.name || 'Q?').join(', ')})</span>
+                                                </div>
+                                            `).join('');
+                        }
+                        return `
+                                            <div class=\"bg-gray-50 p-2 rounded border-l-4 border-blue-400\">
+                                                <strong>${t.exercise} ${i + 1}${ex.name ? ' - ' + ex.name : ''}</strong> (${getExerciseMaxPoints(ex)} ${t.points})
+                                                ${exContent}
+                                            </div>
+                                        `;
+                    }).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+
+                    return `
+                        <div class="mb-6">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded text-xs font-semibold uppercase">${className}</span>
+                                <span class="text-xs text-gray-500">${list.length} devoir(s)</span>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                ${cards}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            container.innerHTML = groupHtml;
+            translatePage();
+        }
+        // ===== GRADES =====
+        function loadGradeSelectors() {
+            const t = translations[currentLanguage];
+            const assignmentSelect = document.getElementById('select-assignment');
+            const studentSelect = document.getElementById('select-student');
+            const classSelect = document.getElementById('select-class-grades');
+            const selectedClass = classSelect.value;
+
+            // Si aucune classe n'est sélectionnée, vider les listes
+            if (!selectedClass) {
+                assignmentSelect.innerHTML = `<option value="">-- ${t.selectClassFirst} --</option>`;
+                studentSelect.innerHTML = `<option value="">-- ${t.selectClassFirst} --</option>`;
+                document.getElementById('grade-entry').innerHTML = `<p class="text-gray-500 text-center py-8">${t.selectClassToStart}</p>`;
+                return;
+            }
+
+            // Filtrer les devoirs par classe sélectionnée
+            const filteredAssignments = data.assignments.filter(a => a.className === selectedClass);
+
+            assignmentSelect.innerHTML = `<option value="">-- ${t.selectAssignment} --</option>` +
+                filteredAssignments.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+
+            // Filtrer les élèves par classe sélectionnée
+            const filteredStudents = data.students.filter(s => s.className === selectedClass);
+
+            studentSelect.innerHTML = `<option value="">-- ${t.selectStudent} --</option>` +
+                filteredStudents.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+
+            // Vider la zone de saisie de notes
+            document.getElementById('grade-entry').innerHTML = `<p class="text-gray-500 text-center py-8">${t.selectAssignmentAndStudentToGrade}</p>`;
+        }
+
+        function renderGradeQuestion(q, studentId, assignmentId, exId, partId = null) {
+            const studentGrades = data.grades[studentId]?.[assignmentId]?.[exId] || {};
+            const partKey = partId || 'direct';
+            if (!studentGrades[partKey]) studentGrades[partKey] = {};
+            const qGrades = studentGrades[partKey][q.id] || {};
+            const mode = studentGrades.mode || ((studentGrades['final']?.['final']?.['final'] || '') !== '' ? 'global' : 'detail');
+
+            let qHtml = `<div class="grade-question-card">
+                <div class="question-header">
+                    <span class="question-title">${getQuestionDisplayName(assignmentId, exId, q.id, partId)}</span>
+                    <span class="question-score" id="q-total-${q.id}">0 / ${getQuestionMaxPoints(q)}</span>
+                </div>`;
+
+            if (!q.subQuestions || q.subQuestions.length === 0) {
+                const val = qGrades['direct'] || '';
+                qHtml += `<div class="question-direct-entry ${mode === 'global' ? 'opacity-50 pointer-events-none' : ''}">
+                    <input type="number" min="0" max="${q.maxPoints}" step="0.25" value="${val}"
+                        ${mode === 'global' ? 'disabled' : ''}
+                        onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','direct',this.value)"
+                        class="grade-input p-2 border rounded text-center font-semibold" title="La note globale désactive la saisie détaillée">
+                    <span class="question-max">/ ${q.maxPoints}</span>
+                </div>`;
+            } else {
+                qHtml += `<div class="subquestion-grid">`;
+                qHtml += q.subQuestions.map(sq => {
+                    const val = qGrades[sq.id] || '';
+                    return `<div class="subquestion-chip ${mode === 'global' ? 'opacity-50 pointer-events-none' : ''}">
+                        <div class="subquestion-chip-header">
+                            <span>${getSubQuestionLetter(q, sq.id)})</span>
+                            <span class="text-xs text-gray-500">/${sq.maxPoints}</span>
+                        </div>
+                        <input type="number" min="0" max="${sq.maxPoints}" step="0.25" value="${val}"
+                            ${mode === 'global' ? 'disabled' : ''}
+                            onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','${sq.id}',this.value)"
+                            class="grade-input p-2 border rounded text-center font-semibold" title="La note globale désactive la saisie détaillée">
+                    </div>`;
+                }).join('');
+                qHtml += `</div>`;
+            }
+
+            qHtml += `</div>`;
+            return qHtml;
+        }
+
+        function getQuestionDisplayName(assignmentId, exId, qId, partId) {
+            const t = translations[currentLanguage];
+            const assignment = data.assignments.find(a => a.id === assignmentId);
+            if (!assignment) return `${t.questionPrefix}?`;
+            const ex = assignment.exercises.find(e => e.id === exId);
+            if (!ex) return `${t.questionPrefix}?`;
+            let list = [];
+            if (partId) {
+                const part = (ex.parts || []).find(p => p.id === partId);
+                list = part ? (part.questions || []) : [];
+            } else {
+                list = ex.questions || [];
+            }
+            const idx = Math.max(0, list.findIndex(x => x.id === qId));
+            return `${t.questionPrefix}${idx + 1}`;
+        }
+
+        function getSubQuestionLetter(q, sqId) {
+            const t = translations[currentLanguage];
+            const letters = (t.subQuestionLetters || '').split('');
+            const idx = Math.max(0, (q.subQuestions || []).findIndex(s => s.id === sqId));
+            return letters[idx] || letters[0] || '?';
+        }
+
+        function loadGradeEntry() {
+            const t = translations[currentLanguage];
+            const assignmentId = document.getElementById('select-assignment').value;
+            const studentId = document.getElementById('select-student').value;
+            const container = document.getElementById('grade-entry');
+
+            if (!assignmentId || !studentId) {
+                container.innerHTML = `<p class="text-gray-500 text-center py-8">${t.selectAssignmentAndStudentToGrade}</p>`;
+                return;
+            }
+
+            const assignment = data.assignments.find(a => a.id === assignmentId);
+            const student = data.students.find(s => s.id === studentId);
+
+            if (!data.grades[studentId]) data.grades[studentId] = {};
+            if (!data.grades[studentId][assignmentId]) data.grades[studentId][assignmentId] = {};
+
+            let html = `<div class="bg-blue-50 p-4 rounded-lg mb-4">
+        <h3 class="font-bold text-xl">${student.name} - ${assignment.name}</h3>
+        <p class="text-2xl font-bold text-blue-600 mt-2">${t.total}: <span id="grade-total">0</span> / ${getAssignmentMaxPoints(assignment)}</p>
+    </div>`;
+
+            html += assignment.exercises.map((ex, exIndex) => {
+                if (!data.grades[studentId][assignmentId][ex.id]) {
+                    data.grades[studentId][assignmentId][ex.id] = {};
+                }
+
+                const directQuestions = ex.questions || [];
+                const parts = ex.parts || [];
+                const hasQuestions = directQuestions.length > 0 || parts.length > 0;
+
+                const exGradesCur = data.grades[studentId][assignmentId][ex.id] || {};
+                const finalGradeCur = exGradesCur['final']?.['final']?.['final'] || '';
+                const modeCur = exGradesCur.mode || (finalGradeCur !== '' ? 'global' : 'detail');
+
+                const accordionId = `grade-ex-${ex.id}`;
+
+                let exHtml = `
+        <div class="border rounded-lg overflow-hidden bg-white mb-3">
+            <div class="bg-gray-100 p-4 flex justify-between items-center cursor-pointer hover:bg-gray-200 transition-colors" 
+                 onclick="toggleAccordion('${accordionId}')">
+                <div class="flex items-center gap-3">
+                    <span id="icon-${accordionId}" class="rotate-icon text-gray-400">▼</span>
+                    <span class="font-bold">${t.exercise} ${exIndex + 1}${ex.name ? ' - ' + ex.name : ''}</span>
+                </div>
+                <span class="text-blue-700 font-bold bg-white px-3 py-1 rounded-full shadow-sm text-sm" id="ex-total-${ex.id}">0 / ${getExerciseMaxPoints(ex)}</span>
+            </div>
+            
+            <div id="accordion-${accordionId}" class="accordion-content">
+                <div class="p-4 space-y-4 border-t">
+                    <div class="flex items-center gap-3">
+                        <div class="inline-flex border rounded overflow-hidden text-sm">
+                            <button type="button" class="px-3 py-1 ${modeCur === 'detail' ? 'bg-blue-600 text-white' : 'bg-white'}" onclick="setExerciseMode('${studentId}','${assignmentId}','${ex.id}','detail')">Σ ${translations[currentLanguage].detailMode}</button>
+                            <button type="button" class="px-3 py-1 ${modeCur === 'global' ? 'bg-yellow-500 text-white' : 'bg-white'}" onclick="setExerciseMode('${studentId}','${assignmentId}','${ex.id}','global')">★ ${translations[currentLanguage].globalMode}</button>
+                        </div>
+                    </div>`;
+
+                // Note finale optionnelle
+                if (hasQuestions) {
+                    const finalGrade = data.grades[studentId][assignmentId][ex.id]?.['final']?.['final']?.['final'] || '';
+                    exHtml += `
+                <div class="flex items-center gap-3 mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-100">
+                    <span class="text-sm font-semibold text-yellow-800">${t.globalGrade}</span>
+                    <input type="number" min="0" max="${getExerciseMaxPoints(ex)}" step="0.25" value="${finalGrade}"
+                        ${modeCur === 'detail' ? 'disabled' : ''}
+                        title="La note globale désactive la saisie détaillée"
+                        onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
+                        class="grade-input w-20 p-2 border rounded text-center font-bold bg-white ${modeCur === 'detail' ? 'opacity-50' : ''}" onclick="event.stopPropagation()">
+                    <span class="text-xs text-yellow-600 italic">${t.ignoresDetails}</span>
+                </div>`;
+                }
+
+                if (directQuestions.length === 0 && parts.length === 0) {
+                    // Pas de questions : note directe
+                    const val = data.grades[studentId][assignmentId][ex.id]?.['direct']?.['direct']?.['direct'] || '';
+                    exHtml += `
+                <div class="flex items-center gap-4 bg-blue-50 p-4 rounded-lg">
+                    <span class="font-semibold">${t.grade}</span>
+                    <input type="number" min="0" max="${ex.maxPoints}" step="0.25" value="${val}"
+                        onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','direct','direct','direct',this.value)"
+                        class="grade-input w-24 p-2 border rounded text-center font-bold text-lg" onclick="event.stopPropagation()">
+                    <span class="text-gray-500 text-lg">/ ${ex.maxPoints}</span>
+                </div>`;
+                } else {
+                    // Questions directes
+                    if (directQuestions.length > 0) {
+                        exHtml += `<div class="grade-question-grid">` + directQuestions.map(q => renderGradeQuestion(q, studentId, assignmentId, ex.id, null)).join('') + `</div>`;
+                    }
+
+                    // Parties
+                    if (parts.length > 0) {
+                        exHtml += parts.map(part => {
+                            return `
+                    <div class="mt-4 pt-4 border-t">
+                        <h4 class="font-bold text-purple-700 mb-3 flex items-center gap-2">
+                            <span class="w-2 h-2 bg-purple-400 rounded-full"></span> ${part.name}
+                        </h4>
+                        <div class="grade-question-grid">
+                            ${(part.questions || []).map(q => renderGradeQuestion(q, studentId, assignmentId, ex.id, part.id)).join('')}
+                        </div>
+                    </div>`;
+                        }).join('');
+                    }
+                }
+
+                exHtml += `</div></div></div>`;
+                return exHtml;
+            }).join('');
+
+            container.innerHTML = html;
+            saveData();
+            recalculateTotals(assignmentId, studentId);
+            translatePage();
+        }
+        function updateGrade(studentId, assignmentId, exId, partKey, qId, sqId, value) {
+            if (!data.grades[studentId]) data.grades[studentId] = {};
+            if (!data.grades[studentId][assignmentId]) data.grades[studentId][assignmentId] = {};
+            if (!data.grades[studentId][assignmentId][exId]) data.grades[studentId][assignmentId][exId] = {};
+            if (!data.grades[studentId][assignmentId][exId][partKey]) data.grades[studentId][assignmentId][exId][partKey] = {};
+            if (!data.grades[studentId][assignmentId][exId][partKey][qId]) data.grades[studentId][assignmentId][exId][partKey][qId] = {};
+
+            data.grades[studentId][assignmentId][exId][partKey][qId][sqId] = parseFloat(value) || 0;
+            if (!(partKey === 'final' && qId === 'final' && sqId === 'final')) {
+                const exGrades = data.grades[studentId][assignmentId][exId];
+                exGrades.mode = 'detail';
+                if (exGrades && exGrades.final && exGrades.final.final && typeof exGrades.final.final.final !== 'undefined') {
+                    exGrades.final.final.final = '';
+                }
+            }
+
+            saveData();
+            recalculateTotals(assignmentId, studentId);
+        }
+
+        function setExerciseMode(studentId, assignmentId, exId, mode) {
+            if (!data.grades[studentId]) data.grades[studentId] = {};
+            if (!data.grades[studentId][assignmentId]) data.grades[studentId][assignmentId] = {};
+            if (!data.grades[studentId][assignmentId][exId]) data.grades[studentId][assignmentId][exId] = {};
+            const exGrades = data.grades[studentId][assignmentId][exId];
+            exGrades.mode = mode;
+            if (mode === 'detail') {
+                if (!exGrades.final) exGrades.final = {};
+                if (!exGrades.final.final) exGrades.final.final = {};
+                exGrades.final.final.final = '';
+            }
+            saveData();
+            recalculateTotals(assignmentId, studentId);
+            loadGradeEntry();
+        }
+
+        function recalculateTotals(assignmentId, studentId) {
+            const assignment = data.assignments.find(a => a.id === assignmentId);
+            const studentGrades = data.grades[studentId]?.[assignmentId] || {};
+
+            let grandTotal = 0;
+
+            for (const ex of assignment.exercises) {
+                let exTotal = 0;
+                const exGrades = studentGrades[ex.id] || {};
+                const directQuestions = ex.questions || [];
+                const parts = ex.parts || [];
+                const hasQuestions = directQuestions.length > 0 || parts.length > 0;
+
+                // Vérifier si une note finale a été saisie
+                const finalGrade = exGrades['final']?.['final']?.['final'];
+
+                if (finalGrade !== undefined && finalGrade !== '') {
+                    // Utiliser la note finale si elle est définie
+                    exTotal = parseFloat(finalGrade) || 0;
+                } else if (directQuestions.length === 0 && parts.length === 0) {
+                    // Exercice sans questions
+                    exTotal = exGrades['direct']?.['direct']?.['direct'] || 0;
+                } else {
+                    // Calculer à partir des questions détaillées
+                    // Direct questions
+                    for (const q of directQuestions) {
+                        let qTotal = 0;
+                        const qGrades = exGrades['direct']?.[q.id] || {};
+
+                        if (!q.subQuestions || q.subQuestions.length === 0) {
+                            qTotal = qGrades['direct'] || 0;
+                        } else {
+                            for (const sq of q.subQuestions) {
+                                qTotal += qGrades[sq.id] || 0;
+                            }
+                        }
+
+                        const qEl = document.getElementById('q-total-' + q.id);
+                        if (qEl) qEl.textContent = qTotal + ' / ' + getQuestionMaxPoints(q);
+                        exTotal += qTotal;
+                    }
+
+                    // Parts
+                    for (const part of parts) {
+                        for (const q of (part.questions || [])) {
+                            let qTotal = 0;
+                            const qGrades = exGrades[part.id]?.[q.id] || {};
+
+                            if (!q.subQuestions || q.subQuestions.length === 0) {
+                                qTotal = qGrades['direct'] || 0;
+                            } else {
+                                for (const sq of q.subQuestions) {
+                                    qTotal += qGrades[sq.id] || 0;
+                                }
+                            }
+
+                            const qEl = document.getElementById('q-total-' + q.id);
+                            if (qEl) qEl.textContent = qTotal + ' / ' + getQuestionMaxPoints(q);
+                            exTotal += qTotal;
+                        }
+                    }
+                }
+
+                const exEl = document.getElementById('ex-total-' + ex.id);
+                if (exEl) {
+                    exEl.textContent = exTotal + ' / ' + getExerciseMaxPoints(ex);
+                    const isGlobal = finalGrade !== undefined && finalGrade !== '';
+                    exEl.className = `text-blue-700 font-bold ${isGlobal ? 'bg-yellow-100' : 'bg-white'} px-3 py-1 rounded-full shadow-sm text-sm`;
+                }
+                grandTotal += exTotal;
+            }
+
+            const totalEl = document.getElementById('grade-total');
+            if (totalEl) totalEl.textContent = grandTotal;
+        }
+
+        function getStudentAssignmentTotal(studentId, assignmentId) {
+            const assignment = data.assignments.find(a => a.id === assignmentId);
+            if (!assignment) return 0;
+            const studentGrades = data.grades[studentId]?.[assignmentId] || {};
+
+            if (studentGrades.global !== undefined && studentGrades.global !== '') {
+                return parseFloat(studentGrades.global) || 0;
+            }
+
+            let total = 0;
+            for (const ex of assignment.exercises) {
+                total += getStudentExerciseTotal(studentGrades, ex);
+            }
+            return total;
+        }
+
+        function getStudentExerciseTotal(studentGrades, ex) {
+            const exGrades = studentGrades[ex.id] || {};
+            const directQuestions = ex.questions || [];
+            const parts = ex.parts || [];
+
+            // Vérifier si une note finale a été saisie
+            const finalGrade = exGrades['final']?.['final']?.['final'];
+            if (finalGrade !== undefined && finalGrade !== '') {
+                return parseFloat(finalGrade) || 0;
+            }
+
+            if (directQuestions.length === 0 && parts.length === 0) {
+                return exGrades['direct']?.['direct']?.['direct'] || 0;
+            }
+
+            let total = 0;
+
+            // Direct questions
+            for (const q of directQuestions) {
+                const qGrades = exGrades['direct']?.[q.id] || {};
+                if (!q.subQuestions || q.subQuestions.length === 0) {
+                    total += qGrades['direct'] || 0;
+                } else {
+                    for (const sq of q.subQuestions) {
+                        total += qGrades[sq.id] || 0;
+                    }
+                }
+            }
+
+            // Parts
+            for (const part of parts) {
+                for (const q of (part.questions || [])) {
+                    const qGrades = exGrades[part.id]?.[q.id] || {};
+                    if (!q.subQuestions || q.subQuestions.length === 0) {
+                        total += qGrades['direct'] || 0;
+                    } else {
+                        for (const sq of q.subQuestions) {
+                            total += qGrades[sq.id] || 0;
+                        }
+                    }
+                }
+            }
+
+            return total;
+        }
+
+        // ===== SUMMARY =====
+        let currentSummaryMode = 'default'; // Mode par défaut
+
+        function setSummaryMode(mode) {
+            currentSummaryMode = mode;
+            renderSummary(); // Rafraîchit l'affichage avec le nouveau mode
+        }
+
+
+        function renderSummary() {
+            switch (currentSummaryMode) {
+                case 'grouped':
+                    renderSummary2();
+                    break;
+                case 'view1':
+                    renderSummary1();
+                    break;
+                default: // 'default' ou toute autre valeur
+                    renderSummary0();
+            }
+        }
+
+        function renderSummary0() {
+            const t = translations[currentLanguage];
+            const container = document.getElementById('summary-table');
+            const detailsCheckbox = document.getElementById('show-details');
+            let showDetails = detailsCheckbox ? detailsCheckbox.checked : false;
+            const classSelect = document.getElementById('select-class-summary');
+            const searchInput = document.getElementById('summary-search');
+            const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+            let selectedClass = classSelect ? classSelect.value : '';
+            let searchMatches = data.students.slice();
+
+            if (searchTerm) {
+                searchMatches = searchMatches.filter(s => {
+                    const haystack = `${s.name || ''} ${s.firstName || ''} ${s.lastName || ''} ${s.className || ''}`.toLowerCase();
+                    return haystack.includes(searchTerm);
+                });
+            }
+
+            const matchingClasses = Array.from(new Set(
+                searchMatches
+                    .map(s => (s.className || '').trim())
+                    .filter(c => c.length > 0)
+            )).sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
+
+            if (classSelect) {
+                const previousValue = selectedClass;
+                classSelect.innerHTML = `<option value="">-- ${t.selectClass} --</option>` +
+                    matchingClasses.map(c => `<option value="${c}" ${c === previousValue ? 'selected' : ''}>${c}</option>`).join('');
+
+                let autoSelectedClass = '';
+                if (searchMatches.length === 1 && searchMatches[0].className) {
+                    autoSelectedClass = searchMatches[0].className;
+                } else if (matchingClasses.length === 1) {
+                    autoSelectedClass = matchingClasses[0];
+                }
+
+                if (autoSelectedClass) {
+                    classSelect.value = autoSelectedClass;
+                } else if (matchingClasses.includes(previousValue)) {
+                    classSelect.value = previousValue;
+                } else {
+                    classSelect.value = '';
+                }
+
+                selectedClass = classSelect.value;
+            }
+
+            let filteredStudents = searchMatches;
+            if (selectedClass) {
+                filteredStudents = filteredStudents.filter(s => s.className === selectedClass);
+            }
+
+            let filteredAssignments = data.assignments.slice();
+            if (selectedClass) {
+                filteredAssignments = filteredAssignments.filter(a => a.className === selectedClass);
+            } else {
+                const classFilterSet = new Set(matchingClasses);
+                filteredAssignments = filteredAssignments.filter(a => classFilterSet.has(a.className));
+            }
+
+            if (summaryAssignmentFilter && summaryAssignmentFilter.size > 0) {
+                filteredAssignments = filteredAssignments.filter(a => summaryAssignmentFilter.has(a.id));
+            }
+
+            if (summaryAssignmentFilter && summaryAssignmentFilter.size > 0 && !selectedClass) {
+                const allowedClasses = new Set(filteredAssignments.map(a => (a.className || '').trim()).filter(c => c.length > 0));
+                filteredStudents = filteredStudents.filter(s => allowedClasses.has((s.className || '').trim()));
+            }
+
+            if (!window.summaryAssignmentOrder) {
+                try {
+                    window.summaryAssignmentOrder = JSON.parse(localStorage.getItem('summary-assignment-order') || '[]');
+                } catch (e) { window.summaryAssignmentOrder = []; }
+            }
+            const ensureOrderIds = () => {
+                const ids = filteredAssignments.map(a => a.id);
+                const set = new Set(window.summaryAssignmentOrder);
+                ids.forEach(id => { if (!set.has(id)) window.summaryAssignmentOrder.push(id); });
+            };
+            ensureOrderIds();
+            filteredAssignments.sort((a, b) => {
+                const oa = window.summaryAssignmentOrder.indexOf(a.id);
+                const ob = window.summaryAssignmentOrder.indexOf(b.id);
+                if (oa === -1 && ob === -1) return 0;
+                if (oa === -1) return 1;
+                if (ob === -1) return -1;
+                return oa - ob;
+            });
+
+            const isAllStudents = !selectedClass && !searchTerm && filteredStudents.length === data.students.length;
+            const assignmentsFiltered = (summaryAssignmentFilter && summaryAssignmentFilter.size > 0) || filteredAssignments.length < data.assignments.length;
+            if (detailsCheckbox) {
+                const shouldDisableDetails = isAllStudents && !assignmentsFiltered;
+                if (shouldDisableDetails) {
+                    detailsCheckbox.checked = false;
+                    detailsCheckbox.disabled = true;
+                } else {
+                    detailsCheckbox.disabled = false;
+                }
+                showDetails = detailsCheckbox.checked;
+            }
+
+            if (filteredStudents.length === 0 || filteredAssignments.length === 0) {
+                let emptyMessage = '';
+                if (selectedClass) {
+                    emptyMessage = `${t.noStudentOrAssignmentForClass} "${selectedClass}".`;
+                } else if (searchTerm) {
+                    emptyMessage = t.noResultForSearch;
+                } else {
+                    emptyMessage = t.addStudentsAndAssignmentsToSeeSummary;
+                }
+                container.innerHTML = `<p class="text-gray-500 text-center py-8">${emptyMessage}</p>`;
+                return;
+            }
+
+            // TRI PAR CLASSE PUIS PAR NOM/NOTE
+            filteredStudents.sort((a, b) => {
+                // 1. Tri par classe d'abord
+                const classA = (a.className || '').toLowerCase();
+                const classB = (b.className || '').toLowerCase();
+
+                if (classA !== classB) {
+                    return classA.localeCompare(classB, 'fr', { sensitivity: 'base' });
+                }
+
+                // 2. Ensuite tri selon la colonne choisie
+                if (summarySort.key === 'name') {
+                    const na = (a.name || '').toLowerCase();
+                    const nb = (b.name || '').toLowerCase();
+                    if (na < nb) return summarySort.direction === 'asc' ? -1 : 1;
+                    if (na > nb) return summarySort.direction === 'asc' ? 1 : -1;
+                    return 0;
+                } else if (summarySort.key.startsWith('assignment-')) {
+                    const assignmentId = summarySort.key.split('assignment-')[1];
+                    const ta = getStudentAssignmentTotal(a.id, assignmentId);
+                    const tb = getStudentAssignmentTotal(b.id, assignmentId);
+                    if (ta < tb) return summarySort.direction === 'asc' ? -1 : 1;
+                    if (ta > tb) return summarySort.direction === 'asc' ? 1 : -1;
+                    return 0;
+                }
+
+                return 0;
+            });
+
+            let headers = `<th class="p-3 text-left bg-gray-100 sticky left-0 z-10 cursor-pointer select-none" onclick="toggleSummarySort('name')">${t.student}</th>`;
+
+            const tagContainer = document.getElementById('summary-assignment-tags');
+            if (tagContainer) {
+                const tagHtml = filteredAssignments.map(a => {
+                    const selected = summaryAssignmentFilter.has(a.id);
+                    return `<div class="flex items-center gap-1">
+                <button class="assignment-tag ${selected ? 'selected' : ''}" onclick="toggleSummaryAssignmentTag('${a.id}')">${a.name}</button>
+                <button class="px-2 py-1 text-xs bg-gray-100 rounded" onclick="moveSummaryAssignmentLeft('${a.id}')">◀</button>
+                <button class="px-2 py-1 text-xs bg-gray-100 rounded" onclick="moveSummaryAssignmentRight('${a.id}')">▶</button>
+            </div>`;
+                }).join('');
+                tagContainer.innerHTML = tagHtml;
+            }
+
+            for (const a of filteredAssignments) {
+                if (showDetails) {
+                    for (const ex of a.exercises) {
+                        const exIndex = a.exercises.indexOf(ex) + 1;
+                        headers += `<th class="p-2 text-center bg-blue-50 text-sm">Ex${exIndex}<br><span class="text-xs text-gray-500">/${getExerciseMaxPoints(ex)}</span></th>`;
+                    }
+                }
+                headers += `<th class="p-3 text-center bg-blue-100 font-bold cursor-pointer select-none" onclick="toggleSummarySort('assignment-${a.id}')">${a.name}<br><span class="text-xs">/${getAssignmentMaxPoints(a)}</span></th>`;
+            }
+
+            // GROUPEMENT PAR CLASSE DANS L'AFFICHAGE
+            let currentClass = '';
+            let rows = filteredStudents.map(s => {
+                let classHeader = '';
+
+                // Ajouter une ligne de séparation pour chaque nouvelle classe
+                if (s.className !== currentClass) {
+                    currentClass = s.className;
+                    const colspan = 1 + (showDetails ? filteredAssignments.reduce((sum, a) => sum + (a.exercises || []).length, 0) : 0) + filteredAssignments.length;
+                    classHeader = `<tr class="bg-blue-600 text-white font-bold">
+                <td colspan="${colspan}" class="p-2 text-center text-lg">
+                    ${s.className || '(Sans classe)'}
+                </td>
+            </tr>`;
+                }
+
+                let row = `<td class="p-3 font-medium bg-gray-50 sticky left-0">${s.name}</td>`;
+
+                for (const a of filteredAssignments) {
+                    const studentGrades = data.grades[s.id]?.[a.id] || {};
+                    const isCompatible = ((s.className || '').trim() === (a.className || '').trim());
+
+                    if (showDetails) {
+                        for (const ex of a.exercises) {
+                            if (isCompatible) {
+                                const exTotal = getStudentExerciseTotal(studentGrades, ex);
+                                const max = getExerciseMaxPoints(ex);
+                                const existingFinal = studentGrades[ex.id]?.['final']?.['final']?.['final'];
+                                row += `<td class="px-2 py-1 text-center">
+                            <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" value="${existingFinal !== undefined && existingFinal !== '' ? existingFinal : exTotal.toFixed(2)}" oninput="sanitizeAndClamp(this, ${max})" onblur="commitSummaryInput('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" onkeydown="handleSummaryInputKey(event, '${s.id}','${a.id}','${ex.id}', ${max})" onfocus="this.select()" id="sum-input-${s.id}-${a.id}-${ex.id}" name="sum-input-${s.id}-${a.id}-${ex.id}" aria-label="Note Ex${a.exercises.indexOf(ex) + 1} pour ${s.name} - ${a.name}" class="summary-grade-input">
+                        </td>`;
+                            } else {
+                                row += `<td class="px-2 py-1 text-center text-gray-300 bg-gray-50">-</td>`;
+                            }
+                        }
+                    }
+
+                    if (isCompatible) {
+                        const total = getStudentAssignmentTotal(s.id, a.id);
+                        const max = getAssignmentMaxPoints(a);
+                        const pct = max > 0 ? (total / max * 100) : 0;
+                        const bgColor = pct >= 70 ? 'bg-green-100' : pct >= 50 ? 'bg-orange-100' : 'bg-red-100';
+                        row += `<td class="p-3 text-center font-bold ${bgColor}" id="sum-total-${s.id}-${a.id}">${total.toFixed(2)}</td>`;
+                    } else {
+                        row += `<td class="p-3 text-center text-gray-400 bg-gray-50">-</td>`;
+                    }
+                }
+
+                return classHeader + `<tr class="border-b hover:bg-gray-50">${row}</tr>`;
+            }).join('');
+
+            const colgroupHtml = (() => {
+                let cols = '<col style="width:220px">';
+                for (const a of filteredAssignments) {
+                    if (showDetails) {
+                        const exCount = (a.exercises || []).length;
+                        for (let i = 0; i < exCount; i++) cols += '<col style="width:70px">';
+                    }
+                    cols += '<col style="width:84px">';
+                }
+                return `<colgroup>${cols}</colgroup>`;
+            })();
+
+            container.innerHTML = `
+        <table class="w-full table-fixed border-collapse">
+            ${colgroupHtml}
+            <thead><tr class="border-b-2">${headers}</tr></thead>
+            <tbody>${rows}</tbody>
+        </table>
+    `;
+            translatePage();
+        }
+        function renderSummary1() {
+            const t = translations[currentLanguage];
+            const container = document.getElementById('summary-table');
+            const detailsCheckbox = document.getElementById('show-details');
+            let showDetails = detailsCheckbox ? detailsCheckbox.checked : false;
+            const classSelect = document.getElementById('select-class-summary');
+            const searchInput = document.getElementById('summary-search');
+            const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+            let selectedClass = classSelect ? classSelect.value : '';
+            let searchMatches = data.students.slice();
+
+            if (searchTerm) {
+                searchMatches = searchMatches.filter(s => {
+                    const haystack = `${s.name || ''} ${s.firstName || ''} ${s.lastName || ''} ${s.className || ''}`.toLowerCase();
+                    return haystack.includes(searchTerm);
+                });
+            }
+
+            const matchingClasses = Array.from(new Set(
+                searchMatches
+                    .map(s => (s.className || '').trim())
+                    .filter(c => c.length > 0)
+            )).sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
+
+            if (classSelect) {
+                const previousValue = selectedClass;
+                classSelect.innerHTML = `<option value="">-- ${t.selectClass} --</option>` +
+                    matchingClasses.map(c => `<option value="${c}" ${c === previousValue ? 'selected' : ''}>${c}</option>`).join('');
+
+                let autoSelectedClass = '';
+                if (searchMatches.length === 1 && searchMatches[0].className) {
+                    autoSelectedClass = searchMatches[0].className;
+                } else if (matchingClasses.length === 1) {
+                    autoSelectedClass = matchingClasses[0];
+                }
+
+                if (autoSelectedClass) {
+                    classSelect.value = autoSelectedClass;
+                } else if (matchingClasses.includes(previousValue)) {
+                    classSelect.value = previousValue;
+                } else {
+                    classSelect.value = '';
+                }
+
+                selectedClass = classSelect.value;
+            }
+
+            let filteredStudents = searchMatches;
+            if (selectedClass) {
+                filteredStudents = filteredStudents.filter(s => s.className === selectedClass);
+            }
+
+            let filteredAssignments = data.assignments.slice();
+            if (selectedClass) {
+                filteredAssignments = filteredAssignments.filter(a => a.className === selectedClass);
+            } else {
+                const classFilterSet = new Set(matchingClasses);
+                filteredAssignments = filteredAssignments.filter(a => classFilterSet.has(a.className));
+            }
+
+            if (summaryAssignmentFilter && summaryAssignmentFilter.size > 0) {
+                filteredAssignments = filteredAssignments.filter(a => summaryAssignmentFilter.has(a.id));
+            }
+
+            if (summaryAssignmentFilter && summaryAssignmentFilter.size > 0 && !selectedClass) {
+                const allowedClasses = new Set(filteredAssignments.map(a => (a.className || '').trim()).filter(c => c.length > 0));
+                filteredStudents = filteredStudents.filter(s => allowedClasses.has((s.className || '').trim()));
+            }
+
+            if (!window.summaryAssignmentOrder) {
+                try {
+                    window.summaryAssignmentOrder = JSON.parse(localStorage.getItem('summary-assignment-order') || '[]');
+                } catch (e) { window.summaryAssignmentOrder = []; }
+            }
+            const ensureOrderIds = () => {
+                const ids = filteredAssignments.map(a => a.id);
+                const set = new Set(window.summaryAssignmentOrder);
+                ids.forEach(id => { if (!set.has(id)) window.summaryAssignmentOrder.push(id); });
+            };
+            ensureOrderIds();
+
+            // NOUVEAU : Grouper les devoirs par classe et trier
+            const classesInOrder = Array.from(new Set(
+                filteredStudents.map(s => (s.className || '').trim())
+            )).filter(c => c.length > 0).sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
+
+            // Créer un map des devoirs par classe
+            const assignmentsByClass = {};
+            classesInOrder.forEach(className => {
+                assignmentsByClass[className] = filteredAssignments
+                    .filter(a => (a.className || '').trim() === className)
+                    .sort((a, b) => {
+                        const oa = window.summaryAssignmentOrder.indexOf(a.id);
+                        const ob = window.summaryAssignmentOrder.indexOf(b.id);
+                        if (oa === -1 && ob === -1) return 0;
+                        if (oa === -1) return 1;
+                        if (ob === -1) return -1;
+                        return oa - ob;
+                    });
+            });
+
+            // Créer la liste ordonnée des devoirs (par classe)
+            const orderedAssignments = [];
+            classesInOrder.forEach(className => {
+                orderedAssignments.push(...(assignmentsByClass[className] || []));
+            });
+
+            const isAllStudents = !selectedClass && !searchTerm && filteredStudents.length === data.students.length;
+            const assignmentsFiltered = (summaryAssignmentFilter && summaryAssignmentFilter.size > 0) || filteredAssignments.length < data.assignments.length;
+            if (detailsCheckbox) {
+                const shouldDisableDetails = isAllStudents && !assignmentsFiltered;
+                if (shouldDisableDetails) {
+                    detailsCheckbox.checked = false;
+                    detailsCheckbox.disabled = true;
+                } else {
+                    detailsCheckbox.disabled = false;
+                }
+                showDetails = detailsCheckbox.checked;
+            }
+
+            if (filteredStudents.length === 0 || orderedAssignments.length === 0) {
+                let emptyMessage = '';
+                if (selectedClass) {
+                    emptyMessage = `${t.noStudentOrAssignmentForClass} "${selectedClass}".`;
+                } else if (searchTerm) {
+                    emptyMessage = t.noResultForSearch;
+                } else {
+                    emptyMessage = t.addStudentsAndAssignmentsToSeeSummary;
+                }
+                container.innerHTML = `<p class="text-gray-500 text-center py-8">${emptyMessage}</p>`;
+                return;
+            }
+
+            // TRI DES ÉLÈVES PAR CLASSE PUIS PAR NOM/NOTE
+            filteredStudents.sort((a, b) => {
+                const classA = (a.className || '').toLowerCase();
+                const classB = (b.className || '').toLowerCase();
+
+                if (classA !== classB) {
+                    return classA.localeCompare(classB, 'fr', { sensitivity: 'base' });
+                }
+
+                if (summarySort.key === 'name') {
+                    const na = (a.name || '').toLowerCase();
+                    const nb = (b.name || '').toLowerCase();
+                    if (na < nb) return summarySort.direction === 'asc' ? -1 : 1;
+                    if (na > nb) return summarySort.direction === 'asc' ? 1 : -1;
+                    return 0;
+                } else if (summarySort.key.startsWith('assignment-')) {
+                    const assignmentId = summarySort.key.split('assignment-')[1];
+                    const ta = getStudentAssignmentTotal(a.id, assignmentId);
+                    const tb = getStudentAssignmentTotal(b.id, assignmentId);
+                    if (ta < tb) return summarySort.direction === 'asc' ? -1 : 1;
+                    if (ta > tb) return summarySort.direction === 'asc' ? 1 : -1;
+                    return 0;
+                }
+
+                return 0;
+            });
+
+            // NOUVEAU : Construire les en-têtes avec groupement par classe
+            let classHeaderRow = `<th class="p-3 bg-gray-100 sticky left-0 z-10"></th>`;
+            let assignmentHeaderRow = `<th class="p-3 text-left bg-gray-100 sticky left-0 z-10 cursor-pointer select-none" onclick="toggleSummarySort('name')">${t.student}</th>`;
+
+            // Calculer le colspan pour chaque classe
+            classesInOrder.forEach(className => {
+                const classAssignments = assignmentsByClass[className] || [];
+                if (classAssignments.length === 0) return;
+
+                let colspan = 0;
+                classAssignments.forEach(a => {
+                    if (showDetails) {
+                        colspan += (a.exercises || []).length;
+                    }
+                    colspan += 1; // Pour le total du devoir
+                });
+
+                // Couleurs alternées pour les classes
+                const classIndex = classesInOrder.indexOf(className);
+                const bgColor = classIndex % 2 === 0 ? 'bg-blue-600' : 'bg-indigo-600';
+
+                classHeaderRow += `<th colspan="${colspan}" class="p-2 text-center text-white font-bold ${bgColor} border-l-2 border-white">${className}</th>`;
+            });
+
+            // Construire les en-têtes des devoirs
+            classesInOrder.forEach(className => {
+                const classAssignments = assignmentsByClass[className] || [];
+                const classIndex = classesInOrder.indexOf(className);
+                const bgLight = classIndex % 2 === 0 ? 'bg-blue-50' : 'bg-indigo-50';
+                const bgMedium = classIndex % 2 === 0 ? 'bg-blue-100' : 'bg-indigo-100';
+                let isFirstInClass = true;
+
+                classAssignments.forEach(a => {
+                    const borderClass = isFirstInClass ? 'border-l-2 border-gray-300' : '';
+                    isFirstInClass = false;
+
+                    if (showDetails) {
+                        a.exercises.forEach((ex, exIdx) => {
+                            const exBorder = exIdx === 0 ? borderClass : '';
+                            assignmentHeaderRow += `<th class="p-2 text-center ${bgLight} text-sm ${exBorder}">Ex${exIdx + 1}<br><span class="text-xs text-gray-500">/${getExerciseMaxPoints(ex)}</span></th>`;
+                        });
+                    }
+
+                    const totalBorder = showDetails ? '' : borderClass;
+                    assignmentHeaderRow += `<th class="p-3 text-center ${bgMedium} font-bold cursor-pointer select-none ${totalBorder}" onclick="toggleSummarySort('assignment-${a.id}')">${a.name}<br><span class="text-xs">/${getAssignmentMaxPoints(a)}</span></th>`;
+                });
+            });
+
+            // Tags pour filtrer les devoirs (groupés par classe)
+            const tagContainer = document.getElementById('summary-assignment-tags');
+            if (tagContainer) {
+                let tagHtml = '';
+                classesInOrder.forEach(className => {
+                    const classAssignments = assignmentsByClass[className] || [];
+                    if (classAssignments.length === 0) return;
+
+                    tagHtml += `<div class="flex flex-wrap items-center gap-1 p-2 bg-gray-100 rounded mb-2">
+                <span class="font-bold text-sm text-gray-600 mr-2">${className}:</span>`;
+
+                    classAssignments.forEach(a => {
+                        const selected = summaryAssignmentFilter.has(a.id);
+                        tagHtml += `<div class="flex items-center gap-1">
+                    <button class="assignment-tag ${selected ? 'selected' : ''}" onclick="toggleSummaryAssignmentTag('${a.id}')">${a.name}</button>
+                    <button class="px-2 py-1 text-xs bg-white rounded hover:bg-gray-200" onclick="moveSummaryAssignmentLeft('${a.id}')">◀</button>
+                    <button class="px-2 py-1 text-xs bg-white rounded hover:bg-gray-200" onclick="moveSummaryAssignmentRight('${a.id}')">▶</button>
+                </div>`;
+                    });
+
+                    tagHtml += `</div>`;
+                });
+                tagContainer.innerHTML = tagHtml;
+            }
+
+            // CONSTRUIRE LES LIGNES DES ÉLÈVES
+            let currentClass = '';
+            let rows = filteredStudents.map(s => {
+                let classHeader = '';
+                const studentClassName = (s.className || '').trim();
+
+                // Ajouter une ligne de séparation pour chaque nouvelle classe
+                if (studentClassName !== currentClass) {
+                    currentClass = studentClassName;
+                    const colspan = 1 + orderedAssignments.reduce((sum, a) => {
+                        return sum + (showDetails ? (a.exercises || []).length : 0) + 1;
+                    }, 0);
+                    classHeader = `<tr class="bg-gray-800 text-white font-bold">
+                <td colspan="${colspan}" class="p-2 text-center text-lg">
+                    📚 ${studentClassName || '(Sans classe)'}
+                </td>
+            </tr>`;
+                }
+
+                let row = `<td class="p-3 font-medium bg-gray-50 sticky left-0 z-5">${s.name}</td>`;
+
+                // Parcourir les devoirs dans l'ordre des classes
+                let currentAssignmentClass = '';
+                classesInOrder.forEach(className => {
+                    const classAssignments = assignmentsByClass[className] || [];
+                    const classIndex = classesInOrder.indexOf(className);
+                    const isStudentClass = studentClassName === className;
+                    let isFirstInClass = true;
+
+                    classAssignments.forEach(a => {
+                        const studentGrades = data.grades[s.id]?.[a.id] || {};
+                        const borderClass = isFirstInClass ? 'border-l-2 border-gray-200' : '';
+                        isFirstInClass = false;
+
+                        // Couleurs de fond alternées selon la classe du devoir
+                        const bgEmpty = classIndex % 2 === 0 ? 'bg-blue-50/30' : 'bg-indigo-50/30';
+
+                        if (showDetails) {
+                            a.exercises.forEach((ex, exIdx) => {
+                                const exBorder = exIdx === 0 ? borderClass : '';
+                                if (isStudentClass) {
+                                    const exTotal = getStudentExerciseTotal(studentGrades, ex);
+                                    const max = getExerciseMaxPoints(ex);
+                                    const existingFinal = studentGrades[ex.id]?.['final']?.['final']?.['final'];
+                                    row += `<td class="px-2 py-1 text-center ${exBorder}">
+                                <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" 
+                                    value="${existingFinal !== undefined && existingFinal !== '' ? existingFinal : exTotal.toFixed(2)}" 
+                                    oninput="sanitizeAndClamp(this, ${max})" 
+                                    onblur="commitSummaryInput('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" 
+                                    onkeydown="handleSummaryInputKey(event, '${s.id}','${a.id}','${ex.id}', ${max})" 
+                                    onfocus="this.select()" 
+                                    id="sum-input-${s.id}-${a.id}-${ex.id}" 
+                                    name="sum-input-${s.id}-${a.id}-${ex.id}" 
+                                    aria-label="Note Ex${exIdx + 1} pour ${s.name} - ${a.name}" 
+                                    class="summary-grade-input">
+                            </td>`;
+                                } else {
+                                    row += `<td class="px-2 py-1 text-center text-gray-300 ${bgEmpty} ${exBorder}">-</td>`;
+                                }
+                            });
+                        }
+
+                        const totalBorder = showDetails ? '' : borderClass;
+                        if (isStudentClass) {
+                            const total = getStudentAssignmentTotal(s.id, a.id);
+                            const max = getAssignmentMaxPoints(a);
+                            const pct = max > 0 ? (total / max * 100) : 0;
+                            const bgColor = pct >= 70 ? 'bg-green-100' : pct >= 50 ? 'bg-orange-100' : 'bg-red-100';
+                            row += `<td class="p-3 text-center font-bold ${bgColor} ${totalBorder}" id="sum-total-${s.id}-${a.id}">${total.toFixed(2)}</td>`;
+                        } else {
+                            row += `<td class="p-3 text-center text-gray-300 ${bgEmpty} ${totalBorder}">-</td>`;
+                        }
+                    });
+                });
+
+                return classHeader + `<tr class="border-b hover:bg-gray-50">${row}</tr>`;
+            }).join('');
+
+            // Construire le colgroup pour les largeurs fixes
+            const colgroupHtml = (() => {
+                let cols = '<col style="width:220px">';
+                orderedAssignments.forEach(a => {
+                    if (showDetails) {
+                        const exCount = (a.exercises || []).length;
+                        for (let i = 0; i < exCount; i++) cols += '<col style="width:70px">';
+                    }
+                    cols += '<col style="width:84px">';
+                });
+                return `<colgroup>${cols}</colgroup>`;
+            })();
+
+            container.innerHTML = `
+        <table class="w-full table-fixed border-collapse">
+            ${colgroupHtml}
+            <thead>
+                <tr class="border-b">${classHeaderRow}</tr>
+                <tr class="border-b-2">${assignmentHeaderRow}</tr>
+            </thead>
+            <tbody>${rows}</tbody>
+        </table>
+    `;
+            translatePage();
+        }
+        function renderSummary2() {
+            const t = translations[currentLanguage];
+            const container = document.getElementById('summary-table');
+            const detailsCheckbox = document.getElementById('show-details');
+            let showDetails = detailsCheckbox ? detailsCheckbox.checked : false;
+            const classSelect = document.getElementById('select-class-summary');
+            const searchInput = document.getElementById('summary-search');
+            const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+            let selectedClass = classSelect ? classSelect.value : '';
+            let searchMatches = data.students.slice();
+
+            if (searchTerm) {
+                searchMatches = searchMatches.filter(s => {
+                    const haystack = `${s.name || ''} ${s.firstName || ''} ${s.lastName || ''} ${s.className || ''}`.toLowerCase();
+                    return haystack.includes(searchTerm);
+                });
+            }
+
+            const matchingClasses = Array.from(new Set(
+                searchMatches
+                    .map(s => (s.className || '').trim())
+                    .filter(c => c.length > 0)
+            )).sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
+
+            if (classSelect) {
+                const previousValue = selectedClass;
+                classSelect.innerHTML = `<option value="">-- ${t.selectClass} --</option>` +
+                    matchingClasses.map(c => `<option value="${c}" ${c === previousValue ? 'selected' : ''}>${c}</option>`).join('');
+
+                let autoSelectedClass = '';
+                if (searchMatches.length === 1 && searchMatches[0].className) {
+                    autoSelectedClass = searchMatches[0].className;
+                } else if (matchingClasses.length === 1) {
+                    autoSelectedClass = matchingClasses[0];
+                }
+
+                if (autoSelectedClass) {
+                    classSelect.value = autoSelectedClass;
+                } else if (matchingClasses.includes(previousValue)) {
+                    classSelect.value = previousValue;
+                } else {
+                    classSelect.value = '';
+                }
+
+                selectedClass = classSelect.value;
+            }
+
+            let filteredStudents = searchMatches;
+            if (selectedClass) {
+                filteredStudents = filteredStudents.filter(s => s.className === selectedClass);
+            }
+
+            let filteredAssignments = data.assignments.slice();
+            if (selectedClass) {
+                filteredAssignments = filteredAssignments.filter(a => a.className === selectedClass);
+            } else {
+                const classFilterSet = new Set(matchingClasses);
+                filteredAssignments = filteredAssignments.filter(a => classFilterSet.has(a.className));
+            }
+
+            if (summaryAssignmentFilter && summaryAssignmentFilter.size > 0) {
+                filteredAssignments = filteredAssignments.filter(a => summaryAssignmentFilter.has(a.id));
+            }
+
+            if (summaryAssignmentFilter && summaryAssignmentFilter.size > 0 && !selectedClass) {
+                const allowedClasses = new Set(filteredAssignments.map(a => (a.className || '').trim()).filter(c => c.length > 0));
+                filteredStudents = filteredStudents.filter(s => allowedClasses.has((s.className || '').trim()));
+            }
+
+            if (!window.summaryAssignmentOrder) {
+                try {
+                    window.summaryAssignmentOrder = JSON.parse(localStorage.getItem('summary-assignment-order') || '[]');
+                } catch (e) { window.summaryAssignmentOrder = []; }
+            }
+            const ensureOrderIds = () => {
+                const ids = filteredAssignments.map(a => a.id);
+                const set = new Set(window.summaryAssignmentOrder);
+                ids.forEach(id => { if (!set.has(id)) window.summaryAssignmentOrder.push(id); });
+            };
+            ensureOrderIds();
+            filteredAssignments.sort((a, b) => {
+                const oa = window.summaryAssignmentOrder.indexOf(a.id);
+                const ob = window.summaryAssignmentOrder.indexOf(b.id);
+                if (oa === -1 && ob === -1) return 0;
+                if (oa === -1) return 1;
+                if (ob === -1) return -1;
+                return oa - ob;
+            });
+
+            const isAllStudents = !selectedClass && !searchTerm && filteredStudents.length === data.students.length;
+            const assignmentsFiltered = (summaryAssignmentFilter && summaryAssignmentFilter.size > 0) || filteredAssignments.length < data.assignments.length;
+            if (detailsCheckbox) {
+                const shouldDisableDetails = isAllStudents && !assignmentsFiltered;
+                if (shouldDisableDetails) {
+                    detailsCheckbox.checked = false;
+                    detailsCheckbox.disabled = true;
+                } else {
+                    detailsCheckbox.disabled = false;
+                }
+                showDetails = detailsCheckbox.checked;
+            }
+
+            if (filteredStudents.length === 0 || filteredAssignments.length === 0) {
+                let emptyMessage = '';
+                if (selectedClass) {
+                    emptyMessage = `${t.noStudentOrAssignmentForClass} "${selectedClass}".`;
+                } else if (searchTerm) {
+                    emptyMessage = t.noResultForSearch;
+                } else {
+                    emptyMessage = t.addStudentsAndAssignmentsToSeeSummary;
+                }
+                container.innerHTML = `<p class="text-gray-500 text-center py-8">${emptyMessage}</p>`;
+                return;
+            }
+
+            // =====================================================
+            // REGROUPEMENT PAR CLASSE
+            // =====================================================
+
+            // Regrouper les élèves par classe
+            const studentsByClass = {};
+            for (const student of filteredStudents) {
+                const className = (student.className || '').trim() || '(Sans classe)';
+                if (!studentsByClass[className]) {
+                    studentsByClass[className] = [];
+                }
+                studentsByClass[className].push(student);
+            }
+
+            // Regrouper les devoirs par classe
+            const assignmentsByClass = {};
+            for (const assignment of filteredAssignments) {
+                const className = (assignment.className || '').trim() || '(Sans classe)';
+                if (!assignmentsByClass[className]) {
+                    assignmentsByClass[className] = [];
+                }
+                assignmentsByClass[className].push(assignment);
+            }
+
+            // Liste des classes triées
+            const orderedClasses = Object.keys(studentsByClass).sort((a, b) =>
+                a.localeCompare(b, 'fr', { sensitivity: 'base' })
+            );
+
+            // Trier les élèves dans chaque classe
+            for (const className of orderedClasses) {
+                studentsByClass[className].sort((a, b) => {
+                    if (summarySort.key === 'name') {
+                        const na = (a.name || '').toLowerCase();
+                        const nb = (b.name || '').toLowerCase();
+                        if (na < nb) return summarySort.direction === 'asc' ? -1 : 1;
+                        if (na > nb) return summarySort.direction === 'asc' ? 1 : -1;
+                        return 0;
+                    } else if (summarySort.key.startsWith('assignment-')) {
+                        const assignmentId = summarySort.key.split('assignment-')[1];
+                        const ta = getStudentAssignmentTotal(a.id, assignmentId);
+                        const tb = getStudentAssignmentTotal(b.id, assignmentId);
+                        if (ta < tb) return summarySort.direction === 'asc' ? -1 : 1;
+                        if (ta > tb) return summarySort.direction === 'asc' ? 1 : -1;
+                        return 0;
+                    }
+                    return 0;
+                });
+            }
+
+            // Tags des devoirs (tous les devoirs filtrés)
+            const tagContainer = document.getElementById('summary-assignment-tags');
+            if (tagContainer) {
+                const tagHtml = filteredAssignments.map(a => {
+                    const selected = summaryAssignmentFilter.has(a.id);
+                    return `<div class="flex items-center gap-1">
+                <button class="assignment-tag ${selected ? 'selected' : ''}" onclick="toggleSummaryAssignmentTag('${a.id}')">${a.name} <span class="text-xs opacity-70">(${a.className || '?'})</span></button>
+                <button class="px-2 py-1 text-xs bg-gray-100 rounded hover:bg-gray-200" onclick="moveSummaryAssignmentLeft('${a.id}')">◀</button>
+                <button class="px-2 py-1 text-xs bg-gray-100 rounded hover:bg-gray-200" onclick="moveSummaryAssignmentRight('${a.id}')">▶</button>
+            </div>`;
+                }).join('');
+                tagContainer.innerHTML = tagHtml;
+            }
+
+            // =====================================================
+            // GÉNÉRATION DU HTML - UN TABLEAU PAR CLASSE
+            // =====================================================
+
+            let html = '';
+
+            for (const className of orderedClasses) {
+                const classStudents = studentsByClass[className] || [];
+                const classAssignments = assignmentsByClass[className] || [];
+
+                if (classStudents.length === 0) continue;
+
+                // Bandeau de la classe
+                html += `<div class="mb-8">`;
+                html += `<div class="bg-blue-600 text-white font-bold p-3 text-lg rounded-t-lg flex items-center justify-between">
+            <span>📚 ${className}</span>
+            <span class="text-sm font-normal opacity-80">${classStudents.length} élève(s) • ${classAssignments.length} devoir(s)</span>
+        </div>`;
+
+                if (classAssignments.length === 0) {
+                    html += `<div class="bg-gray-50 border border-t-0 border-gray-200 p-4 text-center text-gray-500 rounded-b-lg">
+                Aucun devoir pour cette classe
+            </div>`;
+                    html += `</div>`;
+                    continue;
+                }
+
+                // Calcul des colonnes
+                const colgroup = (() => {
+                    let cols = '<col style="width:200px">';
+                    for (const a of classAssignments) {
+                        if (showDetails) {
+                            const exCount = (a.exercises || []).length;
+                            for (let i = 0; i < exCount; i++) cols += '<col style="width:70px">';
+                        }
+                        cols += '<col style="width:90px">';
+                    }
+                    return `<colgroup>${cols}</colgroup>`;
+                })();
+
+                // Début du tableau
+                html += `<div class="overflow-x-auto border border-t-0 border-gray-200 rounded-b-lg">`;
+                html += `<table class="w-full table-fixed border-collapse">`;
+                html += colgroup;
+
+                // Headers
+                html += `<thead><tr class="border-b-2 bg-gray-50">`;
+                html += `<th class="p-3 text-left bg-gray-100 sticky left-0 z-10 cursor-pointer select-none hover:bg-gray-200" onclick="toggleSummarySort('name')">
+            ${t.student} ${summarySort.key === 'name' ? (summarySort.direction === 'asc' ? '↑' : '↓') : ''}
+        </th>`;
+
+                for (const a of classAssignments) {
+                    if (showDetails) {
+                        for (let i = 0; i < a.exercises.length; i++) {
+                            const ex = a.exercises[i];
+                            html += `<th class="p-2 text-center bg-blue-50 text-sm border-l border-gray-200">
+                        Ex${i + 1}<br><span class="text-xs text-gray-500">/${getExerciseMaxPoints(ex)}</span>
+                    </th>`;
+                        }
+                    }
+                    const isSorted = summarySort.key === `assignment-${a.id}`;
+                    html += `<th class="p-3 text-center bg-blue-100 font-bold cursor-pointer select-none hover:bg-blue-200 border-l border-gray-300" 
+                onclick="toggleSummarySort('assignment-${a.id}')">
+                ${a.name} ${isSorted ? (summarySort.direction === 'asc' ? '↑' : '↓') : ''}
+                <br><span class="text-xs font-normal">/${getAssignmentMaxPoints(a)}</span>
+            </th>`;
+                }
+                html += `</tr></thead>`;
+
+                // Body - lignes des élèves
+                html += `<tbody>`;
+                for (const s of classStudents) {
+                    html += `<tr class="border-b hover:bg-gray-50">`;
+                    html += `<td class="p-3 font-medium bg-gray-50 sticky left-0 border-r border-gray-200">${s.name}</td>`;
+
+                    for (const a of classAssignments) {
+                        const studentGrades = data.grades[s.id]?.[a.id] || {};
+
+                        if (showDetails) {
+                            for (let i = 0; i < a.exercises.length; i++) {
+                                const ex = a.exercises[i];
+                                const exTotal = getStudentExerciseTotal(studentGrades, ex);
+                                const max = getExerciseMaxPoints(ex);
+                                const existingFinal = studentGrades[ex.id]?.['final']?.['final']?.['final'];
+                                html += `<td class="px-2 py-1 text-center border-l border-gray-100">
+                            <input type="text" 
+                                inputmode="decimal" 
+                                pattern="[0-9]*[.,]?[0-9]*" 
+                                value="${existingFinal !== undefined && existingFinal !== '' ? existingFinal : exTotal.toFixed(2)}" 
+                                oninput="sanitizeAndClamp(this, ${max})" 
+                                onblur="commitSummaryInput('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" 
+                                onkeydown="handleSummaryInputKey(event, '${s.id}','${a.id}','${ex.id}', ${max})" 
+                                onfocus="this.select()" 
+                                id="sum-input-${s.id}-${a.id}-${ex.id}" 
+                                name="sum-input-${s.id}-${a.id}-${ex.id}" 
+                                aria-label="Note Ex${i + 1} pour ${s.name} - ${a.name}" 
+                                class="summary-grade-input">
+                        </td>`;
+                            }
+                        }
+
+                        const total = getStudentAssignmentTotal(s.id, a.id);
+                        const max = getAssignmentMaxPoints(a);
+                        const pct = max > 0 ? (total / max * 100) : 0;
+                        const bgColor = pct >= 70 ? 'bg-green-100' : pct >= 50 ? 'bg-orange-100' : 'bg-red-100';
+                        html += `<td class="p-3 text-center font-bold ${bgColor} border-l border-gray-300" id="sum-total-${s.id}-${a.id}">
+                    ${total.toFixed(2)}
+                </td>`;
+                    }
+
+                    html += `</tr>`;
+                }
+
+                // Ligne de moyenne de classe (optionnel mais utile)
+                html += `<tr class="bg-gray-100 font-semibold border-t-2">`;
+                html += `<td class="p-3 sticky left-0 bg-gray-100">📊 Moyenne</td>`;
+                for (const a of classAssignments) {
+                    if (showDetails) {
+                        for (const ex of a.exercises) {
+                            const exAvg = classStudents.reduce((sum, s) => {
+                                const studentGrades = data.grades[s.id]?.[a.id] || {};
+                                return sum + getStudentExerciseTotal(studentGrades, ex);
+                            }, 0) / classStudents.length;
+                            html += `<td class="px-2 py-1 text-center text-sm border-l border-gray-200">${exAvg.toFixed(2)}</td>`;
+                        }
+                    }
+                    const avgTotal = classStudents.reduce((sum, s) => sum + getStudentAssignmentTotal(s.id, a.id), 0) / classStudents.length;
+                    const max = getAssignmentMaxPoints(a);
+                    const pct = max > 0 ? (avgTotal / max * 100) : 0;
+                    const bgColor = pct >= 70 ? 'bg-green-200' : pct >= 50 ? 'bg-orange-200' : 'bg-red-200';
+                    html += `<td class="p-3 text-center font-bold ${bgColor} border-l border-gray-300">${avgTotal.toFixed(2)}</td>`;
+                }
+                html += `</tr>`;
+
+                html += `</tbody></table>`;
+                html += `</div></div>`;
+            }
+
+            container.innerHTML = html;
+            translatePage();
+        }
+
+        function setGlobalAssignmentGrade(studentId, assignmentId, value) {
+            if (!data.grades[studentId]) data.grades[studentId] = {};
+            if (!data.grades[studentId][assignmentId]) data.grades[studentId][assignmentId] = {};
+            data.grades[studentId][assignmentId].global = value === '' ? '' : (parseFloat(value) || 0);
+            saveData();
+            renderSummary();
+        }
+        function setExerciseFinalGrade(studentId, assignmentId, exId, max, value) {
+            applyExerciseFinalGrade(studentId, assignmentId, exId, max, value, true);
+        }
+
+        function applyExerciseFinalGrade(studentId, assignmentId, exId, max, value, rerender) {
+            if (!data.grades[studentId]) data.grades[studentId] = {};
+            if (!data.grades[studentId][assignmentId]) data.grades[studentId][assignmentId] = {};
+            if (!data.grades[studentId][assignmentId][exId]) data.grades[studentId][assignmentId][exId] = {};
+            if (!data.grades[studentId][assignmentId][exId]['final']) data.grades[studentId][assignmentId][exId]['final'] = {};
+            if (!data.grades[studentId][assignmentId][exId]['final']['final']) data.grades[studentId][assignmentId][exId]['final']['final'] = {};
+            let v = value === '' ? '' : (parseFloat(value) || 0);
+            if (v !== '' && v > max) v = max;
+            if (v !== '' && v < 0) v = 0;
+            data.grades[studentId][assignmentId][exId]['final']['final']['final'] = v;
+            saveData();
+            if (rerender) {
+                renderSummary();
+            } else {
+                updateSummaryTotalsInline(studentId, assignmentId);
+            }
+        }
+
+        function clampExerciseInput(el, max) {
+            if (el.value === '') return;
+            let v = parseFloat(el.value);
+            if (isNaN(v)) return;
+            if (v < 0) v = 0;
+            if (v > max) v = max;
+            el.value = v;
+        }
+
+        function sanitizeAndClamp(el, max) {
+            let val = (el.value || '').toString();
+            val = val.replace(',', '.');
+            val = val.replace(/[٫٬]/g, '.');
+            val = val.replace(/[^0-9.]/g, '');
+            const parts = val.split('.');
+            if (parts.length > 2) {
+                val = parts[0] + '.' + parts.slice(1).join('');
+            }
+            el.value = val;
+            clampExerciseInput(el, max);
+        }
+
+        function commitSummaryInput(studentId, assignmentId, exId, max, value) {
+            applyExerciseFinalGrade(studentId, assignmentId, exId, max, value, false);
+        }
+
+        function handleSummaryInputKey(e, studentId, assignmentId, exId, max) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                commitSummaryInput(studentId, assignmentId, exId, max, e.target.value);
+                const inputs = Array.from(document.querySelectorAll('.summary-grade-input'));
+                const idx = inputs.indexOf(e.target);
+                const nextIdx = idx + 1;
+                if (nextIdx >= 0 && nextIdx < inputs.length) {
+                    inputs[nextIdx].focus();
+                    inputs[nextIdx].select?.();
+                }
+            }
+        }
+
+        function updateSummaryTotalsInline(studentId, assignmentId) {
+            const totalCell = document.getElementById(`sum-total-${studentId}-${assignmentId}`);
+            if (!totalCell) return;
+            const total = getStudentAssignmentTotal(studentId, assignmentId);
+            const assignment = data.assignments.find(a => a.id === assignmentId);
+            const max = assignment ? getAssignmentMaxPoints(assignment) : 0;
+            const pct = max > 0 ? (total / max * 100) : 0;
+            let bgColor = 'bg-red-100';
+            if (pct >= 70) bgColor = 'bg-green-100'; else if (pct >= 50) bgColor = 'bg-orange-100';
+            totalCell.textContent = total.toFixed(2);
+            totalCell.className = `p-3 text-center font-bold ${bgColor}`;
+        }
+
+        function toggleSummarySort(key) {
+            if (summarySort.key === key) {
+                // Inverser le sens
+                summarySort.direction = summarySort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                summarySort.key = key;
+                // Élève : A→Z par défaut, Devoir : max→0 par défaut
+                summarySort.direction = key === 'name' ? 'asc' : 'desc';
+            }
+            renderSummary();
+        }
+
+        function toggleSummaryAssignmentTag(assignmentId) {
+            if (summaryAssignmentFilter.has(assignmentId)) {
+                summaryAssignmentFilter.delete(assignmentId);
+            } else {
+                summaryAssignmentFilter.add(assignmentId);
+            }
+            renderSummary();
+        }
+
+        function moveSummaryAssignmentLeft(id) {
+            try {
+                const arr = window.summaryAssignmentOrder || [];
+                const i = arr.indexOf(id);
+                if (i > 0) {
+                    [arr[i - 1], arr[i]] = [arr[i], arr[i - 1]];
+                    localStorage.setItem('summary-assignment-order', JSON.stringify(arr));
+                    renderSummary();
+                }
+            } catch (e) { }
+        }
+
+        function moveSummaryAssignmentRight(id) {
+            try {
+                const arr = window.summaryAssignmentOrder || [];
+                const i = arr.indexOf(id);
+                if (i >= 0 && i < arr.length - 1) {
+                    [arr[i + 1], arr[i]] = [arr[i], arr[i + 1]];
+                    localStorage.setItem('summary-assignment-order', JSON.stringify(arr));
+                    renderSummary();
+                }
+            } catch (e) { }
+        }
+
+        function handleStudentImport(event) {
+            const t = translations[currentLanguage];
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const dataBinary = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(dataBinary, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const sheet = workbook.Sheets[firstSheetName];
+                const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+                if (json.length < 2) {
+                    alert(t.emptyFile);
+                    return;
+                }
+
+                const headers = json[1];
+                const rows = json.slice(2); // à partir de la 3ème ligne
+
+                // Fonction utilitaire pour nettoyer les chaines (enlever les espaces inutiles)
+                const cleanStr = (val) => (val || '').toString().trim();
+
+                const getIndex = (label) => headers.findIndex(h => cleanStr(h) === label);
+
+                // Index des colonnes d'identification
+                const idxNIN = getIndex('رقم التعريف');
+                const idxNom = getIndex('اللقب');
+                const idxPrenom = getIndex('الاسم');
+                const idxClasse = getIndex('الفوج التربوي');
+                const idxSexe = getIndex('الجنس');
+                const idxBirth = getIndex('تاريخ الميلاد');
+                const idxReg = getIndex('رقم التسجيل');
+
+                // Liste des index connus (infos élèves) pour identifier les colonnes de NOTES
+                const knownIndices = [idxNIN, idxNom, idxPrenom, idxClasse, idxSexe, idxBirth, idxReg];
+
+                let added = 0;
+                let updated = 0;
+
+                rows.forEach(row => {
+                    if (!row || row.length === 0) return;
+
+                    // Extraction des données de base
+                    const nin = idxNIN >= 0 ? cleanStr(row[idxNIN]) : '';
+                    const lastName = idxNom >= 0 ? cleanStr(row[idxNom]) : '';
+                    const firstName = idxPrenom >= 0 ? cleanStr(row[idxPrenom]) : '';
+                    const className = idxClasse >= 0 ? cleanStr(row[idxClasse]) : '';
+                    const sex = idxSexe >= 0 ? cleanStr(row[idxSexe]) : '';
+                    const birthDate = idxBirth >= 0 ? cleanStr(row[idxBirth]) : '';
+                    const regNumber = idxReg >= 0 ? cleanStr(row[idxReg]) : '';
+
+                    if (!lastName && !firstName) return;
+                    const name = (lastName + ' ' + firstName).trim();
+
+                    // --- CORRECTION 1 : LOGIQUE DE RECHERCHE AMÉLIORÉE ---
+                    let existing = null;
+
+                    // A. Essayer par Numéro d'Inscription (le plus fiable)
+                    if (regNumber) {
+                        existing = data.students.find(s => s.regNumber == regNumber);
+                    }
+                    // B. Si pas trouvé, essayer par NIN
+                    if (!existing && nin) {
+                        existing = data.students.find(s => s.nin == nin);
+                    }
+                    // C. Si pas trouvé, essayer Nom + Prénom + Classe (Comparaison stricte sans espaces)
+                    if (!existing) {
+                        existing = data.students.find(s =>
+                            s.name.trim() === name &&
+                            s.className.trim() === className
+                        );
+                    }
+
+                    // Objet contenant les données à sauvegarder
+                    const studentData = {
+                        name,
+                        className,
+                        nin,
+                        firstName,
+                        lastName,
+                        sex,
+                        birthDate,
+                        regNumber
+                    };
+
+                    // --- CORRECTION 2 : IMPORTATION DES NOTES (Colonnes supplémentaires) ---
+                    // On initialise un objet 'grades' s'il n'existe pas
+                    const importedGrades = {};
+                    headers.forEach((header, index) => {
+                        // Si la colonne n'est pas une info élève et qu'elle a un titre
+                        if (!knownIndices.includes(index) && header && row[index] !== undefined) {
+                            // On enregistre la note associée au nom de la colonne (ex: "Devoir 1")
+                            importedGrades[cleanStr(header)] = row[index];
+                        }
+                    });
+
+                    if (existing) {
+                        // MISE A JOUR de l'élève existant
+                        Object.assign(existing, studentData); // Met à jour infos perso
+
+                        // Fusionner les notes
+                        if (!existing.grades) existing.grades = {};
+                        Object.assign(existing.grades, importedGrades); // Ajoute/Met à jour les notes
+
+                        updated++;
+                    } else {
+                        // CRÉATION d'un nouvel élève
+                        data.students.push({
+                            id: genId(), // Assurez-vous que genId() existe
+                            ...studentData,
+                            grades: importedGrades // On ajoute les notes dès la création
+                        });
+                        added++;
+                    }
+                });
+
+                saveData();
+                renderStudents();
+
+                // Si vous avez une fonction spécifique pour rafraichir les tableaux de notes :
+                if (typeof renderSummary === 'function') renderSummary();
+                if (typeof loadGradeSelectors === 'function') loadGradeSelectors();
+
+                alert(`${t.importSuccess}\nAjoutés: ${added}\nMis à jour: ${updated}`);
+                event.target.value = '';
+            };
+            reader.readAsArrayBuffer(file);
+        }
+        function handleJsonExportData() {
+            const t = translations[currentLanguage];
+            const now = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            const fname = `simpleNotes-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.json`;
+            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fname;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        function handleJsonImportData(event) {
+            const t = translations[currentLanguage];
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+
+                    // Fonction pour nettoyer
+                    const clean = (val) => String(val || '').trim();
+
+                    let added = 0;
+                    let updated = 0;
+
+                    // ========== FUSION DES ÉLÈVES ==========
+                    if (importedData.students && Array.isArray(importedData.students)) {
+                        importedData.students.forEach(importedStudent => {
+                            const nin = clean(importedStudent.nin);
+
+                            // Recherche par NIN
+                            let existing = null;
+                            if (nin) {
+                                existing = data.students.find(s => clean(s.nin) === nin);
+                            }
+
+                            if (existing) {
+                                // Garder l'ancien ID, mettre à jour le reste
+                                const oldId = existing.id;
+                                Object.assign(existing, importedStudent);
+                                existing.id = oldId; // Conserver l'ID original !
+                                updated++;
+
+                                // Si l'ID importé est différent, transférer les notes
+                                if (importedStudent.id !== oldId && importedData.grades && importedData.grades[importedStudent.id]) {
+                                    if (!data.grades[oldId]) {
+                                        data.grades[oldId] = {};
+                                    }
+                                    // Fusionner les notes
+                                    Object.assign(data.grades[oldId], importedData.grades[importedStudent.id]);
+                                }
+                            } else {
+                                // Nouvel élève
+                                data.students.push(importedStudent);
+                                added++;
+
+                                // Copier ses notes aussi
+                                if (importedData.grades && importedData.grades[importedStudent.id]) {
+                                    data.grades[importedStudent.id] = importedData.grades[importedStudent.id];
+                                }
+                            }
+                        });
+                    }
+
+                    // ========== FUSION DES DEVOIRS ==========
+                    if (importedData.assignments && Array.isArray(importedData.assignments)) {
+                        importedData.assignments.forEach(importedAssignment => {
+                            const existingAssignment = data.assignments.find(a => a.id === importedAssignment.id);
+                            if (!existingAssignment) {
+                                data.assignments.push(importedAssignment);
+                            }
+                        });
+                    }
+
+                    saveData();
+                    renderStudents();
+                    if (typeof loadGradeSelectors === 'function') loadGradeSelectors();
+                    if (typeof renderSummary === 'function') renderSummary();
+
+                    alert(`Importation réussie !\nÉlèves mis à jour: ${updated}\nÉlèves ajoutés: ${added}`);
+                    event.target.value = '';
+
+                } catch (error) {
+                    console.error('Erreur importation JSON:', error);
+                    alert('Erreur lors de l\'importation du fichier JSON');
+                }
+            };
+            reader.readAsText(file);
+        }
+        async function exportSummaryToExcel() {
+            const t = translations[currentLanguage];
+            const selectedClass = document.getElementById('select-class-summary')?.value || '';
+            const searchTerm = (document.getElementById('summary-search')?.value || '').toLowerCase().trim();
+
+            const matchingClasses = new Set();
+            for (const s of data.students) {
+                const n = (s.name || '').toLowerCase();
+                const cn = (s.className || '').toLowerCase();
+                if (!searchTerm || n.includes(searchTerm) || cn.includes(searchTerm)) {
+                    matchingClasses.add(s.className);
+                }
+            }
+
+            let filteredStudents = data.students.filter(s => {
+                const n = (s.name || '').toLowerCase();
+                const cn = (s.className || '').toLowerCase();
+                if (searchTerm && !(n.includes(searchTerm) || cn.includes(searchTerm))) return false;
+                if (selectedClass && s.className !== selectedClass) return false;
+                if (!selectedClass && searchTerm && !matchingClasses.has(s.className)) return false;
+                return true;
+            });
+
+            // TRI PAR CLASSE PUIS PAR NOM
+            filteredStudents.sort((a, b) => {
+                const classA = (a.className || '').toLowerCase();
+                const classB = (b.className || '').toLowerCase();
+
+                if (classA !== classB) {
+                    return classA.localeCompare(classB, 'fr', { sensitivity: 'base' });
+                }
+
+                const nameA = `${a.lastName || ''} ${a.firstName || ''}`.toLowerCase();
+                const nameB = `${b.lastName || ''} ${b.firstName || ''}`.toLowerCase();
+                return nameA.localeCompare(nameB);
+            });
+
+            let filteredAssignments = data.assignments.slice();
+            if (selectedClass) {
+                filteredAssignments = filteredAssignments.filter(a => a.className === selectedClass);
+            } else {
+                const classFilterSet = new Set(matchingClasses);
+                filteredAssignments = filteredAssignments.filter(a => classFilterSet.has(a.className));
+            }
+            if (summaryAssignmentFilter && summaryAssignmentFilter.size > 0) {
+                filteredAssignments = filteredAssignments.filter(a => summaryAssignmentFilter.has(a.id));
+            }
+            if (summaryAssignmentFilter && summaryAssignmentFilter.size > 0 && !selectedClass) {
+                const allowedClasses = new Set(filteredAssignments.map(a => (a.className || '').trim()).filter(c => c.length > 0));
+                filteredStudents = filteredStudents.filter(s => allowedClasses.has((s.className || '').trim()));
+            }
+
+            if (filteredStudents.length === 0 || filteredAssignments.length === 0) {
+                alert(t.noResultForSearch || 'Aucun résultat');
+                return;
+            }
+
+            if (!window.summaryAssignmentOrder) {
+                try {
+                    window.summaryAssignmentOrder = JSON.parse(localStorage.getItem('summary-assignment-order') || '[]');
+                } catch (e) { window.summaryAssignmentOrder = []; }
+            }
+            const ids = filteredAssignments.map(a => a.id);
+            const set = new Set(window.summaryAssignmentOrder);
+            ids.forEach(id => { if (!set.has(id)) window.summaryAssignmentOrder.push(id); });
+            filteredAssignments = filteredAssignments.slice().sort((a, b) => {
+                const oa = window.summaryAssignmentOrder.indexOf(a.id);
+                const ob = window.summaryAssignmentOrder.indexOf(b.id);
+                if (oa === -1 && ob === -1) return 0;
+                if (oa === -1) return 1;
+                if (ob === -1) return -1;
+                return oa - ob;
+            });
+
+            const wb = XLSX.utils.book_new();
+
+            // Fonction pour créer un nom de feuille valide et unique
+            const usedSheetNames = new Set();
+            const sanitizeSheetName = (name) => {
+                let sanitized = (name || '').toString().trim();
+
+                // Remplacements des niveaux arabes par des chiffres
+                const replacements = {
+                    'أولى ثانوي': '1',
+                    'اولى ثانوي': '1',
+                    'ثانية  ثانوي': '2',
+                    'ثالثة  ثانوي': '3',
+                };
+
+                // Appliquer les remplacements
+                for (const [key, value] of Object.entries(replacements)) {
+                    // Créer une regex insensible à la casse pour les variantes
+                    const regex = new RegExp(key, 'gi');
+                    sanitized = sanitized.replace(regex, value);
+                }
+
+                // Remplacer les caractères interdits : \ / ? * [ ] :
+                sanitized = sanitized.replace(/[\\\/\?\*\[\]:]/g, '');
+
+                // Nettoyer les espaces multiples
+                sanitized = sanitized.replace(/\s+/g, ' ').trim();
+
+                // Limiter à 31 caractères (limite Excel)
+                if (sanitized.length > 31) {
+                    sanitized = sanitized.substring(0, 31).trim();
+                }
+
+                // Si vide, utiliser un nom par défaut
+                if (!sanitized) {
+                    sanitized = 'Feuille';
+                }
+
+                // Gérer les doublons en ajoutant un numéro
+                let finalName = sanitized;
+                let counter = 1;
+                while (usedSheetNames.has(finalName)) {
+                    const suffix = `_${counter}`;
+                    const maxLength = 31 - suffix.length;
+                    finalName = sanitized.substring(0, maxLength).trim() + suffix;
+                    counter++;
+                }
+
+                usedSheetNames.add(finalName);
+                return finalName;
+            };
+
+            // Grouper les étudiants par classe
+            const studentsByClass = new Map();
+            for (const s of filteredStudents) {
+                const className = (s.className || '').trim() || '(Sans classe)';
+                if (!studentsByClass.has(className)) {
+                    studentsByClass.set(className, []);
+                }
+                studentsByClass.get(className).push(s);
+            }
+
+            // Trier les classes par ordre alphabétique
+            const sortedClasses = Array.from(studentsByClass.keys()).sort((a, b) =>
+                a.localeCompare(b, 'fr', { sensitivity: 'base' })
+            );
+
+            const headerBase = ['رقم التعريف', 'اللقب', 'الاسم', 'تاريخ الميلاد'];
+
+            // Créer une feuille par classe
+            for (const cls of sortedClasses) {
+                const stu = studentsByClass.get(cls) || [];
+
+                // Filtrer les devoirs pour cette classe uniquement
+                const assigns = filteredAssignments.filter(a =>
+                    (a.className || '').trim() === cls.trim() ||
+                    (cls === '(Sans classe)' && !(a.className || '').trim())
+                );
+
+                if (stu.length === 0) continue;
+
+                // Créer l'en-tête avec les devoirs de cette classe
+                const header = [...headerBase];
+                if (assigns.length > 0) {
+                    header.push(...assigns.map(a => a.name));
+                }
+
+                const rows = [header];
+
+                // Ajouter les lignes d'étudiants
+                for (const s of stu) {
+                    const birthDate = formatDate(parseDateMaybeExcel(s.birthDate || ''));
+                    const rowData = [
+                        s.nin || '',
+                        s.lastName || '',
+                        s.firstName || '',
+                        birthDate
+                    ];
+
+                    // Ajouter les notes pour chaque devoir de cette classe
+                    for (const a of assigns) {
+                        const v = getStudentAssignmentTotal(s.id, a.id);
+                        rowData.push(typeof v === 'number' ? v : '');
+                    }
+
+                    rows.push(rowData);
+                }
+
+                // Créer la feuille
+                const ws = XLSX.utils.aoa_to_sheet(rows);
+
+                // Ajouter la feuille avec un nom sécurisé
+                const sheetName = sanitizeSheetName(cls);
+                XLSX.utils.book_append_sheet(wb, ws, sheetName);
+            }
+
+            // Générer le nom du fichier avec timestamp
+            const now = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            const fname = `recap-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.xlsx`;
+
+            // Télécharger le fichier
+            XLSX.writeFile(wb, fname);
+        }
+
+        // Convertit un éventuel numéro de série Excel en Date
+        function parseDateMaybeExcel(value) {
+            if (value === undefined || value === null) return null;
+            // Si déjà objet Date
+            if (value instanceof Date && !isNaN(value)) return value;
+
+            // Si chaîne vide
+            const v = String(value).trim();
+            if (!v) return null;
+
+            // Si nombre (ex: 38962)
+            const num = Number(v);
+            if (!isNaN(num) && num > 10000) { // seuil pour distinguer des années simples
+                // Origine Excel : 1899-12-30
+                const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+                return new Date(excelEpoch.getTime() + num * 86400 * 1000);
+            }
+
+            // Sinon, tenter un parse normal
+            const d = new Date(v);
+            return isNaN(d) ? null : d;
+        }
+
+        // Formate en jj/mm/aaaa
+        function formatDate(d) {
+            if (!d) return '';
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const yyyy = d.getFullYear();
+            return `${dd}/${mm}/${yyyy}`;
+        }
+
+        // Initialize
+        loadData();
+        initLanguage(); // Ajoutez cette ligne
+        renderStudents();
+        renderAssignments();
+    </script>
+</body>
+
+</html>
