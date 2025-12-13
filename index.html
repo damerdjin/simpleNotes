@@ -3993,7 +3993,113 @@
                         tpAssignmentId: '',
                         devoir1: { assignmentIds: [], combine: 'sum', normalize: true, targetMax: 20 },
                         devoir2: { assignmentIds: [], combine: 'sum', normalize: true, targetMax: 20 },
-                        outMax: 20
+                        outMax: 20,
+                        remarks: {
+                            bands: [
+                                { min: 0, max: 6 },
+                                { min: 6.01, max: 9.99 },
+                                { min: 10, max: 13.99 },
+                                { min: 14, max: 15.99 },
+                                { min: 16, max: 17.99 },
+                                { min: 18, max: 20 }
+                            ],
+                            FR: [
+                                [
+                                    { obs: 'Résultats très insuffisants.', cons: "Renforcer le travail de base et demander de l’aide." },
+                                    { obs: 'Bases non maîtrisées.', cons: 'Reprendre les fondamentaux et s’exercer quotidiennement.' },
+                                    { obs: 'Manque d’assiduité.', cons: 'Organiser le travail et suivre les devoirs.' }
+                                ],
+                                [
+                                    { obs: 'Progrès limités.', cons: 'Revoir les notions clés et s’entraîner régulièrement.' },
+                                    { obs: 'Participation à renforcer.', cons: 'Multiplier les exercices ciblés.' },
+                                    { obs: 'Résultats fragiles.', cons: 'Soutien recommandé pour consolider.' }
+                                ],
+                                [
+                                    { obs: 'Ensemble correct.', cons: 'Poursuivre les efforts et viser plus de régularité.' },
+                                    { obs: 'Bilan satisfaisant.', cons: 'Maintenir l’investissement.' },
+                                    { obs: 'Résultats stables.', cons: 'Renforcer l’autonomie.' }
+                                ],
+                                [
+                                    { obs: 'Bon niveau.', cons: 'Maintenir le rythme et consolider les acquis.' },
+                                    { obs: 'Travail sérieux.', cons: 'Approfondir pour viser plus haut.' },
+                                    { obs: 'Bonne progression.', cons: 'Continuer avec rigueur.' }
+                                ],
+                                [
+                                    { obs: 'Très bon travail.', cons: 'Continuer et approfondir les points forts.' },
+                                    { obs: 'Exigence appréciable.', cons: 'Varier les méthodes pour exceller.' },
+                                    { obs: 'Très régulier.', cons: 'Encourager les défis personnels.' }
+                                ],
+                                [
+                                    { obs: 'Excellent.', cons: 'Poursuivre cette excellente dynamique.' },
+                                    { obs: 'Résultats remarquables.', cons: 'Préparer des objectifs avancés.' },
+                                    { obs: 'Exemplarité.', cons: 'Partager les bonnes pratiques.' }
+                                ]
+                            ],
+                            EN: [
+                                [
+                                    { obs: 'Very insufficient results.', cons: 'Strengthen basics and seek help.' },
+                                    { obs: 'Weak fundamentals.', cons: 'Revise core topics daily.' },
+                                    { obs: 'Irregular work.', cons: 'Plan study and follow homework.' }
+                                ],
+                                [
+                                    { obs: 'Limited progress.', cons: 'Review key concepts and practice regularly.' },
+                                    { obs: 'Participation low.', cons: 'Increase targeted exercises.' },
+                                    { obs: 'Fragile results.', cons: 'Support recommended to consolidate.' }
+                                ],
+                                [
+                                    { obs: 'Solid overall.', cons: 'Keep working and aim for consistency.' },
+                                    { obs: 'Satisfactory.', cons: 'Maintain effort.' },
+                                    { obs: 'Stable results.', cons: 'Strengthen autonomy.' }
+                                ],
+                                [
+                                    { obs: 'Good level.', cons: 'Maintain pace and consolidate skills.' },
+                                    { obs: 'Serious work.', cons: 'Deepen to aim higher.' },
+                                    { obs: 'Good progress.', cons: 'Continue with rigor.' }
+                                ],
+                                [
+                                    { obs: 'Very good work.', cons: 'Keep going and deepen strengths.' },
+                                    { obs: 'Strong commitment.', cons: 'Vary methods to excel.' },
+                                    { obs: 'Very consistent.', cons: 'Encourage personal challenges.' }
+                                ],
+                                [
+                                    { obs: 'Excellent.', cons: 'Continue this excellent momentum.' },
+                                    { obs: 'Outstanding results.', cons: 'Set advanced goals.' },
+                                    { obs: 'Exemplary.', cons: 'Share best practices.' }
+                                ]
+                            ],
+                            AR: [
+                                [
+                                    { obs: 'نتائج ضعيفة جدًا.', cons: 'تعزيز الأساسيات وطلب المساعدة.' },
+                                    { obs: 'أساسيات غير متقنة.', cons: 'مراجعة الدروس يوميًا.' },
+                                    { obs: 'عمل غير منتظم.', cons: 'تنظيم الدراسة ومتابعة الواجبات.' }
+                                ],
+                                [
+                                    { obs: 'تقدم محدود.', cons: 'مراجعة المفاهيم الأساسية والتدريب بانتظام.' },
+                                    { obs: 'مشاركة ضعيفة.', cons: 'زيادة التمارين المركزة.' },
+                                    { obs: 'نتائج هشة.', cons: 'الدعم مطلوب للتثبيت.' }
+                                ],
+                                [
+                                    { obs: 'مستوى مقبول.', cons: 'مواصلة الجهد والسعي إلى الانتظام.' },
+                                    { obs: 'نتائج مرضية.', cons: 'الحفاظ على الجهد.' },
+                                    { obs: 'نتائج مستقرة.', cons: 'تعزيز الاستقلالية.' }
+                                ],
+                                [
+                                    { obs: 'مستوى جيد.', cons: 'الحفاظ على الوتيرة وترسيخ المكتسبات.' },
+                                    { obs: 'عمل جاد.', cons: 'تعميق المستوى للوصول للأفضل.' },
+                                    { obs: 'تحسن جيد.', cons: 'الاستمرار بانضباط.' }
+                                ],
+                                [
+                                    { obs: 'عمل ممتاز جدًا.', cons: 'الاستمرار وتعميق نقاط القوة.' },
+                                    { obs: 'التزام قوي.', cons: 'تنويع الأساليب للتميز.' },
+                                    { obs: 'انتظام كبير.', cons: 'تشجيع التحديات الشخصية.' }
+                                ],
+                                [
+                                    { obs: 'ممتاز.', cons: 'مواصلة هذا الأداء المتميز.' },
+                                    { obs: 'نتائج مبهرة.', cons: 'تحديد أهداف متقدمة.' },
+                                    { obs: 'قدوة.', cons: 'مشاركة الممارسات الجيدة.' }
+                                ]
+                            ]
+                        }
                     };
                 }
                 return exportPrepConfig.byClass[className];
@@ -4318,7 +4424,7 @@
                 };
 
                 container.innerHTML = `
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
       <!-- CC -->
       <div class="p-4 border rounded-xl bg-gray-50">
@@ -4369,18 +4475,19 @@
     </div>
 
     <!-- Devoir -->
-    <div class="mt-4 p-4 border rounded-xl bg-blue-50">
-      <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
-        <h3 class="font-bold text-gray-800" data-translate="devoirLabel">Devoir (moyenne Devoir 1 & Devoir 2)</h3>
-        <div class="flex items-center gap-3 flex-wrap">
-          <label class="text-sm font-semibold text-gray-700">
-            ${t.outputOn}
-            <input type="number" min="1" step="1" value="${cfg.outMax}"
-              class="w-20 p-2 border rounded bg-white ml-2"
-              onchange="setExportOutMax(this.value)">
-          </label>
+      <div class="mt-4 p-4 border rounded-xl bg-blue-50">
+        <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
+          <h3 class="font-bold text-gray-800" data-translate="devoirLabel">Devoir (moyenne Devoir 1 & Devoir 2)</h3>
+          <div class="flex items-center gap-3 flex-wrap">
+            <label class="text-sm font-semibold text-gray-700">
+              ${t.outputOn}
+              <input type="number" min="1" step="1" value="${cfg.outMax}"
+                class="w-20 p-2 border rounded bg-white ml-2"
+                onchange="setExportOutMax(this.value)">
+            </label>
+            <button class="px-3 py-2 rounded bg-indigo-600 text-white text-sm" onclick="openRemarksModal()">${t.editRemarks || 'Messages'}</button>
+          </div>
         </div>
-      </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
@@ -4470,10 +4577,183 @@
                 const students = data.students.filter(s => (s.className || '').trim() === (className || '').trim());
                 meta.textContent = `${students.length} ${t.students}`;
 
-                renderExportPreviewTable(className, cfg);
+            renderExportPreviewTable(className, cfg);
 
                 // retraduire le contenu dynamique
                 translatePage();
+            }
+
+            function openRemarksModal() {
+                const className = document.getElementById('select-class-export')?.value || '';
+                const cfg = getExportClassConfig(className);
+                const t = translations[currentLanguage];
+                const overlay = document.createElement('div');
+                overlay.id = 'remarks-modal';
+                overlay.className = 'fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50';
+                const bands = cfg.remarks?.bands || [];
+                const lang = currentLanguage === 'fr' ? 'FR' : (currentLanguage === 'en' ? 'EN' : 'AR');
+                const msgs = cfg.remarks?.[lang] || [];
+                const rows = bands.map((b, i) => {
+                    let items = '';
+                    for (let j = 0; j < 5; j++) {
+                        const m = (msgs[i] && msgs[i][j]) ? msgs[i][j] : { obs: '', cons: '' };
+                        items += `
+                          <tr>
+                            <td class="p-1 text-xs">${j + 1}</td>
+                            <td class="p-1"><textarea class="w-64 p-2 border rounded" data-band="${i}" data-msg="${j}" data-field="obs">${m.obs || ''}</textarea></td>
+                            <td class="p-1"><textarea class="w-64 p-2 border rounded" data-band="${i}" data-msg="${j}" data-field="cons">${m.cons || ''}</textarea></td>
+                          </tr>`;
+                    }
+                    return `
+                      <tr class="bg-gray-50">
+                        <td class="p-2"><input type="number" step="0.01" class="w-24 p-2 border rounded" value="${b.min}" data-band="${i}" data-field="min"></td>
+                        <td class="p-2"><input type="number" step="0.01" class="w-24 p-2 border rounded" value="${b.max}" data-band="${i}" data-field="max"></td>
+                        <td colspan="2" class="p-2">
+                          <table class="w-full text-sm"><thead><tr><th class="p-1">#</th><th class="p-1">${t.observationShort || 'Observation'}</th><th class="p-1">${t.adviceShort || 'Conseil'}</th></tr></thead><tbody>${items}</tbody></table>
+                        </td>
+                      </tr>`;
+                }).join('');
+                overlay.innerHTML = `
+                  <div class="bg-white rounded-xl shadow-xl w-[90%] max-w-5xl" style="max-height:85vh; overflow-y:auto;">
+                    <div class="p-4 border-b flex items-center justify-between">
+                      <div class="font-bold">${t.remarksTitle || 'Messages'}</div>
+                      <button class="px-3 py-1 rounded bg-gray-200" onclick="closeRemarksModal()">${t.cancel || 'Annuler'}</button>
+                    </div>
+                    <div class="p-4">
+                      <div class="mb-3 font-semibold">${t.gradeBands || ''} — ${lang}</div>
+                      <table class="w-full text-sm">
+                        <thead><tr><th class="p-2">${t.min || 'Min'}</th><th class="p-2">${t.max || 'Max'}</th><th class="p-2" colspan="2">${t.editRemarks || 'Messages'}</th></tr></thead>
+                        <tbody>${rows}</tbody>
+                      </table>
+                    </div>
+                    <div class="p-4 border-t flex justify-end gap-2">
+                      <button class="px-4 py-2 rounded bg-indigo-600 text-white" onclick="saveRemarksModal()">${t.save || 'Enregistrer'}</button>
+                    </div>
+                  </div>
+                `;
+                document.body.appendChild(overlay);
+            }
+
+            function closeRemarksModal() {
+                const el = document.getElementById('remarks-modal');
+                if (el) el.remove();
+            }
+
+            function saveRemarksModal() {
+                const className = document.getElementById('select-class-export')?.value || '';
+                const cfg = getExportClassConfig(className);
+                const lang = currentLanguage === 'fr' ? 'FR' : (currentLanguage === 'en' ? 'EN' : 'AR');
+                const overlay = document.getElementById('remarks-modal');
+                if (!overlay) return;
+                const rangeInputs = overlay.querySelectorAll('input[data-field]');
+                rangeInputs.forEach(inp => {
+                    const i = parseInt(inp.getAttribute('data-band'), 10);
+                    const field = inp.getAttribute('data-field');
+                    const n = parseFloat(inp.value);
+                    cfg.remarks.bands[i][field] = Number.isFinite(n) ? n : cfg.remarks.bands[i][field];
+                });
+                const msgTextareas = overlay.querySelectorAll('textarea[data-field]');
+                const perBand = {};
+                msgTextareas.forEach(ta => {
+                    const i = parseInt(ta.getAttribute('data-band'), 10);
+                    const j = parseInt(ta.getAttribute('data-msg'), 10);
+                    const field = ta.getAttribute('data-field');
+                    const key = `${i}`;
+                    if (!perBand[key]) perBand[key] = {};
+                    if (!perBand[key][j]) perBand[key][j] = { obs: '', cons: '' };
+                    perBand[key][j][field] = ta.value || '';
+                });
+                const arr = [];
+                const bands = cfg.remarks.bands || [];
+                for (let i = 0; i < bands.length; i++) {
+                    const list = [];
+                    const bandMsgs = perBand[`${i}`] || {};
+                    const keys = Object.keys(bandMsgs).map(k => parseInt(k, 10)).sort((a,b)=>a-b);
+                    for (const k of keys) {
+                        const m = bandMsgs[k];
+                        if ((m.obs || '').trim() || (m.cons || '').trim()) list.push({ obs: m.obs || '', cons: m.cons || '' });
+                        if (list.length >= 5) break;
+                    }
+                    arr.push(list);
+                }
+                cfg.remarks[lang] = arr;
+                saveExportPrepConfig();
+                closeRemarksModal();
+                renderExportPrep();
+            }
+
+            function ensureRemarksConfig(cfg) {
+                const defaults = () => ({
+                    bands: [ {min:0,max:6}, {min:6.01,max:9.99}, {min:10,max:13.99}, {min:14,max:15.99}, {min:16,max:17.99}, {min:18,max:20} ],
+                    FR: [
+                        [
+                            { obs: 'Résultats très insuffisants.', cons: "Renforcer les bases et demander de l’aide." },
+                            { obs: 'Bases non maîtrisées.', cons: 'Reprendre les fondamentaux quotidiennement.' }
+                        ],
+                        [
+                            { obs: 'Progrès limités.', cons: 'Revoir les notions clés et s’entraîner.' },
+                            { obs: 'Participation à renforcer.', cons: 'Multiplier les exercices.' }
+                        ],
+                        [
+                            { obs: 'Ensemble correct.', cons: 'Poursuivre les efforts avec régularité.' }
+                        ],
+                        [
+                            { obs: 'Bon niveau.', cons: 'Maintenir le rythme et consolider.' }
+                        ],
+                        [
+                            { obs: 'Très bon travail.', cons: 'Approfondir les points forts.' }
+                        ],
+                        [
+                            { obs: 'Excellent.', cons: 'Continuer sur cette lancée.' }
+                        ]
+                    ],
+                    EN: [
+                        [ { obs: 'Very insufficient results.', cons: 'Strengthen basics and seek help.' } ],
+                        [ { obs: 'Limited progress.', cons: 'Review key concepts and practice.' } ],
+                        [ { obs: 'Solid overall.', cons: 'Aim for consistency.' } ],
+                        [ { obs: 'Good level.', cons: 'Maintain pace and consolidate.' } ],
+                        [ { obs: 'Very good work.', cons: 'Deepen strengths.' } ],
+                        [ { obs: 'Excellent.', cons: 'Keep this momentum.' } ]
+                    ],
+                    AR: [
+                        [ { obs: 'نتائج ضعيفة جدًا.', cons: 'تعزيز الأساسيات وطلب المساعدة.' } ],
+                        [ { obs: 'تقدم محدود.', cons: 'مراجعة المفاهيم والتدريب بانتظام.' } ],
+                        [ { obs: 'مستوى مقبول.', cons: 'السعي إلى الانتظام.' } ],
+                        [ { obs: 'مستوى جيد.', cons: 'ترسيخ المكتسبات.' } ],
+                        [ { obs: 'عمل ممتاز جدًا.', cons: 'تعميق نقاط القوة.' } ],
+                        [ { obs: 'ممتاز.', cons: 'مواصلة الأداء المتميز.' } ]
+                    ]
+                });
+                if (!cfg.remarks || !cfg.remarks.bands) {
+                    cfg.remarks = defaults();
+                    return;
+                }
+                if (!Array.isArray(cfg.remarks.bands) || cfg.remarks.bands.length === 0) cfg.remarks.bands = defaults().bands;
+                const langs = ['FR','EN','AR'];
+                for (const L of langs) {
+                    if (!Array.isArray(cfg.remarks[L]) || cfg.remarks[L].length === 0) cfg.remarks[L] = defaults()[L];
+                    while (cfg.remarks[L].length < cfg.remarks.bands.length) cfg.remarks[L].push([]);
+                    for (let i = 0; i < cfg.remarks[L].length; i++) {
+                        if (!Array.isArray(cfg.remarks[L][i])) cfg.remarks[L][i] = []; 
+                    }
+                }
+            }
+            function computeRemarksForAverage(className, avg) {
+                if (avg === null || avg === undefined) return { obs: '', cons: '' };
+                const cfg = getExportClassConfig(className);
+                ensureRemarksConfig(cfg);
+                const bands = cfg.remarks.bands || [];
+                const lang = currentLanguage === 'fr' ? 'FR' : (currentLanguage === 'en' ? 'EN' : 'AR');
+                let idx = -1;
+                for (let i = 0; i < bands.length; i++) {
+                    const b = bands[i];
+                    if (avg >= b.min && avg <= b.max) { idx = i; break; }
+                }
+                if (idx === -1) return { obs: '', cons: '' };
+                const list = cfg.remarks[lang][idx] || [];
+                if (!list.length) return { obs: '', cons: '' };
+                const k = Math.floor(Math.random() * list.length);
+                return list[k];
             }
 
             function setExportSingle(field, assignmentId) {
@@ -4589,6 +4869,7 @@
                     const devoirClass = cellClassForValue(devoir, devoirExpected);
                     const avgClass = cellClassForValue(moyenne, (ccExpected && compExpected && (!hasTP || tpExpected)));
 
+                    const rm = computeRemarksForAverage(className, moyenne);
                     return `
       <tr class="border-b hover:bg-gray-50">
         <td class="p-3 bg-gray-50 sticky left-0 z-10 font-medium">${s.name}</td>
@@ -4613,6 +4894,8 @@
         <td class="p-3 text-center font-bold ${avgClass}">
           ${fmt(moyenne)}
         </td>
+        <td class="p-3 text-left">${rm.obs || ''}</td>
+        <td class="p-3 text-left">${rm.cons || ''}</td>
       </tr>
     `;
                 }).join('');
@@ -4624,7 +4907,9 @@
                 ];
                 if (hasTP) cols.push('<col style="width:110px">');
                 cols.push('<col style="width:130px">'); // Composition
-                cols.push('<col style="width:130px">'); // Moyenne
+                cols.push('<col style="width:130px">');
+                cols.push('<col style="width:220px">');
+                cols.push('<col style="width:220px">');
                 const classHeader = `
                 <div class="mb-2 font-bold text-lg text-gray-700">
                     ${t.class || ' '}  ${className}
@@ -4632,8 +4917,9 @@
                 `;
                 // Nombre total de colonnes (pour le colspan)
                 // Nom + CC + Devoir + (TP?) + Compo + Moyenne
-                let colCount = 1 + 1 + 1 + 1 + 1; // base: Nom, CC, Devoir, Compo, Moy
+                let colCount = 1 + 1 + 1 + 1 + 1;
                 if (hasTP) colCount += 1;
+                colCount += 2;
 
                 preview.innerHTML = `
     <table class="w-full table-fixed border-collapse">
@@ -4661,6 +4947,8 @@
 
           <th class="p-3 text-center bg-gray-100" data-translate="compositionShort">${t.compositionShort || 'Composition'}</th>
           <th class="p-3 text-center bg-green-100" data-translate="avgShort">${t.avgShort || 'Moyenne'}</th>
+          <th class="p-3 text-center bg-gray-100" data-translate="observationShort">${t.observationShort || 'Observation'}</th>
+          <th class="p-3 text-center bg-gray-100" data-translate="adviceShort">${t.adviceShort || 'Conseil'}</th>
         </tr>
       </thead>
       <tbody>${rows}</tbody>
