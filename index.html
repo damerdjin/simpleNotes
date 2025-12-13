@@ -4770,15 +4770,11 @@
             function onRakmanaFileSelected(input) {
                 const file = input.files[0];
                 if (!file) return;
-
                 const reader = new FileReader();
                 reader.onload = function (e) {
                     try {
-                        const dataArr = new Uint8Array(e.target.result);
-                        const workbook = XLSX.read(dataArr, { type: 'array' });
-                        processRakmanaWorkbook(workbook, file.name);
+                        processRakmanaWorkbookExcelJS(e.target.result, file.name);
                     } catch (err) {
-                        console.error(err);
                         alert("Erreur lors de la lecture du fichier Excel : " + err.message);
                     }
                 };
@@ -4788,7 +4784,6 @@
             async function handleRakamnaFile(event) {
                 const file = event.target.files[0];
                 if (!file) {
-                    // Réinitialise l'input pour pouvoir re-sélectionner le même fichier si besoin
                     event.target.value = '';
                     return;
                 }
@@ -4805,26 +4800,17 @@
                 const reader = new FileReader();
                 reader.onload = async (e) => {
                     try {
-                        const data = new Uint8Array(e.target.result);
-                        const workbook = XLSX.read(data, { type: 'array' });
-
-                        // Appelle ta fonction processRakmanaWorkbook
-                        processRakmanaWorkbook(workbook, file.name);
-
+                        await processRakmanaWorkbookExcelJS(e.target.result, file.name);
                     } catch (error) {
-                        console.error("Erreur lors du traitement du fichier XLSX:", error);
                         alert(t.rakamnaProcessingError || "Une erreur est survenue lors du traitement du fichier XLSX.");
                     } finally {
-                        // Réinitialise l'input pour pouvoir re-sélectionner le même fichier si besoin
                         event.target.value = '';
                     }
                 };
 
                 reader.onerror = (error) => {
-                    console.error("Erreur de lecture du fichier:", error);
                     alert(t.rakamnaFileReadError || "Erreur lors de la lecture du fichier.");
                 };
-
                 reader.readAsArrayBuffer(file);
             }
             // Ta fonction processRakmanaWorkbook (avec la correction `s.id`)
@@ -5008,22 +4994,11 @@
                     }
                 }
                 console.log(`🔓 Cellules déverrouillées: ${unlockedCount} (de E${FIRST_STUDENT_ROW + 1} à ${String.fromCharCode(65 + lastCol)}${lastRow + 1})`);
-                // 7) Activer la protection de la feuille (mot de passe vide)
+                // 7) Activer la protection de la feuille (SheetJS)
                 ws['!protect'] = {
                     password: '',
-                    sheet: true,
-                    objects: true,
-                    scenarios: true,
-                    formatCells: true,
-                    formatColumns: true,
-                    formatRows: true,
-                    insertColumns: false,
-                    insertRows: false,
-                    deleteColumns: false,
-                    deleteRows: false,
-                    sort: true,
-                    autoFilter: true,
-                    pivotTables: true
+                    selectUnlockedCells: true,
+                    selectLockedCells: false
                 };
                 // 8) Appliquer double bordure à toute la plage (en-têtes + élèves)
                 for (let R = HEADER_ROW; R <= lastRow; R++) {
@@ -5033,8 +5008,9 @@
                         setBorderDouble(ws[addr]);
                     }
                 }
+                return { lastRow, lastCol, FIRST_STUDENT_ROW };
             }
-            function processRakmanaWorkbook(workbook, originalFileName) {
+            async function processRakmanaWorkbook(workbook, originalFileName) {
                 const t = translations[currentLanguage];
                 const className = document.getElementById('select-class-export')?.value || '';
                 if (!className) {
@@ -5190,9 +5166,9 @@
                 applyRakmanaFormatting(targetWorksheet);
 
                 // ✅ 6. Largeur colonnes + double bordures sur la zone tableau
-                applyRakmanaColumnsAndBorders(targetWorksheet, colIndices, hasTP);
+                const bounds = applyRakmanaColumnsAndBorders(targetWorksheet, colIndices, hasTP);
 
-                // 7. Sauvegarder
+                // ✅ 7. Protection et déverrouillage via ExcelJS (fiable pour la protection cellule)
                 const newFileName = originalFileName.replace(/(\.xlsx)$/i, '_Rempli$1');
                 XLSX.writeFile(workbook, newFileName);
 
@@ -5202,7 +5178,123 @@
                 if (hasTP && colIndices.tp !== -1) colsUsed.push(`TP: ${String.fromCharCode(65 + colIndices.tp)}`);
                 if (colIndices.comp !== -1) colsUsed.push(`Composition: ${String.fromCharCode(65 + colIndices.comp)}`);
 
-                alert(`✅ Fichier généré : ${newFileName}\n\n📊 ${matchCount} élève(s) mis à jour\n📍 Colonnes utilisées : ${colsUsed.join(', ')}`);
+            alert(`✅ Fichier généré : ${newFileName}\n\n📊 ${matchCount} élève(s) mis à jour\n📍 Colonnes utilisées : ${colsUsed.join(', ')}\n🔐 Feuille protégée avec plage de saisie déverrouillée.`);
+            }
+            async function processRakmanaWorkbookExcelJS(arrayBuffer, originalFileName) {
+                const t = translations[currentLanguage];
+                const className = document.getElementById('select-class-export')?.value || '';
+                if (!className) {
+                    alert(t.selectClass || "Veuillez sélectionner une classe d'abord.");
+                    return;
+                }
+                const excelWb = new ExcelJS.Workbook();
+                await excelWb.xlsx.load(arrayBuffer);
+                const cleanClassName = className.replace(/\s/g, '').toUpperCase();
+                let targetWorksheet = null;
+                for (const ws of excelWb.worksheets) {
+                    const r5 = ws.getRow(5);
+                    let txt = '';
+                    for (let c = 1; c <= Math.max(ws.columnCount, 20); c++) {
+                        const v = r5.getCell(c).value;
+                        if (v !== undefined && v !== null) txt += String(v);
+                    }
+                    const clean = txt.replace(/\s/g, '').toUpperCase();
+                    if (clean.includes(cleanClassName)) {
+                        targetWorksheet = ws;
+                        break;
+                    }
+                }
+                if (!targetWorksheet) {
+                    alert(t.rakamnaClassSheetNotFound || `Classe "${className}" non trouvée.`);
+                    return;
+                }
+                const headerRow = targetWorksheet.getRow(8);
+                const HEADERS = { cc: 'التقييم المستمر', devoir: 'معدل الفروض', tp: 'المطالعة', comp: 'الاختبار' };
+                const findColumnIndex = (needle) => {
+                    const norm = needle.replace(/\s/g, '');
+                    for (let i = 1; i <= Math.max(targetWorksheet.columnCount, 40); i++) {
+                        const v = headerRow.getCell(i).value;
+                        const s = String(v || '').replace(/\s/g, '');
+                        if (s.includes(norm)) return i;
+                    }
+                    return -1;
+                };
+                const colIndices = {
+                    cc: findColumnIndex(HEADERS.cc),
+                    devoir: findColumnIndex(HEADERS.devoir),
+                    tp: findColumnIndex(HEADERS.tp),
+                    comp: findColumnIndex(HEADERS.comp)
+                };
+                if (colIndices.cc === -1 && colIndices.devoir === -1 && colIndices.comp === -1) {
+                    alert(t.rakamnaHeadersNotFound || "Impossible de trouver les en-têtes de colonnes (CC, Devoir, Composition) dans la ligne 8.");
+                    return;
+                }
+                const cfg = getExportClassConfig(className);
+                const ccA = cfg.ccAssignmentId ? data.assignments.find(a => a.id === cfg.ccAssignmentId) : null;
+                const compA = cfg.compAssignmentId ? data.assignments.find(a => a.id === cfg.compAssignmentId) : null;
+                const tpA = cfg.tpAssignmentId ? data.assignments.find(a => a.id === cfg.tpAssignmentId) : null;
+                const hasTP = cfg.hasTp && tpA;
+                const gradesByNIN = {};
+                data.students.forEach(s => {
+                    if ((s.className || '').trim() !== className) return;
+                    const cc = ccA ? calcScaledScore(s.id, ccA) : null;
+                    const comp = compA ? calcScaledScore(s.id, compA) : null;
+                    const devoir = computeDevoirFinal(s.id, className, cfg);
+                    const tp = hasTP ? calcScaledScore(s.id, tpA) : null;
+                    const nin = String(s.nin || '').replace(/\s/g, '').trim();
+                    if (nin) gradesByNIN[nin] = { cc, devoir, tp, comp };
+                });
+                let matchCount = 0;
+                let lastRow = 8;
+                const lastCol = Math.max(targetWorksheet.columnCount, 10);
+                for (let r = 9; r <= targetWorksheet.rowCount; r++) {
+                    const v = targetWorksheet.getRow(r).getCell(1).value;
+                    const ninTxtRaw = v === undefined || v === null ? '' : String(v);
+                    const ninTxtTrim = ninTxtRaw.replace(/\s/g, '').trim();
+                    if (!ninTxtTrim) break;
+                    lastRow = r;
+                    let ninInExcel = ninTxtTrim;
+                    if (ninInExcel.endsWith('.0') && /^\d+\.0$/.test(ninInExcel)) ninInExcel = ninInExcel.substring(0, ninInExcel.length - 2);
+                    const g = gradesByNIN[ninInExcel];
+                    if (g) {
+                        matchCount++;
+                        const writeGrade = (colIndex, val) => {
+                            if (colIndex === -1) return;
+                            if (val === null || val === undefined) { targetWorksheet.getRow(r).getCell(colIndex).value = null; return; }
+                            const numVal = Math.round((val + Number.EPSILON) * 100) / 100;
+                            targetWorksheet.getRow(r).getCell(colIndex).value = numVal;
+                        };
+                        writeGrade(colIndices.cc, g.cc);
+                        writeGrade(colIndices.devoir, g.devoir);
+                        if (hasTP && colIndices.tp !== -1) writeGrade(colIndices.tp, g.tp);
+                        writeGrade(colIndices.comp, g.comp);
+                    }
+                }
+                if (matchCount === 0) {
+                    alert(t.rakamnaNoStudentsMatched || "Attention : Aucun élève n'a été trouvé dans le fichier Excel avec un NIN correspondant.");
+                    return;
+                }
+                for (let r = 1; r <= lastRow; r++) targetWorksheet.getRow(r).height = 25;
+                for (let r = 8; r <= lastRow; r++) {
+                    for (let c = 1; c <= lastCol; c++) {
+                        const cell = targetWorksheet.getRow(r).getCell(c);
+                        cell.border = { top: { style: 'double' }, bottom: { style: 'double' }, left: { style: 'double' }, right: { style: 'double' } };
+                    }
+                }
+                for (let r = 9; r <= lastRow; r++) {
+                    for (let c = 5; c <= lastCol; c++) targetWorksheet.getRow(r).getCell(c).protection = { locked: false };
+                }
+                await targetWorksheet.protect('', { selectUnlockedCells: true });
+                const buffer = await excelWb.xlsx.writeBuffer();
+                const newFileName = originalFileName.replace(/(\.xlsx)$/i, '_Rempli$1');
+                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = newFileName;
+                document.body.appendChild(link);
+                link.click();
+                URL.revokeObjectURL(link.href);
+                document.body.removeChild(link);
             }
             // Initialize
             loadData();
