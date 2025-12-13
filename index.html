@@ -4785,50 +4785,50 @@
             }
 
             async function handleRakamnaFile(event) {
-  const file = event.target.files[0];
-  if (!file) {
-    // Réinitialise l'input pour pouvoir re-sélectionner le même fichier si besoin
-    event.target.value = '';
-    return;
-  }
+                const file = event.target.files[0];
+                if (!file) {
+                    // Réinitialise l'input pour pouvoir re-sélectionner le même fichier si besoin
+                    event.target.value = '';
+                    return;
+                }
 
-  const t = translations[currentLanguage];
-  const classNameToMatch = document.getElementById('select-class-export')?.value || '';
+                const t = translations[currentLanguage];
+                const classNameToMatch = document.getElementById('select-class-export')?.value || '';
 
-  if (!classNameToMatch) {
-    alert(t.rakamnaSelectClassWarning || "Veuillez sélectionner une classe d'abord.");
-    event.target.value = ''; // Reset file input
-    return;
-  }
+                if (!classNameToMatch) {
+                    alert(t.rakamnaSelectClassWarning || "Veuillez sélectionner une classe d'abord.");
+                    event.target.value = ''; // Reset file input
+                    return;
+                }
 
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    try {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: 'array' });
-      
-      // Appelle ta fonction processRakmanaWorkbook
-      processRakmanaWorkbook(workbook, file.name);
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
 
-    } catch (error) {
-      console.error("Erreur lors du traitement du fichier XLSX:", error);
-      alert(t.rakamnaProcessingError || "Une erreur est survenue lors du traitement du fichier XLSX.");
-    } finally {
-      // Réinitialise l'input pour pouvoir re-sélectionner le même fichier si besoin
-      event.target.value = '';
-    }
-  };
+                        // Appelle ta fonction processRakmanaWorkbook
+                        processRakmanaWorkbook(workbook, file.name);
 
-  reader.onerror = (error) => {
-    console.error("Erreur de lecture du fichier:", error);
-    alert(t.rakamnaFileReadError || "Erreur lors de la lecture du fichier.");
-  };
+                    } catch (error) {
+                        console.error("Erreur lors du traitement du fichier XLSX:", error);
+                        alert(t.rakamnaProcessingError || "Une erreur est survenue lors du traitement du fichier XLSX.");
+                    } finally {
+                        // Réinitialise l'input pour pouvoir re-sélectionner le même fichier si besoin
+                        event.target.value = '';
+                    }
+                };
 
-  reader.readAsArrayBuffer(file);
-}
+                reader.onerror = (error) => {
+                    console.error("Erreur de lecture du fichier:", error);
+                    alert(t.rakamnaFileReadError || "Erreur lors de la lecture du fichier.");
+                };
 
-// Ta fonction processRakmanaWorkbook (avec la correction `s.id`)
-function processRakmanaWorkbook(workbook, originalFileName) {
+                reader.readAsArrayBuffer(file);
+            }
+
+            // Ta fonction processRakmanaWorkbook (avec la correction `s.id`)
+ function processRakmanaWorkbook(workbook, originalFileName) {
   const t = translations[currentLanguage];
   const className = document.getElementById('select-class-export')?.value || '';
   if (!className) {
@@ -4840,16 +4840,13 @@ function processRakmanaWorkbook(workbook, originalFileName) {
   let targetSheetName = null;
   let targetWorksheet = null;
 
+  // 1. Trouver la feuille correspondant à la classe
   for (const sheetName of workbook.SheetNames) {
     const ws = workbook.Sheets[sheetName];
-    // Pour des raisons de performance et de cohérence avec la détection de classe
-    // on utilise `XLSX.utils.sheet_to_json` pour lire les lignes comme tu l'as fait.
     const rows = XLSX.utils.sheet_to_json(ws, { header: 1, range: 0 });
 
-    // Vérifie si la ligne 5 (index 4) existe et contient du texte
     if (rows.length > 4) {
       const row5 = rows[4];
-      // Joint tous les éléments de la ligne pour former un texte complet
       const cleanRow5Text = (row5 || []).join('').replace(/\s/g, '').toUpperCase();
       
       if (cleanRow5Text.includes(cleanClassName)) {
@@ -4867,54 +4864,91 @@ function processRakmanaWorkbook(workbook, originalFileName) {
 
   console.log("✅ Feuille trouvée :", targetSheetName);
 
-  // 2. Préparation des données de l'application
+  // 2. Lire la ligne 8 (index 7) pour trouver les colonnes dynamiquement
+  const rows = XLSX.utils.sheet_to_json(targetWorksheet, { header: 1, range: 0 });
+  const headerRow = rows[7] || []; // Ligne 8 = index 7
+
+  // Définition des en-têtes à rechercher
+  const HEADERS = {
+    cc: 'التقييم المستمر',      // CC
+    devoir: 'معدل الفروض',       // Devoir
+    tp: 'المطالعة',              // TP
+    comp: 'الاختبار'             // Composition
+  };
+
+  // Fonction pour trouver l'index de colonne par correspondance partielle
+  const findColumnIndex = (headerText) => {
+    for (let i = 0; i < headerRow.length; i++) {
+      const cellText = String(headerRow[i] || '').replace(/\s/g, '');
+      if (cellText.includes(headerText.replace(/\s/g, ''))) {
+        return i;
+      }
+    }
+    return -1; // Non trouvé
+  };
+
+  // Trouver les indices des colonnes
+  const colIndices = {
+    cc: findColumnIndex(HEADERS.cc),
+    devoir: findColumnIndex(HEADERS.devoir),
+    tp: findColumnIndex(HEADERS.tp),
+    comp: findColumnIndex(HEADERS.comp)
+  };
+
+  console.log("📍 Colonnes détectées :", {
+    CC: colIndices.cc !== -1 ? `Colonne ${String.fromCharCode(65 + colIndices.cc)}` : 'Non trouvée',
+    Devoir: colIndices.devoir !== -1 ? `Colonne ${String.fromCharCode(65 + colIndices.devoir)}` : 'Non trouvée',
+    TP: colIndices.tp !== -1 ? `Colonne ${String.fromCharCode(65 + colIndices.tp)}` : 'Non trouvée',
+    Composition: colIndices.comp !== -1 ? `Colonne ${String.fromCharCode(65 + colIndices.comp)}` : 'Non trouvée'
+  });
+
+  // Vérifier qu'on a trouvé au moins les colonnes essentielles
+  if (colIndices.cc === -1 && colIndices.devoir === -1 && colIndices.comp === -1) {
+    alert(t.rakamnaHeadersNotFound || "Impossible de trouver les en-têtes de colonnes (CC, Devoir, Composition) dans la ligne 8.");
+    return;
+  }
+
+  // 3. Préparation des données de l'application
   const cfg = getExportClassConfig(className);
   const ccA = cfg.ccAssignmentId ? data.assignments.find(a => a.id === cfg.ccAssignmentId) : null;
   const compA = cfg.compAssignmentId ? data.assignments.find(a => a.id === cfg.compAssignmentId) : null;
+  const tpA = cfg.tpAssignmentId ? data.assignments.find(a => a.id === cfg.tpAssignmentId) : null;
+  const hasTP = cfg.hasTp && tpA; // Vérifie si TP est activé ET qu'un devoir TP est sélectionné
 
   const gradesByNIN = {};
   data.students.forEach(s => {
     if ((s.className || '').trim() !== className) return;
     
-    // Garde s.id pour les calculs internes, c'est correct
     const cc = ccA ? calcScaledScore(s.id, ccA) : null;
     const comp = compA ? calcScaledScore(s.id, compA) : null;
     const devoir = computeDevoirFinal(s.id, className, cfg);
+    const tp = hasTP ? calcScaledScore(s.id, tpA) : null;
 
-    // ✅ TRÈS IMPORTANT : Utilisez le VRAI CHAMP qui contient le NIN de l'étudiant.
-    // REMPLACEZ `s.nin` PAR LE NOM CORRECT DU CHAMP DANS VOTRE OBJET ÉLÈVE (ex: s.matricule, s.nationalID, etc.)
+    // Utilise le champ NIN correct de ton objet élève
     const ninToMatch = String(s.nin || '').replace(/\s/g, '').trim(); 
     
     if (ninToMatch) {
-      // Utilisez ninToMatch comme clé pour le matching
-      gradesByNIN[ninToMatch] = { cc, devoir, comp };
+      gradesByNIN[ninToMatch] = { cc, devoir, tp, comp };
     }
   });
 
   console.log("📊 Liste des NINs chargés depuis l'App :", Object.keys(gradesByNIN));
 
-  // 3. Écriture des notes dans la feuille Excel
-  // Récupère la plage réelle utilisée par la feuille pour ne pas dépasser
-  const range = XLSX.utils.decode_range(targetWorksheet['!ref'] || "A1"); // 'A1' par défaut si vide
+  // 4. Écriture des notes dans la feuille Excel
+  const range = XLSX.utils.decode_range(targetWorksheet['!ref'] || "A1");
   let matchCount = 0;
 
-  // Commence à la ligne 9 (index 8)
   for (let R = 8; R <= range.e.r; ++R) {
-    const cellRefNIN = XLSX.utils.encode_cell({c: 0, r: R}); // Colonne A (index 0) pour le NIN
+    const cellRefNIN = XLSX.utils.encode_cell({c: 0, r: R});
     const cellNIN = targetWorksheet[cellRefNIN];
     
-    // Si la cellule du NIN est vide ou non définie, on considère la fin de la liste des élèves
     if (!cellNIN || cellNIN.v === undefined || String(cellNIN.v).trim() === '') continue;
 
-    // NETTOYAGE DU NIN (Excel) : Convertir en string, enlever .0 si c'est un nombre, supprimer espaces
+    // Nettoyage du NIN Excel
     let ninInExcel = String(cellNIN.v).replace(/\s/g, '').trim();
-    
-    // Si Excel a lu le NIN comme un nombre entier avec un `.0` implicite, on le retire.
-    // Ex: 1234.0 devient 1234
     if (ninInExcel.endsWith('.0') && /^\d+\.0$/.test(ninInExcel)) {
-      ninInExcel = ninInExcel.substring(0, ninInExcel.length - 2); // Retirer ".0"
+      ninInExcel = ninInExcel.substring(0, ninInExcel.length - 2);
     }
-
 
     const studentGrades = gradesByNIN[ninInExcel];
 
@@ -4923,40 +4957,50 @@ function processRakmanaWorkbook(workbook, originalFileName) {
       console.log(`✍️ Écriture pour NIN ${ninInExcel} à la ligne ${R + 1}`);
 
       const writeGrade = (colIndex, val) => {
-        // N'écrit que si la note est valide (pas null ou undefined)
+        if (colIndex === -1) return; // Colonne non trouvée, on saute
         if (val === null || val === undefined) {
-            // Optionnel: vider la cellule si la note est null
-            const cellRef = XLSX.utils.encode_cell({c: colIndex, r: R});
-            if (targetWorksheet[cellRef]) delete targetWorksheet[cellRef];
-            return;
+          // Optionnel: vider la cellule si la note est null
+          const cellRef = XLSX.utils.encode_cell({c: colIndex, r: R});
+          if (targetWorksheet[cellRef]) delete targetWorksheet[cellRef];
+          return;
         }
         const cellRef = XLSX.utils.encode_cell({c: colIndex, r: R});
-        // Arrondi à 2 décimales pour l'export
         const numVal = Math.round((val + Number.EPSILON) * 100) / 100;
-        
-        targetWorksheet[cellRef] = { t: 'n', v: numVal }; // t: 'n' pour numérique
+        targetWorksheet[cellRef] = { t: 'n', v: numVal };
       };
 
-      writeGrade(4, studentGrades.cc);     // Colonne E (index 4)
-      writeGrade(5, studentGrades.devoir); // Colonne F (index 5)
-      writeGrade(6, studentGrades.comp);   // Colonne G (index 6)
-    } else {
-        // Optionnel : avertir si un élève d'Excel n'est pas dans l'app (par exemple, ancien élève)
-        // console.warn(`Élève avec NIN '${ninInExcel}' de l'Excel non trouvé dans les données de l'application.`);
+      // Écriture dynamique basée sur les colonnes détectées
+      writeGrade(colIndices.cc, studentGrades.cc);
+      writeGrade(colIndices.devoir, studentGrades.devoir);
+      
+      // Écrire TP seulement si la classe a TP ET que la colonne existe dans Excel
+      if (hasTP && colIndices.tp !== -1) {
+        writeGrade(colIndices.tp, studentGrades.tp);
+      }
+      
+      writeGrade(colIndices.comp, studentGrades.comp);
     }
   }
 
   console.log(`🏁 Total d'élèves mis à jour : ${matchCount}`);
 
   if (matchCount === 0) {
-    alert(t.rakamnaNoStudentsMatched || "Attention : Aucun élève n'a été trouvé dans le fichier Excel avec un NIN correspondant. Vérifiez que les NIN (Matricules) correspondent exactement et que les élèves sont dans la bonne classe.");
+    alert(t.rakamnaNoStudentsMatched || "Attention : Aucun élève n'a été trouvé dans le fichier Excel avec un NIN correspondant.");
     return;
   }
 
-  // Suffixe le nom du fichier pour indiquer qu'il est modifié
+  // 5. Sauvegarder le fichier modifié
   const newFileName = originalFileName.replace(/(\.xlsx)$/i, '_Rempli$1');
   XLSX.writeFile(workbook, newFileName);
-  alert(t.rakamnaSuccess || `Fichier '${originalFileName}' mis à jour et téléchargé sous '${newFileName}'.`);
+  
+  // Message de succès avec détail des colonnes utilisées
+  const colsUsed = [];
+  if (colIndices.cc !== -1) colsUsed.push(`CC: ${String.fromCharCode(65 + colIndices.cc)}`);
+  if (colIndices.devoir !== -1) colsUsed.push(`Devoir: ${String.fromCharCode(65 + colIndices.devoir)}`);
+  if (hasTP && colIndices.tp !== -1) colsUsed.push(`TP: ${String.fromCharCode(65 + colIndices.tp)}`);
+  if (colIndices.comp !== -1) colsUsed.push(`Composition: ${String.fromCharCode(65 + colIndices.comp)}`);
+  
+  alert(`✅ Fichier généré : ${newFileName}\n\n📊 ${matchCount} élève(s) mis à jour\n📍 Colonnes utilisées : ${colsUsed.join(', ')}`);
 }
             // Initialize
             loadData();
