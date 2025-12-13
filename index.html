@@ -4629,12 +4629,12 @@
                     ${t.class || ' '}  ${className}
                 </div>
                 `;
-                  // Nombre total de colonnes (pour le colspan)
-  // Nom + CC + Devoir + (TP?) + Compo + Moyenne
-  let colCount = 1 + 1 + 1 + 1 + 1; // base: Nom, CC, Devoir, Compo, Moy
-  if (hasTP) colCount += 1;
+                // Nombre total de colonnes (pour le colspan)
+                // Nom + CC + Devoir + (TP?) + Compo + Moyenne
+                let colCount = 1 + 1 + 1 + 1 + 1; // base: Nom, CC, Devoir, Compo, Moy
+                if (hasTP) colCount += 1;
 
-  preview.innerHTML = `
+                preview.innerHTML = `
     <table class="w-full table-fixed border-collapse">
       <colgroup>${cols.join('')}</colgroup>
       <thead>
@@ -4739,10 +4739,8 @@
                     </body>
                     </html>
                 `);
-
                 win.document.close();
                 win.focus();
-
                 setTimeout(() => win.print(), 250);
             }
 
@@ -4760,6 +4758,206 @@
 
                 XLSX.writeFile(wb, "export-classe.xlsx");
             }
+
+            function doRakamna() {
+                const fileInput = document.getElementById('rakmana-file-input');
+                if (fileInput) {
+                    fileInput.value = ''; // Reset pour permettre de re-sélectionner le même fichier
+                    fileInput.click();
+                }
+            }
+            function onRakmanaFileSelected(input) {
+                const file = input.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    try {
+                        const dataArr = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(dataArr, { type: 'array' });
+                        processRakmanaWorkbook(workbook, file.name);
+                    } catch (err) {
+                        console.error(err);
+                        alert("Erreur lors de la lecture du fichier Excel : " + err.message);
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            }
+
+            async function handleRakamnaFile(event) {
+  const file = event.target.files[0];
+  if (!file) {
+    // Réinitialise l'input pour pouvoir re-sélectionner le même fichier si besoin
+    event.target.value = '';
+    return;
+  }
+
+  const t = translations[currentLanguage];
+  const classNameToMatch = document.getElementById('select-class-export')?.value || '';
+
+  if (!classNameToMatch) {
+    alert(t.rakamnaSelectClassWarning || "Veuillez sélectionner une classe d'abord.");
+    event.target.value = ''; // Reset file input
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      
+      // Appelle ta fonction processRakmanaWorkbook
+      processRakmanaWorkbook(workbook, file.name);
+
+    } catch (error) {
+      console.error("Erreur lors du traitement du fichier XLSX:", error);
+      alert(t.rakamnaProcessingError || "Une erreur est survenue lors du traitement du fichier XLSX.");
+    } finally {
+      // Réinitialise l'input pour pouvoir re-sélectionner le même fichier si besoin
+      event.target.value = '';
+    }
+  };
+
+  reader.onerror = (error) => {
+    console.error("Erreur de lecture du fichier:", error);
+    alert(t.rakamnaFileReadError || "Erreur lors de la lecture du fichier.");
+  };
+
+  reader.readAsArrayBuffer(file);
+}
+
+// Ta fonction processRakmanaWorkbook (avec la correction `s.id`)
+function processRakmanaWorkbook(workbook, originalFileName) {
+  const t = translations[currentLanguage];
+  const className = document.getElementById('select-class-export')?.value || '';
+  if (!className) {
+    alert(t.selectClass || "Veuillez sélectionner une classe d'abord.");
+    return;
+  }
+
+  const cleanClassName = className.replace(/\s/g, '').toUpperCase();
+  let targetSheetName = null;
+  let targetWorksheet = null;
+
+  for (const sheetName of workbook.SheetNames) {
+    const ws = workbook.Sheets[sheetName];
+    // Pour des raisons de performance et de cohérence avec la détection de classe
+    // on utilise `XLSX.utils.sheet_to_json` pour lire les lignes comme tu l'as fait.
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, range: 0 });
+
+    // Vérifie si la ligne 5 (index 4) existe et contient du texte
+    if (rows.length > 4) {
+      const row5 = rows[4];
+      // Joint tous les éléments de la ligne pour former un texte complet
+      const cleanRow5Text = (row5 || []).join('').replace(/\s/g, '').toUpperCase();
+      
+      if (cleanRow5Text.includes(cleanClassName)) {
+        targetSheetName = sheetName;
+        targetWorksheet = ws;
+        break;
+      }
+    }
+  }
+
+  if (!targetSheetName) {
+    alert(t.rakamnaClassSheetNotFound || `Classe "${className}" non trouvée.`);
+    return;
+  }
+
+  console.log("✅ Feuille trouvée :", targetSheetName);
+
+  // 2. Préparation des données de l'application
+  const cfg = getExportClassConfig(className);
+  const ccA = cfg.ccAssignmentId ? data.assignments.find(a => a.id === cfg.ccAssignmentId) : null;
+  const compA = cfg.compAssignmentId ? data.assignments.find(a => a.id === cfg.compAssignmentId) : null;
+
+  const gradesByNIN = {};
+  data.students.forEach(s => {
+    if ((s.className || '').trim() !== className) return;
+    
+    // Garde s.id pour les calculs internes, c'est correct
+    const cc = ccA ? calcScaledScore(s.id, ccA) : null;
+    const comp = compA ? calcScaledScore(s.id, compA) : null;
+    const devoir = computeDevoirFinal(s.id, className, cfg);
+
+    // ✅ TRÈS IMPORTANT : Utilisez le VRAI CHAMP qui contient le NIN de l'étudiant.
+    // REMPLACEZ `s.nin` PAR LE NOM CORRECT DU CHAMP DANS VOTRE OBJET ÉLÈVE (ex: s.matricule, s.nationalID, etc.)
+    const ninToMatch = String(s.nin || '').replace(/\s/g, '').trim(); 
+    
+    if (ninToMatch) {
+      // Utilisez ninToMatch comme clé pour le matching
+      gradesByNIN[ninToMatch] = { cc, devoir, comp };
+    }
+  });
+
+  console.log("📊 Liste des NINs chargés depuis l'App :", Object.keys(gradesByNIN));
+
+  // 3. Écriture des notes dans la feuille Excel
+  // Récupère la plage réelle utilisée par la feuille pour ne pas dépasser
+  const range = XLSX.utils.decode_range(targetWorksheet['!ref'] || "A1"); // 'A1' par défaut si vide
+  let matchCount = 0;
+
+  // Commence à la ligne 9 (index 8)
+  for (let R = 8; R <= range.e.r; ++R) {
+    const cellRefNIN = XLSX.utils.encode_cell({c: 0, r: R}); // Colonne A (index 0) pour le NIN
+    const cellNIN = targetWorksheet[cellRefNIN];
+    
+    // Si la cellule du NIN est vide ou non définie, on considère la fin de la liste des élèves
+    if (!cellNIN || cellNIN.v === undefined || String(cellNIN.v).trim() === '') continue;
+
+    // NETTOYAGE DU NIN (Excel) : Convertir en string, enlever .0 si c'est un nombre, supprimer espaces
+    let ninInExcel = String(cellNIN.v).replace(/\s/g, '').trim();
+    
+    // Si Excel a lu le NIN comme un nombre entier avec un `.0` implicite, on le retire.
+    // Ex: 1234.0 devient 1234
+    if (ninInExcel.endsWith('.0') && /^\d+\.0$/.test(ninInExcel)) {
+      ninInExcel = ninInExcel.substring(0, ninInExcel.length - 2); // Retirer ".0"
+    }
+
+
+    const studentGrades = gradesByNIN[ninInExcel];
+
+    if (studentGrades) {
+      matchCount++;
+      console.log(`✍️ Écriture pour NIN ${ninInExcel} à la ligne ${R + 1}`);
+
+      const writeGrade = (colIndex, val) => {
+        // N'écrit que si la note est valide (pas null ou undefined)
+        if (val === null || val === undefined) {
+            // Optionnel: vider la cellule si la note est null
+            const cellRef = XLSX.utils.encode_cell({c: colIndex, r: R});
+            if (targetWorksheet[cellRef]) delete targetWorksheet[cellRef];
+            return;
+        }
+        const cellRef = XLSX.utils.encode_cell({c: colIndex, r: R});
+        // Arrondi à 2 décimales pour l'export
+        const numVal = Math.round((val + Number.EPSILON) * 100) / 100;
+        
+        targetWorksheet[cellRef] = { t: 'n', v: numVal }; // t: 'n' pour numérique
+      };
+
+      writeGrade(4, studentGrades.cc);     // Colonne E (index 4)
+      writeGrade(5, studentGrades.devoir); // Colonne F (index 5)
+      writeGrade(6, studentGrades.comp);   // Colonne G (index 6)
+    } else {
+        // Optionnel : avertir si un élève d'Excel n'est pas dans l'app (par exemple, ancien élève)
+        // console.warn(`Élève avec NIN '${ninInExcel}' de l'Excel non trouvé dans les données de l'application.`);
+    }
+  }
+
+  console.log(`🏁 Total d'élèves mis à jour : ${matchCount}`);
+
+  if (matchCount === 0) {
+    alert(t.rakamnaNoStudentsMatched || "Attention : Aucun élève n'a été trouvé dans le fichier Excel avec un NIN correspondant. Vérifiez que les NIN (Matricules) correspondent exactement et que les élèves sont dans la bonne classe.");
+    return;
+  }
+
+  // Suffixe le nom du fichier pour indiquer qu'il est modifié
+  const newFileName = originalFileName.replace(/(\.xlsx)$/i, '_Rempli$1');
+  XLSX.writeFile(workbook, newFileName);
+  alert(t.rakamnaSuccess || `Fichier '${originalFileName}' mis à jour et téléchargé sous '${newFileName}'.`);
+}
             // Initialize
             loadData();
             initLanguage(); // Ajoutez cette ligne
@@ -4768,6 +4966,9 @@
             loadExportPrepConfig();
             loadClassSelectorsForExport();
         </script>
+        <!-- Input caché pour charger le fichier Rakmana -->
+        <input type="file" id="rakmana-file-input" accept=".xlsx" style="display: none;"
+            onchange="onRakmanaFileSelected(this)">
 </body>
 
 </html>
