@@ -5274,13 +5274,7 @@
                     alert(t.rakamnaNoStudentsMatched || "Attention : Aucun élève n'a été trouvé dans le fichier Excel avec un NIN correspondant.");
                     return;
                 }
-                for (let r = 1; r <= lastRow; r++) targetWorksheet.getRow(r).height = 25;
-                for (let r = 8; r <= lastRow; r++) {
-                    for (let c = 1; c <= lastCol; c++) {
-                        const cell = targetWorksheet.getRow(r).getCell(c);
-                        cell.border = { top: { style: 'double' }, bottom: { style: 'double' }, left: { style: 'double' }, right: { style: 'double' } };
-                    }
-                }
+                // Ne pas modifier le format original (pas de bordures/hauteurs)
                 for (let r = 9; r <= lastRow; r++) {
                     for (let c = 5; c <= lastCol; c++) targetWorksheet.getRow(r).getCell(c).protection = { locked: false };
                 }
