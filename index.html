@@ -913,6 +913,9 @@
                         <button onclick="resetExportConfig()"
                             class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg font-semibold transition"
                             data-translate="reset">Réinitialiser</button>
+                        <button onclick="openRemarksModal()"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-semibold transition"
+                            data-translate="editRemarks">Messages</button>
                     </div>
                 </div>
 
@@ -3663,7 +3666,8 @@
                 const now = new Date();
                 const pad = n => String(n).padStart(2, '0');
                 const fname = `simpleNotes-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.json`;
-                const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+                const payload = { data, exportPrepConfig };
+                const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
@@ -3682,7 +3686,8 @@
                 const reader = new FileReader();
                 reader.onload = function (e) {
                     try {
-                        const importedData = JSON.parse(e.target.result);
+                        const importedRaw = JSON.parse(e.target.result);
+                        const importedData = importedRaw.data || importedRaw;
 
                         // Fonction pour nettoyer
                         const clean = (val) => String(val || '').trim();
@@ -3737,6 +3742,21 @@
                                     data.assignments.push(importedAssignment);
                                 }
                             });
+                        }
+
+                        // ========== FUSION CONFIG EXPORT (remarks / tranches) ==========
+                        const importedCfg = importedRaw.exportPrepConfig;
+                        if (importedCfg) {
+                            if (!exportPrepConfig || !exportPrepConfig.byClass) exportPrepConfig = { byClass: {} };
+                            if (importedCfg.byClass) {
+                                for (const cls of Object.keys(importedCfg.byClass)) {
+                                    exportPrepConfig.byClass[cls] = importedCfg.byClass[cls];
+                                }
+                            }
+                            if (importedCfg.globalRemarks) {
+                                exportPrepConfig.globalRemarks = importedCfg.globalRemarks;
+                            }
+                            saveExportPrepConfig();
                         }
 
                         saveData();
@@ -3984,6 +4004,171 @@
                 localStorage.setItem(EXPORT_CONFIG_KEY, JSON.stringify(exportPrepConfig));
             }
 
+            function ensureGlobalRemarks() {
+                if (!exportPrepConfig) exportPrepConfig = { byClass: {} };
+                // migration: si des remarques existaient par classe auparavant, prendre la première
+                if (!exportPrepConfig.globalRemarks) {
+                    try {
+                        const classes = Object.keys(exportPrepConfig.byClass || {});
+                        for (const cls of classes) {
+                            const rc = exportPrepConfig.byClass[cls]?.remarks;
+                            if (rc && rc.bands && (rc.FR || rc.EN || rc.AR)) {
+                                exportPrepConfig.globalRemarks = rc;
+                                break;
+                            }
+                        }
+                    } catch (e) {}
+                }
+                const defaults = () => ({
+                    bands: [ {min:0,max:6}, {min:6.01,max:9.99}, {min:10,max:13.99}, {min:14,max:15.99}, {min:16,max:17.99}, {min:18,max:20} ],
+                    FR: [
+                        [
+                            { obs: 'Résultats très insuffisants.', cons: "Renforcer les bases et demander de l’aide." },
+                            { obs: 'Bases non maîtrisées.', cons: 'Reprendre les fondamentaux quotidiennement.' },
+                            { obs: 'Manque d’assiduité.', cons: 'Planifier un travail régulier.' },
+                            { obs: 'Attention aux lacunes.', cons: 'Faire des exercices ciblés.' },
+                            { obs: 'Suivi nécessaire.', cons: 'Solliciter un accompagnement.' }
+                        ],
+                        [
+                            { obs: 'Progrès limités.', cons: 'Revoir les notions clés et s’entraîner.' },
+                            { obs: 'Participation à renforcer.', cons: 'Multiplier les exercices.' },
+                            { obs: 'Résultats fragiles.', cons: 'Consolider avec des révisions.' },
+                            { obs: 'Inégalités dans le travail.', cons: 'Adopter une routine.' },
+                            { obs: 'Peut mieux faire.', cons: 'Fixer des objectifs simples.' }
+                        ],
+                        [
+                            { obs: 'Ensemble correct.', cons: 'Poursuivre les efforts avec régularité.' },
+                            { obs: 'Bilan satisfaisant.', cons: 'Maintenir l’investissement.' },
+                            { obs: 'Résultats stables.', cons: 'Renforcer l’autonomie.' },
+                            { obs: 'Progression notable.', cons: 'Continuer à ce rythme.' },
+                            { obs: 'Attitude sérieuse.', cons: 'Varier les méthodes.' }
+                        ],
+                        [
+                            { obs: 'Bon niveau.', cons: 'Maintenir le rythme et consolider.' },
+                            { obs: 'Travail sérieux.', cons: 'Approfondir pour viser plus haut.' },
+                            { obs: 'Bonne progression.', cons: 'Continuer avec rigueur.' },
+                            { obs: 'Résultats encourageants.', cons: 'S’entraîner sur les détails.' },
+                            { obs: 'Application régulière.', cons: 'Développer la confiance.' }
+                        ],
+                        [
+                            { obs: 'Très bon travail.', cons: 'Approfondir les points forts.' },
+                            { obs: 'Exigence appréciable.', cons: 'Varier les méthodes pour exceller.' },
+                            { obs: 'Très régulier.', cons: 'Entretenir ce rythme.' },
+                            { obs: 'Belle maîtrise.', cons: 'Se fixer des défis.' },
+                            { obs: 'Comportement exemplaire.', cons: 'Continuer ainsi.' }
+                        ],
+                        [
+                            { obs: 'Excellent.', cons: 'Continuer sur cette lancée.' },
+                            { obs: 'Résultats remarquables.', cons: 'Objectifs avancés recommandés.' },
+                            { obs: 'Exemplarité.', cons: 'Partager les bonnes pratiques.' },
+                            { obs: 'Performance élevée.', cons: 'Viser l’excellence durable.' },
+                            { obs: 'Très grande maîtrise.', cons: 'Soutenir les camarades.' }
+                        ]
+                    ],
+                    EN: [
+                        [
+                            { obs: 'Very insufficient results.', cons: 'Strengthen basics and seek help.' },
+                            { obs: 'Weak fundamentals.', cons: 'Revise core topics daily.' },
+                            { obs: 'Irregular work.', cons: 'Plan study and follow homework.' },
+                            { obs: 'Gaps observed.', cons: 'Do targeted exercises.' },
+                            { obs: 'Follow-up needed.', cons: 'Ask for guidance.' }
+                        ],
+                        [
+                            { obs: 'Limited progress.', cons: 'Review key concepts and practice.' },
+                            { obs: 'Low participation.', cons: 'Increase targeted exercises.' },
+                            { obs: 'Fragile results.', cons: 'Consolidate through revision.' },
+                            { obs: 'Uneven work.', cons: 'Adopt a routine.' },
+                            { obs: 'Can do better.', cons: 'Set simple goals.' }
+                        ],
+                        [
+                            { obs: 'Solid overall.', cons: 'Keep working and aim for consistency.' },
+                            { obs: 'Satisfactory.', cons: 'Maintain effort.' },
+                            { obs: 'Stable results.', cons: 'Strengthen autonomy.' },
+                            { obs: 'Notable progress.', cons: 'Continue at this pace.' },
+                            { obs: 'Serious attitude.', cons: 'Vary methods.' }
+                        ],
+                        [
+                            { obs: 'Good level.', cons: 'Maintain pace and consolidate.' },
+                            { obs: 'Serious work.', cons: 'Deepen to aim higher.' },
+                            { obs: 'Good progress.', cons: 'Continue with rigor.' },
+                            { obs: 'Encouraging results.', cons: 'Practice details.' },
+                            { obs: 'Regular application.', cons: 'Build confidence.' }
+                        ],
+                        [
+                            { obs: 'Very good work.', cons: 'Deepen strengths.' },
+                            { obs: 'Strong commitment.', cons: 'Vary methods to excel.' },
+                            { obs: 'Very consistent.', cons: 'Maintain this rhythm.' },
+                            { obs: 'Great mastery.', cons: 'Set challenges.' },
+                            { obs: 'Exemplary attitude.', cons: 'Keep it up.' }
+                        ],
+                        [
+                            { obs: 'Excellent.', cons: 'Continue this excellent momentum.' },
+                            { obs: 'Outstanding results.', cons: 'Set advanced goals.' },
+                            { obs: 'Exemplary.', cons: 'Share best practices.' },
+                            { obs: 'High performance.', cons: 'Aim for lasting excellence.' },
+                            { obs: 'Very strong mastery.', cons: 'Support classmates.' }
+                        ]
+                    ],
+                    AR: [
+                        [
+                            { obs: 'نتائج ضعيفة جدًا.', cons: 'تعزيز الأساسيات وطلب المساعدة.' },
+                            { obs: 'أساسيات غير متقنة.', cons: 'مراجعة الدروس يوميًا.' },
+                            { obs: 'عمل غير منتظم.', cons: 'تنظيم الدراسة ومتابعة الواجبات.' },
+                            { obs: 'ثغرات واضحة.', cons: 'تمارين مركزة مطلوبة.' },
+                            { obs: 'حاجة إلى متابعة.', cons: 'طلب التوجيه.' }
+                        ],
+                        [
+                            { obs: 'تقدم محدود.', cons: 'مراجعة المفاهيم الأساسية والتدريب.' },
+                            { obs: 'مشاركة ضعيفة.', cons: 'زيادة التمارين المركزة.' },
+                            { obs: 'نتائج هشة.', cons: 'تثبيت عبر المراجعة.' },
+                            { obs: 'عمل غير منتظم.', cons: 'اعتماد روتين يومي.' },
+                            { obs: 'يمكن أفضل.', cons: 'تحديد أهداف بسيطة.' }
+                        ],
+                        [
+                            { obs: 'مستوى مقبول.', cons: 'مواصلة الجهد والسعي إلى الانتظام.' },
+                            { obs: 'نتائج مرضية.', cons: 'الحفاظ على الجهد.' },
+                            { obs: 'نتائج مستقرة.', cons: 'تعزيز الاستقلالية.' },
+                            { obs: 'تحسن ملحوظ.', cons: 'الاستمرار بنفس الوتيرة.' },
+                            { obs: 'جدية في المتابعة.', cons: 'تنويع الأساليب.' }
+                        ],
+                        [
+                            { obs: 'مستوى جيد.', cons: 'الحفاظ على الوتيرة وترسيخ المكتسبات.' },
+                            { obs: 'عمل جاد.', cons: 'تعميق المستوى للوصول للأفضل.' },
+                            { obs: 'تحسن جيد.', cons: 'الاستمرار بانضباط.' },
+                            { obs: 'نتائج مشجعة.', cons: 'التركيز على التفاصيل.' },
+                            { obs: 'انتظام واضح.', cons: 'تعزيز الثقة.' }
+                        ],
+                        [
+                            { obs: 'عمل ممتاز جدًا.', cons: 'الاستمرار وتعميق نقاط القوة.' },
+                            { obs: 'التزام قوي.', cons: 'تنويع الأساليب للتميز.' },
+                            { obs: 'انتظام كبير.', cons: 'الحفاظ على الإيقاع.' },
+                            { obs: 'إتقان واضح.', cons: 'تحديات شخصية مطلوبة.' },
+                            { obs: 'سلوك نموذجي.', cons: 'الاستمرار بهذا المستوى.' }
+                        ],
+                        [
+                            { obs: 'ممتاز.', cons: 'مواصلة هذا الأداء المتميز.' },
+                            { obs: 'نتائج مبهرة.', cons: 'تحديد أهداف متقدمة.' },
+                            { obs: 'قدوة.', cons: 'مشاركة الممارسات الجيدة.' },
+                            { obs: 'أداء عالٍ.', cons: 'السعي للتميز المستدام.' },
+                            { obs: 'إتقان قوي جدًا.', cons: 'دعم الزملاء.' }
+                        ]
+                    ]
+                });
+                if (!exportPrepConfig.globalRemarks) exportPrepConfig.globalRemarks = defaults();
+                const gr = exportPrepConfig.globalRemarks;
+                if (!Array.isArray(gr.bands) || gr.bands.length === 0) gr.bands = defaults().bands;
+                const langs = ['FR','EN','AR'];
+                for (const L of langs) {
+                    if (!Array.isArray(gr[L]) || gr[L].length === 0) gr[L] = defaults()[L];
+                    while (gr[L].length < gr.bands.length) gr[L].push([]);
+                    for (let i = 0; i < gr[L].length; i++) {
+                        if (!Array.isArray(gr[L][i])) gr[L][i] = [];
+                    }
+                }
+                saveExportPrepConfig();
+                return gr;
+            }
+
             function getExportClassConfig(className) {
                 if (!className) return null;
                 if (!exportPrepConfig.byClass[className]) {
@@ -3993,113 +4178,7 @@
                         tpAssignmentId: '',
                         devoir1: { assignmentIds: [], combine: 'sum', normalize: true, targetMax: 20 },
                         devoir2: { assignmentIds: [], combine: 'sum', normalize: true, targetMax: 20 },
-                        outMax: 20,
-                        remarks: {
-                            bands: [
-                                { min: 0, max: 6 },
-                                { min: 6.01, max: 9.99 },
-                                { min: 10, max: 13.99 },
-                                { min: 14, max: 15.99 },
-                                { min: 16, max: 17.99 },
-                                { min: 18, max: 20 }
-                            ],
-                            FR: [
-                                [
-                                    { obs: 'Résultats très insuffisants.', cons: "Renforcer le travail de base et demander de l’aide." },
-                                    { obs: 'Bases non maîtrisées.', cons: 'Reprendre les fondamentaux et s’exercer quotidiennement.' },
-                                    { obs: 'Manque d’assiduité.', cons: 'Organiser le travail et suivre les devoirs.' }
-                                ],
-                                [
-                                    { obs: 'Progrès limités.', cons: 'Revoir les notions clés et s’entraîner régulièrement.' },
-                                    { obs: 'Participation à renforcer.', cons: 'Multiplier les exercices ciblés.' },
-                                    { obs: 'Résultats fragiles.', cons: 'Soutien recommandé pour consolider.' }
-                                ],
-                                [
-                                    { obs: 'Ensemble correct.', cons: 'Poursuivre les efforts et viser plus de régularité.' },
-                                    { obs: 'Bilan satisfaisant.', cons: 'Maintenir l’investissement.' },
-                                    { obs: 'Résultats stables.', cons: 'Renforcer l’autonomie.' }
-                                ],
-                                [
-                                    { obs: 'Bon niveau.', cons: 'Maintenir le rythme et consolider les acquis.' },
-                                    { obs: 'Travail sérieux.', cons: 'Approfondir pour viser plus haut.' },
-                                    { obs: 'Bonne progression.', cons: 'Continuer avec rigueur.' }
-                                ],
-                                [
-                                    { obs: 'Très bon travail.', cons: 'Continuer et approfondir les points forts.' },
-                                    { obs: 'Exigence appréciable.', cons: 'Varier les méthodes pour exceller.' },
-                                    { obs: 'Très régulier.', cons: 'Encourager les défis personnels.' }
-                                ],
-                                [
-                                    { obs: 'Excellent.', cons: 'Poursuivre cette excellente dynamique.' },
-                                    { obs: 'Résultats remarquables.', cons: 'Préparer des objectifs avancés.' },
-                                    { obs: 'Exemplarité.', cons: 'Partager les bonnes pratiques.' }
-                                ]
-                            ],
-                            EN: [
-                                [
-                                    { obs: 'Very insufficient results.', cons: 'Strengthen basics and seek help.' },
-                                    { obs: 'Weak fundamentals.', cons: 'Revise core topics daily.' },
-                                    { obs: 'Irregular work.', cons: 'Plan study and follow homework.' }
-                                ],
-                                [
-                                    { obs: 'Limited progress.', cons: 'Review key concepts and practice regularly.' },
-                                    { obs: 'Participation low.', cons: 'Increase targeted exercises.' },
-                                    { obs: 'Fragile results.', cons: 'Support recommended to consolidate.' }
-                                ],
-                                [
-                                    { obs: 'Solid overall.', cons: 'Keep working and aim for consistency.' },
-                                    { obs: 'Satisfactory.', cons: 'Maintain effort.' },
-                                    { obs: 'Stable results.', cons: 'Strengthen autonomy.' }
-                                ],
-                                [
-                                    { obs: 'Good level.', cons: 'Maintain pace and consolidate skills.' },
-                                    { obs: 'Serious work.', cons: 'Deepen to aim higher.' },
-                                    { obs: 'Good progress.', cons: 'Continue with rigor.' }
-                                ],
-                                [
-                                    { obs: 'Very good work.', cons: 'Keep going and deepen strengths.' },
-                                    { obs: 'Strong commitment.', cons: 'Vary methods to excel.' },
-                                    { obs: 'Very consistent.', cons: 'Encourage personal challenges.' }
-                                ],
-                                [
-                                    { obs: 'Excellent.', cons: 'Continue this excellent momentum.' },
-                                    { obs: 'Outstanding results.', cons: 'Set advanced goals.' },
-                                    { obs: 'Exemplary.', cons: 'Share best practices.' }
-                                ]
-                            ],
-                            AR: [
-                                [
-                                    { obs: 'نتائج ضعيفة جدًا.', cons: 'تعزيز الأساسيات وطلب المساعدة.' },
-                                    { obs: 'أساسيات غير متقنة.', cons: 'مراجعة الدروس يوميًا.' },
-                                    { obs: 'عمل غير منتظم.', cons: 'تنظيم الدراسة ومتابعة الواجبات.' }
-                                ],
-                                [
-                                    { obs: 'تقدم محدود.', cons: 'مراجعة المفاهيم الأساسية والتدريب بانتظام.' },
-                                    { obs: 'مشاركة ضعيفة.', cons: 'زيادة التمارين المركزة.' },
-                                    { obs: 'نتائج هشة.', cons: 'الدعم مطلوب للتثبيت.' }
-                                ],
-                                [
-                                    { obs: 'مستوى مقبول.', cons: 'مواصلة الجهد والسعي إلى الانتظام.' },
-                                    { obs: 'نتائج مرضية.', cons: 'الحفاظ على الجهد.' },
-                                    { obs: 'نتائج مستقرة.', cons: 'تعزيز الاستقلالية.' }
-                                ],
-                                [
-                                    { obs: 'مستوى جيد.', cons: 'الحفاظ على الوتيرة وترسيخ المكتسبات.' },
-                                    { obs: 'عمل جاد.', cons: 'تعميق المستوى للوصول للأفضل.' },
-                                    { obs: 'تحسن جيد.', cons: 'الاستمرار بانضباط.' }
-                                ],
-                                [
-                                    { obs: 'عمل ممتاز جدًا.', cons: 'الاستمرار وتعميق نقاط القوة.' },
-                                    { obs: 'التزام قوي.', cons: 'تنويع الأساليب للتميز.' },
-                                    { obs: 'انتظام كبير.', cons: 'تشجيع التحديات الشخصية.' }
-                                ],
-                                [
-                                    { obs: 'ممتاز.', cons: 'مواصلة هذا الأداء المتميز.' },
-                                    { obs: 'نتائج مبهرة.', cons: 'تحديد أهداف متقدمة.' },
-                                    { obs: 'قدوة.', cons: 'مشاركة الممارسات الجيدة.' }
-                                ]
-                            ]
-                        }
+                        outMax: 20
                     };
                 }
                 return exportPrepConfig.byClass[className];
@@ -4485,7 +4564,7 @@
                 class="w-20 p-2 border rounded bg-white ml-2"
                 onchange="setExportOutMax(this.value)">
             </label>
-            <button class="px-3 py-2 rounded bg-indigo-600 text-white text-sm" onclick="openRemarksModal()">${t.editRemarks || 'Messages'}</button>
+            
           </div>
         </div>
 
@@ -4584,15 +4663,14 @@
             }
 
             function openRemarksModal() {
-                const className = document.getElementById('select-class-export')?.value || '';
-                const cfg = getExportClassConfig(className);
                 const t = translations[currentLanguage];
                 const overlay = document.createElement('div');
                 overlay.id = 'remarks-modal';
                 overlay.className = 'fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50';
-                const bands = cfg.remarks?.bands || [];
+                const gr = ensureGlobalRemarks();
+                const bands = gr.bands || [];
                 const lang = currentLanguage === 'fr' ? 'FR' : (currentLanguage === 'en' ? 'EN' : 'AR');
-                const msgs = cfg.remarks?.[lang] || [];
+                const msgs = gr[lang] || [];
                 const rows = bands.map((b, i) => {
                     let items = '';
                     for (let j = 0; j < 5; j++) {
@@ -4640,8 +4718,7 @@
             }
 
             function saveRemarksModal() {
-                const className = document.getElementById('select-class-export')?.value || '';
-                const cfg = getExportClassConfig(className);
+                const gr = ensureGlobalRemarks();
                 const lang = currentLanguage === 'fr' ? 'FR' : (currentLanguage === 'en' ? 'EN' : 'AR');
                 const overlay = document.getElementById('remarks-modal');
                 if (!overlay) return;
@@ -4650,7 +4727,7 @@
                     const i = parseInt(inp.getAttribute('data-band'), 10);
                     const field = inp.getAttribute('data-field');
                     const n = parseFloat(inp.value);
-                    cfg.remarks.bands[i][field] = Number.isFinite(n) ? n : cfg.remarks.bands[i][field];
+                    gr.bands[i][field] = Number.isFinite(n) ? n : gr.bands[i][field];
                 });
                 const msgTextareas = overlay.querySelectorAll('textarea[data-field]');
                 const perBand = {};
@@ -4664,7 +4741,7 @@
                     perBand[key][j][field] = ta.value || '';
                 });
                 const arr = [];
-                const bands = cfg.remarks.bands || [];
+                const bands = gr.bands || [];
                 for (let i = 0; i < bands.length; i++) {
                     const list = [];
                     const bandMsgs = perBand[`${i}`] || {};
@@ -4676,73 +4753,17 @@
                     }
                     arr.push(list);
                 }
-                cfg.remarks[lang] = arr;
+                gr[lang] = arr;
                 saveExportPrepConfig();
                 closeRemarksModal();
                 renderExportPrep();
             }
 
-            function ensureRemarksConfig(cfg) {
-                const defaults = () => ({
-                    bands: [ {min:0,max:6}, {min:6.01,max:9.99}, {min:10,max:13.99}, {min:14,max:15.99}, {min:16,max:17.99}, {min:18,max:20} ],
-                    FR: [
-                        [
-                            { obs: 'Résultats très insuffisants.', cons: "Renforcer les bases et demander de l’aide." },
-                            { obs: 'Bases non maîtrisées.', cons: 'Reprendre les fondamentaux quotidiennement.' }
-                        ],
-                        [
-                            { obs: 'Progrès limités.', cons: 'Revoir les notions clés et s’entraîner.' },
-                            { obs: 'Participation à renforcer.', cons: 'Multiplier les exercices.' }
-                        ],
-                        [
-                            { obs: 'Ensemble correct.', cons: 'Poursuivre les efforts avec régularité.' }
-                        ],
-                        [
-                            { obs: 'Bon niveau.', cons: 'Maintenir le rythme et consolider.' }
-                        ],
-                        [
-                            { obs: 'Très bon travail.', cons: 'Approfondir les points forts.' }
-                        ],
-                        [
-                            { obs: 'Excellent.', cons: 'Continuer sur cette lancée.' }
-                        ]
-                    ],
-                    EN: [
-                        [ { obs: 'Very insufficient results.', cons: 'Strengthen basics and seek help.' } ],
-                        [ { obs: 'Limited progress.', cons: 'Review key concepts and practice.' } ],
-                        [ { obs: 'Solid overall.', cons: 'Aim for consistency.' } ],
-                        [ { obs: 'Good level.', cons: 'Maintain pace and consolidate.' } ],
-                        [ { obs: 'Very good work.', cons: 'Deepen strengths.' } ],
-                        [ { obs: 'Excellent.', cons: 'Keep this momentum.' } ]
-                    ],
-                    AR: [
-                        [ { obs: 'نتائج ضعيفة جدًا.', cons: 'تعزيز الأساسيات وطلب المساعدة.' } ],
-                        [ { obs: 'تقدم محدود.', cons: 'مراجعة المفاهيم والتدريب بانتظام.' } ],
-                        [ { obs: 'مستوى مقبول.', cons: 'السعي إلى الانتظام.' } ],
-                        [ { obs: 'مستوى جيد.', cons: 'ترسيخ المكتسبات.' } ],
-                        [ { obs: 'عمل ممتاز جدًا.', cons: 'تعميق نقاط القوة.' } ],
-                        [ { obs: 'ممتاز.', cons: 'مواصلة الأداء المتميز.' } ]
-                    ]
-                });
-                if (!cfg.remarks || !cfg.remarks.bands) {
-                    cfg.remarks = defaults();
-                    return;
-                }
-                if (!Array.isArray(cfg.remarks.bands) || cfg.remarks.bands.length === 0) cfg.remarks.bands = defaults().bands;
-                const langs = ['FR','EN','AR'];
-                for (const L of langs) {
-                    if (!Array.isArray(cfg.remarks[L]) || cfg.remarks[L].length === 0) cfg.remarks[L] = defaults()[L];
-                    while (cfg.remarks[L].length < cfg.remarks.bands.length) cfg.remarks[L].push([]);
-                    for (let i = 0; i < cfg.remarks[L].length; i++) {
-                        if (!Array.isArray(cfg.remarks[L][i])) cfg.remarks[L][i] = []; 
-                    }
-                }
-            }
+            // remarks globales assurées par ensureGlobalRemarks()
             function computeRemarksForAverage(className, avg) {
                 if (avg === null || avg === undefined) return { obs: '', cons: '' };
-                const cfg = getExportClassConfig(className);
-                ensureRemarksConfig(cfg);
-                const bands = cfg.remarks.bands || [];
+                const gr = ensureGlobalRemarks();
+                const bands = gr.bands || [];
                 const lang = currentLanguage === 'fr' ? 'FR' : (currentLanguage === 'en' ? 'EN' : 'AR');
                 let idx = -1;
                 for (let i = 0; i < bands.length; i++) {
@@ -4750,7 +4771,7 @@
                     if (avg >= b.min && avg <= b.max) { idx = i; break; }
                 }
                 if (idx === -1) return { obs: '', cons: '' };
-                const list = cfg.remarks[lang][idx] || [];
+                const list = gr[lang][idx] || [];
                 if (!list.length) return { obs: '', cons: '' };
                 const k = Math.floor(Math.random() * list.length);
                 return list[k];
