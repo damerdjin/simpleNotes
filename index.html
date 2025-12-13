@@ -3400,7 +3400,9 @@
 
             function clampExerciseInput(el, max) {
                 if (el.value === '') return;
-                let v = parseFloat(el.value);
+                const str = el.value.toString();
+                if (str.endsWith('.')) return;
+                let v = parseFloat(str);
                 if (isNaN(v)) return;
                 if (v < 0) v = 0;
                 if (v > max) v = max;
@@ -3417,7 +3419,7 @@
                     val = parts[0] + '.' + parts.slice(1).join('');
                 }
                 el.value = val;
-                clampExerciseInput(el, max);
+                if (!val.endsWith('.')) clampExerciseInput(el, max);
             }
 
             function commitSummaryInput(studentId, assignmentId, exId, max, value) {
@@ -3435,6 +3437,18 @@
                         inputs[nextIdx].focus();
                         inputs[nextIdx].select?.();
                     }
+                    return;
+                }
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    let v = parseFloat((e.target.value || '0').toString().replace(',', '.'));
+                    if (isNaN(v)) v = 0;
+                    const step = 0.25;
+                    v = e.key === 'ArrowUp' ? v + step : v - step;
+                    if (v < 0) v = 0;
+                    if (v > max) v = max;
+                    e.target.value = v.toFixed(2).replace(/\.00$/, '.0');
+                    commitSummaryInput(studentId, assignmentId, exId, max, e.target.value);
                 }
             }
 
