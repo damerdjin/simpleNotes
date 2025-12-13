@@ -3996,6 +3996,75 @@
             return Math.round((n + Number.EPSILON) * 100) / 100;
         }
 
+        function getGroupRawMaxForDisplay(className, groupCfg) {
+            const ids = (groupCfg.assignmentIds || []).filter(Boolean);
+            const assigns = ids
+                .map(id => data.assignments.find(a => a.id === id))
+                .filter(a => a && (a.className || '').trim() === (className || '').trim());
+
+            if (assigns.length === 0) return 0;
+
+            const maxes = assigns.map(a => getAssignmentMaxPoints(a) || 0).filter(x => x > 0);
+            if (maxes.length === 0) return 0;
+
+            if (groupCfg.combine === 'avg') {
+                // max "moyen" (info), arrondi 2 décimales
+                return maxes.reduce((s, x) => s + x, 0) / maxes.length;
+            }
+            // sum
+            return maxes.reduce((s, x) => s + x, 0);
+        }
+
+        function getGroupDisplayedMax(className, cfg, groupKey) {
+            const g = cfg[groupKey];
+            const outMax = cfg.outMax ?? 20;
+
+            // Si normalisé => la note est censée sortir sur targetMax (souvent 20)
+            if (g.normalize) return (toNumberOrNull(g.targetMax) ?? outMax);
+
+            // Non normalisé => affichage du max brut (ex: /10, /22, etc.)
+            return getGroupRawMaxForDisplay(className, g);
+        }
+
+        function groupHasExportScaleIssue(className, cfg, groupKey) {
+            const outMax = cfg.outMax ?? 20;
+            const g = cfg[groupKey];
+            const selectedCount = (g.assignmentIds || []).filter(Boolean).length;
+            if (selectedCount === 0) return false; // rien => pas d'avertissement
+
+            const displayedMax = getGroupDisplayedMax(className, cfg, groupKey);
+
+            // Problème si :
+            // - normalize = false (cas “oubli” typique)
+            // - OU on normalise vers une cible != outMax (ex: targetMax=10 mais export attendu /20)
+            // - OU combine=avg et normalize=false (max non stable)
+            if (!g.normalize) return true;
+            const target = (toNumberOrNull(g.targetMax) ?? outMax);
+            if (target !== outMax) return true;
+
+            // Si max invalide
+            if (!displayedMax || displayedMax <= 0) return true;
+
+            return false;
+        }
+
+        function cellClassForValue(v, expected) {
+            // expected: boolean => cette colonne est attendue (un devoir est sélectionné)
+            if (!expected) return 'text-gray-300';
+
+            if (v === null || v === undefined || v === '') {
+                // Vide => warning
+                return 'bg-amber-50 text-amber-800 border border-amber-200';
+            }
+            const n = Number(v);
+            if (!Number.isFinite(n)) {
+                return 'bg-amber-50 text-amber-800 border border-amber-200';
+            }
+            if (n === 0) {
+                return 'bg-red-100 text-red-700 border border-red-200 font-semibold';
+            }
+            return 'bg-white';
+        }
         function collectUsedAssignmentIds(cfg) {
             const used = new Set();
             if (cfg.ccAssignmentId) used.add(cfg.ccAssignmentId);
@@ -4155,7 +4224,10 @@
 
             const cfg = getExportClassConfig(className);
             const assigns = getAssignmentsForClass(className);
-
+            const d1MaxShown = getGroupDisplayedMax(className, cfg, 'devoir1');
+            const d2MaxShown = getGroupDisplayedMax(className, cfg, 'devoir2');
+            const d1Issue = groupHasExportScaleIssue(className, cfg, 'devoir1');
+            const d2Issue = groupHasExportScaleIssue(className, cfg, 'devoir2');
             // UI “select” pour CC et Composition
             const buildSingleOptions = (currentValue) => {
                 // désactiver les devoirs déjà utilisés ailleurs (sauf la valeur actuelle du select)
@@ -4273,9 +4345,15 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
         <!-- Devoir 1 -->
-        <div class="bg-white border rounded-xl p-4">
+        <div class="border rounded-xl p-4 ${d1Issue ? 'bg-amber-50 border-amber-300' : 'bg-white'}">
           <div class="flex items-center justify-between gap-2 mb-2">
-            <h4 class="font-bold text-blue-800" data-translate="devoir1Label">Devoir 1</h4>
+            <div class="flex items-center gap-2">
+                <h4 class="font-bold text-blue-800" data-translate="devoir1Label">Devoir 1</h4>
+                <span class="text-xs font-bold px-2 py-1 rounded-full ${d1Issue ? 'bg-amber-200 text-amber-900' : 'bg-blue-100 text-blue-800'}">
+                    / ${round2(d1MaxShown || 0)}
+                </span>
+                ${d1Issue ? `<span class="text-xs font-semibold text-amber-800" title="${t.exportNotOn20 || ''}"></span>` : ``}
+            </div>
             <div class="flex items-center gap-2">
               <select class="p-2 border rounded bg-white text-sm"
                 onchange="setExportGroupField('devoir1','combine',this.value)">
@@ -4302,7 +4380,13 @@
         <!-- Devoir 2 -->
         <div class="bg-white border rounded-xl p-4">
           <div class="flex items-center justify-between gap-2 mb-2">
+            <div class="flex items-center gap-2">
             <h4 class="font-bold text-blue-800" data-translate="devoir2Label">Devoir 2</h4>
+            <span class="text-xs font-bold px-2 py-1 rounded-full ${d2Issue ? 'bg-amber-200 text-amber-900' : 'bg-blue-100 text-blue-800'}">
+                / ${round2(d2MaxShown || 0)}
+            </span>
+            ${d2Issue ? `<span class="text-xs font-semibold text-amber-800" title="${t.exportNotOn20 || ''}">⚠️</span>` : ``}
+            </div>
             <div class="flex items-center gap-2">
               <select class="p-2 border rounded bg-white text-sm"
                 onchange="setExportGroupField('devoir2','combine',this.value)">
@@ -4428,6 +4512,10 @@
 
             const hasTP = !!tpA;
 
+            const d1Issue = groupHasExportScaleIssue(className, cfg, 'devoir1');
+            const d2Issue = groupHasExportScaleIssue(className, cfg, 'devoir2');
+            const devoirScaleIssue = d1Issue || d2Issue;
+
             const fmt = (v) => (v === null ? '' : round2(v).toFixed(2));
 
             const rows = students.map(s => {
@@ -4447,44 +4535,77 @@
                         : (devoir + cc + 2 * comp) / 4;
                 }
 
+                const ccExpected = !!ccA;
+                const tpExpected = !!tpA;
+                const compExpected = !!compA;
+                const devoirExpected = true; // Devoir est attendu (même si config vide => valeurs vides seront signalées via cellule)
+
+                const ccClass = cellClassForValue(cc, ccExpected);
+                const tpClass = cellClassForValue(tp, tpExpected);
+                const compClass = cellClassForValue(comp, compExpected);
+                const devoirClass = cellClassForValue(devoir, devoirExpected);
+                const avgClass = cellClassForValue(moyenne, (ccExpected && compExpected && (!hasTP || tpExpected)));
+
                 return `
       <tr class="border-b hover:bg-gray-50">
         <td class="p-3 bg-gray-50 sticky left-0 z-10 font-medium">${s.name}</td>
-        <td class="p-3 text-center">${fmt(cc)}</td>
-        <td class="p-3 text-center font-bold">${fmt(devoir)}</td>
-        ${hasTP ? `<td class="p-3 text-center">${fmt(tp)}</td>` : ``}
-        <td class="p-3 text-center">${fmt(comp)}</td>
-        <td class="p-3 text-center font-bold bg-green-50">${fmt(moyenne)}</td>
+
+        <td class="p-3 text-center ${ccClass}" title="${cc === null && ccExpected ? (t.missingGrade || '') : (cc === 0 ? (t.zeroGrade || '') : '')}">
+          ${fmt(cc)}
+        </td>
+
+        <td class="p-3 text-center font-bold ${devoirClass}" title="${devoir === null ? (t.missingGrade || '') : (devoir === 0 ? (t.zeroGrade || '') : '')}">
+          ${fmt(devoir)}
+        </td>
+
+        ${hasTP ? `
+          <td class="p-3 text-center ${tpClass}" title="${tp === null && tpExpected ? (t.missingGrade || '') : (tp === 0 ? (t.zeroGrade || '') : '')}">
+            ${fmt(tp)}
+          </td>` : ``}
+
+        <td class="p-3 text-center ${compClass}" title="${comp === null && compExpected ? (t.missingGrade || '') : (comp === 0 ? (t.zeroGrade || '') : '')}">
+          ${fmt(comp)}
+        </td>
+
+        <td class="p-3 text-center font-bold ${avgClass}">
+          ${fmt(moyenne)}
+        </td>
       </tr>
     `;
             }).join('');
 
-            // colgroup dynamique
             const cols = [
                 '<col style="width:240px">',
                 '<col style="width:110px">', // CC
-                '<col style="width:110px">'  // Devoir
+                '<col style="width:120px">'  // Devoir (un peu plus large pour ⚠️)
             ];
-            if (hasTP) cols.push('<col style="width:110px">'); // TP
+            if (hasTP) cols.push('<col style="width:110px">');
             cols.push('<col style="width:130px">'); // Composition
             cols.push('<col style="width:130px">'); // Moyenne
 
             preview.innerHTML = `
-    <table class="w-full table-fixed border-collapse">
-      <colgroup>${cols.join('')}</colgroup>
-      <thead>
-        <tr class="border-b-2">
-          <th class="p-3 text-left bg-gray-100 sticky left-0 z-10">${t.student}</th>
-          <th class="p-3 text-center bg-gray-100" data-translate="ccShort">${t.ccShort || 'CC'}</th>
-          <th class="p-3 text-center bg-blue-100" data-translate="devoirShort">${t.devoirShort || 'Devoir'}</th>
-          ${hasTP ? `<th class="p-3 text-center bg-gray-100" data-translate="tpShort">${t.tpShort || 'TP'}</th>` : ``}
-          <th class="p-3 text-center bg-gray-100" data-translate="compositionShort">${t.compositionShort || 'Composition'}</th>
-          <th class="p-3 text-center bg-green-100" data-translate="avgShort">${t.avgShort || 'Moyenne'}</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
-  `;
+                <table class="w-full table-fixed border-collapse">
+                <colgroup>${cols.join('')}</colgroup>
+                <thead>
+                    <tr class="border-b-2">
+                    <th class="p-3 text-left bg-gray-100 sticky left-0 z-10">${t.student}</th>
+                    <th class="p-3 text-center bg-gray-100" data-translate="ccShort">${t.ccShort || 'CC'}</th>
+
+                    <th class="p-3 text-center ${devoirScaleIssue ? 'bg-amber-200 text-amber-900' : 'bg-blue-100 text-blue-900'}"
+                        title="${devoirScaleIssue ? (t.exportDevoirWarning || '') : (t.exportDevoirOk || '')}">
+                        <span data-translate="devoirShort">${t.devoirShort || 'Devoir'}</span>
+                        <span class="ml-1">${devoirScaleIssue ? '⚠️' : '⚠️'}</span>
+                    </th>
+
+                    ${hasTP ? `<th class="p-3 text-center bg-gray-100" data-translate="tpShort">${t.tpShort || 'TP'}</th>` : ``}
+
+                    <th class="p-3 text-center bg-gray-100" data-translate="compositionShort">${t.compositionShort || 'Composition'}</th>
+                    <th class="p-3 text-center bg-green-100" data-translate="avgShort">${t.avgShort || 'Moyenne'}</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+                </table>
+            `;
 
             translatePage();
         }
