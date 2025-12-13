@@ -4029,25 +4029,36 @@
         function groupHasExportScaleIssue(className, cfg, groupKey) {
             const outMax = cfg.outMax ?? 20;
             const g = cfg[groupKey];
-            const selectedCount = (g.assignmentIds || []).filter(Boolean).length;
-            if (selectedCount === 0) return false; // rien => pas d'avertissement
+            const ids = (g.assignmentIds || []).filter(Boolean);
+            if (ids.length === 0) return false;
 
-            const displayedMax = getGroupDisplayedMax(className, cfg, groupKey);
+            // récupérer max des devoirs sélectionnés
+            const assigns = ids
+                .map(id => data.assignments.find(a => a.id === id))
+                .filter(a => a && (a.className || '').trim() === (className || '').trim());
 
-            // Problème si :
-            // - normalize = false (cas “oubli” typique)
-            // - OU on normalise vers une cible != outMax (ex: targetMax=10 mais export attendu /20)
-            // - OU combine=avg et normalize=false (max non stable)
-            if (!g.normalize) return true;
-            const target = (toNumberOrNull(g.targetMax) ?? outMax);
-            if (target !== outMax) return true;
+            if (assigns.length === 0) return true;
 
-            // Si max invalide
-            if (!displayedMax || displayedMax <= 0) return true;
+            const maxes = assigns.map(a => getAssignmentMaxPoints(a) || 0).filter(x => x > 0);
+            if (maxes.length === 0) return true;
 
-            return false;
+            if (g.normalize) {
+                // Normalisé => OK uniquement si la cible == outMax (souvent 20)
+                const target = (toNumberOrNull(g.targetMax) ?? outMax);
+                return target !== outMax;
+            }
+
+            // Pas normalisé => OK si le max "brut" correspond déjà à outMax
+            if (g.combine === 'sum') {
+                const rawMax = maxes.reduce((s, x) => s + x, 0);
+                return rawMax !== outMax;
+            }
+
+            // combine === 'avg' sans normaliser :
+            // OK seulement si toutes les évaluations sont déjà sur outMax (ex: toutes /20)
+            const allSameAsOut = maxes.every(m => m === outMax);
+            return !allSameAsOut;
         }
-
         function cellClassForValue(v, expected) {
             // expected: boolean => cette colonne est attendue (un devoir est sélectionné)
             if (!expected) return 'text-gray-300';
@@ -4123,14 +4134,20 @@
             const targetMax = toNumberOrNull(groupCfg.targetMax) ?? outMax;
 
             if (groupCfg.combine === 'avg') {
-                // Moyenne des pourcentages, convertie sur targetMax (ou outMax)
-                const percents = entries
-                    .filter(e => e.has && e.max > 0)
-                    .map(e => (e.total / e.max));
+                const valid = entries.filter(e => e.has && e.max > 0);
 
-                if (percents.length === 0) return null;
-                const avgP = percents.reduce((s, p) => s + p, 0) / percents.length;
-                return avgP * targetMax;
+                if (valid.length === 0) return null;
+
+                if (groupCfg.normalize) {
+                    // moyenne des pourcentages puis mise à l’échelle (targetMax)
+                    const percents = valid.map(e => (e.total / e.max));
+                    const avgP = percents.reduce((s, p) => s + p, 0) / percents.length;
+                    return avgP * targetMax;
+                } else {
+                    // moyenne brute des notes (pas d’échelle)
+                    const avgRaw = valid.reduce((s, e) => s + (e.total || 0), 0) / valid.length;
+                    return avgRaw;
+                }
             }
 
             // combine === 'sum'
@@ -4472,9 +4489,12 @@
         function setExportGroupField(groupKey, field, value) {
             const className = document.getElementById('select-class-export')?.value || '';
             const cfg = getExportClassConfig(className);
+
             cfg[groupKey][field] = value;
             saveExportPrepConfig();
-            renderExportPreviewTable(className, cfg);
+
+            // IMPORTANT : re-render complet pour rafraîchir la couleur des cartes + badge /n
+            renderExportPrep();
         }
 
         function toggleExportGroupAssignment(groupKey, assignmentId, checked) {
