@@ -3967,6 +3967,7 @@
                 exportPrepConfig.byClass[className] = {
                     ccAssignmentId: '',
                     compAssignmentId: '',
+                    tpAssignmentId: '',
                     devoir1: { assignmentIds: [], combine: 'sum', normalize: true, targetMax: 20 },
                     devoir2: { assignmentIds: [], combine: 'sum', normalize: true, targetMax: 20 },
                     outMax: 20
@@ -3993,6 +3994,37 @@
 
         function round2(n) {
             return Math.round((n + Number.EPSILON) * 100) / 100;
+        }
+
+        function collectUsedAssignmentIds(cfg) {
+            const used = new Set();
+            if (cfg.ccAssignmentId) used.add(cfg.ccAssignmentId);
+            if (cfg.tpAssignmentId) used.add(cfg.tpAssignmentId);
+            if (cfg.compAssignmentId) used.add(cfg.compAssignmentId);
+            (cfg.devoir1?.assignmentIds || []).forEach(id => id && used.add(id));
+            (cfg.devoir2?.assignmentIds || []).forEach(id => id && used.add(id));
+            return used;
+        }
+
+        // retire assignmentId de toutes les zones SAUF la source
+        // source = { type: 'single'|'group', key: 'ccAssignmentId'|'tpAssignmentId'|'compAssignmentId'|'devoir1'|'devoir2' }
+        function enforceUniqueAssignment(cfg, assignmentId, source) {
+            if (!assignmentId) return;
+
+            // Singles
+            const singleKeys = ['ccAssignmentId', 'tpAssignmentId', 'compAssignmentId'];
+            for (const k of singleKeys) {
+                if (source.type === 'single' && source.key === k) continue;
+                if (cfg[k] === assignmentId) cfg[k] = '';
+            }
+
+            // Groups
+            const groupKeys = ['devoir1', 'devoir2'];
+            for (const gk of groupKeys) {
+                if (source.type === 'group' && source.key === gk) continue;
+                const arr = cfg[gk]?.assignmentIds || [];
+                cfg[gk].assignmentIds = arr.filter(id => id !== assignmentId);
+            }
         }
 
         function computeGroupScore(studentId, className, groupCfg) {
@@ -4125,9 +4157,18 @@
             const assigns = getAssignmentsForClass(className);
 
             // UI “select” pour CC et Composition
-            const options = [`<option value="">-- ${t.selectAssignment} --</option>`]
-                .concat(assigns.map(a => `<option value="${a.id}">${a.name} (${getAssignmentMaxPoints(a)} ${t.points})</option>`))
-                .join('');
+            const buildSingleOptions = (currentValue) => {
+                // désactiver les devoirs déjà utilisés ailleurs (sauf la valeur actuelle du select)
+                const used = collectUsedAssignmentIds(cfg);
+                return [`<option value="">-- ${t.selectAssignment} --</option>`].concat(
+                    assigns.map(a => {
+                        const isUsedElsewhere = used.has(a.id) && a.id !== currentValue;
+                        return `<option value="${a.id}" ${isUsedElsewhere ? 'disabled' : ''}>
+                        ${a.name} (${getAssignmentMaxPoints(a)} ${t.points})
+                    </option>`;
+                    })
+                ).join('');
+            };
 
             // Helper: liste multi-select “moderne” via checkboxes + chips
             const renderMultiPick = (groupKey) => {
@@ -4135,13 +4176,19 @@
                 const selected = new Set(g.assignmentIds || []);
                 const rows = assigns.map(a => {
                     const checked = selected.has(a.id) ? 'checked' : '';
+                    // utilisé ailleurs ? => disabled (sauf si déjà coché dans CE groupe)
+                    const used = collectUsedAssignmentIds(cfg);
+                    const usedElsewhere = used.has(a.id) && !checked; // si déjà coché ici, on autorise l’uncheck
+                    const disabled = usedElsewhere ? 'disabled' : '';
+                    const opacity = usedElsewhere ? 'opacity-50 cursor-not-allowed' : '';
                     return `
-        <label class="flex items-center gap-2 p-2 border rounded-lg bg-white hover:bg-gray-50 cursor-pointer">
-          <input type="checkbox" ${checked} onchange="toggleExportGroupAssignment('${groupKey}','${a.id}',this.checked)" class="w-4 h-4">
-          <span class="flex-1 min-w-0 truncate font-medium">${a.name}</span>
-          <span class="text-xs text-gray-500">/${getAssignmentMaxPoints(a)} ${t.points}</span>
-        </label>
-      `;
+                    <label class="flex items-center gap-2 p-2 border rounded-lg bg-white hover:bg-gray-50 ${opacity}">
+                        <input type="checkbox" ${checked} ${disabled}
+                        onchange="toggleExportGroupAssignment('${groupKey}','${a.id}',this.checked)" class="w-4 h-4">
+                            <span class="flex-1 min-w-0 truncate font-medium">${a.name}</span>
+                            <span class="text-xs text-gray-500">/${getAssignmentMaxPoints(a)} ${t.points}</span>
+                            </label>
+                        `;
                 }).join('');
 
                 const chips = (g.assignmentIds || [])
@@ -4159,7 +4206,7 @@
             };
 
             container.innerHTML = `
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
       <!-- CC -->
       <div class="p-4 border rounded-xl bg-gray-50">
@@ -4170,13 +4217,27 @@
         <select class="w-full p-3 border rounded-lg bg-white"
           onchange="setExportSingle('ccAssignmentId', this.value)"
           id="export-cc-select">
-          ${options}
+          ${buildSingleOptions(cfg.ccAssignmentId || '')}
         </select>
         <p class="text-xs text-gray-500 mt-2" data-translate="singleSelectHint">
           Sélectionnez un devoir existant pour alimenter cette note (conversion sur /20).
         </p>
       </div>
-
+        <!-- TP (optionnel) -->
+        <div class="p-4 border rounded-xl bg-gray-50">
+            <div class="flex items-center justify-between mb-2">
+            <h3 class="font-bold text-gray-800" data-translate="tpLabel">${t.tpLabel || 'TP'}</h3>
+            <span class="text-xs text-gray-500">${t.outputOn} / ${cfg.outMax}</span>
+            </div>
+            <select class="w-full p-3 border rounded-lg bg-white"
+            onchange="setExportSingle('tpAssignmentId', this.value)"
+            id="export-tp-select">
+            ${buildSingleOptions(cfg.tpAssignmentId || '')}
+            </select>
+            <p class="text-xs text-gray-500 mt-2" data-translate="singleSelectHint">
+            ${t.singleSelectHint}
+            </p>
+        </div>
       <!-- Composition -->
       <div class="p-4 border rounded-xl bg-gray-50">
         <div class="flex items-center justify-between mb-2">
@@ -4186,7 +4247,7 @@
         <select class="w-full p-3 border rounded-lg bg-white"
           onchange="setExportSingle('compAssignmentId', this.value)"
           id="export-comp-select">
-          ${options}
+          ${buildSingleOptions(cfg.compAssignmentId || '')}
         </select>
         <p class="text-xs text-gray-500 mt-2" data-translate="singleSelectHint">
           Sélectionnez un devoir existant pour alimenter cette note (conversion sur /20).
@@ -4276,6 +4337,8 @@
             // Appliquer les valeurs selected sur CC/Comp
             const ccSelect = document.getElementById('export-cc-select');
             const compSelect = document.getElementById('export-comp-select');
+            const tpSelect = document.getElementById('export-tp-select');
+            if (tpSelect) tpSelect.value = cfg.tpAssignmentId || '';
             if (ccSelect) ccSelect.value = cfg.ccAssignmentId || '';
             if (compSelect) compSelect.value = cfg.compAssignmentId || '';
 
@@ -4292,9 +4355,21 @@
         function setExportSingle(field, assignmentId) {
             const className = document.getElementById('select-class-export')?.value || '';
             const cfg = getExportClassConfig(className);
-            cfg[field] = assignmentId || '';
+
+            // si vide => simple reset du champ
+            if (!assignmentId) {
+                cfg[field] = '';
+                saveExportPrepConfig();
+                renderExportPrep();
+                return;
+            }
+
+            // imposer unicité : on garde ce choix et on le retire d'ailleurs
+            cfg[field] = assignmentId;
+            enforceUniqueAssignment(cfg, assignmentId, { type: 'single', key: field });
+
             saveExportPrepConfig();
-            renderExportPreviewTable(className, cfg);
+            renderExportPrep(); // rerender complet (désactive ailleurs + refresh preview)
         }
 
         function setExportOutMax(val) {
@@ -4323,11 +4398,17 @@
             const cfg = getExportClassConfig(className);
             const arr = cfg[groupKey].assignmentIds || [];
             const set = new Set(arr);
-            if (checked) set.add(assignmentId);
-            else set.delete(assignmentId);
+
+            if (checked) {
+                // retirer d'ailleurs, puis ajouter ici
+                enforceUniqueAssignment(cfg, assignmentId, { type: 'group', key: groupKey });
+                set.add(assignmentId);
+            } else {
+                set.delete(assignmentId);
+            }
+
             cfg[groupKey].assignmentIds = Array.from(set);
             saveExportPrepConfig();
-            // Re-render config (pour chips + cohérence UI) + preview
             renderExportPrep();
         }
 
@@ -4342,39 +4423,63 @@
                 .sort((a, b) => (a.name || '').localeCompare((b.name || ''), 'fr', { sensitivity: 'base' }));
 
             const ccA = cfg.ccAssignmentId ? data.assignments.find(a => a.id === cfg.ccAssignmentId) : null;
+            const tpA = cfg.tpAssignmentId ? data.assignments.find(a => a.id === cfg.tpAssignmentId) : null;
             const compA = cfg.compAssignmentId ? data.assignments.find(a => a.id === cfg.compAssignmentId) : null;
 
-            const rows = students.map((s, idx) => {
+            const hasTP = !!tpA;
+
+            const fmt = (v) => (v === null ? '' : round2(v).toFixed(2));
+
+            const rows = students.map(s => {
                 const cc = ccA ? calcScaledScore(s.id, ccA) : null;
+                const tp = tpA ? calcScaledScore(s.id, tpA) : null;
                 const comp = compA ? calcScaledScore(s.id, compA) : null;
                 const devoir = computeDevoirFinal(s.id, className, cfg);
 
-                const fmt = (v) => (v === null ? '' : round2(v).toFixed(2));
+                // Moyenne:
+                // sans TP: (devoir + CC + 2*Compo) / 4
+                // avec TP: (devoir + CC + TP + 2*Compo) / 5
+                let moyenne = null;
+                const requiredOk = (devoir !== null && cc !== null && comp !== null && (!hasTP || tp !== null));
+                if (requiredOk) {
+                    moyenne = hasTP
+                        ? (devoir + cc + tp + 2 * comp) / 5
+                        : (devoir + cc + 2 * comp) / 4;
+                }
 
                 return `
       <tr class="border-b hover:bg-gray-50">
         <td class="p-3 bg-gray-50 sticky left-0 z-10 font-medium">${s.name}</td>
         <td class="p-3 text-center">${fmt(cc)}</td>
         <td class="p-3 text-center font-bold">${fmt(devoir)}</td>
+        ${hasTP ? `<td class="p-3 text-center">${fmt(tp)}</td>` : ``}
         <td class="p-3 text-center">${fmt(comp)}</td>
+        <td class="p-3 text-center font-bold bg-green-50">${fmt(moyenne)}</td>
       </tr>
     `;
             }).join('');
 
+            // colgroup dynamique
+            const cols = [
+                '<col style="width:240px">',
+                '<col style="width:110px">', // CC
+                '<col style="width:110px">'  // Devoir
+            ];
+            if (hasTP) cols.push('<col style="width:110px">'); // TP
+            cols.push('<col style="width:130px">'); // Composition
+            cols.push('<col style="width:130px">'); // Moyenne
+
             preview.innerHTML = `
     <table class="w-full table-fixed border-collapse">
-      <colgroup>
-        <col style="width:240px">
-        <col style="width:110px">
-        <col style="width:110px">
-        <col style="width:130px">
-      </colgroup>
+      <colgroup>${cols.join('')}</colgroup>
       <thead>
         <tr class="border-b-2">
           <th class="p-3 text-left bg-gray-100 sticky left-0 z-10">${t.student}</th>
-          <th class="p-3 text-center bg-gray-100" data-translate="ccShort">CC</th>
-          <th class="p-3 text-center bg-blue-100" data-translate="devoirShort">Devoir</th>
-          <th class="p-3 text-center bg-gray-100" data-translate="compositionShort">Composition</th>
+          <th class="p-3 text-center bg-gray-100" data-translate="ccShort">${t.ccShort || 'CC'}</th>
+          <th class="p-3 text-center bg-blue-100" data-translate="devoirShort">${t.devoirShort || 'Devoir'}</th>
+          ${hasTP ? `<th class="p-3 text-center bg-gray-100" data-translate="tpShort">${t.tpShort || 'TP'}</th>` : ``}
+          <th class="p-3 text-center bg-gray-100" data-translate="compositionShort">${t.compositionShort || 'Composition'}</th>
+          <th class="p-3 text-center bg-green-100" data-translate="avgShort">${t.avgShort || 'Moyenne'}</th>
         </tr>
       </thead>
       <tbody>${rows}</tbody>

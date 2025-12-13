@@ -146,7 +146,10 @@ const translations = {
         noneSelected: "Aucun sélectionné",
         singleSelectHint: "Sélectionnez un devoir existant pour alimenter cette note (conversion sur /20).",
         groupHint: "Sélectionnez un ou plusieurs devoirs de la classe, puis choisissez Somme ou Moyenne.",
-        devoirRule: "Règle: Devoir = moyenne(Devoir 1, Devoir 2). Si l’un manque, on prend l’autre."
+        devoirRule: "Règle: Devoir = moyenne(Devoir 1, Devoir 2). Si l’un manque, on prend l’autre.",
+        tpLabel: "TP",
+        tpShort: "TP",
+        avgShort: "Moyenne",
 
     },
 
@@ -298,7 +301,10 @@ const translations = {
         noneSelected: "None selected",
         singleSelectHint: "Select an existing assignment to feed this grade (scaled to /20).",
         groupHint: "Select one or more assignments, then choose Sum or Average.",
-        devoirRule: "Rule: Homework = average(Homework 1, Homework 2). If one is missing, use the other."
+        devoirRule: "Rule: Homework = average(Homework 1, Homework 2). If one is missing, use the other.",
+        tpLabel: "Lab (TP)",
+        tpShort: "Lab",
+        avgShort: "Average",
 
     },
 
@@ -433,14 +439,14 @@ const translations = {
         reset: "إعادة ضبط",
 
         ccLabel: "المراقبة المستمرة (CC)",
-        compLabel: "التركيب",
+        compLabel: "الاختبار",
         devoirLabel: "الفرض (معدل الفرض 1 والفرض 2)",
         devoir1Label: "الفرض 1",
         devoir2Label: "الفرض 2",
 
-        ccShort: "CC",
-        devoirShort: "الفرض",
-        compositionShort: "التركيب",
+        ccShort: "التقييم المستمر",
+        devoirShort: "معدل الفروض",
+        compositionShort: "الاختبار",
 
         sum: "مجموع",
         average: "معدل",
@@ -450,6 +456,12 @@ const translations = {
         noneSelected: "لا شيء محدد",
         singleSelectHint: "اختر فرضًا موجودًا لتغذية هذه العلامة (تحويل إلى /20).",
         groupHint: "اختر فرضًا أو أكثر ثم اختر: مجموع أو معدل.",
-        devoirRule: "القاعدة: الفرض = معدل(الفرض 1، الفرض 2). إذا كان أحدهما غير موجود نأخذ الآخر."
+        devoirRule: "القاعدة: الفرض = معدل(الفرض 1، الفرض 2). إذا كان أحدهما غير موجود نأخذ الآخر.",
+        tpLabel: "أعمال تطبيقية (TP)",
+        tpShort: "TP",
+        avgShort: "المعدل",
+        tpLabel: "أعمال تطبيقية (TP)",
+        tpShort: "TP",
+        avgShort: "المعدل",
     }
 };
