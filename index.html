@@ -1018,6 +1018,63 @@
                 applyLanguage();
             }
 
+            function softResetUI() {
+                try { closeRemarksModal(); } catch (e) {}
+                try { closeAssignmentModal(); } catch (e) {}
+                const rm = document.getElementById('remarks-modal'); if (rm) rm.remove();
+                const am = document.getElementById('assignment-modal'); if (am) am.remove();
+                const sm = document.getElementById('student-modal'); if (sm) { sm.classList.remove('active'); sm.classList.add('hidden'); }
+                document.body.style.pointerEvents = '';
+                document.body.style.overflow = '';
+                const tabs = Array.from(document.querySelectorAll('.tab-content'));
+                const active = tabs.find(t => !t.classList.contains('hidden'));
+                if (active) {
+                    const id = active.id;
+                    if (id === 'content-summary') renderSummary();
+                    else if (id === 'content-assignments') renderAssignments();
+                    else if (id === 'content-export') renderExportPrep();
+                    else if (id === 'content-grades') loadGradeEntry();
+                }
+                const b = document.getElementById('ui-error-banner'); if (b) b.style.display = 'none';
+            }
+
+            function showUiErrorBanner(msg) {
+                let b = document.getElementById('ui-error-banner');
+                if (!b) {
+                    b = document.createElement('div');
+                    b.id = 'ui-error-banner';
+                    b.className = 'fixed top-2 left-1/2 -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded shadow flex items-center gap-2 z-50';
+                    b.innerHTML = '<span id="ui-error-text"></span><button onclick="softResetUI()" class="px-2 py-1 bg-white text-red-600 rounded">Réinitialiser</button>';
+                    document.body.appendChild(b);
+                }
+                const s = document.getElementById('ui-error-text');
+                if (s) s.textContent = msg || 'Erreur inattendue';
+                b.style.display = 'flex';
+            }
+
+            function setupGlobalUiGuard() {
+                window.addEventListener('error', (e) => {
+                    const m = (e.error && e.error.message) || e.message || 'Erreur';
+                    showUiErrorBanner(m);
+                });
+                window.addEventListener('unhandledrejection', (e) => {
+                    const m = (e && e.reason && (e.reason.message || e.reason)) || 'Erreur asynchrone';
+                    showUiErrorBanner(m);
+                });
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        try { closeRemarksModal(); } catch (_) {}
+                        try { closeAssignmentModal(); } catch (_) {}
+                        const rm = document.getElementById('remarks-modal'); if (rm) rm.remove();
+                        const am = document.getElementById('assignment-modal'); if (am) am.remove();
+                    }
+                    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'r') {
+                        softResetUI();
+                    }
+                });
+            }
+            setupGlobalUiGuard();
+
             function applyLanguage() {
                 isRTL = currentLanguage === 'ar';
 
