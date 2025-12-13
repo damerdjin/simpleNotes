@@ -4,13 +4,13 @@ const translations = {
         // Interface générale
         appTitle: "📝 Gestion des Corrections",
         appSubtitle: "Gérez vos élèves, devoirs et notes en toute simplicité",
-        
+
         // Navigation
         studentsTab: "👥 Élèves",
-        assignmentsTab: "📋 Devoirs", 
+        assignmentsTab: "📋 Devoirs",
         gradesTab: "🎯 Notes",
         summaryTab: "📊 Récapitulatif",
-        
+
         // Étudiants
         studentsList: "Liste des Élèves",
         addStudent: "+ Ajouter un élève",
@@ -23,7 +23,7 @@ const translations = {
         student: "Élève",
         students: "élève(s)",
         noStudentsAddFirst: "Aucun élève. Ajoutez votre premier élève !",
-        
+
         // Modal étudiant
         addStudentTitle: "Ajouter un élève",
         lastName: "Nom",
@@ -32,7 +32,7 @@ const translations = {
         nin: "NIN (optionnel)",
         cancel: "Annuler",
         add: "Ajouter",
-        
+
         // Devoirs
         assignments: "devoir(s)",
         assignmentsManagement: "Gestion des Devoirs",
@@ -54,7 +54,7 @@ const translations = {
         edit: "Modifier",
         delete: "Supprimer",
 
-        
+
         // Exercices et questions
         exercise: "Exercice",
         part: "Partie",
@@ -79,7 +79,7 @@ const translations = {
         subQuestionLetters: 'abcdefghijklmnopqrstuvwxyz',
         detailMode: 'Détail',
         globalMode: 'Globale',
-        
+
         // Notes
         gradesEntry: "Saisie des Notes",
         selectClass: "-- Sélectionner une classe --",
@@ -90,7 +90,7 @@ const translations = {
         globalGrade: "Note globale (force le total):",
         ignoresDetails: "Si rempli, ignore le détail des questions ci-dessous.",
         grade: "Note :",
-        
+
         // Récapitulatif
         summaryTitle: "Récapitulatif des Notes",
         search: "Rechercher (nom, prénom, classe)",
@@ -102,7 +102,7 @@ const translations = {
         noStudentOrAssignmentForClass: "Aucun élève ou devoir pour la classe",
         noResultForSearch: "Aucun résultat ne correspond à votre recherche.",
         addStudentsAndAssignmentsToSeeSummary: "Ajoutez des élèves et des devoirs pour voir le récapitulatif.",
-        
+
         // Messages d'erreur
         enterName: "Veuillez entrer au moins un nom ou prénom",
         enterAssignmentName: "Veuillez entrer un nom pour le devoir",
@@ -111,7 +111,7 @@ const translations = {
         deleteClassConfirm: "Supprimer la classe",
         andStudents: "et ses",
         noClassesAutoCreated: "Aucune classe. Les classes sont créées automatiquement lors de l'ajout d'élèves.",
-        
+
         exerciseAbbr: "ex.",
         selectClassToStart: "Sélectionnez une classe pour commencer",
         globalGrade: "Note globale (force le total):",
@@ -125,19 +125,42 @@ const translations = {
         importSuccess: "Import terminé. Nouveaux élèves ajoutés :",
         newStudentsAdded: "", // Vide car déjà inclus dans importSuccess
 
+        //RAKMANA
+        exportPrepTitle: "Préparation des notes (CC/Devoir/Composition)",
+        exportPrepHint: "Choisissez la classe, puis associez les devoirs existants aux trois notes à exporter.",
+        exportPreview: "Aperçu (prêt pour export)",
+        reset: "Réinitialiser",
+        ccLabel: "Contrôle Continu (CC)",
+        compLabel: "Composition",
+        devoirLabel: "Devoir (moyenne Devoir 1 & Devoir 2)",
+        devoir1Label: "Devoir 1",
+        devoir2Label: "Devoir 2",
+        ccShort: "CC",
+        devoirShort: "Devoir",
+        compositionShort: "Composition",
+        sum: "Somme",
+        average: "Moyenne",
+        normalize: "Normaliser",
+        targetMax: "Note cible",
+        outputOn: "Sortie sur",
+        noneSelected: "Aucun sélectionné",
+        singleSelectHint: "Sélectionnez un devoir existant pour alimenter cette note (conversion sur /20).",
+        groupHint: "Sélectionnez un ou plusieurs devoirs de la classe, puis choisissez Somme ou Moyenne.",
+        devoirRule: "Règle: Devoir = moyenne(Devoir 1, Devoir 2). Si l’un manque, on prend l’autre."
+
     },
-    
+
     en: {
         // Interface générale
         appTitle: "📝 Grading Management",
         appSubtitle: "Manage your students, assignments and grades easily",
-        
+
         // Navigation
         studentsTab: "👥 Students",
         assignmentsTab: "📋 Assignments",
         gradesTab: "🎯 Grades",
         summaryTab: "📊 Summary",
-        
+
         // Étudiants
         studentsList: "Students List",
         addStudent: "+ Add Student",
@@ -150,7 +173,7 @@ const translations = {
         student: "Student",
         students: "student(s)",
         noStudentsAddFirst: "No students. Add your first student!",
-        
+
         // Modal étudiant
         addStudentTitle: "Add Student",
         lastName: "Last Name",
@@ -159,7 +182,7 @@ const translations = {
         nin: "NIN (optional)",
         cancel: "Cancel",
         add: "Add",
-        
+
         // Devoirs
         assignments: "assignment(s)",
         assignmentsManagement: "Assignments Management",
@@ -180,7 +203,7 @@ const translations = {
         duplicate: "Duplicate",
         edit: "Edit",
         delete: "Delete",
-        
+
         // Exercices et questions
         exercise: "Exercise",
         part: "Part",
@@ -205,7 +228,7 @@ const translations = {
         subQuestionLetters: 'abcdefghijklmnopqrstuvwxyz',
         detailMode: 'Detail',
         globalMode: 'Global',
-        
+
         // Notes
         gradesEntry: "Grade Entry",
         selectClass: "-- Select a class --",
@@ -216,7 +239,7 @@ const translations = {
         globalGrade: "Global grade (overrides total):",
         ignoresDetails: "If filled, ignores the details below.",
         grade: "Grade:",
-        
+
         // Récapitulatif
         summaryTitle: "Grades Summary",
         search: "Search (name, first name, class)",
@@ -228,7 +251,7 @@ const translations = {
         noStudentOrAssignmentForClass: "No students or assignments for class",
         noResultForSearch: "No results match your search.",
         addStudentsAndAssignmentsToSeeSummary: "Add students and assignments to see the summary.",
-        
+
         // Messages d'erreur
         enterName: "Please enter at least a last name or first name",
         enterAssignmentName: "Please enter a name for the assignment",
@@ -236,7 +259,7 @@ const translations = {
         addExerciseFirst: "Add at least one exercise",
         deleteClassConfirm: "Delete class",
         andStudents: "and its",
-        
+
         noClassesAutoCreated: "No classes. Classes are automatically created when adding students.",
         exerciseAbbr: "ex.",
         selectClassToStart: "Select a class to start",
@@ -251,21 +274,45 @@ const translations = {
         emptyFile: "Empty file or no data.",
         importSuccess: "Import completed. New students added: ",
         newStudentsAdded: "", // Vide car déjà inclus dans importSuccess
+        //RAKMANA
+        exportPrepTitle: "Grade export prep (CC/Homework/Exam)",
+        exportPrepHint: "Choose the class, then map existing assignments to the 3 exported grades.",
+        exportPreview: "Preview (ready for export)",
+        reset: "Reset",
 
-        
+        ccLabel: "Continuous Assessment (CA)",
+        compLabel: "Exam",
+        devoirLabel: "Homework (avg of Homework 1 & Homework 2)",
+        devoir1Label: "Homework 1",
+        devoir2Label: "Homework 2",
+
+        ccShort: "CA",
+        devoirShort: "Homework",
+        compositionShort: "Exam",
+
+        sum: "Sum",
+        average: "Average",
+        normalize: "Normalize",
+        targetMax: "Target max",
+        outputOn: "Output on",
+        noneSelected: "None selected",
+        singleSelectHint: "Select an existing assignment to feed this grade (scaled to /20).",
+        groupHint: "Select one or more assignments, then choose Sum or Average.",
+        devoirRule: "Rule: Homework = average(Homework 1, Homework 2). If one is missing, use the other."
+
     },
-    
+
     ar: {
         // Interface générale
         appTitle: "📝 إدارة التصحيح",
         appSubtitle: "إدارة طلابك، واجباتك و نقاطك بكل سهولة",
-        
+
         // Navigation
         studentsTab: "👥 الطلاب",
         assignmentsTab: "📋 الواجبات",
         gradesTab: "🎯 النقاط",
         summaryTab: "📊 الملخص",
-        
+
         // Étudiants
         studentsList: "قائمة الطلاب",
         addStudent: "+ إضافة طالب",
@@ -277,7 +324,7 @@ const translations = {
         deleteStudent: "حذف هذا الطالب وجميع نقاطه ؟",
         student: "الطالب",
         students: "طلاب",
-        
+
         // Modal étudiant
         addStudentTitle: "إضافة طالب",
         lastName: "اللقب",
@@ -286,7 +333,7 @@ const translations = {
         nin: "الرقم الوطني (اختياري)",
         cancel: "إلغاء",
         add: "إضافة",
-        
+
         // Devoirs
         assignments: "واجب",
         assignmentsManagement: "إدارة الواجبات",
@@ -307,7 +354,7 @@ const translations = {
         duplicate: "نسخ",
         edit: "تعديل",
         delete: "حذف",
-        
+
         // Exercices et questions
         exercise: "تمرين",
         part: "جزء",
@@ -332,7 +379,7 @@ const translations = {
         subQuestionLetters: 'أبتثجحخدذرزسشصضطظعغفقكلمنهوي',
         detailMode: 'تفصيلي',
         globalMode: 'إجمالي',
-        
+
         // Notes
         gradesEntry: "إدخال النقط",
         selectClass: "-- اختر فصلا --",
@@ -343,7 +390,7 @@ const translations = {
         globalGrade: "النقطة العامة (تتجاوز المجموع):",
         ignoresDetails: "إذا تم ملؤه، يتجاهل التفاصيل أدناه.",
         grade: "النقطة:",
-        
+
         // Récapitulatif
         summaryTitle: "ملخص النقط",
         search: "بحث (الاسم، الاسم الأول، الفصل)",
@@ -355,7 +402,7 @@ const translations = {
         noStudentOrAssignmentForClass: "لا توجد طلاب أو واجبات للفصل",
         noResultForSearch: "لا توجد نتائج تطابق بحثك.",
         addStudentsAndAssignmentsToSeeSummary: "أضف طلابا وواجبات لرؤية الملخص.",
-        
+
         // Messages d'erreur
         enterName: "الرجاء إدخال اسم العائلة أو الاسم الأول على الأقل",
         enterAssignmentName: "الرجاء إدخال اسم للواجب",
@@ -363,7 +410,7 @@ const translations = {
         addExerciseFirst: "أضف تمرينا واحدا على الأقل",
         deleteClassConfirm: "حذف الفصل",
         andStudents: "وطالبه البالغ عددهم",
-        
+
         noClassesAutoCreated: "لا توجد فصول. يتم إنشاء الفصول تلقائيًا عند إضافة الطلاب.",
         exerciseAbbr: "تمرين",
         selectClassToStart: "اختر فصلاً للبدء",
@@ -371,12 +418,38 @@ const translations = {
         ignoresDetails: "إذا تم ملؤه، يتجاهل التفاصيل أدناه.",
         total: "المجموع",
         grade: "النقطة:",
-        
+
         // Import
         importExcel: "استيراد (.xlsx)",
         importCompleted: "تم الاستيراد. طلاب جدد مضافون:",
         emptyFile: "ملف فارغ أو بدون بيانات.",
         importSuccess: "تم الاستيراد. طلاب جدد مضافون:",
         newStudentsAdded: "", // Vide car déjà inclus dans importSuccess
+
+        //rakmana
+        exportPrepTitle: "تحضير التصدير (المراقبة/الفرض/التركيب)",
+        exportPrepHint: "اختر القسم ثم اربط الفروض بالنقاط الثلاث المراد تصديرها.",
+        exportPreview: "معاينة (جاهز للتصدير)",
+        reset: "إعادة ضبط",
+
+        ccLabel: "المراقبة المستمرة (CC)",
+        compLabel: "التركيب",
+        devoirLabel: "الفرض (معدل الفرض 1 والفرض 2)",
+        devoir1Label: "الفرض 1",
+        devoir2Label: "الفرض 2",
+
+        ccShort: "CC",
+        devoirShort: "الفرض",
+        compositionShort: "التركيب",
+
+        sum: "مجموع",
+        average: "معدل",
+        normalize: "توحيد",
+        targetMax: "العلامة القصوى",
+        outputOn: "الإخراج على",
+        noneSelected: "لا شيء محدد",
+        singleSelectHint: "اختر فرضًا موجودًا لتغذية هذه العلامة (تحويل إلى /20).",
+        groupHint: "اختر فرضًا أو أكثر ثم اختر: مجموع أو معدل.",
+        devoirRule: "القاعدة: الفرض = معدل(الفرض 1، الفرض 2). إذا كان أحدهما غير موجود نأخذ الآخر."
     }
 };

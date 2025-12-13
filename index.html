@@ -756,6 +756,10 @@
                 class="tab-btn px-6 py-3 rounded-lg font-semibold transition-all bg-gray-200 text-gray-600 hover:bg-gray-300">
                 📊 Récapitulatif
             </button>
+            <button onclick="showTab('export')" id="tab-export"
+                class="tab-btn px-6 py-3 rounded-lg font-semibold transition-all bg-gray-200 text-gray-600 hover:bg-gray-300">
+                🧾 Préparation Export
+            </button>
         </div>
 
         <!-- Students Tab -->
@@ -896,7 +900,47 @@
             </div>
         </div>
     </div>
+    <!-- Export Prep Tab -->
+    <div id="content-export" class="tab-content hidden">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+                <h2 class="text-2xl font-bold text-gray-800" data-translate="exportPrepTitle">Préparation des notes
+                    (CC/Devoir/Composition)</h2>
+                <div class="flex items-center gap-2">
+                    <button onclick="resetExportConfig()"
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg font-semibold transition"
+                        data-translate="reset">Réinitialiser</button>
+                </div>
+            </div>
 
+            <!-- Choix classe -->
+            <div class="mb-4 p-4 bg-gray-50 rounded-lg">
+                <label class="block text-sm font-medium text-gray-700 mb-2" data-translate="selectClass">
+                    -- Sélectionner une classe --
+                </label>
+                <select id="select-class-export" onchange="onExportClassChange()"
+                    class="w-full md:w-80 p-3 border rounded-lg">
+                    <option value="">-- Sélectionner une classe --</option>
+                </select>
+                <p class="text-xs text-gray-500 mt-2" data-translate="exportPrepHint">
+                    Choisissez la classe, puis associez les devoirs existants aux trois notes à exporter.
+                </p>
+            </div>
+
+            <!-- Config -->
+            <div id="export-config" class="space-y-4"></div>
+
+            <!-- Aperçu table -->
+            <div class="mt-6">
+                <div class="flex items-center justify-between flex-wrap gap-3 mb-3">
+                    <h3 class="text-lg font-bold text-gray-800" data-translate="exportPreview">Aperçu (prêt pour export)
+                    </h3>
+                    <div class="text-sm text-gray-500" id="export-preview-meta"></div>
+                </div>
+                <div id="export-preview-table" class="overflow-x-auto"></div>
+            </div>
+        </div>
+    </div>
     <!-- Student Modal -->
     <div id="student-modal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-50 hidden">
         <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
@@ -1011,6 +1055,8 @@
             if (typeof renderAssignments === 'function') renderAssignments();
             if (typeof renderSummary === 'function') renderSummary();
             if (typeof loadGradeSelectors === 'function') loadGradeSelectors();
+            if (typeof renderExportPrep === 'function') renderExportPrep();
+            if (typeof loadClassSelectorsForExport === 'function') loadClassSelectorsForExport();
         }
 
         function translatePage() {
@@ -1193,6 +1239,10 @@
             if (tab === 'assignments') {
                 loadClassSelectorsForAssignments();
                 renderAssignments();
+            }
+            if (tab === 'export') {
+                loadClassSelectorsForExport();
+                renderExportPrep();
             }
             translatePage();
         }
@@ -3880,6 +3930,459 @@
             XLSX.writeFile(wb, fname);
         }
 
+        // ===== EXPORT PREP (CC / Devoir / Composition) =====
+
+        // Config persistée (par classe)
+        const EXPORT_CONFIG_KEY = 'corrections-export-config-v1';
+
+        // structure:
+        // exportPrepConfig = {
+        //   byClass: {
+        //     [className]: {
+        //        ccAssignmentId, compAssignmentId,
+        //        devoir1: { assignmentIds:[], combine:'sum'|'avg', normalize:true, targetMax:20 },
+        //        devoir2: { assignmentIds:[], combine:'sum'|'avg', normalize:true, targetMax:20 },
+        //        outMax: 20
+        //     }
+        //   }
+        // }
+        let exportPrepConfig = { byClass: {} };
+
+        function loadExportPrepConfig() {
+            try {
+                exportPrepConfig = JSON.parse(localStorage.getItem(EXPORT_CONFIG_KEY) || '{"byClass":{}}');
+                if (!exportPrepConfig.byClass) exportPrepConfig.byClass = {};
+            } catch (e) {
+                exportPrepConfig = { byClass: {} };
+            }
+        }
+
+        function saveExportPrepConfig() {
+            localStorage.setItem(EXPORT_CONFIG_KEY, JSON.stringify(exportPrepConfig));
+        }
+
+        function getExportClassConfig(className) {
+            if (!className) return null;
+            if (!exportPrepConfig.byClass[className]) {
+                exportPrepConfig.byClass[className] = {
+                    ccAssignmentId: '',
+                    compAssignmentId: '',
+                    devoir1: { assignmentIds: [], combine: 'sum', normalize: true, targetMax: 20 },
+                    devoir2: { assignmentIds: [], combine: 'sum', normalize: true, targetMax: 20 },
+                    outMax: 20
+                };
+            }
+            return exportPrepConfig.byClass[className];
+        }
+
+        function getAssignmentsForClass(className) {
+            return data.assignments.filter(a => (a.className || '').trim() === (className || '').trim());
+        }
+
+        function hasAnyGradeForAssignment(studentId, assignmentId) {
+            // On considère "non saisi" si data.grades[studentId]?.[assignmentId] est undefined.
+            // (Si présent mais total=0, on affiche 0.)
+            return !!data.grades?.[studentId]?.[assignmentId];
+        }
+
+        function toNumberOrNull(v) {
+            if (v === '' || v === null || v === undefined) return null;
+            const n = Number(v);
+            return Number.isFinite(n) ? n : null;
+        }
+
+        function round2(n) {
+            return Math.round((n + Number.EPSILON) * 100) / 100;
+        }
+
+        function computeGroupScore(studentId, className, groupCfg) {
+            const outMax = (getExportClassConfig(className)?.outMax ?? 20);
+
+            const ids = (groupCfg.assignmentIds || []).filter(Boolean);
+            if (ids.length === 0) return null;
+
+            const assigns = ids
+                .map(id => data.assignments.find(a => a.id === id))
+                .filter(a => a && (a.className || '').trim() === (className || '').trim());
+
+            if (assigns.length === 0) return null;
+
+            // Collecter scores & max
+            const entries = assigns.map(a => {
+                const has = hasAnyGradeForAssignment(studentId, a.id);
+                const max = getAssignmentMaxPoints(a);
+                const total = has ? getStudentAssignmentTotal(studentId, a.id) : null;
+                return { a, has, total, max };
+            });
+
+            // Si aucune note saisie parmi les devoirs du groupe => null (cellule vide)
+            if (!entries.some(e => e.has)) return null;
+
+            const normalize = !!groupCfg.normalize;
+            const targetMax = toNumberOrNull(groupCfg.targetMax) ?? outMax;
+
+            if (groupCfg.combine === 'avg') {
+                // Moyenne des pourcentages, convertie sur targetMax (ou outMax)
+                const percents = entries
+                    .filter(e => e.has && e.max > 0)
+                    .map(e => (e.total / e.max));
+
+                if (percents.length === 0) return null;
+                const avgP = percents.reduce((s, p) => s + p, 0) / percents.length;
+                return avgP * targetMax;
+            }
+
+            // combine === 'sum'
+            const sumTotal = entries.reduce((s, e) => s + (e.has ? (e.total || 0) : 0), 0);
+            const sumMax = entries.reduce((s, e) => s + (e.max > 0 ? e.max : 0), 0);
+
+            if (!normalize) {
+                // Somme brute (utile si l’ensemble est déjà naturellement /20)
+                return sumTotal;
+            }
+
+            // Somme normalisée sur targetMax
+            if (!sumMax || sumMax <= 0) return null;
+            return (sumTotal / sumMax) * targetMax;
+        }
+
+        function computeDevoirFinal(studentId, className, cfg) {
+            const d1 = computeGroupScore(studentId, className, cfg.devoir1);
+            const d2 = computeGroupScore(studentId, className, cfg.devoir2);
+
+            // Règle : Devoir = moyenne(D1, D2) si les deux existent,
+            // sinon Devoir = celui qui existe, sinon vide.
+            if (d1 === null && d2 === null) return null;
+            if (d1 !== null && d2 !== null) return (d1 + d2) / 2;
+            return (d1 !== null) ? d1 : d2;
+        }
+        function calcScaledScore(studentId, assignment) {
+            // Retourne note sur /outMax (configurable)
+            if (!assignment) return null;
+            const cfg = getExportClassConfig(assignment.className);
+            const outMax = cfg?.outMax ?? 20;
+
+            if (!hasAnyGradeForAssignment(studentId, assignment.id)) return null;
+
+            const total = getStudentAssignmentTotal(studentId, assignment.id);
+            const max = getAssignmentMaxPoints(assignment);
+            if (!max || max <= 0) return null;
+
+            return (total / max) * outMax;
+        }
+
+        function loadClassSelectorsForExport() {
+            const classes = getClasses();
+            const select = document.getElementById('select-class-export');
+            const t = translations[currentLanguage];
+
+            if (!select) return;
+            const currentValue = select.value;
+            select.innerHTML = `<option value="">-- ${t.selectClass} --</option>` +
+                classes.map(c => `<option value="${c}" ${c === currentValue ? 'selected' : ''}>${c}</option>`).join('');
+        }
+
+        function onExportClassChange() {
+            const className = document.getElementById('select-class-export')?.value || '';
+            if (!className) {
+                document.getElementById('export-config').innerHTML = '';
+                document.getElementById('export-preview-table').innerHTML = '';
+                document.getElementById('export-preview-meta').textContent = '';
+                return;
+            }
+
+            // init config
+            getExportClassConfig(className);
+            saveExportPrepConfig();
+            renderExportPrep();
+        }
+
+        function resetExportConfig() {
+            const className = document.getElementById('select-class-export')?.value || '';
+            if (!className) return;
+            delete exportPrepConfig.byClass[className];
+            saveExportPrepConfig();
+            renderExportPrep();
+        }
+
+        function renderExportPrep() {
+            const t = translations[currentLanguage];
+            const className = document.getElementById('select-class-export')?.value || '';
+            const container = document.getElementById('export-config');
+            const preview = document.getElementById('export-preview-table');
+            const meta = document.getElementById('export-preview-meta');
+
+            if (!container || !preview || !meta) return;
+
+            if (!className) {
+                container.innerHTML = '';
+                preview.innerHTML = '';
+                meta.textContent = '';
+                return;
+            }
+
+            const cfg = getExportClassConfig(className);
+            const assigns = getAssignmentsForClass(className);
+
+            // UI “select” pour CC et Composition
+            const options = [`<option value="">-- ${t.selectAssignment} --</option>`]
+                .concat(assigns.map(a => `<option value="${a.id}">${a.name} (${getAssignmentMaxPoints(a)} ${t.points})</option>`))
+                .join('');
+
+            // Helper: liste multi-select “moderne” via checkboxes + chips
+            const renderMultiPick = (groupKey) => {
+                const g = cfg[groupKey];
+                const selected = new Set(g.assignmentIds || []);
+                const rows = assigns.map(a => {
+                    const checked = selected.has(a.id) ? 'checked' : '';
+                    return `
+        <label class="flex items-center gap-2 p-2 border rounded-lg bg-white hover:bg-gray-50 cursor-pointer">
+          <input type="checkbox" ${checked} onchange="toggleExportGroupAssignment('${groupKey}','${a.id}',this.checked)" class="w-4 h-4">
+          <span class="flex-1 min-w-0 truncate font-medium">${a.name}</span>
+          <span class="text-xs text-gray-500">/${getAssignmentMaxPoints(a)} ${t.points}</span>
+        </label>
+      `;
+                }).join('');
+
+                const chips = (g.assignmentIds || [])
+                    .map(id => assigns.find(a => a.id === id))
+                    .filter(Boolean)
+                    .map(a => `<span class="px-2 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-semibold border border-blue-200">${a.name}</span>`)
+                    .join('') || `<span class="text-xs text-gray-400">${t.noneSelected}</span>`;
+
+                return `
+      <div class="space-y-2">
+        <div class="flex flex-wrap gap-2 items-center">${chips}</div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">${rows}</div>
+      </div>
+    `;
+            };
+
+            container.innerHTML = `
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+      <!-- CC -->
+      <div class="p-4 border rounded-xl bg-gray-50">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="font-bold text-gray-800" data-translate="ccLabel">Contrôle Continu (CC)</h3>
+          <span class="text-xs text-gray-500">${t.outputOn} / ${cfg.outMax}</span>
+        </div>
+        <select class="w-full p-3 border rounded-lg bg-white"
+          onchange="setExportSingle('ccAssignmentId', this.value)"
+          id="export-cc-select">
+          ${options}
+        </select>
+        <p class="text-xs text-gray-500 mt-2" data-translate="singleSelectHint">
+          Sélectionnez un devoir existant pour alimenter cette note (conversion sur /20).
+        </p>
+      </div>
+
+      <!-- Composition -->
+      <div class="p-4 border rounded-xl bg-gray-50">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="font-bold text-gray-800" data-translate="compLabel">Composition</h3>
+          <span class="text-xs text-gray-500">${t.outputOn} / ${cfg.outMax}</span>
+        </div>
+        <select class="w-full p-3 border rounded-lg bg-white"
+          onchange="setExportSingle('compAssignmentId', this.value)"
+          id="export-comp-select">
+          ${options}
+        </select>
+        <p class="text-xs text-gray-500 mt-2" data-translate="singleSelectHint">
+          Sélectionnez un devoir existant pour alimenter cette note (conversion sur /20).
+        </p>
+      </div>
+
+    </div>
+
+    <!-- Devoir -->
+    <div class="mt-4 p-4 border rounded-xl bg-blue-50">
+      <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
+        <h3 class="font-bold text-gray-800" data-translate="devoirLabel">Devoir (moyenne Devoir 1 & Devoir 2)</h3>
+        <div class="flex items-center gap-3 flex-wrap">
+          <label class="text-sm font-semibold text-gray-700">
+            ${t.outputOn}
+            <input type="number" min="1" step="1" value="${cfg.outMax}"
+              class="w-20 p-2 border rounded bg-white ml-2"
+              onchange="setExportOutMax(this.value)">
+          </label>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+        <!-- Devoir 1 -->
+        <div class="bg-white border rounded-xl p-4">
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <h4 class="font-bold text-blue-800" data-translate="devoir1Label">Devoir 1</h4>
+            <div class="flex items-center gap-2">
+              <select class="p-2 border rounded bg-white text-sm"
+                onchange="setExportGroupField('devoir1','combine',this.value)">
+                <option value="sum" ${cfg.devoir1.combine === 'sum' ? 'selected' : ''}>${t.sum}</option>
+                <option value="avg" ${cfg.devoir1.combine === 'avg' ? 'selected' : ''}>${t.average}</option>
+              </select>
+              <label class="text-sm flex items-center gap-2">
+                <input type="checkbox" class="w-4 h-4" ${cfg.devoir1.normalize ? 'checked' : ''}
+                  onchange="setExportGroupField('devoir1','normalize',this.checked)">
+                <span data-translate="normalize">${t.normalize}</span>
+              </label>
+              <input type="number" min="1" step="1" value="${cfg.devoir1.targetMax ?? 20}"
+                class="w-20 p-2 border rounded bg-white text-sm"
+                title="${t.targetMax}"
+                onchange="setExportGroupField('devoir1','targetMax',this.value)">
+            </div>
+          </div>
+          <div class="text-xs text-gray-500 mb-2" data-translate="groupHint">
+            Sélectionnez un ou plusieurs devoirs de la classe, puis choisissez Somme ou Moyenne.
+          </div>
+          ${renderMultiPick('devoir1')}
+        </div>
+
+        <!-- Devoir 2 -->
+        <div class="bg-white border rounded-xl p-4">
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <h4 class="font-bold text-blue-800" data-translate="devoir2Label">Devoir 2</h4>
+            <div class="flex items-center gap-2">
+              <select class="p-2 border rounded bg-white text-sm"
+                onchange="setExportGroupField('devoir2','combine',this.value)">
+                <option value="sum" ${cfg.devoir2.combine === 'sum' ? 'selected' : ''}>${t.sum}</option>
+                <option value="avg" ${cfg.devoir2.combine === 'avg' ? 'selected' : ''}>${t.average}</option>
+              </select>
+              <label class="text-sm flex items-center gap-2">
+                <input type="checkbox" class="w-4 h-4" ${cfg.devoir2.normalize ? 'checked' : ''}
+                  onchange="setExportGroupField('devoir2','normalize',this.checked)">
+                <span data-translate="normalize">${t.normalize}</span>
+              </label>
+              <input type="number" min="1" step="1" value="${cfg.devoir2.targetMax ?? 20}"
+                class="w-20 p-2 border rounded bg-white text-sm"
+                title="${t.targetMax}"
+                onchange="setExportGroupField('devoir2','targetMax',this.value)">
+            </div>
+          </div>
+          <div class="text-xs text-gray-500 mb-2" data-translate="groupHint">
+            Sélectionnez un ou plusieurs devoirs de la classe, puis choisissez Somme ou Moyenne.
+          </div>
+          ${renderMultiPick('devoir2')}
+        </div>
+
+      </div>
+
+      <div class="mt-3 text-sm text-gray-700" data-translate="devoirRule">
+        Règle: Devoir = moyenne(Devoir 1, Devoir 2). Si l’un manque, on prend l’autre.
+      </div>
+    </div>
+  `;
+
+            // Appliquer les valeurs selected sur CC/Comp
+            const ccSelect = document.getElementById('export-cc-select');
+            const compSelect = document.getElementById('export-comp-select');
+            if (ccSelect) ccSelect.value = cfg.ccAssignmentId || '';
+            if (compSelect) compSelect.value = cfg.compAssignmentId || '';
+
+            // Preview
+            const students = data.students.filter(s => (s.className || '').trim() === (className || '').trim());
+            meta.textContent = `${students.length} ${t.students}`;
+
+            renderExportPreviewTable(className, cfg);
+
+            // retraduire le contenu dynamique
+            translatePage();
+        }
+
+        function setExportSingle(field, assignmentId) {
+            const className = document.getElementById('select-class-export')?.value || '';
+            const cfg = getExportClassConfig(className);
+            cfg[field] = assignmentId || '';
+            saveExportPrepConfig();
+            renderExportPreviewTable(className, cfg);
+        }
+
+        function setExportOutMax(val) {
+            const className = document.getElementById('select-class-export')?.value || '';
+            const cfg = getExportClassConfig(className);
+            const n = parseInt(val, 10);
+            cfg.outMax = Number.isFinite(n) && n > 0 ? n : 20;
+            // mettre à jour aussi targetMax par défaut si vides
+            if (!cfg.devoir1.targetMax) cfg.devoir1.targetMax = cfg.outMax;
+            if (!cfg.devoir2.targetMax) cfg.devoir2.targetMax = cfg.outMax;
+
+            saveExportPrepConfig();
+            renderExportPrep(); // rerender car affichage outMax + calculs
+        }
+
+        function setExportGroupField(groupKey, field, value) {
+            const className = document.getElementById('select-class-export')?.value || '';
+            const cfg = getExportClassConfig(className);
+            cfg[groupKey][field] = value;
+            saveExportPrepConfig();
+            renderExportPreviewTable(className, cfg);
+        }
+
+        function toggleExportGroupAssignment(groupKey, assignmentId, checked) {
+            const className = document.getElementById('select-class-export')?.value || '';
+            const cfg = getExportClassConfig(className);
+            const arr = cfg[groupKey].assignmentIds || [];
+            const set = new Set(arr);
+            if (checked) set.add(assignmentId);
+            else set.delete(assignmentId);
+            cfg[groupKey].assignmentIds = Array.from(set);
+            saveExportPrepConfig();
+            // Re-render config (pour chips + cohérence UI) + preview
+            renderExportPrep();
+        }
+
+        function renderExportPreviewTable(className, cfg) {
+            const t = translations[currentLanguage];
+            const preview = document.getElementById('export-preview-table');
+            if (!preview) return;
+
+            const students = data.students
+                .filter(s => (s.className || '').trim() === (className || '').trim())
+                .slice()
+                .sort((a, b) => (a.name || '').localeCompare((b.name || ''), 'fr', { sensitivity: 'base' }));
+
+            const ccA = cfg.ccAssignmentId ? data.assignments.find(a => a.id === cfg.ccAssignmentId) : null;
+            const compA = cfg.compAssignmentId ? data.assignments.find(a => a.id === cfg.compAssignmentId) : null;
+
+            const rows = students.map((s, idx) => {
+                const cc = ccA ? calcScaledScore(s.id, ccA) : null;
+                const comp = compA ? calcScaledScore(s.id, compA) : null;
+                const devoir = computeDevoirFinal(s.id, className, cfg);
+
+                const fmt = (v) => (v === null ? '' : round2(v).toFixed(2));
+
+                return `
+      <tr class="border-b hover:bg-gray-50">
+        <td class="p-3 bg-gray-50 sticky left-0 z-10 font-medium">${s.name}</td>
+        <td class="p-3 text-center">${fmt(cc)}</td>
+        <td class="p-3 text-center font-bold">${fmt(devoir)}</td>
+        <td class="p-3 text-center">${fmt(comp)}</td>
+      </tr>
+    `;
+            }).join('');
+
+            preview.innerHTML = `
+    <table class="w-full table-fixed border-collapse">
+      <colgroup>
+        <col style="width:240px">
+        <col style="width:110px">
+        <col style="width:110px">
+        <col style="width:130px">
+      </colgroup>
+      <thead>
+        <tr class="border-b-2">
+          <th class="p-3 text-left bg-gray-100 sticky left-0 z-10">${t.student}</th>
+          <th class="p-3 text-center bg-gray-100" data-translate="ccShort">CC</th>
+          <th class="p-3 text-center bg-blue-100" data-translate="devoirShort">Devoir</th>
+          <th class="p-3 text-center bg-gray-100" data-translate="compositionShort">Composition</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+
+            translatePage();
+        }
         // Convertit un éventuel numéro de série Excel en Date
         function parseDateMaybeExcel(value) {
             if (value === undefined || value === null) return null;
@@ -3917,6 +4420,8 @@
         initLanguage(); // Ajoutez cette ligne
         renderStudents();
         renderAssignments();
+        loadExportPrepConfig();
+        loadClassSelectorsForExport();
     </script>
 </body>
 
