@@ -967,7 +967,7 @@
 
 
 
-    <script src="translations.js"></script>
+    <script src="./translations.js"></script>
     <script>
         // Language Management
         let currentLanguage = 'fr';
@@ -3201,9 +3201,9 @@
                 // Bandeau de la classe
                 html += `<div class="mb-8">`;
                 html += `<div class="bg-blue-600 text-white font-bold p-3 text-lg rounded-t-lg flex items-center justify-between">
-            <span>📚 ${className}</span>
-            <span class="text-sm font-normal opacity-80">${classStudents.length} élève(s) • ${classAssignments.length} devoir(s)</span>
-        </div>`;
+                            <span>📚 ${className}</span>
+                            <span class="text-sm font-normal opacity-80">${classStudents.length} ${t.students} </span>
+                        </div>`;
 
                 if (classAssignments.length === 0) {
                     html += `<div class="bg-gray-50 border border-t-0 border-gray-200 p-4 text-center text-gray-500 rounded-b-lg">

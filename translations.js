@@ -34,6 +34,7 @@ const translations = {
         add: "Ajouter",
         
         // Devoirs
+        assignments: "devoir(s)",
         assignmentsManagement: "Gestion des Devoirs",
         createAssignment: "+ Créer un devoir",
         filterByClass: "Filtrer par classe",
@@ -160,6 +161,7 @@ const translations = {
         add: "Add",
         
         // Devoirs
+        assignments: "assignment(s)",
         assignmentsManagement: "Assignments Management",
         createAssignment: "+ Create Assignment",
         filterByClass: "Filter by class",
@@ -274,7 +276,7 @@ const translations = {
         noStudents: "لا يوجد طلاب. أضف طالبك الأول!",
         deleteStudent: "حذف هذا الطالب وجميع نقاطه ؟",
         student: "الطالب",
-        students: "طالب",
+        students: "طلاب",
         
         // Modal étudiant
         addStudentTitle: "إضافة طالب",
@@ -286,6 +288,7 @@ const translations = {
         add: "إضافة",
         
         // Devoirs
+        assignments: "واجب",
         assignmentsManagement: "إدارة الواجبات",
         createAssignment: "+ إنشاء واجب",
         filterByClass: "تصفية حسب الفصل",
