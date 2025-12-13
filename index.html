@@ -2723,8 +2723,10 @@
                                     const exTotal = getStudentExerciseTotal(studentGrades, ex);
                                     const max = getExerciseMaxPoints(ex);
                                     const existingFinal = studentGrades[ex.id]?.['final']?.['final']?.['final'];
+                                    const hasEx = hasAnyGradeForExercise(studentGrades, ex);
+                                    const val = existingFinal !== undefined && existingFinal !== '' ? existingFinal : (hasEx ? exTotal.toFixed(2) : '');
                                     row += `<td class="px-2 py-1 text-center">
-                            <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" value="${existingFinal !== undefined && existingFinal !== '' ? existingFinal : exTotal.toFixed(2)}" oninput="sanitizeAndClamp(this, ${max})" onblur="commitSummaryInput('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" onkeydown="handleSummaryInputKey(event, '${s.id}','${a.id}','${ex.id}', ${max})" onfocus="this.select()" id="sum-input-${s.id}-${a.id}-${ex.id}" name="sum-input-${s.id}-${a.id}-${ex.id}" aria-label="Note Ex${a.exercises.indexOf(ex) + 1} pour ${s.name} - ${a.name}" class="summary-grade-input">
+                            <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" value="${val}" oninput="sanitizeAndClamp(this, ${max})" onblur="commitSummaryInput('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" onkeydown="handleSummaryInputKey(event, '${s.id}','${a.id}','${ex.id}', ${max})" onfocus="this.select()" id="sum-input-${s.id}-${a.id}-${ex.id}" name="sum-input-${s.id}-${a.id}-${ex.id}" aria-label="Note Ex${a.exercises.indexOf(ex) + 1} pour ${s.name} - ${a.name}" class="summary-grade-input">
                         </td>`;
                                 } else {
                                     row += `<td class="px-2 py-1 text-center text-gray-300 bg-gray-50">-</td>`;
@@ -2733,11 +2735,16 @@
                         }
 
                         if (isCompatible) {
-                            const total = getStudentAssignmentTotal(s.id, a.id);
-                            const max = getAssignmentMaxPoints(a);
-                            const pct = max > 0 ? (total / max * 100) : 0;
-                            const bgColor = pct >= 70 ? 'bg-green-100' : pct >= 50 ? 'bg-orange-100' : 'bg-red-100';
-                            row += `<td class="p-3 text-center font-bold ${bgColor}" id="sum-total-${s.id}-${a.id}">${total.toFixed(2)}</td>`;
+                            const has = hasAnyGradeForAssignment(s.id, a.id);
+                            if (has) {
+                                const total = getStudentAssignmentTotal(s.id, a.id);
+                                const max = getAssignmentMaxPoints(a);
+                                const pct = max > 0 ? (total / max * 100) : 0;
+                                const bgColor = pct >= 70 ? 'bg-green-100' : pct >= 50 ? 'bg-orange-100' : 'bg-red-100';
+                                row += `<td class="p-3 text-center font-bold ${bgColor}" id="sum-total-${s.id}-${a.id}">${total.toFixed(2)}</td>`;
+                            } else {
+                                row += `<td class="p-3 text-center text-gray-400 bg-gray-50" id="sum-total-${s.id}-${a.id}"></td>`;
+                            }
                         } else {
                             row += `<td class="p-3 text-center text-gray-400 bg-gray-50">-</td>`;
                         }
@@ -3045,9 +3052,11 @@
                                         const exTotal = getStudentExerciseTotal(studentGrades, ex);
                                         const max = getExerciseMaxPoints(ex);
                                         const existingFinal = studentGrades[ex.id]?.['final']?.['final']?.['final'];
+                                        const hasEx = hasAnyGradeForExercise(studentGrades, ex);
+                                        const val = existingFinal !== undefined && existingFinal !== '' ? existingFinal : (hasEx ? exTotal.toFixed(2) : '');
                                         row += `<td class="px-2 py-1 text-center ${exBorder}">
                                 <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" 
-                                    value="${existingFinal !== undefined && existingFinal !== '' ? existingFinal : exTotal.toFixed(2)}" 
+                                    value="${val}" 
                                     oninput="sanitizeAndClamp(this, ${max})" 
                                     onblur="commitSummaryInput('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" 
                                     onkeydown="handleSummaryInputKey(event, '${s.id}','${a.id}','${ex.id}', ${max})" 
@@ -3065,11 +3074,16 @@
 
                             const totalBorder = showDetails ? '' : borderClass;
                             if (isStudentClass) {
-                                const total = getStudentAssignmentTotal(s.id, a.id);
-                                const max = getAssignmentMaxPoints(a);
-                                const pct = max > 0 ? (total / max * 100) : 0;
-                                const bgColor = pct >= 70 ? 'bg-green-100' : pct >= 50 ? 'bg-orange-100' : 'bg-red-100';
-                                row += `<td class="p-3 text-center font-bold ${bgColor} ${totalBorder}" id="sum-total-${s.id}-${a.id}">${total.toFixed(2)}</td>`;
+                                const has = hasAnyGradeForAssignment(s.id, a.id);
+                                if (has) {
+                                    const total = getStudentAssignmentTotal(s.id, a.id);
+                                    const max = getAssignmentMaxPoints(a);
+                                    const pct = max > 0 ? (total / max * 100) : 0;
+                                    const bgColor = pct >= 70 ? 'bg-green-100' : pct >= 50 ? 'bg-orange-100' : 'bg-red-100';
+                                    row += `<td class="p-3 text-center font-bold ${bgColor} ${totalBorder}" id="sum-total-${s.id}-${a.id}">${total.toFixed(2)}</td>`;
+                                } else {
+                                    row += `<td class="p-3 text-center text-gray-300 ${bgEmpty} ${totalBorder}" id="sum-total-${s.id}-${a.id}"></td>`;
+                                }
                             } else {
                                 row += `<td class="p-3 text-center text-gray-300 ${bgEmpty} ${totalBorder}">-</td>`;
                             }
@@ -3368,11 +3382,13 @@
                                     const exTotal = getStudentExerciseTotal(studentGrades, ex);
                                     const max = getExerciseMaxPoints(ex);
                                     const existingFinal = studentGrades[ex.id]?.['final']?.['final']?.['final'];
+                                    const hasEx = hasAnyGradeForExercise(studentGrades, ex);
+                                    const val = existingFinal !== undefined && existingFinal !== '' ? existingFinal : (hasEx ? exTotal.toFixed(2) : '');
                                     html += `<td class="px-2 py-1 text-center border-l border-gray-100">
                             <input type="text" 
                                 inputmode="decimal" 
                                 pattern="[0-9]*[.,]?[0-9]*" 
-                                value="${existingFinal !== undefined && existingFinal !== '' ? existingFinal : exTotal.toFixed(2)}" 
+                                value="${val}" 
                                 oninput="sanitizeAndClamp(this, ${max})" 
                                 onblur="commitSummaryInput('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" 
                                 onkeydown="handleSummaryInputKey(event, '${s.id}','${a.id}','${ex.id}', ${max})" 
@@ -3385,13 +3401,18 @@
                                 }
                             }
 
-                            const total = getStudentAssignmentTotal(s.id, a.id);
-                            const max = getAssignmentMaxPoints(a);
-                            const pct = max > 0 ? (total / max * 100) : 0;
-                            const bgColor = pct >= 70 ? 'bg-green-100' : pct >= 50 ? 'bg-orange-100' : 'bg-red-100';
-                            html += `<td class="p-3 text-center font-bold ${bgColor} border-l border-gray-300" id="sum-total-${s.id}-${a.id}">
+                            const has = hasAnyGradeForAssignment(s.id, a.id);
+                            if (has) {
+                                const total = getStudentAssignmentTotal(s.id, a.id);
+                                const max = getAssignmentMaxPoints(a);
+                                const pct = max > 0 ? (total / max * 100) : 0;
+                                const bgColor = pct >= 70 ? 'bg-green-100' : pct >= 50 ? 'bg-orange-100' : 'bg-red-100';
+                                html += `<td class="p-3 text-center font-bold ${bgColor} border-l border-gray-300" id="sum-total-${s.id}-${a.id}">
                     ${total.toFixed(2)}
                 </td>`;
+                            } else {
+                                html += `<td class="p-3 text-center text-gray-300 border-l border-gray-300" id="sum-total-${s.id}-${a.id}"></td>`;
+                            }
                         }
 
                         html += `</tr>`;
@@ -3403,18 +3424,32 @@
                     for (const a of classAssignments) {
                         if (showDetails) {
                             for (const ex of a.exercises) {
-                                const exAvg = classStudents.reduce((sum, s) => {
+                                let exSum = 0;
+                                let exCount = 0;
+                                for (const s of classStudents) {
                                     const studentGrades = data.grades[s.id]?.[a.id] || {};
-                                    return sum + getStudentExerciseTotal(studentGrades, ex);
-                                }, 0) / classStudents.length;
-                                html += `<td class="px-2 py-1 text-center text-sm border-l border-gray-200">${exAvg.toFixed(2)}</td>`;
+                                    if (hasAnyGradeForExercise(studentGrades, ex)) {
+                                        exSum += getStudentExerciseTotal(studentGrades, ex);
+                                        exCount++;
+                                    }
+                                }
+                                const exAvg = exCount > 0 ? (exSum / exCount) : null;
+                                html += `<td class="px-2 py-1 text-center text-sm border-l border-gray-200">${exAvg === null ? '' : exAvg.toFixed(2)}</td>`;
                             }
                         }
-                        const avgTotal = classStudents.reduce((sum, s) => sum + getStudentAssignmentTotal(s.id, a.id), 0) / classStudents.length;
+                        let sumTot = 0;
+                        let ct = 0;
+                        for (const s of classStudents) {
+                            if (hasAnyGradeForAssignment(s.id, a.id)) {
+                                sumTot += getStudentAssignmentTotal(s.id, a.id);
+                                ct++;
+                            }
+                        }
+                        const avgTotal = ct > 0 ? (sumTot / ct) : null;
                         const max = getAssignmentMaxPoints(a);
-                        const pct = max > 0 ? (avgTotal / max * 100) : 0;
-                        const bgColor = pct >= 70 ? 'bg-green-200' : pct >= 50 ? 'bg-orange-200' : 'bg-red-200';
-                        html += `<td class="p-3 text-center font-bold ${bgColor} border-l border-gray-300">${avgTotal.toFixed(2)}</td>`;
+                        const pct = avgTotal !== null && max > 0 ? (avgTotal / max * 100) : 0;
+                        const bgColor = avgTotal === null ? 'bg-gray-100' : (pct >= 70 ? 'bg-green-200' : pct >= 50 ? 'bg-orange-200' : 'bg-red-200');
+                        html += `<td class="p-3 text-center font-bold ${bgColor} border-l border-gray-300">${avgTotal === null ? '' : avgTotal.toFixed(2)}</td>`;
                     }
                     html += `</tr>`;
 
@@ -3512,6 +3547,12 @@
             function updateSummaryTotalsInline(studentId, assignmentId) {
                 const totalCell = document.getElementById(`sum-total-${studentId}-${assignmentId}`);
                 if (!totalCell) return;
+                const has = hasAnyGradeForAssignment(studentId, assignmentId);
+                if (!has) {
+                    totalCell.textContent = '';
+                    totalCell.className = 'p-3 text-center text-gray-300';
+                    return;
+                }
                 const total = getStudentAssignmentTotal(studentId, assignmentId);
                 const assignment = data.assignments.find(a => a.id === assignmentId);
                 const max = assignment ? getAssignmentMaxPoints(assignment) : 0;
@@ -4237,10 +4278,55 @@
                 return data.assignments.filter(a => (a.className || '').trim() === (className || '').trim());
             }
 
+            function hasAnyGradeForExercise(studentGrades, ex) {
+                const exGrades = studentGrades?.[ex.id] || {};
+                const final = exGrades?.final?.final?.final;
+                if (final !== undefined && final !== '') return true;
+                const directQuestions = ex.questions || [];
+                const parts = ex.parts || [];
+                if (directQuestions.length === 0 && parts.length === 0) {
+                    const d = exGrades?.direct?.direct?.direct;
+                    return d !== undefined && d !== '';
+                }
+                for (const q of directQuestions) {
+                    const qg = exGrades?.direct?.[q.id] || {};
+                    if (!q.subQuestions || q.subQuestions.length === 0) {
+                        const v = qg?.direct;
+                        if (v !== undefined && v !== '') return true;
+                    } else {
+                        for (const sq of q.subQuestions) {
+                            const v = qg?.[sq.id];
+                            if (v !== undefined && v !== '') return true;
+                        }
+                    }
+                }
+                for (const part of parts) {
+                    for (const q of (part.questions || [])) {
+                        const qg = exGrades?.[part.id]?.[q.id] || {};
+                        if (!q.subQuestions || q.subQuestions.length === 0) {
+                            const v = qg?.direct;
+                            if (v !== undefined && v !== '') return true;
+                        } else {
+                            for (const sq of q.subQuestions) {
+                                const v = qg?.[sq.id];
+                                if (v !== undefined && v !== '') return true;
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
             function hasAnyGradeForAssignment(studentId, assignmentId) {
-                // On considère "non saisi" si data.grades[studentId]?.[assignmentId] est undefined.
-                // (Si présent mais total=0, on affiche 0.)
-                return !!data.grades?.[studentId]?.[assignmentId];
+                const sg = data.grades?.[studentId]?.[assignmentId];
+                if (!sg) return false;
+                const g = sg.global;
+                if (g !== undefined && g !== '') return true;
+                const a = data.assignments.find(x => x.id === assignmentId);
+                if (!a) return false;
+                for (const ex of (a.exercises || [])) {
+                    if (hasAnyGradeForExercise(sg, ex)) return true;
+                }
+                return false;
             }
 
             function toNumberOrNull(v) {
