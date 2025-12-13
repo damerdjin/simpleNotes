@@ -4004,22 +4004,8 @@
                 localStorage.setItem(EXPORT_CONFIG_KEY, JSON.stringify(exportPrepConfig));
             }
 
-            function ensureGlobalRemarks() {
-                if (!exportPrepConfig) exportPrepConfig = { byClass: {} };
-                // migration: si des remarques existaient par classe auparavant, prendre la première
-                if (!exportPrepConfig.globalRemarks) {
-                    try {
-                        const classes = Object.keys(exportPrepConfig.byClass || {});
-                        for (const cls of classes) {
-                            const rc = exportPrepConfig.byClass[cls]?.remarks;
-                            if (rc && rc.bands && (rc.FR || rc.EN || rc.AR)) {
-                                exportPrepConfig.globalRemarks = rc;
-                                break;
-                            }
-                        }
-                    } catch (e) {}
-                }
-                const defaults = () => ({
+            function getDefaultGlobalRemarks() {
+                return {
                     bands: [ {min:0,max:6}, {min:6.01,max:9.99}, {min:10,max:13.99}, {min:14,max:15.99}, {min:16,max:17.99}, {min:18,max:20} ],
                     FR: [
                         [
@@ -4153,13 +4139,30 @@
                             { obs: 'إتقان قوي جدًا.', cons: 'دعم الزملاء.' }
                         ]
                     ]
-                });
-                if (!exportPrepConfig.globalRemarks) exportPrepConfig.globalRemarks = defaults();
+                };
+            }
+            function ensureGlobalRemarks() {
+                if (!exportPrepConfig) exportPrepConfig = { byClass: {} };
+                // migration: si des remarques existaient par classe auparavant, prendre la première
+                if (!exportPrepConfig.globalRemarks) {
+                    try {
+                        const classes = Object.keys(exportPrepConfig.byClass || {});
+                        for (const cls of classes) {
+                            const rc = exportPrepConfig.byClass[cls]?.remarks;
+                            if (rc && rc.bands && (rc.FR || rc.EN || rc.AR)) {
+                                exportPrepConfig.globalRemarks = rc;
+                                break;
+                            }
+                        }
+                    } catch (e) {}
+                }
+                const defs = getDefaultGlobalRemarks();
+                if (!exportPrepConfig.globalRemarks) exportPrepConfig.globalRemarks = defs;
                 const gr = exportPrepConfig.globalRemarks;
-                if (!Array.isArray(gr.bands) || gr.bands.length === 0) gr.bands = defaults().bands;
+                if (!Array.isArray(gr.bands) || gr.bands.length === 0) gr.bands = defs.bands;
                 const langs = ['FR','EN','AR'];
                 for (const L of langs) {
-                    if (!Array.isArray(gr[L]) || gr[L].length === 0) gr[L] = defaults()[L];
+                    if (!Array.isArray(gr[L]) || gr[L].length === 0) gr[L] = defs[L];
                     while (gr[L].length < gr.bands.length) gr[L].push([]);
                     for (let i = 0; i < gr[L].length; i++) {
                         if (!Array.isArray(gr[L][i])) gr[L][i] = [];
@@ -4167,6 +4170,16 @@
                 }
                 saveExportPrepConfig();
                 return gr;
+            }
+            function resetRemarksCurrentLanguage() {
+                const gr = ensureGlobalRemarks();
+                const defs = getDefaultGlobalRemarks();
+                const lang = currentLanguage === 'fr' ? 'FR' : (currentLanguage === 'en' ? 'EN' : 'AR');
+                gr.bands = defs.bands.map(b => ({ min: b.min, max: b.max }));
+                gr[lang] = defs[lang].map(arr => arr.map(m => ({ obs: m.obs, cons: m.cons })));
+                saveExportPrepConfig();
+                closeRemarksModal();
+                openRemarksModal();
             }
 
             function getExportClassConfig(className) {
@@ -4695,7 +4708,10 @@
                   <div class="bg-white rounded-xl shadow-xl w-[90%] max-w-5xl" style="max-height:85vh; overflow-y:auto;">
                     <div class="p-4 border-b flex items-center justify-between">
                       <div class="font-bold">${t.remarksTitle || 'Messages'}</div>
-                      <button class="px-3 py-1 rounded bg-gray-200" onclick="closeRemarksModal()">${t.cancel || 'Annuler'}</button>
+                      <div class="flex items-center gap-2">
+                        <button class="px-3 py-1 rounded bg-amber-200" onclick="resetRemarksCurrentLanguage()">${t.reset || 'Réinitialiser'}</button>
+                        <button class="px-3 py-1 rounded bg-gray-200" onclick="closeRemarksModal()">${t.cancel || 'Annuler'}</button>
+                      </div>
                     </div>
                     <div class="p-4">
                       <div class="mb-3 font-semibold">${t.gradeBands || ''} — ${lang}</div>
