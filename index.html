@@ -5275,12 +5275,8 @@
                     return;
                 }
                 // Ne pas modifier le format original (pas de bordures/hauteurs)
-                for (let r = 9; r <= lastRow; r++) {
-                    for (let c = 5; c <= lastCol; c++) targetWorksheet.getRow(r).getCell(c).protection = { locked: false };
-                }
-                await targetWorksheet.protect('', { selectUnlockedCells: true });
                 const buffer = await excelWb.xlsx.writeBuffer();
-                const newFileName = originalFileName.replace(/(\.xlsx)$/i, '_Rempli$1');
+                const newFileName = originalFileName;
                 const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);
