@@ -154,7 +154,10 @@ const translations = {
         zeroGrade: "Attention: note = 0",
         exportNotOn20: "Avertissement: ce calcul ne sort pas sur /20 (normalisation manquante ou cible différente).",
         exportDevoirWarning: "⚠️ Problème d'échelle: Devoir 1 ou Devoir 2 n'est pas sur /20",
-        exportDevoirOk: "Échelle OK (sur /20)"
+        exportDevoirOk: "Échelle OK (sur /20)",
+        print: "Imprimer",
+        exportXlsx: "Exporter XLSX",
+        rakamna: "Rakmana"
 
     },
 
@@ -314,7 +317,10 @@ const translations = {
         zeroGrade: "Warning: grade = 0",
         exportNotOn20: "Warning: not scaled to /20 (normalization missing or target differs).",
         exportDevoirWarning: "⚠️ Scale issue: Homework 1 or Homework 2 is not /20",
-        exportDevoirOk: "Scale OK (/20)"
+        exportDevoirOk: "Scale OK (/20)",
+        print: "Print",
+        exportXlsx: "Export XLSX",
+        rakamna: "Rakmana"
 
     },
 
@@ -478,6 +484,9 @@ const translations = {
         zeroGrade: "تنبيه: النقطة = 0",
         exportNotOn20: "تنبيه: النتيجة ليست على /20 (التوحيد غير مفعّل أو الهدف مختلف).",
         exportDevoirWarning: "⚠️ مشكلة في السلم: الفرض 1 أو الفرض 2 ليس على /20",
-        exportDevoirOk: "السلم صحيح (/20)"
+        exportDevoirOk: "السلم صحيح (/20)",
+        print: "طباعة",
+        exportXlsx: "تصدير XLSX",
+        rakamna: "رقمنة"
     }
 };

@@ -935,11 +935,28 @@
                 <!-- Aperçu table -->
                 <div class="mt-6">
                     <div class="flex items-center justify-between flex-wrap gap-3 mb-3">
-                        <h3 class="text-lg font-bold text-gray-800" data-translate="exportPreview">Aperçu (prêt pour
-                            export)
+                        <h3 class="text-lg font-bold text-gray-800" data-translate="exportPreview">
+                            Aperçu (prêt pour export)
                         </h3>
+
+                        <!-- BOUTONS -->
+                        <div class="flex items-center gap-3">
+                            <button onclick="printExportTable()"
+                                class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold shadow-sm transition"
+                                data-translate="print">Imprimer</button>
+
+                            <button onclick="exportExportTableXLSX()"
+                                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow-sm transition"
+                                data-translate="exportXlsx">Exporter XLSX</button>
+
+                            <button onclick="doRakamna()"
+                                class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold shadow-sm transition"
+                                data-translate="rakamna">Rakamna</button>
+                        </div>
+
                         <div class="text-sm text-gray-500" id="export-preview-meta"></div>
                     </div>
+
                     <div id="export-preview-table" class="overflow-x-auto"></div>
                 </div>
             </div>
@@ -4607,30 +4624,47 @@
                 if (hasTP) cols.push('<col style="width:110px">');
                 cols.push('<col style="width:130px">'); // Composition
                 cols.push('<col style="width:130px">'); // Moyenne
+                const classHeader = `
+                <div class="mb-2 font-bold text-lg text-gray-700">
+                    ${t.class || ' '}  ${className}
+                </div>
+                `;
+                  // Nombre total de colonnes (pour le colspan)
+  // Nom + CC + Devoir + (TP?) + Compo + Moyenne
+  let colCount = 1 + 1 + 1 + 1 + 1; // base: Nom, CC, Devoir, Compo, Moy
+  if (hasTP) colCount += 1;
 
-                preview.innerHTML = `
-                <table class="w-full table-fixed border-collapse">
-                <colgroup>${cols.join('')}</colgroup>
-                <thead>
-                    <tr class="border-b-2">
-                    <th class="p-3 text-left bg-gray-100 sticky left-0 z-10">${t.student}</th>
-                    <th class="p-3 text-center bg-gray-100" data-translate="ccShort">${t.ccShort || 'CC'}</th>
+  preview.innerHTML = `
+    <table class="w-full table-fixed border-collapse">
+      <colgroup>${cols.join('')}</colgroup>
+      <thead>
+        <!-- ✅ NOUVELLE LIGNE : NOM DE LA CLASSE -->
+        <tr class="bg-gray-200 border-b-2 border-gray-300">
+          <th colspan="${colCount}" class="p-4 text-center text-xl font-bold uppercase tracking-wide text-gray-800">
+            ${className}
+          </th>
+        </tr>
 
-                    <th class="p-3 text-center ${devoirScaleIssue ? 'bg-amber-200 text-amber-900' : 'bg-blue-100 text-blue-900'}"
-                        title="${devoirScaleIssue ? (t.exportDevoirWarning || '') : (t.exportDevoirOk || '')}">
-                        <span data-translate="devoirShort">${t.devoirShort || 'Devoir'}</span>
-                        <span class="ml-1">${devoirScaleIssue ? '⚠️' : '⚠️'}</span>
-                    </th>
+        <!-- Ligne des titres colonnes (inchangée) -->
+        <tr class="border-b-2">
+          <th class="p-3 text-left bg-gray-100 sticky left-0 z-10">${t.student}</th>
+          <th class="p-3 text-center bg-gray-100" data-translate="ccShort">${t.ccShort || 'CC'}</th>
 
-                    ${hasTP ? `<th class="p-3 text-center bg-gray-100" data-translate="tpShort">${t.tpShort || 'TP'}</th>` : ``}
+          <th class="p-3 text-center ${devoirScaleIssue ? 'bg-amber-200 text-amber-900' : 'bg-blue-100 text-blue-900'}"
+              title="${devoirScaleIssue ? (t.exportDevoirWarning || '') : (t.exportDevoirOk || '')}">
+            <span data-translate="devoirShort">${t.devoirShort || 'Devoir'}</span>
+            <span class="ml-1">${devoirScaleIssue ? '⚠️' : '⚠️'}</span>
+          </th>
 
-                    <th class="p-3 text-center bg-gray-100" data-translate="compositionShort">${t.compositionShort || 'Composition'}</th>
-                    <th class="p-3 text-center bg-green-100" data-translate="avgShort">${t.avgShort || 'Moyenne'}</th>
-                    </tr>
-                </thead>
-                <tbody>${rows}</tbody>
-                </table>
-            `;
+          ${hasTP ? `<th class="p-3 text-center bg-gray-100" data-translate="tpShort">${t.tpShort || 'TP'}</th>` : ``}
+
+          <th class="p-3 text-center bg-gray-100" data-translate="compositionShort">${t.compositionShort || 'Composition'}</th>
+          <th class="p-3 text-center bg-green-100" data-translate="avgShort">${t.avgShort || 'Moyenne'}</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
 
                 translatePage();
             }
@@ -4666,6 +4700,66 @@
                 return `${dd}/${mm}/${yyyy}`;
             }
 
+            function printExportTable() {
+                const table = document.getElementById("export-preview-table");
+                if (!table) {
+                    alert("Tableau introuvable !");
+                    return;
+                }
+
+                const win = window.open("", "_blank");
+
+                win.document.write(`
+                    <html>
+                    <head>
+                        <title>Impression</title>
+                        <style>
+                        body {
+                            font-family: sans-serif;
+                            padding: 20px;
+                        }
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            font-size: 14px;
+                        }
+                        th, td {
+                            border: 1px solid #444;
+                            padding: 6px 8px;
+                            text-align: center;
+                        }
+                        th {
+                            background: #eee;
+                        }
+                        </style>
+                    </head>
+                    <body>                        
+                        <h3 style="margin-bottom:20px;">${document.getElementById("select-class-export").value}</h3>
+                        ${table.innerHTML}
+                    </body>
+                    </html>
+                `);
+
+                win.document.close();
+                win.focus();
+
+                setTimeout(() => win.print(), 250);
+            }
+
+            function exportExportTableXLSX() {
+                const table = document.querySelector("#export-preview-table table");
+                if (!table) {
+                    alert("Tableau introuvable !");
+                    return;
+                }
+
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.table_to_sheet(table);
+                XLSX.utils.book_append_sheet(wb, ws, "Export");
+
+
+                XLSX.writeFile(wb, "export-classe.xlsx");
+            }
             // Initialize
             loadData();
             initLanguage(); // Ajoutez cette ligne
