@@ -4876,109 +4876,164 @@
                 ws['!rows'][5] = { hidden: true }; // Ligne 6
                 ws['!rows'][6] = { hidden: true }; // Ligne 7
             }
-   function applyRakmanaColumnsAndBorders(ws) {
-    const HEADER_ROW = 7;        // Excel row 8 (0-based)
-    const FIRST_STUDENT_ROW = 8; // Excel row 9 (0-based)
-    const NIN_COL = 0;           // Col A
+            function applyRakmanaColumnsAndBorders(ws) {
+                const HEADER_ROW = 7;        // Excel row 8 (0-based)
+                const FIRST_STUDENT_ROW = 8; // Excel row 9 (0-based)
+                const NIN_COL = 0;           // Col A
 
-    const getCellText = (cell) => {
-        if (!cell || cell.v === undefined || cell.v === null) return '';
-        return String(cell.w ?? cell.v);
-    };
+                const getCellText = (cell) => {
+                    if (!cell || cell.v === undefined || cell.v === null) return '';
+                    return String(cell.w ?? cell.v);
+                };
 
-    const calcTextWidth = (text) => {
-        const s = String(text || '');
-        let w = 0;
-        for (const ch of s) {
-            if (/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(ch)) w += 1.2;
-            else w += 1.0;
-        }
-        return w;
-    };
+                const calcTextWidth = (text) => {
+                    const s = String(text || '');
+                    let w = 0;
+                    for (const ch of s) {
+                        if (/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(ch)) w += 1.2;
+                        else w += 1.0;
+                    }
+                    return w;
+                };
 
-    const setBorderDouble = (cell) => {
-        const existing = cell.s || {};
-        const existingBorder = existing.border || {};
-        const dbl = { style: 'double', color: { rgb: "000000" } };
+                const setBorderDouble = (cell) => {
+                    const existing = cell.s || {};
+                    const existingBorder = existing.border || {};
+                    const dbl = { style: 'double', color: { rgb: "000000" } };
 
-        cell.s = {
-            ...existing,
-            border: {
-                ...existingBorder,
-                top: existingBorder.top || dbl,
-                bottom: existingBorder.bottom || dbl,
-                left: existingBorder.left || dbl,
-                right: existingBorder.right || dbl,
+                    cell.s = {
+                        ...existing,
+                        border: {
+                            ...existingBorder,
+                            top: existingBorder.top || dbl,
+                            bottom: existingBorder.bottom || dbl,
+                            left: existingBorder.left || dbl,
+                            right: existingBorder.right || dbl,
+                        }
+                    };
+                };
+
+                const ref = ws['!ref'] || 'A1';
+                const sheetRange = XLSX.utils.decode_range(ref);
+
+                // 1) Déterminer la dernière colonne du tableau depuis la ligne 8
+                let lastCol = -1;
+                for (let C = sheetRange.e.c; C >= sheetRange.s.c; C--) {
+                    const addr = XLSX.utils.encode_cell({ r: HEADER_ROW, c: C });
+                    const txt = getCellText(ws[addr]).replace(/\s/g, '');
+                    if (txt) { lastCol = C; break; }
+                }
+                if (lastCol === -1) lastCol = sheetRange.e.c;
+
+                // 2) Déterminer la dernière ligne élève en scannant la colonne A (NIN)
+                let lastRow = HEADER_ROW;
+                for (let R = FIRST_STUDENT_ROW; R <= sheetRange.e.r; R++) {
+                    const ninAddr = XLSX.utils.encode_cell({ r: R, c: NIN_COL });
+                    const ninTxt = getCellText(ws[ninAddr]).trim();
+                    if (!ninTxt) break;
+                    lastRow = R;
+                }
+
+                // 3) Ajuster la largeur des colonnes A, B, C, D selon contenu
+                const cols = ws['!cols'] ? [...ws['!cols']] : [];
+                [0, 1, 2, 3].forEach((C) => {
+                    let maxW = 0;
+                    for (let R = HEADER_ROW; R <= lastRow; R++) {
+                        const addr = XLSX.utils.encode_cell({ r: R, c: C });
+                        const txt = getCellText(ws[addr]);
+                        maxW = Math.max(maxW, calcTextWidth(txt));
+                    }
+                    const wch = Math.max(8, Math.min(45, Math.ceil(maxW + 2)));
+                    cols[C] = { ...(cols[C] || {}), wch };
+                });
+
+                // 4) Ajuster colonnes E jusqu'à la fin selon les en-têtes
+                for (let C = 4; C <= lastCol; C++) {
+                    const addr = XLSX.utils.encode_cell({ r: HEADER_ROW, c: C });
+                    const txt = getCellText(ws[addr]);
+                    const wch = Math.max(8, Math.min(45, Math.ceil(calcTextWidth(txt) + 2)));
+                    cols[C] = { ...(cols[C] || {}), wch };
+                }
+                ws['!cols'] = cols;
+
+                // ✅ 5) AUGMENTER LA HAUTEUR DES LIGNES de la ligne 1 jusqu'au dernier élève
+                if (!ws['!rows']) ws['!rows'] = [];
+
+                const ROW_HEIGHT = 25; // Hauteur en points (ajustez selon vos besoins)
+
+                for (let R = 0; R <= lastRow; R++) {
+                    // Préserver les propriétés existantes (comme hidden pour lignes 6 et 7)
+                    const existingRowProps = ws['!rows'][R] || {};
+                    ws['!rows'][R] = {
+                        ...existingRowProps,
+                        hpt: ROW_HEIGHT  // hauteur en points
+                    };
+                }
+                // 5) Forcer toutes les cellules dans la plage (1 → dernier élève, colonnes utilisées) à être verrouillées
+                const lockCell = (cell) => {
+                    const existingStyle = cell.s || {};
+                    const existingProtection = existingStyle.protection || {};
+                    cell.s = {
+                        ...existingStyle,
+                        protection: { ...existingProtection, locked: true }
+                    };
+                };
+
+                for (let R = 0; R <= lastRow; R++) {
+                    for (let C = sheetRange.s.c; C <= lastCol; C++) {
+                        const addr = XLSX.utils.encode_cell({ r: R, c: C });
+                        if (!ws[addr]) ws[addr] = { t: 's', v: '' };
+                        lockCell(ws[addr]);
+                    }
+                }
+
+                // 6) Déverrouiller uniquement la zone E9 → dernière ligne/colonne
+                const unlockCell = (cell) => {
+                    const existingStyle = cell.s || {};
+                    cell.s = {
+                        ...existingStyle,
+                        protection: { ...(existingStyle.protection || {}), locked: false }
+                    };
+                };
+
+                const FIRST_UNLOCK_COL = 4; // colonne E
+                let unlockedCount = 0;
+
+                for (let R = FIRST_STUDENT_ROW; R <= lastRow; R++) {
+                    for (let C = FIRST_UNLOCK_COL; C <= lastCol; C++) {
+                        const addr = XLSX.utils.encode_cell({ r: R, c: C });
+                        if (!ws[addr]) ws[addr] = { t: 's', v: '' };
+                        unlockCell(ws[addr]);
+                        unlockedCount++;
+                    }
+                }
+                console.log(`🔓 Cellules déverrouillées: ${unlockedCount} (de E${FIRST_STUDENT_ROW + 1} à ${String.fromCharCode(65 + lastCol)}${lastRow + 1})`);
+                // 7) Activer la protection de la feuille (mot de passe vide)
+                ws['!protect'] = {
+                    password: '',
+                    sheet: true,
+                    objects: true,
+                    scenarios: true,
+                    formatCells: true,
+                    formatColumns: true,
+                    formatRows: true,
+                    insertColumns: false,
+                    insertRows: false,
+                    deleteColumns: false,
+                    deleteRows: false,
+                    sort: true,
+                    autoFilter: true,
+                    pivotTables: true
+                };
+                // 8) Appliquer double bordure à toute la plage (en-têtes + élèves)
+                for (let R = HEADER_ROW; R <= lastRow; R++) {
+                    for (let C = sheetRange.s.c; C <= lastCol; C++) {
+                        const addr = XLSX.utils.encode_cell({ r: R, c: C });
+                        if (!ws[addr]) ws[addr] = { t: 's', v: '' };
+                        setBorderDouble(ws[addr]);
+                    }
+                }
             }
-        };
-    };
-
-    const ref = ws['!ref'] || 'A1';
-    const sheetRange = XLSX.utils.decode_range(ref);
-
-    // 1) Déterminer la dernière colonne du tableau depuis la ligne 8
-    let lastCol = -1;
-    for (let C = sheetRange.e.c; C >= sheetRange.s.c; C--) {
-        const addr = XLSX.utils.encode_cell({ r: HEADER_ROW, c: C });
-        const txt = getCellText(ws[addr]).replace(/\s/g, '');
-        if (txt) { lastCol = C; break; }
-    }
-    if (lastCol === -1) lastCol = sheetRange.e.c;
-
-    // 2) Déterminer la dernière ligne élève en scannant la colonne A (NIN)
-    let lastRow = HEADER_ROW;
-    for (let R = FIRST_STUDENT_ROW; R <= sheetRange.e.r; R++) {
-        const ninAddr = XLSX.utils.encode_cell({ r: R, c: NIN_COL });
-        const ninTxt = getCellText(ws[ninAddr]).trim();
-        if (!ninTxt) break;
-        lastRow = R;
-    }
-
-    // 3) Ajuster la largeur des colonnes A, B, C, D selon contenu
-    const cols = ws['!cols'] ? [...ws['!cols']] : [];
-    [0, 1, 2, 3].forEach((C) => {
-        let maxW = 0;
-        for (let R = HEADER_ROW; R <= lastRow; R++) {
-            const addr = XLSX.utils.encode_cell({ r: R, c: C });
-            const txt = getCellText(ws[addr]);
-            maxW = Math.max(maxW, calcTextWidth(txt));
-        }
-        const wch = Math.max(8, Math.min(45, Math.ceil(maxW + 2)));
-        cols[C] = { ...(cols[C] || {}), wch };
-    });
-
-    // 4) Ajuster colonnes E jusqu'à la fin selon les en-têtes
-    for (let C = 4; C <= lastCol; C++) {
-        const addr = XLSX.utils.encode_cell({ r: HEADER_ROW, c: C });
-        const txt = getCellText(ws[addr]);
-        const wch = Math.max(8, Math.min(45, Math.ceil(calcTextWidth(txt) + 2)));
-        cols[C] = { ...(cols[C] || {}), wch };
-    }
-    ws['!cols'] = cols;
-
-    // ✅ 5) AUGMENTER LA HAUTEUR DES LIGNES de la ligne 1 jusqu'au dernier élève
-    if (!ws['!rows']) ws['!rows'] = [];
-    
-    const ROW_HEIGHT = 25; // Hauteur en points (ajustez selon vos besoins)
-    
-    for (let R = 0; R <= lastRow; R++) {
-        // Préserver les propriétés existantes (comme hidden pour lignes 6 et 7)
-        const existingRowProps = ws['!rows'][R] || {};
-        ws['!rows'][R] = {
-            ...existingRowProps,
-            hpt: ROW_HEIGHT  // hauteur en points
-        };
-    }
-
-    // 6) Appliquer double bordure à toute la plage (en-têtes + élèves)
-    for (let R = HEADER_ROW; R <= lastRow; R++) {
-        for (let C = sheetRange.s.c; C <= lastCol; C++) {
-            const addr = XLSX.utils.encode_cell({ r: R, c: C });
-            if (!ws[addr]) ws[addr] = { t: 's', v: '' };
-            setBorderDouble(ws[addr]);
-        }
-    }
-}
             function processRakmanaWorkbook(workbook, originalFileName) {
                 const t = translations[currentLanguage];
                 const className = document.getElementById('select-class-export')?.value || '';
