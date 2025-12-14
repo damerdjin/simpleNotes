@@ -140,6 +140,7 @@ const translations = {
         compositionShort: "Composition",
         sum: "Somme",
         average: "Moyenne",
+        max: "Maximum",
         normalize: "Normaliser",
         targetMax: "Note cible",
         outputOn: "Sortie sur",
@@ -312,6 +313,7 @@ const translations = {
 
         sum: "Sum",
         average: "Average",
+        max: "Maximum",
         normalize: "Normalize",
         targetMax: "Target max",
         outputOn: "Output on",
@@ -484,6 +486,7 @@ const translations = {
 
         sum: "مجموع",
         average: "معدل",
+        max: "الأقصى",
         normalize: "توحيد",
         targetMax: "العلامة القصوى",
         outputOn: "الإخراج على",

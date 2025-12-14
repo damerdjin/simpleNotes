@@ -4354,6 +4354,10 @@
                     // max "moyen" (info), arrondi 2 décimales
                     return maxes.reduce((s, x) => s + x, 0) / maxes.length;
                 }
+                if (groupCfg.combine === 'max') {
+                    // max des max (info), le plus élevé
+                    return Math.max(...maxes);
+                }
                 // sum
                 return maxes.reduce((s, x) => s + x, 0);
             }
@@ -4490,6 +4494,23 @@
                         // moyenne brute des notes (pas d’échelle)
                         const avgRaw = valid.reduce((s, e) => s + (e.total || 0), 0) / valid.length;
                         return avgRaw;
+                    }
+                }
+
+                if (groupCfg.combine === 'max') {
+                    const valid = entries.filter(e => e.has && e.max > 0);
+
+                    if (valid.length === 0) return null;
+
+                    if (groupCfg.normalize) {
+                        // maximum des pourcentages puis mise à l’échelle (targetMax)
+                        const percents = valid.map(e => (e.total / e.max));
+                        const maxP = Math.max(...percents);
+                        return maxP * targetMax;
+                    } else {
+                        // maximum brute des notes
+                        const notes = valid.map(e => e.total || 0);
+                        return Math.max(...notes);
                     }
                 }
 
@@ -4720,6 +4741,7 @@
                 onchange="setExportGroupField('devoir1','combine',this.value)">
                 <option value="sum" ${cfg.devoir1.combine === 'sum' ? 'selected' : ''}>${t.sum}</option>
                 <option value="avg" ${cfg.devoir1.combine === 'avg' ? 'selected' : ''}>${t.average}</option>
+                <option value="max" ${cfg.devoir1.combine === 'max' ? 'selected' : ''}>${t.max}</option>
               </select>
               <label class="text-sm flex items-center gap-2">
                 <input type="checkbox" class="w-4 h-4" ${cfg.devoir1.normalize ? 'checked' : ''}
@@ -4753,6 +4775,7 @@
                 onchange="setExportGroupField('devoir2','combine',this.value)">
                 <option value="sum" ${cfg.devoir2.combine === 'sum' ? 'selected' : ''}>${t.sum}</option>
                 <option value="avg" ${cfg.devoir2.combine === 'avg' ? 'selected' : ''}>${t.average}</option>
+                <option value="max" ${cfg.devoir2.combine === 'max' ? 'selected' : ''}>${t.max}</option>
               </select>
               <label class="text-sm flex items-center gap-2">
                 <input type="checkbox" class="w-4 h-4" ${cfg.devoir2.normalize ? 'checked' : ''}
