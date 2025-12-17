@@ -81,6 +81,12 @@ async function build() {
     await fs.writeFile(path.join(distDir, 'styles.css'), cssMin, 'utf8');
   }
 
+  // Copy favicon.ico if present
+  const srcFavicon = path.join(root, 'favicon.ico');
+  if (await fs.pathExists(srcFavicon)) {
+    await fs.copy(srcFavicon, path.join(distDir, 'favicon.ico'));
+  }
+
   console.log('Build complete. Output in ./dist');
 }
 
