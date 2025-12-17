@@ -9,6 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
     <style>
         /* ===== RTL SUPPORT COMPLET ET OPTIMISÉ ===== */
         .rtl-layout {
@@ -1019,8 +1020,8 @@
             }
 
             function softResetUI() {
-                try { closeRemarksModal(); } catch (e) {}
-                try { closeAssignmentModal(); } catch (e) {}
+                try { closeRemarksModal(); } catch (e) { }
+                try { closeAssignmentModal(); } catch (e) { }
                 const rm = document.getElementById('remarks-modal'); if (rm) rm.remove();
                 const am = document.getElementById('assignment-modal'); if (am) am.remove();
                 const sm = document.getElementById('student-modal'); if (sm) { sm.classList.remove('active'); sm.classList.add('hidden'); }
@@ -1063,8 +1064,8 @@
                 });
                 document.addEventListener('keydown', (e) => {
                     if (e.key === 'Escape') {
-                        try { closeRemarksModal(); } catch (_) {}
-                        try { closeAssignmentModal(); } catch (_) {}
+                        try { closeRemarksModal(); } catch (_) { }
+                        try { closeAssignmentModal(); } catch (_) { }
                         const rm = document.getElementById('remarks-modal'); if (rm) rm.remove();
                         const am = document.getElementById('assignment-modal'); if (am) am.remove();
                     }
@@ -1548,7 +1549,7 @@
                         if (globalMaxInput) globalMaxInput.value = 20;
                     }
                     toggleGlobalAssignmentMode(isGlobalAssignment);
-                } catch (e) {}
+                } catch (e) { }
                 renderExercisesBuilder();
             }
 
@@ -4083,7 +4084,7 @@
 
             function getDefaultGlobalRemarks() {
                 return {
-                    bands: [ {min:0,max:6}, {min:6.01,max:9.99}, {min:10,max:13.99}, {min:14,max:15.99}, {min:16,max:17.99}, {min:18,max:20} ],
+                    bands: [{ min: 0, max: 6 }, { min: 6.01, max: 9.99 }, { min: 10, max: 13.99 }, { min: 14, max: 15.99 }, { min: 16, max: 17.99 }, { min: 18, max: 20 }],
                     FR: [
                         [
                             { obs: 'Résultats très insuffisants.', cons: "Renforcer les bases et demander de l’aide." },
@@ -4231,13 +4232,13 @@
                                 break;
                             }
                         }
-                    } catch (e) {}
+                    } catch (e) { }
                 }
                 const defs = getDefaultGlobalRemarks();
                 if (!exportPrepConfig.globalRemarks) exportPrepConfig.globalRemarks = defs;
                 const gr = exportPrepConfig.globalRemarks;
                 if (!Array.isArray(gr.bands) || gr.bands.length === 0) gr.bands = defs.bands;
-                const langs = ['FR','EN','AR'];
+                const langs = ['FR', 'EN', 'AR'];
                 for (const L of langs) {
                     if (!Array.isArray(gr[L]) || gr[L].length === 0) gr[L] = defs[L];
                     while (gr[L].length < gr.bands.length) gr[L].push([]);
@@ -4814,7 +4815,7 @@
                 const students = data.students.filter(s => (s.className || '').trim() === (className || '').trim());
                 meta.textContent = `${students.length} ${t.students}`;
 
-            renderExportPreviewTable(className, cfg);
+                renderExportPreviewTable(className, cfg);
 
                 // retraduire le contenu dynamique
                 translatePage();
@@ -4906,7 +4907,7 @@
                 for (let i = 0; i < bands.length; i++) {
                     const list = [];
                     const bandMsgs = perBand[`${i}`] || {};
-                    const keys = Object.keys(bandMsgs).map(k => parseInt(k, 10)).sort((a,b)=>a-b);
+                    const keys = Object.keys(bandMsgs).map(k => parseInt(k, 10)).sort((a, b) => a - b);
                     for (const k of keys) {
                         const m = bandMsgs[k];
                         if ((m.obs || '').trim() || (m.cons || '').trim()) list.push({ obs: m.obs || '', cons: m.cons || '' });
@@ -5648,7 +5649,7 @@
                 if (hasTP && colIndices.tp !== -1) colsUsed.push(`TP: ${String.fromCharCode(65 + colIndices.tp)}`);
                 if (colIndices.comp !== -1) colsUsed.push(`Composition: ${String.fromCharCode(65 + colIndices.comp)}`);
 
-            alert(`✅ Fichier généré : ${newFileName}\n\n📊 ${matchCount} élève(s) mis à jour\n📍 Colonnes utilisées : ${colsUsed.join(', ')}\n🔐 Feuille protégée avec plage de saisie déverrouillée.`);
+                alert(`✅ Fichier généré : ${newFileName}\n\n📊 ${matchCount} élève(s) mis à jour\n📍 Colonnes utilisées : ${colsUsed.join(', ')}\n🔐 Feuille protégée avec plage de saisie déverrouillée.`);
             }
             async function processRakmanaWorkbookExcelJS(arrayBuffer, originalFileName) {
                 const t = translations[currentLanguage];
@@ -5657,10 +5658,17 @@
                     alert(t.selectClass || "Veuillez sélectionner une classe d'abord.");
                     return;
                 }
+
+                console.log("[Rakmana] 🚀 Démarrage de la stratégie hybride (ExcelJS + JSZip)");
+
+                // ===== ÉTAPE 1 : Générer le fichier modifié avec ExcelJS =====
+                console.log("[Rakmana] 📝 Chargement et modification avec ExcelJS...");
                 const excelWb = new ExcelJS.Workbook();
                 await excelWb.xlsx.load(arrayBuffer);
                 const cleanClassName = className.replace(/\s/g, '').toUpperCase();
                 let targetWorksheet = null;
+                let targetSheetName = null;
+
                 for (const ws of excelWb.worksheets) {
                     const r5 = ws.getRow(5);
                     let txt = '';
@@ -5671,6 +5679,7 @@
                     const clean = txt.replace(/\s/g, '').toUpperCase();
                     if (clean.includes(cleanClassName)) {
                         targetWorksheet = ws;
+                        targetSheetName = ws.name;
                         break;
                     }
                 }
@@ -5678,6 +5687,9 @@
                     alert(t.rakamnaClassSheetNotFound || `Classe "${className}" non trouvée.`);
                     return;
                 }
+
+                console.log(`[Rakmana] ✅ Feuille trouvée: "${targetSheetName}"`);
+
                 const headerRow = targetWorksheet.getRow(8);
                 const HEADERS = { cc: 'التقييم المستمر', devoir: 'معدل الفروض', tp: 'المطالعة', comp: 'الاختبار' };
                 const findColumnIndex = (needle) => {
@@ -5744,17 +5756,135 @@
                     alert(t.rakamnaNoStudentsMatched || "Attention : Aucun élève n'a été trouvé dans le fichier Excel avec un NIN correspondant.");
                     return;
                 }
-                // Ne pas modifier le format original (pas de bordures/hauteurs)
-                const buffer = await excelWb.xlsx.writeBuffer();
-                const newFileName = originalFileName;
-                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+                console.log(`[Rakmana] ✍️ ${matchCount} élève(s) mis à jour avec ExcelJS`);
+
+                // Générer le buffer modifié
+                const correctedBuffer = await excelWb.xlsx.writeBuffer();
+                console.log("[Rakmana] ✅ Fichier modifié généré (SANS protection)");
+
+                // ===== ÉTAPE 2 : Extraire la protection du fichier original avec JSZip =====
+                console.log("[Rakmana] 🔐 Extraction de la protection du fichier original...");
+
+                // Vérifier que JSZip est disponible
+                if (typeof JSZip === 'undefined') {
+                    console.warn("[Rakmana] ⚠️ JSZip non disponible, téléchargement sans protection...");
+                    // Fallback : télécharger sans protection
+                    const blob = new Blob([correctedBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = originalFileName;
+                    document.body.appendChild(link);
+                    link.click();
+                    URL.revokeObjectURL(link.href);
+                    document.body.removeChild(link);
+                    alert(`✅ ${matchCount} élève(s) mis à jour.\n⚠️ La protection n'a pas pu être préservée (JSZip manquant).`);
+                    return;
+                }
+
+                const originalZip = await JSZip.loadAsync(arrayBuffer);
+                const correctedZip = await JSZip.loadAsync(correctedBuffer);
+
+                // Lire workbook.xml pour trouver les feuilles
+                const workbookXml = await originalZip.file("xl/workbook.xml")?.async("string");
+                const workbookRelsXml = await originalZip.file("xl/_rels/workbook.xml.rels")?.async("string");
+
+                if (!workbookXml || !workbookRelsXml) {
+                    console.warn("[Rakmana] ⚠️ Structure Excel invalide, téléchargement sans protection...");
+                    const blob = new Blob([correctedBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = originalFileName;
+                    document.body.appendChild(link);
+                    link.click();
+                    URL.revokeObjectURL(link.href);
+                    document.body.removeChild(link);
+                    alert(`✅ ${matchCount} élève(s) mis à jour.\n⚠️ La protection n'a pas pu être préservée.`);
+                    return;
+                }
+
+                const parser = new DOMParser();
+                const wbDoc = parser.parseFromString(workbookXml, "text/xml");
+                const relsDoc = parser.parseFromString(workbookRelsXml, "text/xml");
+
+                // ===== ÉTAPE 3 : Parcourir chaque feuille et transplanter la protection =====
+                const sheets = Array.from(wbDoc.getElementsByTagName("sheet"));
+                let protectionTransplanted = false;
+
+                for (const sheetNode of sheets) {
+                    const sheetName = sheetNode.getAttribute("name");
+                    const rId = sheetNode.getAttribute("r:id");
+
+                    // Trouver le fichier XML de la feuille
+                    const relNode = Array.from(relsDoc.getElementsByTagName("Relationship"))
+                        .find(n => n.getAttribute("Id") === rId);
+                    const target = relNode?.getAttribute("Target");
+                    if (!target) continue;
+
+                    const fullPath = target.startsWith("/") ? target.substring(1) : `xl/${target}`;
+
+                    // Extraire le tag de protection du fichier original
+                    const originalSheetXml = await originalZip.file(fullPath)?.async("string");
+                    if (!originalSheetXml) continue;
+
+                    const protectionMatch = originalSheetXml.match(/<sheetProtection[^>]*\/>/);
+                    if (!protectionMatch) {
+                        console.log(`[Rakmana] ℹ️ Pas de protection dans la feuille "${sheetName}"`);
+                        continue;
+                    }
+
+                    const protectionTag = protectionMatch[0];
+                    console.log(`[Rakmana] 🔍 Protection trouvée dans "${sheetName}": ${protectionTag}`);
+
+                    // Charger le XML de la feuille modifiée
+                    let correctedSheetXml = await correctedZip.file(fullPath)?.async("string");
+                    if (!correctedSheetXml) continue;
+
+                    // CRITIQUE : Supprimer toute protection existante
+                    correctedSheetXml = correctedSheetXml.replace(/<sheetProtection[^>]*\/>/g, '');
+                    console.log(`[Rakmana] 🗑️ Protection existante supprimée dans "${sheetName}"`);
+
+                    // Trouver le point d'insertion (après </sheetData>)
+                    const sheetDataEndIndex = correctedSheetXml.indexOf("</sheetData>");
+                    if (sheetDataEndIndex === -1) {
+                        console.warn(`[Rakmana] ⚠️ Balise </sheetData> non trouvée dans "${sheetName}"`);
+                        continue;
+                    }
+
+                    const insertionPoint = sheetDataEndIndex + "</sheetData>".length;
+
+                    // Insérer le tag de protection ORIGINAL
+                    correctedSheetXml =
+                        correctedSheetXml.substring(0, insertionPoint) +
+                        protectionTag +
+                        correctedSheetXml.substring(insertionPoint);
+
+                    // Écrire le XML modifié dans le zip
+                    correctedZip.file(fullPath, correctedSheetXml);
+                    console.log(`[Rakmana] ✅ Protection transplantée dans "${sheetName}"`);
+                    protectionTransplanted = true;
+                }
+
+                // ===== ÉTAPE 4 : Générer le fichier final =====
+                console.log("[Rakmana] 📦 Génération du fichier final...");
+                const finalBlob = await correctedZip.generateAsync({ type: "blob" });
+
+                // Télécharger le fichier
                 const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = newFileName;
+                link.href = URL.createObjectURL(finalBlob);
+                link.download = originalFileName;
                 document.body.appendChild(link);
                 link.click();
                 URL.revokeObjectURL(link.href);
                 document.body.removeChild(link);
+
+                console.log("[Rakmana] 🎉 Fichier téléchargé avec succès!");
+
+                const msg = protectionTransplanted
+                    ? `✅ ${matchCount} élève(s) mis à jour\n🔐 Protection par mot de passe préservée`
+                    : `✅ ${matchCount} élève(s) mis à jour\nℹ️ Aucune protection n'a été détectée dans le fichier original`;
+
+                alert(msg);
             }
             // Initialize
             loadData();

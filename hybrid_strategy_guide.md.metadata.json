@@ -1,0 +1,5 @@
+{
+  "artifactType": "ARTIFACT_TYPE_OTHER",
+  "summary": "Technical guide explaining the Hybrid Strategy for modifying password-protected Excel files. Covers the problem, previous failed approaches, detailed implementation steps, critical pitfalls to avoid, debugging logs, and application to the user's Excel filling scenario. Includes code examples, file structure diagrams, and validation checklist.",
+  "updatedAt": "2025-12-16T21:53:11.265177100Z"
+}
