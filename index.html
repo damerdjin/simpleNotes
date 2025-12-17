@@ -10,6 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
     <style>
         /* ===== RTL SUPPORT COMPLET ET OPTIMISÉ ===== */
         .rtl-layout {
@@ -991,6 +992,12 @@
 
 
         <script src="./translations.js"></script>
+        <script type="module">
+            import { computeExportRemarks } from "./remarks.engine.js";
+            window.computeExportRemarks = computeExportRemarks;
+        </script>
+
+
         <script>
             // Language Management
             let currentLanguage = 'fr';
@@ -5043,7 +5050,7 @@
                             ? (devoir + cc + tp + 2 * comp) / 5
                             : (devoir + cc + 2 * comp) / 4;
                     }
-
+                    //console.log(s.name, { devoir, comp, moyenne })
                     const ccExpected = !!ccA;
                     const tpExpected = !!tpA;
                     const compExpected = !!compA;
@@ -5055,35 +5062,46 @@
                     const devoirClass = cellClassForValue(devoir, devoirExpected);
                     const avgClass = cellClassForValue(moyenne, (ccExpected && compExpected && (!hasTP || tpExpected)));
 
-                    const rm = computeRemarksForAverage(className, moyenne);
+
+                    const rm = (window.computeExportRemarks)
+                        ? window.computeExportRemarks({
+                            devoir,
+                            comp,
+                            avg: moyenne,
+                            currentLanguage,
+                            seed: s.id || 0
+                        })
+                        : { obs: "", cons: "" };
+                        
+
                     return `
-      <tr class="border-b hover:bg-gray-50">
-        <td class="p-3 bg-gray-50 sticky left-0 z-10 font-medium">${s.name}</td>
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-3 bg-gray-50 sticky left-0 z-10 font-medium">${s.name}</td>
 
-        <td class="p-3 text-center ${ccClass}" title="${cc === null && ccExpected ? (t.missingGrade || '') : (cc === 0 ? (t.zeroGrade || '') : '')}">
-          ${fmt(cc)}
-        </td>
+                            <td class="p-3 text-center ${ccClass}" title="${cc === null && ccExpected ? (t.missingGrade || '') : (cc === 0 ? (t.zeroGrade || '') : '')}">
+                            ${fmt(cc)}
+                            </td>
 
-        <td class="p-3 text-center font-bold ${devoirClass}" title="${devoir === null ? (t.missingGrade || '') : (devoir === 0 ? (t.zeroGrade || '') : '')}">
-          ${fmt(devoir)}
-        </td>
+                            <td class="p-3 text-center font-bold ${devoirClass}" title="${devoir === null ? (t.missingGrade || '') : (devoir === 0 ? (t.zeroGrade || '') : '')}">
+                            ${fmt(devoir)}
+                            </td>
 
-        ${hasTP ? `
-          <td class="p-3 text-center ${tpClass}" title="${tp === null && tpExpected ? (t.missingGrade || '') : (tp === 0 ? (t.zeroGrade || '') : '')}">
-            ${fmt(tp)}
-          </td>` : ``}
+                            ${hasTP ? `
+                            <td class="p-3 text-center ${tpClass}" title="${tp === null && tpExpected ? (t.missingGrade || '') : (tp === 0 ? (t.zeroGrade || '') : '')}">
+                                ${fmt(tp)}
+                            </td>` : ``}
 
-        <td class="p-3 text-center ${compClass}" title="${comp === null && compExpected ? (t.missingGrade || '') : (comp === 0 ? (t.zeroGrade || '') : '')}">
-          ${fmt(comp)}
-        </td>
+                            <td class="p-3 text-center ${compClass}" title="${comp === null && compExpected ? (t.missingGrade || '') : (comp === 0 ? (t.zeroGrade || '') : '')}">
+                            ${fmt(comp)}
+                            </td>
 
-        <td class="p-3 text-center font-bold ${avgClass}">
-          ${fmt(moyenne)}
-        </td>
-        <td class="p-3 text-left">${rm.obs || ''}</td>
-        <td class="p-3 text-left">${rm.cons || ''}</td>
-      </tr>
-    `;
+                            <td class="p-3 text-center font-bold ${avgClass}">
+                            ${fmt(moyenne)}
+                            </td>
+                            <td class="p-3 text-left">${rm.obs || ''}</td>
+                            <td class="p-3 text-left">${rm.cons || ''}</td>
+                        </tr>
+                        `;
                 }).join('');
 
                 const cols = [
