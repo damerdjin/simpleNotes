@@ -5360,15 +5360,57 @@
                 const tpA = cfg.tpAssignmentId ? data.assignments.find(a => a.id === cfg.tpAssignmentId) : null;
                 const hasTP = cfg.hasTp && tpA;
                 const gradesByNIN = {};
+                const averagesDebug = [];   // toutes les moyennes calculées (par élève de la classe)
+                const matchedDebug = [];    // uniquement ceux réellement matchés dans le fichier Excel
+
+                console.log("[Rakmana] Poids utilisés pour la moyenne :", {
+                    cc: cfg?.weightCc ?? 1,
+                    devoir: cfg?.weightDevoir ?? 1,
+                    tp: cfg?.weightTp ?? 1,
+                    comp: cfg?.weightComp ?? 1
+                });
                 data.students.forEach(s => {
                     if ((s.className || '').trim() !== className) return;
+
                     const cc = ccA ? calcScaledScore(s.id, ccA) : null;
                     const comp = compA ? calcScaledScore(s.id, compA) : null;
                     const devoir = computeDevoirFinal(s.id, className, cfg);
                     const tp = hasTP ? calcScaledScore(s.id, tpA) : null;
+
                     const nin = String(s.nin || '').replace(/\s/g, '').trim();
-                    if (nin) gradesByNIN[nin] = { cc, devoir, tp, comp };
+                    if (!nin) return;
+
+                    const g = { cc, devoir, tp, comp };
+                    const avg = computeAverageFromGrades(g, cfg, hasTP);
+
+                    // Stocke aussi avg (pratique pour réutiliser dans la boucle Excel)
+                    gradesByNIN[nin] = { ...g, avg, _studentId: s.id };
+
+                    // Nom lisible (selon tes champs existants)
+                    const name =
+                        s.fullName ||
+                        s.name ||
+                        s.nomComplet ||
+                        `${s.lastName || s.nom || ''} ${s.firstName || s.prenom || ''}`.trim();
+
+                    averagesDebug.push({
+                        nin,
+                        name,
+                        cc: cc == null ? null : round2(cc),
+                        devoir: devoir == null ? null : round2(devoir),
+                        tp: tp == null ? null : round2(tp),
+                        comp: comp == null ? null : round2(comp),
+                        moyenne: avg == null ? null : round2(avg)
+                    });
                 });
+                console.group(`[Rakmana] Moyennes calculées (${className})`);
+                console.table(
+                    averagesDebug
+                        .slice()
+                        .sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')))
+                );
+                console.groupEnd();
+
                 let matchCount = 0;
                 let lastRow = 8;
                 const lastCol = Math.max(targetWorksheet.columnCount, 10);
@@ -5539,28 +5581,27 @@
             //const round2 = (x) => Math.round((x + Number.EPSILON) * 100) / 100;
 
             function computeAverageFromGrades(g, cfg, hasTP) {
-                // Poids par défaut = 1 (tu peux les mettre dans cfg si tu veux)
-                const w = {
-                    cc: cfg?.weightCc ?? 1,
-                    devoir: cfg?.weightDevoir ?? 1,
-                    tp: cfg?.weightTp ?? 1,
-                    comp: cfg?.weightComp ?? 1
+                const toNum = (x) => {
+                    const n = Number(x);
+                    return Number.isFinite(n) ? n : null;
                 };
 
-                const parts = [];
-                if (g.cc != null) parts.push({ v: Number(g.cc), w: w.cc });
-                if (g.devoir != null) parts.push({ v: Number(g.devoir), w: w.devoir });
-                if (hasTP && g.tp != null) parts.push({ v: Number(g.tp), w: w.tp });
-                if (g.comp != null) parts.push({ v: Number(g.comp), w: w.comp });
+                const cc = toNum(g.cc);
+                const dev = toNum(g.devoir);
+                const compo = toNum(g.comp);
+                const tp = toNum(g.tp);
 
-                const valid = parts.filter(p => Number.isFinite(p.v) && Number.isFinite(p.w) && p.w > 0);
-                const sumW = valid.reduce((a, p) => a + p.w, 0);
-                if (sumW === 0) return null;
+                // On exige les 3 notes de base
+                if (cc == null || dev == null || compo == null) return null;
 
-                const avg = valid.reduce((a, p) => a + p.v * p.w, 0) / sumW;
-                return avg;
+                if (hasTP) {
+                    // Si TP est censé compter, on exige TP
+                    if (tp == null) return null;
+                    return (cc + dev + tp + 2 * compo) / 5;
+                }
+
+                return (cc + dev + 2 * compo) / 4;
             }
-
             function observationAndAdviceFromAverage(avg) {
                 // Exemple de barème (à adapter à tes règles)
                 if (avg == null) return { obs: '', cons: '' };
