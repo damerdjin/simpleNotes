@@ -5244,7 +5244,7 @@
                 const reader = new FileReader();
                 reader.onload = function (e) {
                     try {
-                        processRakmanaWorkbookExcelJS(e.target.result, file.name);
+                        processRakmanaWorkbookExcelJS_AllClasses(e.target.result, file.name);
                     } catch (err) {
                         alert("Erreur lors de la lecture du fichier Excel : " + err.message);
                     }
@@ -5271,7 +5271,7 @@
                 const reader = new FileReader();
                 reader.onload = async (e) => {
                     try {
-                        await processRakmanaWorkbookExcelJS(e.target.result, file.name);
+                        await processRakmanaWorkbookExcelJS_AllClasses(e.target.result, file.name);
                     } catch (error) {
                         alert(t.rakamnaProcessingError || "Une erreur est survenue lors du traitement du fichier XLSX.");
                     } finally {
@@ -5579,6 +5579,363 @@
             }
 
             //const round2 = (x) => Math.round((x + Number.EPSILON) * 100) / 100;
+            async function processRakmanaWorkbookExcelJS_AllClasses(arrayBuffer, originalFileName) {
+                const t = translations[currentLanguage] || {};
+
+                // 1) Récupérer toutes les classes "enseignant"
+                const select = document.getElementById('select-class-export');
+                const classNames = select
+                    ? Array.from(select.options).map(o => (o.value || '').trim()).filter(Boolean)
+                    : [...new Set((data.students || []).map(s => (s.className || '').trim()).filter(Boolean))];
+
+                if (!classNames.length) {
+                    alert(t.selectClass || "Aucune classe trouvée.");
+                    return;
+                }
+
+                console.log("[Rakmana] Export multi-classes - classes détectées :", classNames);
+
+                // 2) Charger workbook
+                const excelWb = new ExcelJS.Workbook();
+                await excelWb.xlsx.load(arrayBuffer);
+
+                // Helpers
+                const normalize = (s) => String(s || '').replace(/\s/g, '').toUpperCase();
+
+                const extractNIN = (cellValue) => {
+                    if (cellValue === undefined || cellValue === null) return '';
+                    let s = String(cellValue).replace(/\s/g, '').trim();
+                    if (!s) return '';
+                    if (s.endsWith('.0') && /^\d+\.0$/.test(s)) s = s.slice(0, -2);
+                    return s;
+                };
+
+                const findWorksheetForClass = (className) => {
+                    const cleanClass = normalize(className);
+                    for (const ws of excelWb.worksheets) {
+                        const r5 = ws.getRow(5);
+                        let txt = '';
+                        for (let c = 1; c <= Math.max(ws.columnCount, 20); c++) {
+                            const v = r5.getCell(c).value;
+                            if (v !== undefined && v !== null) txt += String(v);
+                        }
+                        if (normalize(txt).includes(cleanClass)) return ws;
+                    }
+                    return null;
+                };
+
+                // En-têtes (ligne 8)
+                const HEADERS = {
+                    cc: 'التقييم المستمر',
+                    devoir: 'معدل الفروض',
+                    tp: 'المطالعة',
+                    comp: 'الاختبار',
+                    obs: 'التقديرات',
+                    cons: 'الارشادات'
+                };
+
+                const findColumnIndex = (ws, headerRow, needle) => {
+                    const norm = needle.replace(/\s/g, '');
+                    for (let i = 1; i <= Math.max(ws.columnCount, 40); i++) {
+                        const v = headerRow.getCell(i).value;
+                        const s = String(v || '').replace(/\s/g, '');
+                        if (s.includes(norm)) return i;
+                    }
+                    return -1;
+                };
+
+                // Lookup assignments rapide (optionnel mais propre)
+                const assignmentsById = new Map((data.assignments || []).map(a => [a.id, a]));
+
+                // 3) PRE-FLIGHT (on prépare un "plan" pour garantir un export atomique)
+                const plan = [];
+                const issues = [];
+
+                for (const className of classNames) {
+                    const cfg = getExportClassConfig(className);
+
+                    if (!cfg) {
+                        issues.push(`- ${className}: configuration d'export absente.`);
+                        continue;
+                    }
+
+                    const ccA = cfg.ccAssignmentId ? assignmentsById.get(cfg.ccAssignmentId) : null;
+                    const compA = cfg.compAssignmentId ? assignmentsById.get(cfg.compAssignmentId) : null;
+                    const tpA = cfg.tpAssignmentId ? assignmentsById.get(cfg.tpAssignmentId) : null;
+                    const hasTP = !!(cfg.hasTp && tpA);
+
+                    // Tu peux être plus/moins strict ici. Je mets strict sur CC+Compo (souvent indispensables).
+                    if (!ccA) issues.push(`- ${className}: CC non configuré (ccAssignmentId manquant ou introuvable).`);
+                    if (!compA) issues.push(`- ${className}: Composition non configurée (compAssignmentId manquant ou introuvable).`);
+                    if (cfg.hasTp && !tpA) issues.push(`- ${className}: TP activé mais tpAssignmentId manquant ou introuvable.`);
+
+                    const ws = findWorksheetForClass(className);
+                    if (!ws) {
+                        issues.push(`- ${className}: feuille non trouvée dans le classeur officiel (ligne 5).`);
+                        continue;
+                    }
+
+                    const headerRow = ws.getRow(8);
+                    const colIndices = {
+                        cc: findColumnIndex(ws, headerRow, HEADERS.cc),
+                        devoir: findColumnIndex(ws, headerRow, HEADERS.devoir),
+                        tp: findColumnIndex(ws, headerRow, HEADERS.tp),
+                        comp: findColumnIndex(ws, headerRow, HEADERS.comp),
+                        obs: findColumnIndex(ws, headerRow, HEADERS.obs),
+                        cons: findColumnIndex(ws, headerRow, HEADERS.cons)
+                    };
+
+                    const missingHeaders = [];
+                    if (colIndices.cc === -1) missingHeaders.push(HEADERS.cc);
+                    if (colIndices.devoir === -1) missingHeaders.push(HEADERS.devoir);
+                    if (colIndices.comp === -1) missingHeaders.push(HEADERS.comp);
+                    if (hasTP && colIndices.tp === -1) missingHeaders.push(HEADERS.tp);
+                    if (colIndices.obs === -1) missingHeaders.push(HEADERS.obs);
+                    if (colIndices.cons === -1) missingHeaders.push(HEADERS.cons);
+
+                    if (missingHeaders.length) {
+                        issues.push(`- ${className}: en-têtes manquants (ligne 8): ${missingHeaders.join(' | ')}`);
+                        continue;
+                    }
+
+                    // Construire gradesByNIN pour cette classe
+                    const gradesByNIN = {};
+                    let studentsWithNIN = 0;
+
+                    (data.students || []).forEach(s => {
+                        if ((s.className || '').trim() !== className) return;
+
+                        const nin = String(s.nin || '').replace(/\s/g, '').trim();
+                        if (!nin) return;
+
+                        studentsWithNIN++;
+
+                        const cc = ccA ? calcScaledScore(s.id, ccA) : null;
+                        const comp = compA ? calcScaledScore(s.id, compA) : null;
+                        const devoir = computeDevoirFinal(s.id, className, cfg);
+                        const tp = hasTP ? calcScaledScore(s.id, tpA) : null;
+
+                        gradesByNIN[nin] = { cc, devoir, tp, comp };
+                    });
+
+                    if (studentsWithNIN === 0) {
+                        issues.push(`- ${className}: aucun élève avec NIN côté application.`);
+                        continue;
+                    }
+
+                    // Dry-run matching dans Excel
+                    let totalMatches = 0;
+                    for (let r = 9; r <= ws.rowCount; r++) {
+                        const nin = extractNIN(ws.getRow(r).getCell(1).value);
+                        if (!nin) break;
+                        if (gradesByNIN[nin]) totalMatches++;
+                    }
+
+                    if (totalMatches === 0) {
+                        issues.push(`- ${className}: aucun NIN matché dans la feuille Excel (colonne A).`);
+                        continue;
+                    }
+
+                    // OK -> on ajoute au plan
+                    plan.push({ className, cfg, ws, colIndices, gradesByNIN, hasTP, expectedMatches: totalMatches });
+                }
+
+                // S'il y a des problèmes (config/headers/sheets/matching), on annule tout
+                if (issues.length) {
+                    console.warn("[Rakmana] Export annulé (preflight KO):\n" + issues.join("\n"));
+                    alert(
+                        "Export Rakmana annulé : certaines classes ne sont pas prêtes.\n\n" +
+                        issues.join("\n")
+                    );
+                    return;
+                }
+
+                // 4) APPLICATION : écrire toutes les classes
+                const perClassStats = [];
+                let totalMatches = 0;
+
+                for (const item of plan) {
+                    const { className, cfg, ws, colIndices, gradesByNIN, hasTP } = item;
+
+                    let classtotalMatches = 0;
+
+                    const writeGrade = (r, colIndex, val) => {
+                        if (colIndex === -1) return;
+                        if (val === null || val === undefined) { ws.getRow(r).getCell(colIndex).value = null; return; }
+                        ws.getRow(r).getCell(colIndex).value = round2(Number(val));
+                    };
+
+                    for (let r = 9; r <= ws.rowCount; r++) {
+                        const nin = extractNIN(ws.getRow(r).getCell(1).value);
+                        if (!nin) break;
+
+                        const g = gradesByNIN[nin];
+                        if (!g) continue;
+
+                        classtotalMatches++;
+
+                        writeGrade(r, colIndices.cc, g.cc);
+                        writeGrade(r, colIndices.devoir, g.devoir);
+                        if (hasTP) writeGrade(r, colIndices.tp, g.tp);
+                        writeGrade(r, colIndices.comp, g.comp);
+
+                        // Observation / Conseil selon moyenne (si tu as déjà ces fonctions)
+                        const avg = computeAverageFromGrades(g, cfg, hasTP);
+                        const { obs, cons } = observationAndAdviceFromAverage(avg);
+
+                        ws.getRow(r).getCell(colIndices.obs).value = obs;
+                        ws.getRow(r).getCell(colIndices.cons).value = cons;
+                    }
+
+                    perClassStats.push({ classe: className, elevesMisAJour: classtotalMatches });
+                    totalMatches += classtotalMatches;
+                }
+
+                console.table(perClassStats);
+                console.log(`[Rakmana] Export multi-classes OK: ${plan.length} classe(s), ${totalMatches} élève(s) mis à jour.`);
+
+                // 5) Générer le buffer modifié
+                const correctedBuffer = await excelWb.xlsx.writeBuffer();
+
+                // 6) IMPORTANT : ici tu reprends EXACTEMENT ton bloc JSZip actuel
+                // (Étape 2/3/4) pour préserver la protection, puis téléchargement.
+                //
+                // -> Ton code JSZip boucle déjà sur toutes les feuilles, donc il est compatible multi-classes sans changement.
+                //
+                // Juste pense à afficher un message final basé sur totalMatches + plan.length.
+                //
+                // Exemple de message final:
+                // alert(`✅ ${plan.length} classe(s) mises à jour\n✅ ${totalMatches} élève(s) mis à jour\n🔐 Protection préservée si détectée`);
+                // Générer le buffer modifié
+                //const correctedBuffer = await excelWb.xlsx.writeBuffer();
+                console.log("[Rakmana] ✅ Fichier modifié généré (SANS protection)");
+
+                // ===== ÉTAPE 2 : Extraire la protection du fichier original avec JSZip =====
+                console.log("[Rakmana] 🔐 Extraction de la protection du fichier original...");
+
+                // Vérifier que JSZip est disponible
+                if (typeof JSZip === 'undefined') {
+                    console.warn("[Rakmana] ⚠️ JSZip non disponible, téléchargement sans protection...");
+                    // Fallback : télécharger sans protection
+                    const blob = new Blob([correctedBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = originalFileName;
+                    document.body.appendChild(link);
+                    link.click();
+                    URL.revokeObjectURL(link.href);
+                    document.body.removeChild(link);
+                    alert(`✅ ${totalMatches} élève(s) mis à jour.\n⚠️ La protection n'a pas pu être préservée (JSZip manquant).`);
+                    return;
+                }
+
+                const originalZip = await JSZip.loadAsync(arrayBuffer);
+                const correctedZip = await JSZip.loadAsync(correctedBuffer);
+
+                // Lire workbook.xml pour trouver les feuilles
+                const workbookXml = await originalZip.file("xl/workbook.xml")?.async("string");
+                const workbookRelsXml = await originalZip.file("xl/_rels/workbook.xml.rels")?.async("string");
+
+                if (!workbookXml || !workbookRelsXml) {
+                    console.warn("[Rakmana] ⚠️ Structure Excel invalide, téléchargement sans protection...");
+                    const blob = new Blob([correctedBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = originalFileName;
+                    document.body.appendChild(link);
+                    link.click();
+                    URL.revokeObjectURL(link.href);
+                    document.body.removeChild(link);
+                    alert(`✅ ${totalMatches} élève(s) mis à jour.\n⚠️ La protection n'a pas pu être préservée.`);
+                    return;
+                }
+
+                const parser = new DOMParser();
+                const wbDoc = parser.parseFromString(workbookXml, "text/xml");
+                const relsDoc = parser.parseFromString(workbookRelsXml, "text/xml");
+
+                // ===== ÉTAPE 3 : Parcourir chaque feuille et transplanter la protection =====
+                const sheets = Array.from(wbDoc.getElementsByTagName("sheet"));
+                let protectionTransplanted = false;
+
+                for (const sheetNode of sheets) {
+                    const sheetName = sheetNode.getAttribute("name");
+                    const rId = sheetNode.getAttribute("r:id");
+
+                    // Trouver le fichier XML de la feuille
+                    const relNode = Array.from(relsDoc.getElementsByTagName("Relationship"))
+                        .find(n => n.getAttribute("Id") === rId);
+                    const target = relNode?.getAttribute("Target");
+                    if (!target) continue;
+
+                    const fullPath = target.startsWith("/") ? target.substring(1) : `xl/${target}`;
+
+                    // Extraire le tag de protection du fichier original
+                    const originalSheetXml = await originalZip.file(fullPath)?.async("string");
+                    if (!originalSheetXml) continue;
+
+                    const protectionMatch = originalSheetXml.match(/<sheetProtection[^>]*\/>/);
+                    if (!protectionMatch) {
+                        console.log(`[Rakmana] ℹ️ Pas de protection dans la feuille "${sheetName}"`);
+                        continue;
+                    }
+
+                    const protectionTag = protectionMatch[0];
+                    console.log(`[Rakmana] 🔍 Protection trouvée dans "${sheetName}": ${protectionTag}`);
+
+                    // Charger le XML de la feuille modifiée
+                    let correctedSheetXml = await correctedZip.file(fullPath)?.async("string");
+                    if (!correctedSheetXml) continue;
+
+                    // CRITIQUE : Supprimer toute protection existante
+                    correctedSheetXml = correctedSheetXml.replace(/<sheetProtection[^>]*\/>/g, '');
+                    console.log(`[Rakmana] 🗑️ Protection existante supprimée dans "${sheetName}"`);
+
+                    // Trouver le point d'insertion (après </sheetData>)
+                    const sheetDataEndIndex = correctedSheetXml.indexOf("</sheetData>");
+                    if (sheetDataEndIndex === -1) {
+                        console.warn(`[Rakmana] ⚠️ Balise </sheetData> non trouvée dans "${sheetName}"`);
+                        continue;
+                    }
+
+                    const insertionPoint = sheetDataEndIndex + "</sheetData>".length;
+
+                    // Insérer le tag de protection ORIGINAL
+                    correctedSheetXml =
+                        correctedSheetXml.substring(0, insertionPoint) +
+                        protectionTag +
+                        correctedSheetXml.substring(insertionPoint);
+
+                    // Écrire le XML modifié dans le zip
+                    correctedZip.file(fullPath, correctedSheetXml);
+                    console.log(`[Rakmana] ✅ Protection transplantée dans "${sheetName}"`);
+                    protectionTransplanted = true;
+                }
+
+                // ===== ÉTAPE 4 : Générer le fichier final =====
+                console.log("[Rakmana] 📦 Génération du fichier final...");
+                const finalBlob = await correctedZip.generateAsync({ type: "blob" });
+
+                // Télécharger le fichier
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(finalBlob);
+                link.download = originalFileName;
+                document.body.appendChild(link);
+                link.click();
+                URL.revokeObjectURL(link.href);
+                document.body.removeChild(link);
+
+                console.log("[Rakmana] 🎉 Fichier téléchargé avec succès!");
+
+                const msg = protectionTransplanted
+                    ? `✅ ${totalMatches} élève(s) mis à jour\n🔐 Protection par mot de passe préservée`
+                    : `✅ ${totalMatches} élève(s) mis à jour\nℹ️ Aucune protection n'a été détectée dans le fichier original`;
+
+                //alert(msg);
+                //alert(`✅ ${plan.length} classe(s) mises à jour\n✅ ${totalMatches} élève(s) mis à jour\n🔐 Protection préservée si détectée`);
+                alert(`✅ ${plan.length} classe(s) mises à jour\n✅ ${totalMatches} élève(s) mis à jour`);
+                return { correctedBuffer, totalMatches, perClassStats }; // optionnel si tu veux utiliser ces infos ensuite
+            }
 
             function computeAverageFromGrades(g, cfg, hasTP) {
                 const toNum = (x) => {
