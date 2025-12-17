@@ -921,11 +921,11 @@
                 </div>
 
                 <!-- Choix classe -->
-                <div class="mb-4 p-4 bg-gray-50 rounded-lg">
+                <div id="export-class-card" class="mb-4 p-4 bg-gray-50 rounded-lg">
                     <label class="block text-sm font-medium text-gray-700 mb-2" data-translate="selectClass">
                         -- Sélectionner une classe --
                     </label>
-                    <select id="select-class-export" onchange="onExportClassChange()"
+                    <select id="select-class-export" onchange="onExportClassChange(); updateExportClassCardColor();"
                         class="w-full md:w-80 p-3 border rounded-lg">
                         <option value="">-- Sélectionner une classe --</option>
                     </select>
@@ -4578,6 +4578,8 @@
                 getExportClassConfig(className);
                 saveExportPrepConfig();
                 renderExportPrep();
+                installRakmanaColorAutoUpdate();
+                updateExportClassCardColor();
             }
 
             function resetExportConfig() {
@@ -4981,6 +4983,7 @@
 
                 // IMPORTANT : re-render complet pour rafraîchir la couleur des cartes + badge /n
                 renderExportPrep();
+                updateExportClassCardColor();
             }
 
             function toggleExportGroupAssignment(groupKey, assignmentId, checked) {
@@ -6081,7 +6084,98 @@
 
                 return true;
             }
+            function isClassReadyForRakmana(className) {
+                const assignmentsById = new Map((data.assignments || []).map(a => [String(a.id), a]));
+                const cfg = getExportClassConfig(className);
 
+                if (!cfg) return false;
+
+                // CC + Compo obligatoires
+                if (!cfg.ccAssignmentId || !assignmentsById.has(String(cfg.ccAssignmentId))) return false;
+                if (!cfg.compAssignmentId || !assignmentsById.has(String(cfg.compAssignmentId))) return false;
+
+                // Au moins un devoir (devoir1 ou devoir2)
+                const devoirIds = getSelectedDevoirIds(cfg, assignmentsById);
+                if (devoirIds.length === 0) return false;
+
+                // TP si activé
+                if (cfg.hasTp) {
+                    if (!cfg.tpAssignmentId || !assignmentsById.has(String(cfg.tpAssignmentId))) return false;
+                }
+
+                return true;
+            }
+            function updateExportClassCardColor() {
+                const card = document.getElementById('export-class-card');
+                const select = document.getElementById('select-class-export');
+                if (!card || !select) return;
+
+                const classNames = Array.from(select.options).map(o => (o.value || '').trim()).filter(Boolean);
+                const selected = (select.value || '').trim();
+
+                // Par défaut : aucune coloration (gris)
+                let state = 'none';
+
+                if (selected) {
+                    const st = getRakmanaStatusForClass(selected);
+                    state = st.ready ? 'green' : (st.partialDevoir ? 'orange' : 'none');
+                } else {
+                    // Sans sélection : tu avais demandé "vert si toutes prêtes sinon rien"
+                    const allReady = classNames.length > 0 && classNames.every(c => getRakmanaStatusForClass(c).ready);
+                    state = allReady ? 'green' : 'none';
+                }
+
+                // Reset
+                card.classList.remove('bg-green-50', 'border-green-300', 'bg-amber-50', 'border-amber-300');
+                card.classList.add('bg-gray-50', 'border-transparent');
+
+                // Apply
+                if (state === 'green') {
+                    card.classList.remove('bg-gray-50', 'border-transparent');
+                    card.classList.add('bg-green-50', 'border-green-300');
+                } else if (state === 'orange') {
+                    card.classList.remove('bg-gray-50', 'border-transparent');
+                    card.classList.add('bg-amber-50', 'border-amber-300');
+                }
+            }
+            function installRakmanaColorAutoUpdate() {
+                const root = document.getElementById('export-config');
+                if (!root) return;
+
+                if (root.dataset.rakmanaAutoUpdateInstalled === '1') return;
+                root.dataset.rakmanaAutoUpdateInstalled = '1';
+
+                const refresh = () => requestAnimationFrame(updateExportClassCardColor);
+
+                root.addEventListener('change', refresh);
+                root.addEventListener('input', refresh);
+                root.addEventListener('click', refresh);
+            }
+            function getRakmanaStatusForClass(className) {
+                const assignmentsById = new Map((data.assignments || []).map(a => [String(a.id), a]));
+                const cfg = getExportClassConfig(className);
+                if (!cfg) return { ready: false, partialDevoir: false };
+
+                // ✅ Utilise les vrais noms de ta config existante
+                const ccOk = !!cfg.ccAssignmentId && assignmentsById.has(String(cfg.ccAssignmentId));
+                const tpOk = !!cfg.tpAssignmentId && assignmentsById.has(String(cfg.tpAssignmentId));
+                const compoOk = !!cfg.compAssignmentId && assignmentsById.has(String(cfg.compAssignmentId));
+
+                // ✅ Devoirs : utilise la fonction existante qui gère les tableaux assignmentIds[]
+                const devoirCount = getSelectedDevoirIds(cfg, assignmentsById).length;
+                const hasAtLeastOneDevoir = devoirCount > 0;
+
+                // Au moins 1 composant → ORANGE
+                const anyComponentSelected = ccOk || tpOk || compoOk || hasAtLeastOneDevoir;
+
+                // CC + Compo + au moins 1 devoir → VERT
+                const ready = ccOk && compoOk && hasAtLeastOneDevoir;
+
+                // Orange si partiel
+                const partialDevoir = anyComponentSelected && !ready;
+
+                return { ready, partialDevoir };
+            }
 
             // Initialize
             loadData();
