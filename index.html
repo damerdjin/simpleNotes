@@ -5285,372 +5285,6 @@
                 reader.readAsArrayBuffer(file);
             }
             // Ta fonction processRakmanaWorkbook (avec la correction `s.id`)
-            function applyRakmanaFormatting(ws) {
-                // Style par défaut : DejaVu Serif, taille 10
-                const defaultStyle = {
-                    font: { name: 'DejaVu Serif', sz: 10 }
-                };
-
-                // Style pour A1, A2, A3 : taille 15, gras, centré
-                const titleStyle = {
-                    font: { name: 'DejaVu Serif', sz: 15, bold: true },
-                    alignment: { horizontal: 'center', vertical: 'center' }
-                };
-
-                // Style pour A4, A5 : taille 15, gras
-                const subTitleStyle = {
-                    font: { name: 'DejaVu Serif', sz: 15, bold: true }
-                };
-
-                // 1. Appliquer le style par défaut à TOUTES les cellules
-                const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
-                for (let R = range.s.r; R <= range.e.r; R++) {
-                    for (let C = range.s.c; C <= range.e.c; C++) {
-                        const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
-                        if (ws[cellRef]) {
-                            // Préserver la valeur, ajouter le style par défaut
-                            ws[cellRef].s = { ...defaultStyle };
-                        }
-                    }
-                }
-
-                // 2. Appliquer styles spécifiques à A1, A2, A3 (lignes 1, 2, 3 = index 0, 1, 2)
-                ['A1', 'A2', 'A3'].forEach(ref => {
-                    if (ws[ref]) {
-                        ws[ref].s = titleStyle;
-                    }
-                });
-
-                // 3. Appliquer styles spécifiques à A4, A5 (lignes 4, 5 = index 3, 4)
-                ['A4', 'A5'].forEach(ref => {
-                    if (ws[ref]) {
-                        ws[ref].s = subTitleStyle;
-                    }
-                });
-
-                // 4. Masquer les lignes 6 et 7 (index 5 et 6)
-                if (!ws['!rows']) ws['!rows'] = [];
-                ws['!rows'][5] = { hidden: true }; // Ligne 6
-                ws['!rows'][6] = { hidden: true }; // Ligne 7
-            }
-            function applyRakmanaColumnsAndBorders(ws) {
-                const HEADER_ROW = 7;        // Excel row 8 (0-based)
-                const FIRST_STUDENT_ROW = 8; // Excel row 9 (0-based)
-                const NIN_COL = 0;           // Col A
-
-                const getCellText = (cell) => {
-                    if (!cell || cell.v === undefined || cell.v === null) return '';
-                    return String(cell.w ?? cell.v);
-                };
-
-                const calcTextWidth = (text) => {
-                    const s = String(text || '');
-                    let w = 0;
-                    for (const ch of s) {
-                        if (/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(ch)) w += 1.2;
-                        else w += 1.0;
-                    }
-                    return w;
-                };
-
-                const setBorderDouble = (cell) => {
-                    const existing = cell.s || {};
-                    const existingBorder = existing.border || {};
-                    const dbl = { style: 'double', color: { rgb: "000000" } };
-
-                    cell.s = {
-                        ...existing,
-                        border: {
-                            ...existingBorder,
-                            top: existingBorder.top || dbl,
-                            bottom: existingBorder.bottom || dbl,
-                            left: existingBorder.left || dbl,
-                            right: existingBorder.right || dbl,
-                        }
-                    };
-                };
-
-                const ref = ws['!ref'] || 'A1';
-                const sheetRange = XLSX.utils.decode_range(ref);
-
-                // 1) Déterminer la dernière colonne du tableau depuis la ligne 8
-                let lastCol = -1;
-                for (let C = sheetRange.e.c; C >= sheetRange.s.c; C--) {
-                    const addr = XLSX.utils.encode_cell({ r: HEADER_ROW, c: C });
-                    const txt = getCellText(ws[addr]).replace(/\s/g, '');
-                    if (txt) { lastCol = C; break; }
-                }
-                if (lastCol === -1) lastCol = sheetRange.e.c;
-
-                // 2) Déterminer la dernière ligne élève en scannant la colonne A (NIN)
-                let lastRow = HEADER_ROW;
-                for (let R = FIRST_STUDENT_ROW; R <= sheetRange.e.r; R++) {
-                    const ninAddr = XLSX.utils.encode_cell({ r: R, c: NIN_COL });
-                    const ninTxt = getCellText(ws[ninAddr]).trim();
-                    if (!ninTxt) break;
-                    lastRow = R;
-                }
-
-                // 3) Ajuster la largeur des colonnes A, B, C, D selon contenu
-                const cols = ws['!cols'] ? [...ws['!cols']] : [];
-                [0, 1, 2, 3].forEach((C) => {
-                    let maxW = 0;
-                    for (let R = HEADER_ROW; R <= lastRow; R++) {
-                        const addr = XLSX.utils.encode_cell({ r: R, c: C });
-                        const txt = getCellText(ws[addr]);
-                        maxW = Math.max(maxW, calcTextWidth(txt));
-                    }
-                    const wch = Math.max(8, Math.min(45, Math.ceil(maxW + 2)));
-                    cols[C] = { ...(cols[C] || {}), wch };
-                });
-
-                // 4) Ajuster colonnes E jusqu'à la fin selon les en-têtes
-                for (let C = 4; C <= lastCol; C++) {
-                    const addr = XLSX.utils.encode_cell({ r: HEADER_ROW, c: C });
-                    const txt = getCellText(ws[addr]);
-                    const wch = Math.max(8, Math.min(45, Math.ceil(calcTextWidth(txt) + 2)));
-                    cols[C] = { ...(cols[C] || {}), wch };
-                }
-                ws['!cols'] = cols;
-
-                // ✅ 5) AUGMENTER LA HAUTEUR DES LIGNES de la ligne 1 jusqu'au dernier élève
-                if (!ws['!rows']) ws['!rows'] = [];
-
-                const ROW_HEIGHT = 25; // Hauteur en points (ajustez selon vos besoins)
-
-                for (let R = 0; R <= lastRow; R++) {
-                    // Préserver les propriétés existantes (comme hidden pour lignes 6 et 7)
-                    const existingRowProps = ws['!rows'][R] || {};
-                    ws['!rows'][R] = {
-                        ...existingRowProps,
-                        hpt: ROW_HEIGHT  // hauteur en points
-                    };
-                }
-                // 5) Forcer toutes les cellules dans la plage (1 → dernier élève, colonnes utilisées) à être verrouillées
-                const lockCell = (cell) => {
-                    const existingStyle = cell.s || {};
-                    const existingProtection = existingStyle.protection || {};
-                    cell.s = {
-                        ...existingStyle,
-                        protection: { ...existingProtection, locked: true }
-                    };
-                };
-
-                for (let R = 0; R <= lastRow; R++) {
-                    for (let C = sheetRange.s.c; C <= lastCol; C++) {
-                        const addr = XLSX.utils.encode_cell({ r: R, c: C });
-                        if (!ws[addr]) ws[addr] = { t: 's', v: '' };
-                        lockCell(ws[addr]);
-                    }
-                }
-
-                // 6) Déverrouiller uniquement la zone E9 → dernière ligne/colonne
-                const unlockCell = (cell) => {
-                    const existingStyle = cell.s || {};
-                    cell.s = {
-                        ...existingStyle,
-                        protection: { ...(existingStyle.protection || {}), locked: false }
-                    };
-                };
-
-                const FIRST_UNLOCK_COL = 4; // colonne E
-                let unlockedCount = 0;
-
-                for (let R = FIRST_STUDENT_ROW; R <= lastRow; R++) {
-                    for (let C = FIRST_UNLOCK_COL; C <= lastCol; C++) {
-                        const addr = XLSX.utils.encode_cell({ r: R, c: C });
-                        if (!ws[addr]) ws[addr] = { t: 's', v: '' };
-                        unlockCell(ws[addr]);
-                        unlockedCount++;
-                    }
-                }
-                console.log(`🔓 Cellules déverrouillées: ${unlockedCount} (de E${FIRST_STUDENT_ROW + 1} à ${String.fromCharCode(65 + lastCol)}${lastRow + 1})`);
-                // 7) Activer la protection de la feuille (SheetJS)
-                ws['!protect'] = {
-                    password: '',
-                    selectUnlockedCells: true,
-                    selectLockedCells: false
-                };
-                // 8) Appliquer double bordure à toute la plage (en-têtes + élèves)
-                for (let R = HEADER_ROW; R <= lastRow; R++) {
-                    for (let C = sheetRange.s.c; C <= lastCol; C++) {
-                        const addr = XLSX.utils.encode_cell({ r: R, c: C });
-                        if (!ws[addr]) ws[addr] = { t: 's', v: '' };
-                        setBorderDouble(ws[addr]);
-                    }
-                }
-                return { lastRow, lastCol, FIRST_STUDENT_ROW };
-            }
-            async function processRakmanaWorkbook(workbook, originalFileName) {
-                const t = translations[currentLanguage];
-                const className = document.getElementById('select-class-export')?.value || '';
-                if (!className) {
-                    alert(t.selectClass || "Veuillez sélectionner une classe d'abord.");
-                    return;
-                }
-
-                const cleanClassName = className.replace(/\s/g, '').toUpperCase();
-                let targetSheetName = null;
-                let targetWorksheet = null;
-
-                // 1. Trouver la feuille correspondant à la classe
-                for (const sheetName of workbook.SheetNames) {
-                    const ws = workbook.Sheets[sheetName];
-                    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, range: 0 });
-
-                    if (rows.length > 4) {
-                        const row5 = rows[4];
-                        const cleanRow5Text = (row5 || []).join('').replace(/\s/g, '').toUpperCase();
-
-                        if (cleanRow5Text.includes(cleanClassName)) {
-                            targetSheetName = sheetName;
-                            targetWorksheet = ws;
-                            break;
-                        }
-                    }
-                }
-
-                if (!targetSheetName) {
-                    alert(t.rakamnaClassSheetNotFound || `Classe "${className}" non trouvée.`);
-                    return;
-                }
-
-                console.log("✅ Feuille trouvée :", targetSheetName);
-
-                // 2. Lire la ligne 8 (index 7) pour trouver les colonnes dynamiquement
-                const rows = XLSX.utils.sheet_to_json(targetWorksheet, { header: 1, range: 0 });
-                const headerRow = rows[7] || [];
-
-                const HEADERS = {
-                    cc: 'التقييم المستمر',
-                    devoir: 'معدل الفروض',
-                    tp: 'المطالعة',
-                    comp: 'الاختبار'
-                };
-
-                const findColumnIndex = (headerText) => {
-                    for (let i = 0; i < headerRow.length; i++) {
-                        const cellText = String(headerRow[i] || '').replace(/\s/g, '');
-                        if (cellText.includes(headerText.replace(/\s/g, ''))) {
-                            return i;
-                        }
-                    }
-                    return -1;
-                };
-
-                const colIndices = {
-                    cc: findColumnIndex(HEADERS.cc),
-                    devoir: findColumnIndex(HEADERS.devoir),
-                    tp: findColumnIndex(HEADERS.tp),
-                    comp: findColumnIndex(HEADERS.comp)
-                };
-
-                console.log("📍 Colonnes détectées :", {
-                    CC: colIndices.cc !== -1 ? `Colonne ${String.fromCharCode(65 + colIndices.cc)}` : 'Non trouvée',
-                    Devoir: colIndices.devoir !== -1 ? `Colonne ${String.fromCharCode(65 + colIndices.devoir)}` : 'Non trouvée',
-                    TP: colIndices.tp !== -1 ? `Colonne ${String.fromCharCode(65 + colIndices.tp)}` : 'Non trouvée',
-                    Composition: colIndices.comp !== -1 ? `Colonne ${String.fromCharCode(65 + colIndices.comp)}` : 'Non trouvée'
-                });
-
-                if (colIndices.cc === -1 && colIndices.devoir === -1 && colIndices.comp === -1) {
-                    alert(t.rakamnaHeadersNotFound || "Impossible de trouver les en-têtes de colonnes (CC, Devoir, Composition) dans la ligne 8.");
-                    return;
-                }
-
-                // 3. Préparation des données de l'application
-                const cfg = getExportClassConfig(className);
-                const ccA = cfg.ccAssignmentId ? data.assignments.find(a => a.id === cfg.ccAssignmentId) : null;
-                const compA = cfg.compAssignmentId ? data.assignments.find(a => a.id === cfg.compAssignmentId) : null;
-                const tpA = cfg.tpAssignmentId ? data.assignments.find(a => a.id === cfg.tpAssignmentId) : null;
-                const hasTP = cfg.hasTp && tpA;
-
-                const gradesByNIN = {};
-                data.students.forEach(s => {
-                    if ((s.className || '').trim() !== className) return;
-
-                    const cc = ccA ? calcScaledScore(s.id, ccA) : null;
-                    const comp = compA ? calcScaledScore(s.id, compA) : null;
-                    const devoir = computeDevoirFinal(s.id, className, cfg);
-                    const tp = hasTP ? calcScaledScore(s.id, tpA) : null;
-
-                    const ninToMatch = String(s.nin || '').replace(/\s/g, '').trim();
-
-                    if (ninToMatch) {
-                        gradesByNIN[ninToMatch] = { cc, devoir, tp, comp };
-                    }
-                });
-
-                console.log("📊 Liste des NINs chargés depuis l'App :", Object.keys(gradesByNIN));
-
-                // 4. Écriture des notes dans la feuille Excel
-                const range = XLSX.utils.decode_range(targetWorksheet['!ref'] || "A1");
-                let matchCount = 0;
-
-                for (let R = 8; R <= range.e.r; ++R) {
-                    const cellRefNIN = XLSX.utils.encode_cell({ c: 0, r: R });
-                    const cellNIN = targetWorksheet[cellRefNIN];
-
-                    if (!cellNIN || cellNIN.v === undefined || String(cellNIN.v).trim() === '') continue;
-
-                    let ninInExcel = String(cellNIN.v).replace(/\s/g, '').trim();
-                    if (ninInExcel.endsWith('.0') && /^\d+\.0$/.test(ninInExcel)) {
-                        ninInExcel = ninInExcel.substring(0, ninInExcel.length - 2);
-                    }
-
-                    const studentGrades = gradesByNIN[ninInExcel];
-
-                    if (studentGrades) {
-                        matchCount++;
-                        console.log(`✍️ Écriture pour NIN ${ninInExcel} à la ligne ${R + 1}`);
-
-                        const writeGrade = (colIndex, val) => {
-                            if (colIndex === -1) return;
-                            if (val === null || val === undefined) {
-                                const cellRef = XLSX.utils.encode_cell({ c: colIndex, r: R });
-                                if (targetWorksheet[cellRef]) delete targetWorksheet[cellRef];
-                                return;
-                            }
-                            const cellRef = XLSX.utils.encode_cell({ c: colIndex, r: R });
-                            const numVal = Math.round((val + Number.EPSILON) * 100) / 100;
-                            targetWorksheet[cellRef] = { t: 'n', v: numVal };
-                        };
-
-                        writeGrade(colIndices.cc, studentGrades.cc);
-                        writeGrade(colIndices.devoir, studentGrades.devoir);
-
-                        if (hasTP && colIndices.tp !== -1) {
-                            writeGrade(colIndices.tp, studentGrades.tp);
-                        }
-
-                        writeGrade(colIndices.comp, studentGrades.comp);
-                    }
-                }
-
-                console.log(`🏁 Total d'élèves mis à jour : ${matchCount}`);
-
-                if (matchCount === 0) {
-                    alert(t.rakamnaNoStudentsMatched || "Attention : Aucun élève n'a été trouvé dans le fichier Excel avec un NIN correspondant.");
-                    return;
-                }
-
-                // ✅ 5. APPLIQUER LE FORMATAGE
-                applyRakmanaFormatting(targetWorksheet);
-
-                // ✅ 6. Largeur colonnes + double bordures sur la zone tableau
-                const bounds = applyRakmanaColumnsAndBorders(targetWorksheet, colIndices, hasTP);
-
-                // ✅ 7. Protection et déverrouillage via ExcelJS (fiable pour la protection cellule)
-                const newFileName = originalFileName.replace(/(\.xlsx)$/i, '_Rempli$1');
-                XLSX.writeFile(workbook, newFileName);
-
-                const colsUsed = [];
-                if (colIndices.cc !== -1) colsUsed.push(`CC: ${String.fromCharCode(65 + colIndices.cc)}`);
-                if (colIndices.devoir !== -1) colsUsed.push(`Devoir: ${String.fromCharCode(65 + colIndices.devoir)}`);
-                if (hasTP && colIndices.tp !== -1) colsUsed.push(`TP: ${String.fromCharCode(65 + colIndices.tp)}`);
-                if (colIndices.comp !== -1) colsUsed.push(`Composition: ${String.fromCharCode(65 + colIndices.comp)}`);
-
-                alert(`✅ Fichier généré : ${newFileName}\n\n📊 ${matchCount} élève(s) mis à jour\n📍 Colonnes utilisées : ${colsUsed.join(', ')}\n🔐 Feuille protégée avec plage de saisie déverrouillée.`);
-            }
             async function processRakmanaWorkbookExcelJS(arrayBuffer, originalFileName) {
                 const t = translations[currentLanguage];
                 const className = document.getElementById('select-class-export')?.value || '';
@@ -5691,7 +5325,14 @@
                 console.log(`[Rakmana] ✅ Feuille trouvée: "${targetSheetName}"`);
 
                 const headerRow = targetWorksheet.getRow(8);
-                const HEADERS = { cc: 'التقييم المستمر', devoir: 'معدل الفروض', tp: 'المطالعة', comp: 'الاختبار' };
+                const HEADERS = {
+                    cc: 'التقييم المستمر',
+                    devoir: 'معدل الفروض',
+                    tp: 'المطالعة',
+                    comp: 'الاختبار',
+                    obs: 'التقديرات',   // Observation / appréciation
+                    cons: 'الارشادات'   // Conseil / guidance
+                };
                 const findColumnIndex = (needle) => {
                     const norm = needle.replace(/\s/g, '');
                     for (let i = 1; i <= Math.max(targetWorksheet.columnCount, 40); i++) {
@@ -5705,7 +5346,9 @@
                     cc: findColumnIndex(HEADERS.cc),
                     devoir: findColumnIndex(HEADERS.devoir),
                     tp: findColumnIndex(HEADERS.tp),
-                    comp: findColumnIndex(HEADERS.comp)
+                    comp: findColumnIndex(HEADERS.comp),
+                    obs: findColumnIndex(HEADERS.obs),
+                    cons: findColumnIndex(HEADERS.cons)
                 };
                 if (colIndices.cc === -1 && colIndices.devoir === -1 && colIndices.comp === -1) {
                     alert(t.rakamnaHeadersNotFound || "Impossible de trouver les en-têtes de colonnes (CC, Devoir, Composition) dans la ligne 8.");
@@ -5750,6 +5393,12 @@
                         writeGrade(colIndices.devoir, g.devoir);
                         if (hasTP && colIndices.tp !== -1) writeGrade(colIndices.tp, g.tp);
                         writeGrade(colIndices.comp, g.comp);
+                        // --- NOUVEAU : Observation + Conseil selon la moyenne ---
+                        const avg = computeAverageFromGrades(g, cfg, hasTP);
+                        const { obs, cons } = observationAndAdviceFromAverage(avg);
+
+                        if (colIndices.obs !== -1) targetWorksheet.getRow(r).getCell(colIndices.obs).value = obs;
+                        if (colIndices.cons !== -1) targetWorksheet.getRow(r).getCell(colIndices.cons).value = cons;
                     }
                 }
                 if (matchCount === 0) {
@@ -5886,6 +5535,44 @@
 
                 alert(msg);
             }
+
+            //const round2 = (x) => Math.round((x + Number.EPSILON) * 100) / 100;
+
+            function computeAverageFromGrades(g, cfg, hasTP) {
+                // Poids par défaut = 1 (tu peux les mettre dans cfg si tu veux)
+                const w = {
+                    cc: cfg?.weightCc ?? 1,
+                    devoir: cfg?.weightDevoir ?? 1,
+                    tp: cfg?.weightTp ?? 1,
+                    comp: cfg?.weightComp ?? 1
+                };
+
+                const parts = [];
+                if (g.cc != null) parts.push({ v: Number(g.cc), w: w.cc });
+                if (g.devoir != null) parts.push({ v: Number(g.devoir), w: w.devoir });
+                if (hasTP && g.tp != null) parts.push({ v: Number(g.tp), w: w.tp });
+                if (g.comp != null) parts.push({ v: Number(g.comp), w: w.comp });
+
+                const valid = parts.filter(p => Number.isFinite(p.v) && Number.isFinite(p.w) && p.w > 0);
+                const sumW = valid.reduce((a, p) => a + p.w, 0);
+                if (sumW === 0) return null;
+
+                const avg = valid.reduce((a, p) => a + p.v * p.w, 0) / sumW;
+                return avg;
+            }
+
+            function observationAndAdviceFromAverage(avg) {
+                // Exemple de barème (à adapter à tes règles)
+                if (avg == null) return { obs: '', cons: '' };
+
+                if (avg >= 18) return { obs: 'ممتاز', cons: 'حافظ على هذا المستوى.' };
+                if (avg >= 16) return { obs: 'جيد جدا', cons: 'واصل العمل الجيد.' };
+                if (avg >= 14) return { obs: 'جيد', cons: 'يمكنك تحسين الأداء بالمزيد من المراجعة.' };
+                if (avg >= 12) return { obs: 'متوسط', cons: 'نحتاج إلى تركيز أكبر وتنظيم الوقت.' };
+                if (avg >= 10) return { obs: 'مقبول', cons: 'راجع الدروس بانتظام واطلب المساعدة عند الحاجة.' };
+                return { obs: 'ضعيف', cons: 'تحتاج إلى بذل مجهود أكبر والمتابعة المستمرة.' };
+            }
+
             // Initialize
             loadData();
             initLanguage(); // Ajoutez cette ligne
