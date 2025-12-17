@@ -5232,12 +5232,25 @@
             }
 
             function doRakamna() {
-                const fileInput = document.getElementById('rakmana-file-input');
-                if (fileInput) {
-                    fileInput.value = ''; // Reset pour permettre de re-sélectionner le même fichier
-                    fileInput.click();
+                // 1) Contrôle AVANT de proposer le choix du fichier
+                if (typeof precheckRakmanaAllClassesConfig === 'function') {
+                    const ok = precheckRakmanaAllClassesConfig();
+                    if (!ok) return; // on stoppe ici
+                } else {
+                    console.warn("[Rakmana] precheckRakmanaAllClassesConfig() n'est pas défini.");
                 }
+
+                // 2) Seulement si tout est OK -> ouvrir le fichier
+                const fileInput = document.getElementById('rakmana-file-input');
+                if (!fileInput) {
+                    alert("Impossible de trouver l'input fichier (#rakmana-file-input).");
+                    return;
+                }
+
+                fileInput.value = ''; // Reset pour permettre de re-sélectionner le même fichier
+                fileInput.click();
             }
+
             function onRakmanaFileSelected(input) {
                 const file = input.files[0];
                 if (!file) return;
@@ -5798,16 +5811,6 @@
                 const correctedBuffer = await excelWb.xlsx.writeBuffer();
 
                 // 6) IMPORTANT : ici tu reprends EXACTEMENT ton bloc JSZip actuel
-                // (Étape 2/3/4) pour préserver la protection, puis téléchargement.
-                //
-                // -> Ton code JSZip boucle déjà sur toutes les feuilles, donc il est compatible multi-classes sans changement.
-                //
-                // Juste pense à afficher un message final basé sur totalMatches + plan.length.
-                //
-                // Exemple de message final:
-                // alert(`✅ ${plan.length} classe(s) mises à jour\n✅ ${totalMatches} élève(s) mis à jour\n🔐 Protection préservée si détectée`);
-                // Générer le buffer modifié
-                //const correctedBuffer = await excelWb.xlsx.writeBuffer();
                 console.log("[Rakmana] ✅ Fichier modifié généré (SANS protection)");
 
                 // ===== ÉTAPE 2 : Extraire la protection du fichier original avec JSZip =====
@@ -5970,6 +5973,115 @@
                 if (avg >= 10) return { obs: 'مقبول', cons: 'راجع الدروس بانتظام واطلب المساعدة عند الحاجة.' };
                 return { obs: 'ضعيف', cons: 'تحتاج إلى بذل مجهود أكبر والمتابعة المستمرة.' };
             }
+
+            function collectSelectedAssignmentIdsFromGroup(groupCfg, assignmentsById) {
+                const out = new Set();
+
+                // Champs "techniques" qu'on ignore pour éviter de prendre targetMax=20 comme un id, etc.
+                const SKIP_KEYS = new Set(['combine', 'normalize', 'targetMax']);
+
+                const walk = (node) => {
+                    if (node == null) return;
+
+                    if (Array.isArray(node)) {
+                        node.forEach(walk);
+                        return;
+                    }
+
+                    const t = typeof node;
+
+                    // Si on tombe sur une valeur primitive qui correspond à un assignmentId -> on prend
+                    if (t === 'string' || t === 'number') {
+                        const id = String(node);
+                        if (assignmentsById.has(id)) out.add(id);
+                        return;
+                    }
+
+                    if (t === 'object') {
+                        for (const [k, v] of Object.entries(node)) {
+                            if (SKIP_KEYS.has(k)) continue;
+
+                            // Cas fréquent: map { "assignmentId": true/false }
+                            const keyAsId = String(k);
+                            if (assignmentsById.has(keyAsId) && !!v) out.add(keyAsId);
+
+                            // On continue de descendre (au cas où la sélection est dans node.picks, node.selectedIds, etc.)
+                            walk(v);
+                        }
+                    }
+                };
+
+                walk(groupCfg);
+                return [...out];
+            }
+
+            function getSelectedDevoirIds(cfg, assignmentsById) {
+                const ids = new Set();
+
+                for (const id of collectSelectedAssignmentIdsFromGroup(cfg?.devoir1, assignmentsById)) ids.add(id);
+                for (const id of collectSelectedAssignmentIdsFromGroup(cfg?.devoir2, assignmentsById)) ids.add(id);
+
+                return [...ids];
+            }
+            function precheckRakmanaAllClassesConfig() {
+                const t = translations[currentLanguage] || {};
+
+                const select = document.getElementById('select-class-export');
+                const classNames = select
+                    ? Array.from(select.options).map(o => (o.value || '').trim()).filter(Boolean)
+                    : [...new Set((data.students || []).map(s => (s.className || '').trim()).filter(Boolean))];
+
+                if (!classNames.length) {
+                    alert(t.selectClass || "Aucune classe trouvée.");
+                    return false;
+                }
+
+                const assignmentsById = new Map((data.assignments || []).map(a => [a.id, a]));
+                const issues = [];
+
+                for (const className of classNames) {
+                    const cfg = getExportClassConfig(className);
+                    if (!cfg) {
+                        issues.push(`- ${className}: configuration d'export absente.`);
+                        continue;
+                    }
+
+                    // CC obligatoire
+                    if (!cfg.ccAssignmentId || !assignmentsById.has(cfg.ccAssignmentId)) {
+                        issues.push(`- ${className}: CC non sélectionné (ou activité introuvable).`);
+                    }
+
+                    // Compo obligatoire
+                    if (!cfg.compAssignmentId || !assignmentsById.has(cfg.compAssignmentId)) {
+                        issues.push(`- ${className}: Composition non sélectionnée (ou activité introuvable).`);
+                    }
+
+                    // Devoir : au moins 1 devoir sélectionné
+                    const devoirIds = getSelectedDevoirIds(cfg, assignmentsById);
+
+                    if (devoirIds.length === 0) {
+                        issues.push(`- ${className}: aucun devoir sélectionné (Devoir 1 ou Devoir 2 requis).`);
+                    }
+
+                    // TP si activé
+                    if (cfg.hasTp) {
+                        if (!cfg.tpAssignmentId || !assignmentsById.has(cfg.tpAssignmentId)) {
+                            issues.push(`- ${className}: TP activé mais activité TP non sélectionnée (ou introuvable).`);
+                        }
+                    }
+                }
+
+                if (issues.length) {
+                    alert(
+                        "Export Rakmana annulé : certaines classes ne sont pas configurées.\n\n" +
+                        issues.join("\n")
+                    );
+                    return false;
+                }
+
+                return true;
+            }
+
 
             // Initialize
             loadData();
