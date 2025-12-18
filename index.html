@@ -4106,6 +4106,40 @@
 
                 saveRemarksOverrides(remarksOverrides);
             }
+            // === LIBRAIRIE PROF (messages perso réutilisables) ===
+            const TEACHER_REMARKS_LIBRARY_KEY = "corrections-teacher-remarks-library-v1";
+
+            function loadTeacherLibrary() {
+                try { return JSON.parse(localStorage.getItem(TEACHER_REMARKS_LIBRARY_KEY)) || {}; }
+                catch { return {}; }
+            }
+            function saveTeacherLibrary(lib) {
+                localStorage.setItem(TEACHER_REMARKS_LIBRARY_KEY, JSON.stringify(lib));
+            }
+
+            let teacherRemarksLibrary = loadTeacherLibrary();
+            // Structure: library[langKey()][kind] = [ "msg1", "msg2", ... ] ; kind in ("obs","cons")
+            function ensureTeacherList(lang, kind) {
+                if (!teacherRemarksLibrary[lang]) teacherRemarksLibrary[lang] = { obs: [], cons: [] };
+                if (!teacherRemarksLibrary[lang][kind]) teacherRemarksLibrary[lang][kind] = [];
+                return teacherRemarksLibrary[lang][kind];
+            }
+
+            function addTeacherMessage(kind, message) {
+                const msg = String(message || "").trim().replace(/\s+/g, " ");
+                if (!msg) return false;
+                const lang = langKey();
+                const list = ensureTeacherList(lang, kind);
+                const exists = list.some(x => x.trim().toLowerCase() === msg.toLowerCase());
+                if (!exists) list.unshift(msg); // ajouter en haut
+                saveTeacherLibrary(teacherRemarksLibrary);
+                return true;
+            }
+
+            function getTeacherMessages(kind) {
+                const lang = langKey();
+                return (teacherRemarksLibrary?.[lang]?.[kind] || []).slice(0, 80); // limite raisonnable
+            }
 
             // Config persistée (par classe)
             const EXPORT_CONFIG_KEY = 'corrections-export-config-v1';
@@ -5164,6 +5198,8 @@
                     const obsCandidates = getObsCandidatesForRow(devoir, comp);
                     const consCandidates = getConsCandidatesForRow(moyenne);
 
+                    const teacherObs = getTeacherMessages("obs");
+                    const teacherCons = getTeacherMessages("cons");
 
                     return `
                         <tr class="border-b hover:bg-gray-50">
@@ -5194,12 +5230,16 @@
                                 <div class="remark-text text-sm leading-snug">${escapeHtml(finalObs)}</div>
                                 <div class="mt-1 flex gap-2">
                                 <button type="button" class="remark-edit-btn text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded">Modifier</button>
-                                <button type="button" class="remark-auto-btn text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded">Auto</button>
+                                    <button type="button" class="remark-auto-btn text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded">Auto</button>
+                                    <button type="button" class="remark-custom-btn text-xs px-2 py-1 bg-indigo-100 hover:bg-indigo-200 rounded">+ Perso</button>
                                 </div>
                                 <div class="remark-editor mt-2 hidden">
                                 <select class="remark-select w-full p-2 border rounded bg-white text-sm">
                                     <option value="">(Auto)</option>
-                                    ${obsCandidates.map(msg => `<option value="${escapeHtml(msg)}">${escapeHtml(msg.slice(0, 120))}${msg.length > 120 ? "…" : ""}</option>`).join("")}
+                                    <option value="" disabled>— Perso —</option>
+                                    ${teacherObs.map(msg => `<option value="${escapeHtml(msg)}">${escapeHtml(msg.slice(0,120))}${msg.length>120?"…":""}</option>`).join("")}
+                                    <option value="" disabled>— Moteur —</option>
+                                    ${obsCandidates.map(msg => `<option value="${escapeHtml(msg)}">${escapeHtml(msg.slice(0,120))}${msg.length>120?"…":""}</option>`).join("")}
                                 </select>
                                 </div>
                             </div>
@@ -5209,13 +5249,17 @@
                             <div class="remark-cell" data-scope="${escapeHtml(scopeKey)}" data-student-id="${escapeHtml(s.id)}" data-kind="cons">
                                 <div class="remark-text text-sm leading-snug">${escapeHtml(finalCons)}</div>
                                 <div class="mt-1 flex gap-2">
-                                <button type="button" class="remark-edit-btn text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded">Modifier</button>
-                                <button type="button" class="remark-auto-btn text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded">Auto</button>
+                                    <button type="button" class="remark-edit-btn text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded">Modifier</button>
+                                    <button type="button" class="remark-auto-btn text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded">Auto</button>
+                                    <button type="button" class="remark-custom-btn text-xs px-2 py-1 bg-indigo-100 hover:bg-indigo-200 rounded">+ Perso</button>
                                 </div>
                                 <div class="remark-editor mt-2 hidden">
                                 <select class="remark-select w-full p-2 border rounded bg-white text-sm">
                                     <option value="">(Auto)</option>
-                                    ${consCandidates.map(msg => `<option value="${escapeHtml(msg)}">${escapeHtml(msg.slice(0, 120))}${msg.length > 120 ? "…" : ""}</option>`).join("")}
+                                    <option value="" disabled>— Perso —</option>
+                                    ${teacherCons.map(msg =>   `<option value="${escapeHtml(msg)}">${escapeHtml(msg.slice(0,120))}${msg.length>120?"…":""}</option>`).join("")}
+                                    <option value="" disabled>— Moteur —</option>
+                                    ${consCandidates.map(msg => `<option value="${escapeHtml(msg)}">${escapeHtml(msg.slice(0,120))}${msg.length>120?"…":""}</option>`).join("")}
                                 </select>
                                 </div>
                             </div>
@@ -5247,45 +5291,50 @@
                 colCount += 2;
 
                 preview.innerHTML = `
-    <table class="w-full table-fixed border-collapse">
-      <colgroup>${cols.join('')}</colgroup>
-      <thead>
-        <!-- ✅ NOUVELLE LIGNE : NOM DE LA CLASSE -->
-        <tr class="bg-gray-200 border-b-2 border-gray-300">
-          <th colspan="${colCount}" class="p-4 text-center text-xl font-bold uppercase tracking-wide text-gray-800">
-            ${className}
-          </th>
-        </tr>
+                        <table class="w-full table-fixed border-collapse">
+                        <colgroup>${cols.join('')}</colgroup>
+                        <thead>
+                            <!-- ✅ NOUVELLE LIGNE : NOM DE LA CLASSE -->
+                            <tr class="bg-gray-200 border-b-2 border-gray-300">
+                            <th colspan="${colCount}" class="p-4 text-center text-xl font-bold uppercase tracking-wide text-gray-800">
+                                ${className}
+                            </th>
+                            </tr>
 
-        <!-- Ligne des titres colonnes (inchangée) -->
-        <tr class="border-b-2">
-          <th class="p-3 text-left bg-gray-100 sticky left-0 z-10">${t.student}</th>
-          <th class="p-3 text-center bg-gray-100" data-translate="ccShort">${t.ccShort || 'CC'}</th>
+                            <!-- Ligne des titres colonnes (inchangée) -->
+                            <tr class="border-b-2">
+                            <th class="p-3 text-left bg-gray-100 sticky left-0 z-10">${t.student}</th>
+                            <th class="p-3 text-center bg-gray-100" data-translate="ccShort">${t.ccShort || 'CC'}</th>
 
-          <th class="p-3 text-center ${devoirScaleIssue ? 'bg-amber-200 text-amber-900' : 'bg-blue-100 text-blue-900'}"
-              title="${devoirScaleIssue ? (t.exportDevoirWarning || '') : (t.exportDevoirOk || '')}">
-            <span data-translate="devoirShort">${t.devoirShort || 'Devoir'}</span>
-            <span class="ml-1">${devoirScaleIssue ? '⚠️' : '⚠️'}</span>
-          </th>
+                            <th class="p-3 text-center ${devoirScaleIssue ? 'bg-amber-200 text-amber-900' : 'bg-blue-100 text-blue-900'}"
+                                title="${devoirScaleIssue ? (t.exportDevoirWarning || '') : (t.exportDevoirOk || '')}">
+                                <span data-translate="devoirShort">${t.devoirShort || 'Devoir'}</span>
+                                <span class="ml-1">${devoirScaleIssue ? '⚠️' : '⚠️'}</span>
+                            </th>
 
-          ${hasTP ? `<th class="p-3 text-center bg-gray-100" data-translate="tpShort">${t.tpShort || 'TP'}</th>` : ``}
+                            ${hasTP ? `<th class="p-3 text-center bg-gray-100" data-translate="tpShort">${t.tpShort || 'TP'}</th>` : ``}
 
-          <th class="p-3 text-center bg-gray-100" data-translate="compositionShort">${t.compositionShort || 'Composition'}</th>
-          <th class="p-3 text-center bg-green-100" data-translate="avgShort">${t.avgShort || 'Moyenne'}</th>
-          <th class="p-3 text-center bg-gray-100" data-translate="observationShort">${t.observationShort || 'Observation'}</th>
-          <th class="p-3 text-center bg-gray-100" data-translate="adviceShort">${t.adviceShort || 'Conseil'}</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
-  `;
-                preview.querySelectorAll(".remark-cell").forEach(cell => {
+                            <th class="p-3 text-center bg-gray-100" data-translate="compositionShort">${t.compositionShort || 'Composition'}</th>
+                            <th class="p-3 text-center bg-green-100" data-translate="avgShort">${t.avgShort || 'Moyenne'}</th>
+                            <th class="p-3 text-center bg-gray-100" data-translate="observationShort">${t.observationShort || 'Observation'}</th>
+                            <th class="p-3 text-center bg-gray-100" data-translate="adviceShort">${t.adviceShort || 'Conseil'}</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                        </table>
+                    `;
+
+
+                
+                    preview.querySelectorAll(".remark-cell").forEach(cell => {
                     const scopeKey = cell.dataset.scope;
                     const studentId = cell.dataset.studentId;
                     const kind = cell.dataset.kind;
 
                     const btnEdit = cell.querySelector(".remark-edit-btn");
                     const btnAuto = cell.querySelector(".remark-auto-btn");
+                    const btnCustom = cell.querySelector(".remark-custom-btn");
+
                     const editor = cell.querySelector(".remark-editor");
                     const select = cell.querySelector(".remark-select");
 
@@ -5301,7 +5350,20 @@
                         clearOverrideField(scopeKey, studentId, kind);
                         renderExportPrep(); // rerender complet
                     });
+                    
+                    btnCustom.addEventListener("click", () => {
+                    const label = kind === "obs" ? "Observation" : "Conseil";
+                    const msg = prompt(`Ajouter un message perso (${label}) :`);
+                    if (!msg) return;
 
+                    const ok = addTeacherMessage(kind, msg);
+                    if (!ok) return;
+
+                    // Mettre ce message directement pour l'élève
+                    setOverride(scopeKey, studentId, { [kind]: msg.trim() });
+
+                    renderExportPrep(); // rerender pour voir le message + qu'il apparaisse dans la liste
+                    });
                     select.addEventListener("change", () => {
                         const chosen = select.value;
                         if (!chosen) clearOverrideField(scopeKey, studentId, kind);
