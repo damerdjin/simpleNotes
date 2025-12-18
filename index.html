@@ -5346,44 +5346,43 @@
             }
 
             function printExportTable() {
-                const table = document.getElementById("export-preview-table");
-                if (!table) {
-                    alert("Tableau introuvable !");
-                    return;
-                }
+                const wrap = document.getElementById("export-preview-table");
+                const table = document.querySelector("#export-preview-table table");
+                if (!wrap || !table) { alert("Tableau introuvable !"); return; }
+
+                const className = document.getElementById("select-class-export")?.value || "";
+
+                // Clone propre
+                const clone = table.cloneNode(true);
+
+                // Nettoyer les cellules obs/cons: garder uniquement le texte visible
+                clone.querySelectorAll(".remark-cell").forEach(cell => {
+                    const txt = cell.querySelector(".remark-text")?.textContent || "";
+                    cell.innerHTML = escapeHtml(txt);
+                });
+
+                // (Sécurité) supprimer boutons/inputs qui peuvent trainer
+                clone.querySelectorAll("button, select, input, textarea").forEach(el => el.remove());
 
                 const win = window.open("", "_blank");
-
                 win.document.write(`
                     <html>
                     <head>
                         <title>Impression</title>
                         <style>
-                        body {
-                            font-family: sans-serif;
-                            padding: 20px;
-                        }
-                        table {
-                            width: 100%;
-                            border-collapse: collapse;
-                            font-size: 14px;
-                        }
-                        th, td {
-                            border: 1px solid #444;
-                            padding: 6px 8px;
-                            text-align: center;
-                        }
-                        th {
-                            background: #eee;
-                        }
+                        body { font-family: sans-serif; padding: 20px; }
+                        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+                        th, td { border: 1px solid #444; padding: 6px 8px; text-align: center; vertical-align: top; }
+                        th { background: #eee; }
                         </style>
                     </head>
-                    <body>                        
-                        <h3 style="margin-bottom:20px;">${document.getElementById("select-class-export").value}</h3>
-                        ${table.innerHTML}
+                    <body>
+                        <h3 style="margin-bottom:20px;">${escapeHtml(className)}</h3>
                     </body>
                     </html>
                 `);
+
+                win.document.body.appendChild(clone);
                 win.document.close();
                 win.focus();
                 setTimeout(() => win.print(), 250);
