@@ -4120,10 +4120,11 @@
             let teacherRemarksLibrary = loadTeacherLibrary();
             // Structure: library[langKey()][kind] = [ "msg1", "msg2", ... ] ; kind in ("obs","cons")
             function ensureTeacherList(lang, kind) {
-                if (!teacherRemarksLibrary[lang]) teacherRemarksLibrary[lang] = { obs: [], cons: [] };
+                if (!teacherRemarksLibrary[lang]) teacherRemarksLibrary[lang] = {};
                 if (!teacherRemarksLibrary[lang][kind]) teacherRemarksLibrary[lang][kind] = [];
                 return teacherRemarksLibrary[lang][kind];
             }
+
 
             function addTeacherMessage(kind, message) {
                 const msg = String(message || "").trim().replace(/\s+/g, " ");
@@ -5167,6 +5168,8 @@
                             ? (devoir + cc + tp + 2 * comp) / 5
                             : (devoir + cc + 2 * comp) / 4;
                     }
+
+
                     //console.log(s.name, { devoir, comp, moyenne })
                     const ccExpected = !!ccA;
                     const tpExpected = !!tpA;
@@ -5189,18 +5192,31 @@
                             seed: s.id || 0
                         })
                         : { obs: "", cons: "" };
+
                     const scopeKey = getRemarksScopeKey(className);
                     const ov = getOverride(scopeKey, s.id) || {};
+                    const R = window.REMARKS_MESSAGES;
+                    const consBandIdx = R ? findBandIndexLocal(R.avgBands, moyenne) : -1;
+                    const teacherObsAll = getTeacherMessages("obs"); // toute la bibliothèque prof (langue courante)
 
-                    const finalObs = (ov.obs && ov.obs.trim()) ? ov.obs : rm.obs;
-                    const finalCons = (ov.cons && ov.cons.trim()) ? ov.cons : rm.cons;
+                    const autoObs = teacherObsAll.length
+                        ? pickDeterministic(teacherObsAll, `${className}|${s.id}|obs|${moyenne}`)
+                        : rm.obs; // fallback moteur si bibliothèque vide
+
 
                     const obsCandidates = getObsCandidatesForRow(devoir, comp);
                     const consCandidates = getConsCandidatesForRow(moyenne);
+                    const teacherConsBand = getTeacherMessages(`cons@${consBandIdx}`);
+                    const optionsCons = [...teacherConsBand, ...consCandidates];
+
+                    const consPool = [...teacherConsBand, ...consCandidates];
+                    const autoCons = pickDeterministic(consPool, `${className}|${s.id}|cons|${moyenne}|band:${consBandIdx}`);
+
 
                     const teacherObs = getTeacherMessages("obs");
                     const teacherCons = getTeacherMessages("cons");
-
+                    const finalObs = (ov.obs && ov.obs.trim()) ? ov.obs : rm.obs;
+                    const finalCons = (ov.cons && ov.cons.trim()) ? ov.cons : (autoCons || rm.cons);
                     return `
                         <tr class="border-b hover:bg-gray-50">
                             <td class="p-3 bg-gray-50 sticky left-0 z-10 font-medium">${s.name}</td>
@@ -5226,7 +5242,7 @@
                             ${fmt(moyenne)}
                             </td>
                             <td class="p-3 text-left">
-                            <div class="remark-cell" data-scope="${escapeHtml(scopeKey)}" data-student-id="${escapeHtml(s.id)}" data-kind="obs">
+                            <div class="remark-cell" data-scope="${escapeHtml(scopeKey)}" data-student-id="${escapeHtml(s.id)}" data-kind="obs" data-avg="${escapeHtml(moyenne)}">
                                 <div class="remark-text text-sm leading-snug">${escapeHtml(finalObs)}</div>
                                 <div class="mt-1 flex gap-2">
                                 <button type="button" class="remark-edit-btn text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded">Modifier</button>
@@ -5235,18 +5251,16 @@
                                 </div>
                                 <div class="remark-editor mt-2 hidden">
                                 <select class="remark-select w-full p-2 border rounded bg-white text-sm">
-                                    <option value="">(Auto)</option>
-                                    <option value="" disabled>— Perso —</option>
-                                    ${teacherObs.map(msg => `<option value="${escapeHtml(msg)}">${escapeHtml(msg.slice(0,120))}${msg.length>120?"…":""}</option>`).join("")}
-                                    <option value="" disabled>— Moteur —</option>
-                                    ${obsCandidates.map(msg => `<option value="${escapeHtml(msg)}">${escapeHtml(msg.slice(0,120))}${msg.length>120?"…":""}</option>`).join("")}
+                                    <option value="">(Auto)</option>                                    
+                                    ${teacherObs.map(msg => `<option value="${escapeHtml(msg)}">${escapeHtml(msg.slice(0, 120))}${msg.length > 120 ? "…" : ""}</option>`).join("")}
+                                    ${obsCandidates.map(msg => `<option value="${escapeHtml(msg)}">${escapeHtml(msg.slice(0, 120))}${msg.length > 120 ? "…" : ""}</option>`).join("")}
                                 </select>
                                 </div>
                             </div>
                             </td>
 
                             <td class="p-3 text-left">
-                            <div class="remark-cell" data-scope="${escapeHtml(scopeKey)}" data-student-id="${escapeHtml(s.id)}" data-kind="cons">
+                            <div class="remark-cell" data-scope="${escapeHtml(scopeKey)}" data-student-id="${escapeHtml(s.id)}" data-kind="cons" data-avg="${escapeHtml(moyenne)}" data-cons-band="${consBandIdx}">
                                 <div class="remark-text text-sm leading-snug">${escapeHtml(finalCons)}</div>
                                 <div class="mt-1 flex gap-2">
                                     <button type="button" class="remark-edit-btn text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded">Modifier</button>
@@ -5256,10 +5270,7 @@
                                 <div class="remark-editor mt-2 hidden">
                                 <select class="remark-select w-full p-2 border rounded bg-white text-sm">
                                     <option value="">(Auto)</option>
-                                    <option value="" disabled>— Perso —</option>
-                                    ${teacherCons.map(msg =>   `<option value="${escapeHtml(msg)}">${escapeHtml(msg.slice(0,120))}${msg.length>120?"…":""}</option>`).join("")}
-                                    <option value="" disabled>— Moteur —</option>
-                                    ${consCandidates.map(msg => `<option value="${escapeHtml(msg)}">${escapeHtml(msg.slice(0,120))}${msg.length>120?"…":""}</option>`).join("")}
+                                    ${optionsCons.map(msg => `<option value="${escapeHtml(msg)}">${escapeHtml(msg)}</option>`).join("")}
                                 </select>
                                 </div>
                             </div>
@@ -5325,11 +5336,12 @@
                     `;
 
 
-                
-                    preview.querySelectorAll(".remark-cell").forEach(cell => {
+
+                preview.querySelectorAll(".remark-cell").forEach(cell => {
                     const scopeKey = cell.dataset.scope;
                     const studentId = cell.dataset.studentId;
                     const kind = cell.dataset.kind;
+                    const avg = parseFloat(cell.dataset.avg || "NaN");
 
                     const btnEdit = cell.querySelector(".remark-edit-btn");
                     const btnAuto = cell.querySelector(".remark-auto-btn");
@@ -5350,19 +5362,27 @@
                         clearOverrideField(scopeKey, studentId, kind);
                         renderExportPrep(); // rerender complet
                     });
-                    
+
                     btnCustom.addEventListener("click", () => {
-                    const label = kind === "obs" ? "Observation" : "Conseil";
-                    const msg = prompt(`Ajouter un message perso (${label}) :`);
-                    if (!msg) return;
+                        const label = kind === "obs" ? "Observation" : "Conseil";
+                        const msg = prompt(`Ajouter un message perso (${label}) :`);
+                        if (!msg) return;
 
-                    const ok = addTeacherMessage(kind, msg);
-                    if (!ok) return;
+                        if (kind === "cons") {
+                            const R = window.REMARKS_MESSAGES;
+                            const bandIdx = parseInt(cell.dataset.consBand || "-1", 10);
+                            addTeacherMessage(`cons@${bandIdx}`, msg);
 
-                    // Mettre ce message directement pour l'élève
-                    setOverride(scopeKey, studentId, { [kind]: msg.trim() });
+                        } else {
+                            addTeacherMessage("obs", msg);
+                        }
 
-                    renderExportPrep(); // rerender pour voir le message + qu'il apparaisse dans la liste
+                        //if (!ok) return;
+
+                        // Mettre ce message directement pour l'élève
+                        setOverride(scopeKey, studentId, { [kind]: msg.trim() });
+
+                        renderExportPrep(); // rerender pour voir le message + qu'il apparaisse dans la liste
                     });
                     select.addEventListener("change", () => {
                         const chosen = select.value;
@@ -6409,6 +6429,16 @@
                 const partialDevoir = anyComponentSelected && !ready;
 
                 return { ready, partialDevoir };
+            }
+
+            function pickDeterministic(list, seedStr) {
+                const arr = (list || []).map(x => String(x || "").trim()).filter(Boolean);
+                if (!arr.length) return "";
+                let h = 2166136261;
+                const s = String(seedStr || "");
+                for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+                const idx = Math.abs(h) % arr.length;
+                return arr[idx];
             }
 
             // Initialize
