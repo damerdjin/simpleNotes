@@ -994,8 +994,11 @@
         <script src="./translations.js"></script>
         <script type="module">
             import { computeExportRemarks } from "./remarks.engine.js";
+            import { REMARKS } from "./remarks.messages.js";
             window.computeExportRemarks = computeExportRemarks;
+            window.REMARKS_MESSAGES = REMARKS;
         </script>
+
 
 
         <script>
@@ -4059,6 +4062,50 @@
             }
 
             // ===== EXPORT PREP (CC / Devoir / Composition) =====
+            // === OVERRIDES OBS/CONS (par classe; trimestre plus tard) ===
+            const REMARKS_OVERRIDE_KEY = "corrections-remarks-overrides-v1";
+
+            function getRemarksScopeKey(className) {
+                // TODO plus tard: return `${className}::T${currentTrimester}`
+                return String(className || "");
+            }
+
+            function loadRemarksOverrides() {
+                try { return JSON.parse(localStorage.getItem(REMARKS_OVERRIDE_KEY)) || {}; }
+                catch { return {}; }
+            }
+            function saveRemarksOverrides(obj) {
+                localStorage.setItem(REMARKS_OVERRIDE_KEY, JSON.stringify(obj));
+            }
+
+            let remarksOverrides = loadRemarksOverrides();
+
+            // overrides[scopeKey][studentId] = { obs, cons, updatedAt }
+            function ensureScope(scopeKey) {
+                if (!remarksOverrides[scopeKey]) remarksOverrides[scopeKey] = {};
+                return remarksOverrides[scopeKey];
+            }
+            function getOverride(scopeKey, studentId) {
+                return remarksOverrides?.[scopeKey]?.[String(studentId)] || null;
+            }
+            function setOverride(scopeKey, studentId, patch) {
+                const scope = ensureScope(scopeKey);
+                const id = String(studentId);
+                scope[id] = { ...(scope[id] || {}), ...patch, updatedAt: Date.now() };
+                saveRemarksOverrides(remarksOverrides);
+            }
+            function clearOverrideField(scopeKey, studentId, field) {
+                const scope = ensureScope(scopeKey);
+                const id = String(studentId);
+                if (!scope[id]) return;
+                delete scope[id][field];
+
+                const hasObs = !!(scope[id].obs && scope[id].obs.trim());
+                const hasCons = !!(scope[id].cons && scope[id].cons.trim());
+                if (!hasObs && !hasCons) delete scope[id];
+
+                saveRemarksOverrides(remarksOverrides);
+            }
 
             // Config persistée (par classe)
             const EXPORT_CONFIG_KEY = 'corrections-export-config-v1';
@@ -5011,6 +5058,42 @@
                 saveExportPrepConfig();
                 renderExportPrep();
             }
+            function escapeHtml(str) {
+                return String(str ?? "").replace(/[&<>"']/g, m => ({
+                    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+                }[m]));
+            }
+
+            function langKey() {
+                return currentLanguage === "fr" ? "FR" : (currentLanguage === "en" ? "EN" : "AR");
+            }
+            function findBandIndexLocal(bands, value) {
+                const v = Number(value);
+                if (!Number.isFinite(v)) return -1;
+                const vv = Math.round(v * 100) / 100;
+                for (let i = 0; i < bands.length; i++) {
+                    const b = bands[i];
+                    if (vv >= b.min && vv <= b.max) return i;
+                }
+                return -1;
+            }
+            function getObsCandidatesForRow(devoir, comp) {
+                const R = window.REMARKS_MESSAGES;
+                if (!R) return [];
+                const d = Number(devoir), c = Number(comp);
+                if (!Number.isFinite(d) || !Number.isFinite(c)) return [];
+                const diff = d - c;
+                const idx = findBandIndexLocal(R.diffBands, diff);
+                if (idx < 0) return [];
+                return (R.observations?.[langKey()]?.[idx]) || [];
+            }
+            function getConsCandidatesForRow(avg) {
+                const R = window.REMARKS_MESSAGES;
+                if (!R) return [];
+                const idx = findBandIndexLocal(R.avgBands, avg);
+                if (idx < 0) return [];
+                return (R.advice?.[langKey()]?.[idx]) || [];
+            }
 
             function renderExportPreviewTable(className, cfg) {
                 const t = translations[currentLanguage];
@@ -5072,7 +5155,15 @@
                             seed: s.id || 0
                         })
                         : { obs: "", cons: "" };
-                        
+                    const scopeKey = getRemarksScopeKey(className);
+                    const ov = getOverride(scopeKey, s.id) || {};
+
+                    const finalObs = (ov.obs && ov.obs.trim()) ? ov.obs : rm.obs;
+                    const finalCons = (ov.cons && ov.cons.trim()) ? ov.cons : rm.cons;
+
+                    const obsCandidates = getObsCandidatesForRow(devoir, comp);
+                    const consCandidates = getConsCandidatesForRow(moyenne);
+
 
                     return `
                         <tr class="border-b hover:bg-gray-50">
@@ -5098,8 +5189,38 @@
                             <td class="p-3 text-center font-bold ${avgClass}">
                             ${fmt(moyenne)}
                             </td>
-                            <td class="p-3 text-left">${rm.obs || ''}</td>
-                            <td class="p-3 text-left">${rm.cons || ''}</td>
+                            <td class="p-3 text-left">
+                            <div class="remark-cell" data-scope="${escapeHtml(scopeKey)}" data-student-id="${escapeHtml(s.id)}" data-kind="obs">
+                                <div class="remark-text text-sm leading-snug">${escapeHtml(finalObs)}</div>
+                                <div class="mt-1 flex gap-2">
+                                <button type="button" class="remark-edit-btn text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded">Modifier</button>
+                                <button type="button" class="remark-auto-btn text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded">Auto</button>
+                                </div>
+                                <div class="remark-editor mt-2 hidden">
+                                <select class="remark-select w-full p-2 border rounded bg-white text-sm">
+                                    <option value="">(Auto)</option>
+                                    ${obsCandidates.map(msg => `<option value="${escapeHtml(msg)}">${escapeHtml(msg.slice(0, 120))}${msg.length > 120 ? "…" : ""}</option>`).join("")}
+                                </select>
+                                </div>
+                            </div>
+                            </td>
+
+                            <td class="p-3 text-left">
+                            <div class="remark-cell" data-scope="${escapeHtml(scopeKey)}" data-student-id="${escapeHtml(s.id)}" data-kind="cons">
+                                <div class="remark-text text-sm leading-snug">${escapeHtml(finalCons)}</div>
+                                <div class="mt-1 flex gap-2">
+                                <button type="button" class="remark-edit-btn text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded">Modifier</button>
+                                <button type="button" class="remark-auto-btn text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded">Auto</button>
+                                </div>
+                                <div class="remark-editor mt-2 hidden">
+                                <select class="remark-select w-full p-2 border rounded bg-white text-sm">
+                                    <option value="">(Auto)</option>
+                                    ${consCandidates.map(msg => `<option value="${escapeHtml(msg)}">${escapeHtml(msg.slice(0, 120))}${msg.length > 120 ? "…" : ""}</option>`).join("")}
+                                </select>
+                                </div>
+                            </div>
+                            </td>
+
                         </tr>
                         `;
                 }).join('');
@@ -5158,6 +5279,37 @@
       <tbody>${rows}</tbody>
     </table>
   `;
+                preview.querySelectorAll(".remark-cell").forEach(cell => {
+                    const scopeKey = cell.dataset.scope;
+                    const studentId = cell.dataset.studentId;
+                    const kind = cell.dataset.kind;
+
+                    const btnEdit = cell.querySelector(".remark-edit-btn");
+                    const btnAuto = cell.querySelector(".remark-auto-btn");
+                    const editor = cell.querySelector(".remark-editor");
+                    const select = cell.querySelector(".remark-select");
+
+                    // init select (si override existe)
+                    const ov = getOverride(scopeKey, studentId);
+                    select.value = (ov && ov[kind]) ? ov[kind] : "";
+
+                    btnEdit.addEventListener("click", () => {
+                        editor.classList.toggle("hidden");
+                    });
+
+                    btnAuto.addEventListener("click", () => {
+                        clearOverrideField(scopeKey, studentId, kind);
+                        renderExportPrep(); // rerender complet
+                    });
+
+                    select.addEventListener("change", () => {
+                        const chosen = select.value;
+                        if (!chosen) clearOverrideField(scopeKey, studentId, kind);
+                        else setOverride(scopeKey, studentId, { [kind]: chosen });
+
+                        renderExportPrep(); // rerender complet
+                    });
+                });
 
                 translatePage();
             }
@@ -5239,16 +5391,19 @@
 
             function exportExportTableXLSX() {
                 const table = document.querySelector("#export-preview-table table");
-                if (!table) {
-                    alert("Tableau introuvable !");
-                    return;
-                }
+                if (!table) { alert("Tableau introuvable !"); return; }
+
+                const clone = table.cloneNode(true);
+
+                // Remplacer les cellules remark par juste le texte final visible
+                clone.querySelectorAll(".remark-cell").forEach(cell => {
+                    const txt = cell.querySelector(".remark-text")?.textContent || "";
+                    cell.innerHTML = escapeHtml(txt);
+                });
 
                 const wb = XLSX.utils.book_new();
-                const ws = XLSX.utils.table_to_sheet(table);
+                const ws = XLSX.utils.table_to_sheet(clone, { raw: true });
                 XLSX.utils.book_append_sheet(wb, ws, "Export");
-
-
                 XLSX.writeFile(wb, "export-classe.xlsx");
             }
 
