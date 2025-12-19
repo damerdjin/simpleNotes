@@ -87,6 +87,18 @@ async function build() {
     await fs.copy(srcFavicon, path.join(distDir, 'favicon.ico'));
   }
 
+  // Copy remarks.engine.js if present
+  const srcRemarksEngine = path.join(root, 'remarks.engine.js');
+  if (await fs.pathExists(srcRemarksEngine)) {
+    await fs.copy(srcRemarksEngine, path.join(distDir, 'remarks.engine.js'));
+  }
+
+  // Copy remarks.messages.js if present
+  const srcRemarksMessages = path.join(root, 'remarks.messages.js');
+  if (await fs.pathExists(srcRemarksMessages)) {
+    await fs.copy(srcRemarksMessages, path.join(distDir, 'remarks.messages.js'));
+  }
+
   console.log('Build complete. Output in ./dist');
 }
 
