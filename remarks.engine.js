@@ -20,10 +20,18 @@ function toSeedInt(seed) {
 }
 
 function pick(list, seed = 0) {
+  if (list == null) return "";
+  if (typeof list === "string") return list;
   if (!Array.isArray(list) || list.length === 0) return "";
+  
+  // Priorise "+Perso" si présent, sinon cycle normal
+  if (list[list.length - 1]?.includes("+Perso")) return list[list.length - 1];
+  
   const k = toSeedInt(seed) % list.length;
   return String(list[k] ?? "");
 }
+
+
 
 function findBandIndex(bands, value) {
   if (value === null || value === undefined) return -1;
@@ -46,7 +54,7 @@ function findBandIndex(bands, value) {
  */
 export function computeObservationByDiff(devoir, comp, currentLanguage, seed = 0) {
   const lang = clampLang(currentLanguage);
-  console.log("[DBG]", { lang, devoir, comp });
+  //console.log("[DBG]", { lang, devoir, comp });
   const d = Number(devoir);
   const c = Number(comp);
 
@@ -55,11 +63,11 @@ export function computeObservationByDiff(devoir, comp, currentLanguage, seed = 0
 
   const diff = d - c;
   const idx = findBandIndex(REMARKS.diffBands, diff);
-  console.log("[DBG diff]", { lang, diff, idx });
+  //console.log("[DBG diff]", { lang, diff, idx });
   if (idx < 0) return "";
 
   const candidates = REMARKS.observations?.[lang]?.[idx] ?? [];
-  console.log("[DBG obs]", { lang, idx, has: !!(REMARKS.observations?.[lang]?.[idx]) });
+  //console.log("[DBG obs]", { lang, idx, has: !!(REMARKS.observations?.[lang]?.[idx]) });
 
   return pick(Array.isArray(candidates) ? candidates : [], seed);
 }
@@ -84,7 +92,7 @@ export function computeAdviceByAverage(avg, currentLanguage, seed = 0) {
     candidates = REMARKS.advice?.[altLang]?.[idx];
     if (typeof candidates === "string") candidates = [candidates];
   }
-  console.log("[DBG advice]", { lang, idx, has: !!(REMARKS.advice?.[lang]?.[idx]) });
+  //console.log("[DBG advice]", { lang, idx, has: !!(REMARKS.advice?.[lang]?.[idx]) });
 
   return pick(Array.isArray(candidates) ? candidates : [], seed);
 }

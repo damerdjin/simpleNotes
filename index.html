@@ -5196,7 +5196,7 @@
                             comp,
                             avg: moyenne,
                             currentLanguage,
-                            seed: s.id || 0                            
+                            seed: s.id || 0
                         })
                         : { obs: "", cons: "" };
 
@@ -6046,47 +6046,72 @@
                         const nin = extractNIN(ws.getRow(r).getCell(1).value);
                         if (!nin) break;
 
-                        //console.log(s.id, nin);
                         const g = gradesByNIN[nin];
                         if (!g) continue;
 
                         classtotalMatches++;
 
+                        // ... tes writeGrade existants ...
                         writeGrade(r, colIndices.cc, g.cc);
                         writeGrade(r, colIndices.devoir, g.devoir);
                         if (hasTP) writeGrade(r, colIndices.tp, g.tp);
                         writeGrade(r, colIndices.comp, g.comp);
 
-                        // Observation / Conseil selon moyenne (si tu as déjà ces fonctions)
-
                         const avg = computeAverageFromGrades(g, cfg, hasTP);
                         const scopeKey = getRemarksScopeKey(className);
-                        const { obs: ovObs, cons: ovCons } = getObsConsFromLocalStorageOnly(scopeKey, g.studentId);
 
-                        let obs = (ovObs || "").trim();
-                        let cons = (ovCons || "").trim();
-                        console.log("ovObs=", ovObs, "ovCons=", ovCons || "");
-                        if (!obs || !cons) {
-                            //console.log("AUCUNES OBSERVATIONS OU CONSEILS DANS LOCALSTORAGE");
-                            //const avg = computeAverageFromGrades(g, cfg, hasTP);
+                        // 1) Moteur principal, comme preview
+                        const rm = window.computeExportRemarks
+                            ? window.computeExportRemarks({
+                                devoir: g.devoir,
+                                comp: g.comp,
+                                avg,
+                                currentLanguage,
+                                seed: g.studentId || 0
+                            })
+                            : { obs: "", cons: "" };
 
-                            // Auto basé sur tes fichiers remarks.engine.js + remarks.messages.js
-                            console.log("[DBG0] : devoir=", g.devoir, "comp=", g.comp, "avg=", avg);
-                            const rm = (window.computeExportRemarks)
-                                ? window.computeExportRemarks(g.devoir, g.comp, avg, currentLanguage, g.studentId)
-                                : { obs: "", cons: "" };
-                                console.log("[DBG00] : devoir=", g.devoir, "comp=", g.comp, "avg=", avg);
-                            console.log("rm=", rm);
-                            if (!obs) obs = rm.obs || "";
-                            if (!cons) cons = rm.cons || "";
-                        }
-                        //console.log(avg, g.devoir, g.comp, obs, cons);
-                        //console.log("lang=", currentLanguage, "clamp=", (currentLanguage==="fr"?"FR":currentLanguage==="en"?"EN":"AR"));
+                        // 2) Overrides, comme preview
+                        const ov = getOverride(scopeKey, g.studentId) || {};
+                        const R = window.REMARKS_MESSAGES;
+                        const consBandIdx = R ? findBandIndexLocal(R.avgBands, avg) : -1;
 
+                        // 3) Pools et auto, comme preview
+                        const teacherObsAll = getTeacherMessages("obs") || [];
+                        const autoObs = teacherObsAll.length
+                            ? pickDeterministic(teacherObsAll, `${className}|${g.studentId}|obs|${avg}`)
+                            : rm.obs;
+
+                        const obsCandidates = getObsCandidatesForRow(g.devoir, g.comp) || [];
+                        const consCandidates = getConsCandidatesForRow(avg) || [];
+                        const teacherConsBand = getTeacherMessages(`cons@${consBandIdx}`) || [];
+                        const consPool = [...teacherConsBand, ...consCandidates];
+
+                        const autoCons = consPool.length
+                            ? pickDeterministic(consPool, `${className}|${g.studentId}|cons|${avg}|band:${consBandIdx}`)
+                            : rm.cons;
+
+                        // 4) Final, EXACTEMENT comme preview
+                        let obs = (ov.obs && ov.obs.trim()) ? ov.obs : rm.obs;
+                        let cons = (ov.cons && ov.cons.trim()) ? ov.cons : (autoCons || rm.cons);
+
+                        // 5) Debug pour comparer avec preview
+                        /*console.log("=== DEBUG", g.studentId);
+                        console.log("devoir/comp/avg:", g.devoir, g.comp, avg);
+                        console.log("rm:", rm);
+                        console.log("ov:", ov);
+                        console.log("consBandIdx:", consBandIdx);
+                        console.log("teacherObsAll.length:", teacherObsAll.length);
+                        console.log("obsCandidates[0]:", obsCandidates[0]);
+                        console.log("consCandidates[0]:", consCandidates[0]);
+                        console.log("teacherConsBand[0]:", teacherConsBand[0]);
+                        console.log("autoObs:", autoObs);
+                        console.log("autoCons:", autoCons);
+                        console.log("FINAL Excel:", obs, "|", cons);
+                        */
+                        // 6) Écriture
                         ws.getRow(r).getCell(colIndices.obs).value = obs;
                         ws.getRow(r).getCell(colIndices.cons).value = cons;
-
-
 
 
                     }
