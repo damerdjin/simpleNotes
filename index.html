@@ -995,9 +995,16 @@
         <script type="module">
             import { computeExportRemarks } from "./remarks.engine.js";
             import { REMARKS } from "./remarks.messages.js";
+
             window.computeExportRemarks = computeExportRemarks;
+
+            // 1) Ton nom "underscore" (si tu l'utilises ailleurs)
             window.REMARKS_MESSAGES = REMARKS;
+
+            // 2) Alias pour index.html (getObsCandidatesForRow / getConsCandidatesForRow / preview)
+            window.REMARKSMESSAGES = REMARKS;
         </script>
+
 
 
 
@@ -5189,7 +5196,7 @@
                             comp,
                             avg: moyenne,
                             currentLanguage,
-                            seed: s.id || 0
+                            seed: s.id || 0                            
                         })
                         : { obs: "", cons: "" };
 
@@ -5985,7 +5992,7 @@
                         const devoir = computeDevoirFinal(s.id, className, cfg);
                         const tp = hasTP ? calcScaledScore(s.id, tpA) : null;
 
-                        gradesByNIN[nin] = { cc, devoir, tp, comp };
+                        gradesByNIN[nin] = { cc, devoir, tp, comp, studentId: s.id };
                     });
 
                     if (studentsWithNIN === 0) {
@@ -6039,6 +6046,7 @@
                         const nin = extractNIN(ws.getRow(r).getCell(1).value);
                         if (!nin) break;
 
+                        //console.log(s.id, nin);
                         const g = gradesByNIN[nin];
                         if (!g) continue;
 
@@ -6050,11 +6058,37 @@
                         writeGrade(r, colIndices.comp, g.comp);
 
                         // Observation / Conseil selon moyenne (si tu as déjà ces fonctions)
+
                         const avg = computeAverageFromGrades(g, cfg, hasTP);
-                        const { obs, cons } = observationAndAdviceFromAverage(avg);
+                        const scopeKey = getRemarksScopeKey(className);
+                        const { obs: ovObs, cons: ovCons } = getObsConsFromLocalStorageOnly(scopeKey, g.studentId);
+
+                        let obs = (ovObs || "").trim();
+                        let cons = (ovCons || "").trim();
+                        console.log("ovObs=", ovObs, "ovCons=", ovCons || "");
+                        if (!obs || !cons) {
+                            //console.log("AUCUNES OBSERVATIONS OU CONSEILS DANS LOCALSTORAGE");
+                            //const avg = computeAverageFromGrades(g, cfg, hasTP);
+
+                            // Auto basé sur tes fichiers remarks.engine.js + remarks.messages.js
+                            console.log("[DBG0] : devoir=", g.devoir, "comp=", g.comp, "avg=", avg);
+                            const rm = (window.computeExportRemarks)
+                                ? window.computeExportRemarks(g.devoir, g.comp, avg, currentLanguage, g.studentId)
+                                : { obs: "", cons: "" };
+                                console.log("[DBG00] : devoir=", g.devoir, "comp=", g.comp, "avg=", avg);
+                            console.log("rm=", rm);
+                            if (!obs) obs = rm.obs || "";
+                            if (!cons) cons = rm.cons || "";
+                        }
+                        //console.log(avg, g.devoir, g.comp, obs, cons);
+                        //console.log("lang=", currentLanguage, "clamp=", (currentLanguage==="fr"?"FR":currentLanguage==="en"?"EN":"AR"));
 
                         ws.getRow(r).getCell(colIndices.obs).value = obs;
                         ws.getRow(r).getCell(colIndices.cons).value = cons;
+
+
+
+
                     }
 
                     perClassStats.push({ classe: className, elevesMisAJour: classtotalMatches });
@@ -6195,6 +6229,59 @@
                 //alert(`✅ ${plan.length} classe(s) mises à jour\n✅ ${totalMatches} élève(s) mis à jour\n🔐 Protection préservée si détectée`);
                 alert(`✅ ${plan.length} classe(s) mises à jour\n✅ ${totalMatches} élève(s) mis à jour`);
                 return { correctedBuffer, totalMatches, perClassStats }; // optionnel si tu veux utiliser ces infos ensuite
+            }
+
+            function getObsConsFromLocalStorageOnly(scopeKey, studentId) {
+                const REMARKSOVERRIDEKEY = "corrections-remarks-overrides-v1";
+
+                let overrides = {};
+                try {
+                    overrides = JSON.parse(localStorage.getItem(REMARKSOVERRIDEKEY)) || {};
+                } catch (e) {
+                    overrides = {};
+                }
+
+                const sid = String(studentId);
+                const entry = overrides?.[String(scopeKey)]?.[sid] || null;
+
+                return {
+                    obs: entry?.obs != null ? String(entry.obs) : "",
+                    cons: entry?.cons != null ? String(entry.cons) : ""
+                };
+            }
+
+            // Récupérer obs/cons UNIQUEMENT depuis localStorage (overrides)
+            // - Pas de calcul
+            // - Pas de fallback auto
+            // - Si pas trouvé => "" (vide)
+            function getObsConsFromLocalStorageOnly(className, studentId) {
+                // Même clé que ton système actuel
+                const REMARKSOVERRIDEKEY = "corrections-remarks-overrides-v1";
+
+                // Même logique de scope que ton app (actuellement: scope = className)
+                const scopeKey = String(className ?? "").trim();
+
+                let overrides = {};
+                try {
+                    overrides = JSON.parse(localStorage.getItem(REMARKSOVERRIDEKEY)) || {};
+                } catch (e) {
+                    overrides = {};
+                }
+
+                const sid = String(studentId);
+                const entry = overrides?.[scopeKey]?.[sid] || null;
+
+                // IMPORTANT: pas de fallback, donc vide si absent
+                const obs = entry?.obs != null ? String(entry.obs) : "";
+                const cons = entry?.cons != null ? String(entry.cons) : "";
+
+                return {
+                    obs,
+                    cons,
+                    // optionnel: pour debug
+                    found: !!entry,
+                    updatedAt: entry?.updatedAt ?? null,
+                };
             }
 
             function computeAverageFromGrades(g, cfg, hasTP) {

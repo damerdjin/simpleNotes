@@ -29,7 +29,7 @@ function findBandIndex(bands, value) {
   if (value === null || value === undefined) return -1;
   const v = Number(value);
   if (!Number.isFinite(v)) return -1;
-  
+
   // Arrondir à 2 décimales pour éviter bug flottants
   const vv = Math.round(v * 100) / 100;
 
@@ -46,18 +46,21 @@ function findBandIndex(bands, value) {
  */
 export function computeObservationByDiff(devoir, comp, currentLanguage, seed = 0) {
   const lang = clampLang(currentLanguage);
-
+  console.log("[DBG]", { lang, devoir, comp });
   const d = Number(devoir);
   const c = Number(comp);
-  
+
   // Si l'un est manquant, observation vide (données insuffisantes)
   if (!Number.isFinite(d) || !Number.isFinite(c)) return "";
 
   const diff = d - c;
   const idx = findBandIndex(REMARKS.diffBands, diff);
+  console.log("[DBG diff]", { lang, diff, idx });
   if (idx < 0) return "";
 
   const candidates = REMARKS.observations?.[lang]?.[idx] ?? [];
+  console.log("[DBG obs]", { lang, idx, has: !!(REMARKS.observations?.[lang]?.[idx]) });
+
   return pick(Array.isArray(candidates) ? candidates : [], seed);
 }
 
@@ -81,6 +84,7 @@ export function computeAdviceByAverage(avg, currentLanguage, seed = 0) {
     candidates = REMARKS.advice?.[altLang]?.[idx];
     if (typeof candidates === "string") candidates = [candidates];
   }
+  console.log("[DBG advice]", { lang, idx, has: !!(REMARKS.advice?.[lang]?.[idx]) });
 
   return pick(Array.isArray(candidates) ? candidates : [], seed);
 }
@@ -94,9 +98,26 @@ export function computeAdviceByAverage(avg, currentLanguage, seed = 0) {
  * @param {number|string} seed - ID étudiant pour variation déterministe
  * @returns {{obs: string, cons: string}} Observation + Conseil personnalisés
  */
-export function computeExportRemarks({ devoir, comp, avg, currentLanguage, seed = 0 }) {
+export function computeExportRemarks(a, b, c, d, e) {
+  // Support 1) appel objet: computeExportRemarks({devoir, comp, avg, currentLanguage, seed})
+  if (a && typeof a === "object") {
+    const { devoir, comp, avg, currentLanguage, seed = 0 } = a;
+    return {
+      obs: computeObservationByDiff(devoir, comp, currentLanguage, seed),
+      cons: computeAdviceByAverage(avg, currentLanguage, seed + 1)
+    };
+  }
+
+  // Support 2) appel positionnel: computeExportRemarks(devoir, comp, avg, currentLanguage, seed)
+  const devoir = a;
+  const comp = b;
+  const avg = c;
+  const currentLanguage = d;
+  const seed = e ?? 0;
+
   return {
     obs: computeObservationByDiff(devoir, comp, currentLanguage, seed),
     cons: computeAdviceByAverage(avg, currentLanguage, seed + 1)
   };
 }
+
