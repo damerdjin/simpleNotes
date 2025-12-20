@@ -3761,8 +3761,34 @@
                 const now = new Date();
                 const pad = n => String(n).padStart(2, '0');
                 const fname = `simpleNotes-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.json`;
-                const payload = { data, exportPrepConfig };
-                const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+
+                // === SAUVEGARDE DES MESSAGES PERSO ===
+                const teacherMessages = {};
+                try {
+                    // Récupère TOUS les messages Perso par scope/band
+                    const scopes = ["obs"]; // obs généraux
+                    for (let band = 0; band <= 8; band++) {
+                        scopes.push(`cons@${band}`);
+                    }
+
+                    scopes.forEach(scope => {
+                        const msgs = getTeacherMessages(scope) || [];
+                        if (msgs.length > 0) {
+                            teacherMessages[scope] = msgs;
+                        }
+                    });
+                    console.log("Messages Perso exportés:", teacherMessages);
+                } catch (e) {
+                    console.warn("Erreur export messages Perso:", e);
+                }
+
+                const payload = {
+                    data,              // tes données existantes
+                    exportPrepConfig,  // config export existante
+                    teacherMessages    // ⭐ NOUVEAU : messages Perso !
+                };
+
+                const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
@@ -3772,6 +3798,7 @@
                 a.remove();
                 URL.revokeObjectURL(url);
             }
+
 
             function handleJsonImportData(event) {
                 const t = translations[currentLanguage];
@@ -3827,6 +3854,21 @@
                                     }
                                 }
                             });
+                            if (importedData.teacherMessages) {
+                                try {
+                                    Object.entries(importedData.teacherMessages).forEach(([scope, msgs]) => {
+                                        if (Array.isArray(msgs) && msgs.length > 0) {
+                                            // Restaure les messages Perso
+                                            window.REMARKS_MESSAGES.teacherMessages = window.REMARKS_MESSAGES.teacherMessages || {};
+                                            window.REMARKS_MESSAGES.teacherMessages[scope] = msgs;
+                                            addTeacherMessages(scope, msgs); // si fonction existe
+                                        }
+                                    });
+                                    console.log("Messages Perso importés:", importedData.teacherMessages);
+                                } catch (e) {
+                                    console.warn("Erreur import messages Perso:", e);
+                                }
+                            }
                         }
 
                         // ========== FUSION DES DEVOIRS ==========
