@@ -3880,6 +3880,23 @@
                                 }
                             });
                         }
+                        // Import messages Perso
+                        if (importedData.teacherMessages) {
+                            try {
+                                Object.entries(importedData.teacherMessages).forEach(([scope, msgs]) => {
+                                    if (Array.isArray(msgs) && msgs.length > 0) {
+                                        // Restaure les messages Perso
+                                        window.REMARKS_MESSAGES.teacherMessages = window.REMARKS_MESSAGES.teacherMessages || {};
+                                        window.REMARKS_MESSAGES.teacherMessages[scope] = msgs;
+                                        addTeacherMessages(scope, msgs); // si fonction existe
+                                    }
+                                });
+                                console.log("Messages Perso importés:", importedData.teacherMessages);
+                            } catch (e) {
+                                console.warn("Erreur import messages Perso:", e);
+                            }
+                        }
+
 
                         // ========== FUSION CONFIG EXPORT (remarks / tranches) ==========
                         const importedCfg = importedRaw.exportPrepConfig;
@@ -3908,6 +3925,7 @@
                         console.error('Erreur importation JSON:', error);
                         alert('Erreur lors de l\'importation du fichier JSON');
                     }
+
                 };
                 reader.readAsText(file);
             }
