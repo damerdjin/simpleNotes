@@ -3806,46 +3806,14 @@
                 if (!file) return;
 
                 const reader = new FileReader();
-reader.onload = function(e) {
-    try {
-        const importedRaw = JSON.parse(e.target.result);
-        
-        // 🔧 FIX : cherche teacherMessages partout
-        let importedData;
-        if (importedRaw.data) {
-            importedData = importedRaw.data;
-        } else {
-            importedData = importedRaw;
-        }
-        
-        console.log("📦 importedRaw:", importedRaw);
-        console.log("📦 importedData:", importedData);
-        console.log("📦 teacherMessages trouvé:", !!importedData.teacherMessages);
+                reader.onload = function (e) {
+                    try {
+                        const importedRaw = JSON.parse(e.target.result);
+                        const importedData = importedRaw.data || importedRaw;
 
-        // ⭐ IMPORT MESSAGES PERSO (MULTI-NIVEAUX)
-        const teacherData = importedData.teacherMessages || importedRaw.teacherMessages;
-        if (teacherData) {
-            console.log("✅ teacherMessages TROUVÉ:", teacherData);
-            
-            Object.entries(teacherData).forEach(([scope, msgs]) => {
-                if (Array.isArray(msgs) && msgs.length > 0) {
-                    // Global
-                    window.REMARKS_MESSAGES = window.REMARKS_MESSAGES || {};
-                    window.REMARKS_MESSAGES.teacherMessages = window.REMARKS_MESSAGES.teacherMessages || {};
-                    window.REMARKS_MESSAGES.teacherMessages[scope] = msgs;
-                    
-                    // localStorage
-                    const key = `corrections-teacher-messages`;
-                    const storage = JSON.parse(localStorage.getItem(key) || '{}');
-                    storage[scope] = msgs;
-                    localStorage.setItem(key, JSON.stringify(storage));
-                    
-                    console.log(`✅ ${scope}:`, msgs[0]);
-                }
-            });
-            
-            renderExportPrep(); // refresh aperçu
-        }
+                        console.log("📦 importedRaw:", importedRaw);
+                        console.log("📦 importedData:", importedData);
+
                         // Fonction pour nettoyer
                         const clean = (val) => String(val || '').trim();
 
@@ -3889,21 +3857,45 @@ reader.onload = function(e) {
                                     }
                                 }
                             });
-                            if (importedData.teacherMessages) {
-                                try {
-                                    Object.entries(importedData.teacherMessages).forEach(([scope, msgs]) => {
-                                        if (Array.isArray(msgs) && msgs.length > 0) {
-                                            // Restaure les messages Perso
-                                            window.REMARKS_MESSAGES.teacherMessages = window.REMARKS_MESSAGES.teacherMessages || {};
-                                            window.REMARKS_MESSAGES.teacherMessages[scope] = msgs;
-                                            addTeacherMessages(scope, msgs); // si fonction existe
-                                        }
-                                    });
-                                    console.log("Messages Perso importés:", importedData.teacherMessages);
-                                } catch (e) {
-                                    console.warn("Erreur import messages Perso:", e);
+                        }
+
+                        // ⭐ IMPORT MESSAGES PERSO (vraies clés)
+                        const teacherData = importedData.teacherMessages || importedRaw.teacherMessages;
+                        if (teacherData) {
+                            console.log("✅ teacherMessages TROUVÉ:", teacherData);
+
+                            Object.entries(teacherData).forEach(([scope, msgs]) => {
+                                if (Array.isArray(msgs) && msgs.length > 0) {
+                                    // 1) window.REMARKS_MESSAGES
+                                    window.REMARKS_MESSAGES = window.REMARKS_MESSAGES || {};
+                                    window.REMARKS_MESSAGES.teacherMessages = window.REMARKS_MESSAGES.teacherMessages || {};
+                                    window.REMARKS_MESSAGES.teacherMessages[scope] = msgs;
+
+                                    // 2) LES VRAIES CLÉS localStorage
+                                    const v1Key = `corrections-teacher-remarks-library-v1`;
+                                    const v2Key = `corrections-teacher-remarks-library-v2`;
+
+                                    // v1 format: {"FR":{"obs":[...],"cons@0":[...]}}
+                                    let v1Data = JSON.parse(localStorage.getItem(v1Key) || '{}');
+                                    v1Data.FR = v1Data.FR || {};
+                                    v1Data.FR[scope] = msgs;
+                                    localStorage.setItem(v1Key, JSON.stringify(v1Data));
+
+                                    // v2 format: {"FR":{"obs":{"0":["FaibleObs"]}}}
+                                    let v2Data = JSON.parse(localStorage.getItem(v2Key) || '{}');
+                                    v2Data.FR = v2Data.FR || {};
+                                    if (!v2Data.FR[scope]) v2Data.FR[scope] = {};
+                                    v2Data.FR[scope]["0"] = msgs; // simplifié
+                                    localStorage.setItem(v2Key, JSON.stringify(v2Data));
+
+                                    console.log(`✅ ${scope} → v1/v2 localStorage`);
                                 }
-                            }
+                            });
+
+                            renderExportPrep();
+                        }
+                        else {
+                            console.warn("❌ Pas de teacherMessages");
                         }
 
                         // ========== FUSION DES DEVOIRS ==========
@@ -3916,9 +3908,7 @@ reader.onload = function(e) {
                             });
                         }
 
-
-
-                        // ========== FUSION CONFIG EXPORT (remarks / tranches) ==========
+                        // ========== FUSION CONFIG EXPORT ==========
                         const importedCfg = importedRaw.exportPrepConfig;
                         if (importedCfg) {
                             if (!exportPrepConfig || !exportPrepConfig.byClass) exportPrepConfig = { byClass: {} };
@@ -3934,7 +3924,6 @@ reader.onload = function(e) {
                         }
 
                         saveData();
-                        
                         renderStudents();
                         if (typeof loadGradeSelectors === 'function') loadGradeSelectors();
                         if (typeof renderSummary === 'function') renderSummary();
@@ -3946,10 +3935,10 @@ reader.onload = function(e) {
                         console.error('Erreur importation JSON:', error);
                         alert('Erreur lors de l\'importation du fichier JSON');
                     }
-
                 };
                 reader.readAsText(file);
             }
+
             async function exportSummaryToExcel() {
                 const t = translations[currentLanguage];
                 const selectedClass = document.getElementById('select-class-summary')?.value || '';
