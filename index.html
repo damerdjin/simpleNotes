@@ -3746,10 +3746,23 @@
 
                     saveData();
                     renderStudents();
-
                     // Si vous avez une fonction spécifique pour rafraichir les tableaux de notes :
                     if (typeof renderSummary === 'function') renderSummary();
                     if (typeof loadGradeSelectors === 'function') loadGradeSelectors();
+                    // ⭐ NOUVEAU : RAFFRAICHISSEMENT COMPLET
+                    console.log("🔄 RAFFRAICHISSEMENT COMPLET...");
+                    try {
+                        showTab('export'); // ou 'students'
+                        renderAssignments?.();
+                        loadClassSelectors?.();
+                        loadClassSelectorsForExport?.();
+                        renderExportPrep();
+                        applyLanguage();
+                        softResetUI?.();
+                        console.log("✅ APP RAFFRAICHIE !");
+                    } catch (e) {
+                        console.warn("Refresh:", e);
+                    }
 
                     alert(`${t.importSuccess}\nAjoutés: ${added}\nMis à jour: ${updated}`);
                     event.target.value = '';
