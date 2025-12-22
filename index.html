@@ -3780,11 +3780,13 @@
                 try {
                     // Récupère TOUS les messages Perso par scope/band
                     const scopes = [];
-                    for (let band = 0; band <= 8; band++) {
+                    // On scanne tous les types de paliers possibles pour Obs et Cons
+                    for (let band = -1; band <= 10; band++) {
                         scopes.push(`obs@${band}`);
                         scopes.push(`cons@${band}`);
                     }
-                    scopes.push("obs"); // legacy support
+                    scopes.push("obs");
+                    scopes.push("cons");
                     
                     scopes.forEach(scope => {
                         const msgs = getTeacherMessages(scope) || [];
@@ -3875,38 +3877,19 @@
                         }
 
                         // ⭐ IMPORT MESSAGES PERSO (vraies clés)
-                        const teacherData = importedData.teacherMessages || importedRaw.teacherMessages;
+                        const teacherData = importedRaw.teacherMessages || importedData.teacherMessages;
                         if (teacherData) {
                             console.log("✅ teacherMessages TROUVÉ:", teacherData);
 
                             Object.entries(teacherData).forEach(([scope, msgs]) => {
                                 if (Array.isArray(msgs) && msgs.length > 0) {
                                     // 1) window.REMARKS_MESSAGES
-                                    window.REMARKS_MESSAGES = window.REMARKS_MESSAGES || {};
-                                    window.REMARKS_MESSAGES.teacherMessages = window.REMARKS_MESSAGES.teacherMessages || {};
-                                    window.REMARKS_MESSAGES.teacherMessages[scope] = msgs;
-
-                                    // 2) LES VRAIES CLÉS localStorage
-                                    const v1Key = `corrections-teacher-remarks-library-v1`;
-                                    const v2Key = `corrections-teacher-remarks-library-v2`;
-
-                                    // v1 format: {"FR":{"obs":[...],"cons@0":[...]}}
-                                    let v1Data = JSON.parse(localStorage.getItem(v1Key) || '{}');
-                                    v1Data.FR = v1Data.FR || {};
-                                    v1Data.FR[scope] = msgs;
-                                    localStorage.setItem(v1Key, JSON.stringify(v1Data));
-
-                                    // v2 format: {"FR":{"obs":{"0":["FaibleObs"]}}}
-                                    let v2Data = JSON.parse(localStorage.getItem(v2Key) || '{}');
-                                    v2Data.FR = v2Data.FR || {};
-                                    if (!v2Data.FR[scope]) v2Data.FR[scope] = {};
-                                    v2Data.FR[scope]["0"] = msgs; // simplifié
-                                    localStorage.setItem(v2Key, JSON.stringify(v2Data));
-
-                                    console.log(`✅ ${scope} → v1/v2 localStorage`);
+                                    // On s'assure que addTeacherMessage fonctionnera
+                                    msgs.forEach(m => addTeacherMessage(scope, m));
+                                    
+                                    console.log(`✅ ${scope} importé dans la bibliothèque locale`);
                                 }
                             });
-
                             renderExportPrep();
                         }
                         else {
@@ -6182,12 +6165,17 @@
                         // 2) Overrides, comme preview
                         const ov = getOverride(scopeKey, g.studentId) || {};
                         const R = window.REMARKS_MESSAGES;
+                        
+                        const diff = (g.devoir !== null && g.comp !== null) ? (g.devoir - g.comp) : null;
+                        const obsBandIdx = (R && diff !== null) ? findBandIndexLocal(R.diffBands, diff) : -1;
                         const consBandIdx = R ? findBandIndexLocal(R.avgBands, avg) : -1;
 
                         // 3) Pools et auto, comme preview
-                        const teacherObsAll = getTeacherMessages("obs") || [];
-                        const autoObs = teacherObsAll.length
-                            ? pickDeterministic(teacherObsAll, `${className}|${g.studentId}|obs|${avg}`)
+                        const teacherObsBand = getTeacherMessages(`obs@${obsBandIdx}`) || [];
+                        const obsPool = [...teacherObsBand];
+                        if (rm.obs) obsPool.push(rm.obs);
+                        const autoObs = obsPool.length
+                            ? pickDeterministic(obsPool, `${className}|${g.studentId}|obs|${avg}|band:${obsBandIdx}`)
                             : rm.obs;
 
                         const obsCandidates = getObsCandidatesForRow(g.devoir, g.comp) || [];
@@ -6200,7 +6188,7 @@
                             : rm.cons;
 
                         // 4) Final, EXACTEMENT comme preview
-                        let obs = (ov.obs && ov.obs.trim()) ? ov.obs : rm.obs;
+                        let obs = (ov.obs && ov.obs.trim()) ? ov.obs : (autoObs || rm.obs);
                         let cons = (ov.cons && ov.cons.trim()) ? ov.cons : (autoCons || rm.cons);
 
                         // 5) Debug pour comparer avec preview
