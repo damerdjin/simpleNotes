@@ -3779,11 +3779,13 @@
                 const teacherMessages = {};
                 try {
                     // Récupère TOUS les messages Perso par scope/band
-                    const scopes = ["obs"]; // obs généraux
+                    const scopes = [];
                     for (let band = 0; band <= 8; band++) {
+                        scopes.push(`obs@${band}`);
                         scopes.push(`cons@${band}`);
                     }
-
+                    scopes.push("obs"); // legacy support
+                    
                     scopes.forEach(scope => {
                         const msgs = getTeacherMessages(scope) || [];
                         if (msgs.length > 0) {
@@ -5273,6 +5275,19 @@
                     const avgClass = cellClassForValue(moyenne, (ccExpected && compExpected && (!hasTP || tpExpected)));
 
 
+                    const scopeKey = getRemarksScopeKey(className);
+                    const ov = getOverride(scopeKey, s.id) || {};
+                    const R = window.REMARKS_MESSAGES;
+                    
+                    // Calcul des indices de paliers pour Obs et Cons
+                    const diff = (devoir !== null && comp !== null) ? (devoir - comp) : null;
+                    const obsBandIdx = (R && diff !== null) ? findBandIndexLocal(R.diffBands, diff) : -1;
+                    const consBandIdx = R ? findBandIndexLocal(R.avgBands, moyenne) : -1;
+
+                    // Récupération des messages personnalisés (bibliothèque prof)
+                    const teacherObsBand = getTeacherMessages(`obs@${obsBandIdx}`);
+                    const teacherConsBand = getTeacherMessages(`cons@${consBandIdx}`);
+
                     const rm = (window.computeExportRemarks)
                         ? window.computeExportRemarks({
                             devoir,
@@ -5283,29 +5298,21 @@
                         })
                         : { obs: "", cons: "" };
 
-                    const scopeKey = getRemarksScopeKey(className);
-                    const ov = getOverride(scopeKey, s.id) || {};
-                    const R = window.REMARKS_MESSAGES;
-                    const consBandIdx = R ? findBandIndexLocal(R.avgBands, moyenne) : -1;
-                    const teacherObsAll = getTeacherMessages("obs"); // toute la bibliothèque prof (langue courante)
-
-                    const autoObs = teacherObsAll.length
-                        ? pickDeterministic(teacherObsAll, `${className}|${s.id}|obs|${moyenne}`)
-                        : rm.obs; // fallback moteur si bibliothèque vide
-
+                    // Logique Auto Obs: moteur + bibliothèque band-specific
+                    const obsPool = [...teacherObsBand];
+                    if (rm.obs) obsPool.push(rm.obs);
+                    const autoObs = obsPool.length
+                        ? pickDeterministic(obsPool, `${className}|${s.id}|obs|${moyenne}|band:${obsBandIdx}`)
+                        : "";
 
                     const obsCandidates = getObsCandidatesForRow(devoir, comp);
                     const consCandidates = getConsCandidatesForRow(moyenne);
-                    const teacherConsBand = getTeacherMessages(`cons@${consBandIdx}`);
-                    const optionsCons = [...teacherConsBand, ...consCandidates];
-
+                    
+                    // Logique Auto Cons: moteur + bibliothèque band-specific
                     const consPool = [...teacherConsBand, ...consCandidates];
                     const autoCons = pickDeterministic(consPool, `${className}|${s.id}|cons|${moyenne}|band:${consBandIdx}`);
 
-
-                    const teacherObs = getTeacherMessages("obs");
-                    const teacherCons = getTeacherMessages("cons");
-                    const finalObs = (ov.obs && ov.obs.trim()) ? ov.obs : rm.obs;
+                    const finalObs = (ov.obs && ov.obs.trim()) ? ov.obs : (autoObs || rm.obs);
                     const finalCons = (ov.cons && ov.cons.trim()) ? ov.cons : (autoCons || rm.cons);
                     return `
                         <tr class="border-b hover:bg-gray-50">
@@ -5332,19 +5339,27 @@
                             ${fmt(moyenne)}
                             </td>
                             <td class="p-3 text-left">
-                            <div class="remark-cell" data-scope="${escapeHtml(scopeKey)}" data-student-id="${escapeHtml(s.id)}" data-kind="obs" data-avg="${escapeHtml(moyenne)}">
+                            <div class="remark-cell" data-scope="${escapeHtml(scopeKey)}" data-student-id="${escapeHtml(s.id)}" data-kind="obs" data-avg="${escapeHtml(moyenne)}" data-obs-band="${obsBandIdx}">
                                 <div class="remark-text text-sm leading-snug">${escapeHtml(finalObs)}</div>
                                 <div class="mt-1 flex gap-2">
-                                <button type="button" class="remark-edit-btn text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded">Modifier</button>
+                                    <button type="button" class="remark-edit-btn text-xs px-2 py-1 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 rounded">Modifier / Perso</button>
                                     <button type="button" class="remark-auto-btn text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded">Auto</button>
-                                    <button type="button" class="remark-custom-btn text-xs px-2 py-1 bg-indigo-100 hover:bg-indigo-200 rounded">+ Perso</button>
                                 </div>
-                                <div class="remark-editor mt-2 hidden">
-                                <select class="remark-select w-full p-2 border rounded bg-white text-sm">
-                                    <option value="">(Auto)</option>                                    
-                                    ${teacherObs.map(msg => `<option value="${escapeHtml(msg)}">${escapeHtml(msg.slice(0, 120))}${msg.length > 120 ? "…" : ""}</option>`).join("")}
-                                    ${obsCandidates.map(msg => `<option value="${escapeHtml(msg)}">${escapeHtml(msg.slice(0, 120))}${msg.length > 120 ? "…" : ""}</option>`).join("")}
-                                </select>
+                                <div class="remark-editor mt-2 hidden p-2 bg-indigo-50 rounded border border-indigo-100 space-y-2">
+                                    <textarea class="remark-textarea w-full p-2 border rounded bg-white text-sm h-20" placeholder="Commentaire personnalisé...">${escapeHtml(finalObs)}</textarea>
+                                    <div class="flex flex-wrap gap-2 items-center">
+                                        <select class="remark-select flex-1 p-1 border rounded bg-white text-xs">
+                                            <option value="">(Suggestions / Bibliothèque)</option>                                    
+                                            ${teacherObsBand.length ? `<optgroup label="Ma bibliothèque">
+                                                ${teacherObsBand.map(msg => `<option value="${escapeHtml(msg)}">${escapeHtml(msg.slice(0, 80))}...</option>`).join("")}
+                                            </optgroup>` : ""}
+                                            ${obsCandidates.length ? `<optgroup label="Suggestions moteur">
+                                                ${obsCandidates.map(msg => `<option value="${escapeHtml(msg)}">${escapeHtml(msg.slice(0, 80))}...</option>`).join("")}
+                                            </optgroup>` : ""}
+                                        </select>
+                                        <button type="button" class="remark-save-btn px-2 py-1 bg-indigo-600 text-white rounded text-xs hover:bg-indigo-700">OK</button>
+                                        <button type="button" class="remark-add-lib-btn px-2 py-1 bg-amber-500 text-white rounded text-xs hover:bg-amber-600" title="Ajouter à ma bibliothèque pour ce niveau">+ Biblio</button>
+                                    </div>
                                 </div>
                             </div>
                             </td>
@@ -5353,15 +5368,24 @@
                             <div class="remark-cell" data-scope="${escapeHtml(scopeKey)}" data-student-id="${escapeHtml(s.id)}" data-kind="cons" data-avg="${escapeHtml(moyenne)}" data-cons-band="${consBandIdx}">
                                 <div class="remark-text text-sm leading-snug">${escapeHtml(finalCons)}</div>
                                 <div class="mt-1 flex gap-2">
-                                    <button type="button" class="remark-edit-btn text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded">Modifier</button>
+                                    <button type="button" class="remark-edit-btn text-xs px-2 py-1 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 rounded">Modifier / Perso</button>
                                     <button type="button" class="remark-auto-btn text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded">Auto</button>
-                                    <button type="button" class="remark-custom-btn text-xs px-2 py-1 bg-indigo-100 hover:bg-indigo-200 rounded">+ Perso</button>
                                 </div>
-                                <div class="remark-editor mt-2 hidden">
-                                <select class="remark-select w-full p-2 border rounded bg-white text-sm">
-                                    <option value="">(Auto)</option>
-                                    ${optionsCons.map(msg => `<option value="${escapeHtml(msg)}">${escapeHtml(msg)}</option>`).join("")}
-                                </select>
+                                <div class="remark-editor mt-2 hidden p-2 bg-indigo-50 rounded border border-indigo-100 space-y-2">
+                                    <textarea class="remark-textarea w-full p-2 border rounded bg-white text-sm h-20" placeholder="Conseil personnalisé...">${escapeHtml(finalCons)}</textarea>
+                                    <div class="flex flex-wrap gap-2 items-center">
+                                        <select class="remark-select flex-1 p-1 border rounded bg-white text-xs">
+                                            <option value="">(Suggestions / Bibliothèque)</option>
+                                            ${teacherConsBand.length ? `<optgroup label="Ma bibliothèque">
+                                                ${teacherConsBand.map(msg => `<option value="${escapeHtml(msg)}">${escapeHtml(msg.slice(0, 80))}...</option>`).join("")}
+                                            </optgroup>` : ""}
+                                            ${consCandidates.length ? `<optgroup label="Suggestions moteur">
+                                                ${consCandidates.map(msg => `<option value="${escapeHtml(msg)}">${escapeHtml(msg.slice(0, 80))}...</option>`).join("")}
+                                            </optgroup>` : ""}
+                                        </select>
+                                        <button type="button" class="remark-save-btn px-2 py-1 bg-indigo-600 text-white rounded text-xs hover:bg-indigo-700">OK</button>
+                                        <button type="button" class="remark-add-lib-btn px-2 py-1 bg-amber-500 text-white rounded text-xs hover:bg-amber-600" title="Ajouter à ma bibliothèque pour ce niveau">+ Biblio</button>
+                                    </div>
                                 </div>
                             </div>
                             </td>
@@ -5435,14 +5459,12 @@
 
                     const btnEdit = cell.querySelector(".remark-edit-btn");
                     const btnAuto = cell.querySelector(".remark-auto-btn");
-                    const btnCustom = cell.querySelector(".remark-custom-btn");
+                    const btnSave = cell.querySelector(".remark-save-btn");
+                    const btnAddLib = cell.querySelector(".remark-add-lib-btn");
 
                     const editor = cell.querySelector(".remark-editor");
+                    const textarea = cell.querySelector(".remark-textarea");
                     const select = cell.querySelector(".remark-select");
-
-                    // init select (si override existe)
-                    const ov = getOverride(scopeKey, studentId);
-                    select.value = (ov && ov[kind]) ? ov[kind] : "";
 
                     btnEdit.addEventListener("click", () => {
                         editor.classList.toggle("hidden");
@@ -5450,36 +5472,39 @@
 
                     btnAuto.addEventListener("click", () => {
                         clearOverrideField(scopeKey, studentId, kind);
-                        renderExportPrep(); // rerender complet
+                        renderExportPrep(); 
                     });
 
-                    btnCustom.addEventListener("click", () => {
-                        const label = kind === "obs" ? "Observation" : "Conseil";
-                        const msg = prompt(`Ajouter un message perso (${label}) :`);
+                    select.addEventListener("change", () => {
+                        const val = select.value;
+                        if (val) {
+                            textarea.value = val;
+                        }
+                    });
+
+                    btnSave.addEventListener("click", () => {
+                        const msg = textarea.value.trim();
+                        if (!msg) {
+                            clearOverrideField(scopeKey, studentId, kind);
+                        } else {
+                            setOverride(scopeKey, studentId, { [kind]: msg });
+                        }
+                        renderExportPrep();
+                    });
+
+                    btnAddLib.addEventListener("click", () => {
+                        const msg = textarea.value.trim();
                         if (!msg) return;
 
-                        if (kind === "cons") {
-                            const R = window.REMARKS_MESSAGES;
-                            const bandIdx = parseInt(cell.dataset.consBand || "-1", 10);
-                            addTeacherMessage(`cons@${bandIdx}`, msg);
-
-                        } else {
-                            addTeacherMessage("obs", msg);
-                        }
-
-                        //if (!ok) return;
-
-                        // Mettre ce message directement pour l'élève
-                        setOverride(scopeKey, studentId, { [kind]: msg.trim() });
-
-                        renderExportPrep(); // rerender pour voir le message + qu'il apparaisse dans la liste
-                    });
-                    select.addEventListener("change", () => {
-                        const chosen = select.value;
-                        if (!chosen) clearOverrideField(scopeKey, studentId, kind);
-                        else setOverride(scopeKey, studentId, { [kind]: chosen });
-
-                        renderExportPrep(); // rerender complet
+                        const bandIdx = parseInt(kind === "obs" ? (cell.dataset.obsBand || "-1") : (cell.dataset.consBand || "-1"), 10);
+                        const label = kind === "obs" ? "obs" : "cons";
+                        
+                        addTeacherMessage(`${label}@${bandIdx}`, msg);
+                        
+                        // On enregistre aussi pour l'élève actuel
+                        setOverride(scopeKey, studentId, { [kind]: msg });
+                        
+                        renderExportPrep();
                     });
                 });
 
