@@ -5337,10 +5337,10 @@
                             ${fmt(comp)}
                             </td>
 
+                            ${hasAnyMoyenne ? `
                             <td class="p-3 text-center font-bold ${avgClass}">
                             ${fmt(moyenne)}
                             </td>
-                            ${hasAnyMoyenne ? `
                             <td class="p-3 text-left">
                             <div class="remark-cell" data-scope="${escapeHtml(scopeKey)}" data-student-id="${escapeHtml(s.id)}" data-kind="obs" data-avg="${escapeHtml(moyenne)}" data-obs-band="${obsBandIdx}">
                                 <div class="remark-text text-sm leading-snug">${escapeHtml(displayObs)}</div>
@@ -5405,8 +5405,8 @@
                 ];
                 if (hasTP) cols.push('<col style="width:110px">');
                 cols.push('<col style="width:130px">'); // Composition
-                cols.push('<col style="width:130px">'); // Moyenne
                 if (hasAnyMoyenne) {
+                    cols.push('<col style="width:130px">'); // Moyenne
                     cols.push('<col style="width:220px">');
                     cols.push('<col style="width:220px">');
                 }
@@ -5416,10 +5416,10 @@
                 </div>
                 `;
                 // Nombre total de colonnes (pour le colspan)
-                // Nom + CC + Devoir + (TP?) + Compo + Moyenne
-                let colCount = 1 + 1 + 1 + 1 + 1;
+                // Nom + CC + Devoir + (TP?) + Compo
+                let colCount = 1 + 1 + 1 + 1;
                 if (hasTP) colCount += 1;
-                if (hasAnyMoyenne) colCount += 2;
+                if (hasAnyMoyenne) colCount += 3; // + Moyenne + Obs + Cons
 
                 preview.innerHTML = `
                         <table class="w-full table-fixed border-collapse">
@@ -5446,8 +5446,8 @@
                             ${hasTP ? `<th class="p-3 text-center bg-gray-100" data-translate="tpShort">${t.tpShort || 'TP'}</th>` : ``}
 
                             <th class="p-3 text-center bg-gray-100" data-translate="compositionShort">${t.compositionShort || 'Composition'}</th>
-                            <th class="p-3 text-center bg-green-100" data-translate="avgShort">${t.avgShort || 'Moyenne'}</th>
                             ${hasAnyMoyenne ? `
+                            <th class="p-3 text-center bg-green-100" data-translate="avgShort">${t.avgShort || 'Moyenne'}</th>
                             <th class="p-3 text-center bg-gray-100" data-translate="observationShort">${t.observationShort || 'Observation'}</th>
                             <th class="p-3 text-center bg-gray-100" data-translate="adviceShort">${t.adviceShort || 'Conseil'}</th>
                             ` : ``}
