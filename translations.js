@@ -53,6 +53,11 @@ const translations = {
         duplicate: "Dupliquer",
         edit: "Modifier",
         delete: "Supprimer",
+        copyGrades: "Copier les notes d'un autre devoir",
+        noCopyGrades: "-- Ne pas copier de notes --",
+        copyGradesWarning: "⚠️ Cela écrasera les notes existantes de ce devoir si vous le modifiez.",
+        globalOnlyLabel: "Note globale uniquement (sans exercices détaillés)",
+        globalMaxLabel: "Note maximale du devoir",
 
 
         // Exercices et questions
@@ -224,6 +229,11 @@ const translations = {
         duplicate: "Duplicate",
         edit: "Edit",
         delete: "Delete",
+        copyGrades: "Copy grades from another assignment",
+        noCopyGrades: "-- Do not copy grades --",
+        copyGradesWarning: "⚠️ This will overwrite existing grades for this assignment if you modify it.",
+        globalOnlyLabel: "Global grade only (without detailed exercises)",
+        globalMaxLabel: "Maximum assignment grade",
 
         // Exercices et questions
         exercise: "Exercise",
@@ -396,6 +406,11 @@ const translations = {
         duplicate: "نسخ",
         edit: "تعديل",
         delete: "حذف",
+        copyGrades: "نسخ النقط من واجب آخر",
+        noCopyGrades: "-- عدم نسخ النقط --",
+        copyGradesWarning: "⚠️ سيؤدي هذا إلى الكتابة فوق النقط الحالية لهذا الواجب إذا قمت بتعديله.",
+        globalOnlyLabel: "نقطة إجمالية فقط (بدون تمارين مفصلة)",
+        globalMaxLabel: "النقطة القصوى للواجب",
 
         // Exercices et questions
         exercise: "تمرين",

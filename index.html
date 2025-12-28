@@ -820,18 +820,19 @@
                 </div>
 
                 <!-- Filters -->
-                <div class="mb-6 p-4 bg-gray-50 rounded-lg flex gap-4 flex-wrap">
-                    <div class="flex-1 min-w-48">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Filtrer par classe</label>
-                        <select id="filter-class-assignments" onchange="renderAssignments()"
-                            class="w-full p-3 border rounded-lg">
-                            <option value="">-- Toutes les classes --</option>
-                        </select>
+                <div class="mb-6 space-y-4">
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <label class="block text-sm font-medium text-gray-700 mb-3">Filtrer par classe :</label>
+                        <div id="assignment-class-chips" class="flex flex-wrap gap-2">
+                            <!-- Chips will be injected here -->
+                        </div>
                     </div>
-                    <div class="flex-1 min-w-48">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Filtrer par nom de devoir</label>
-                        <input type="text" id="filter-name-assignments" placeholder="Rechercher un devoir..."
-                            onkeyup="renderAssignments()" class="w-full p-3 border rounded-lg">
+                    
+                    <div class="flex gap-4 flex-wrap">
+                        <div class="flex-1 min-w-48">
+                            <input type="text" id="filter-name-assignments" placeholder="Rechercher un devoir..."
+                                onkeyup="renderAssignments()" class="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 outline-none">
+                        </div>
                     </div>
                 </div>
 
@@ -1114,23 +1115,22 @@
 
             function translatePage() {
                 const t = translations[currentLanguage];
+                if (!t) return;
 
                 // Traduire les éléments avec data-translate
                 document.querySelectorAll('[data-translate]').forEach(element => {
                     const key = element.getAttribute('data-translate');
                     if (t[key]) {
-                        if (element.tagName === 'OPTION') {
-                            element.textContent = t[key];
-                        } else {
-                            element.textContent = t[key];
-                        }
+                        element.textContent = t[key];
                     }
                 });
-                // Mettre à jour le placeholder du champ de recherche avec la même traduction
+                
+                // Mettre à jour le placeholder du champ de recherche
                 const searchInput = document.getElementById('student-search');
-                if (searchInput) {
-                    searchInput.placeholder = t.search; // Utilise la même clé que dans Récapitulatif
+                if (searchInput && t.search) {
+                    searchInput.placeholder = t.search;
                 }
+                
                 // Titre et sous-titre
                 setTextContent('h1', t.appTitle);
                 setTextContent('header p', t.appSubtitle);
@@ -1159,16 +1159,13 @@
                 // Onglet Devoirs
                 setTextContent('#content-assignments h2', t.assignmentsManagement);
                 setTextContent('button[onclick="openAssignmentModal()"]', t.createAssignment);
-                setTextContent('#filter-class-assignments + label', t.filterByClass);
-                setTextContent('#filter-class-assignments option:first-child', t.allClasses);
-                const filterClassLabel = document.querySelector('#filter-class-assignments').previousElementSibling;
-                const filterNameLabel = document.querySelector('#filter-name-assignments').previousElementSibling;
-                if (filterClassLabel) filterClassLabel.textContent = t.filterByClass;
-                if (filterNameLabel) filterNameLabel.textContent = t.filterByName;
-                setTextContent('#filter-class-assignments option:first-child', t.allClasses);
-                setAttribute('#filter-name-assignments', 'placeholder', t.searchAssignment);
-
-                setTextContent('#filter-name-assignments + label', t.filterByName);
+                
+                // Labels des filtres
+                const chipsContainer = document.querySelector('#assignment-class-chips');
+                if (chipsContainer && chipsContainer.previousElementSibling) {
+                    chipsContainer.previousElementSibling.textContent = t.filterByClass;
+                }
+                
                 setAttribute('#filter-name-assignments', 'placeholder', t.searchAssignment);
 
                 // Modal devoir
@@ -1178,6 +1175,13 @@
                 setTextContent('button[onclick="addExercise()"]', t.addExercise);
                 setTextContent('.modal button:first-child', t.cancel);
                 setTextContent('.modal button:last-child', t.save);
+                
+                // Traduction dynamique des éléments spécifiques au mode global si le modal est ouvert
+                setTextContent('label[for="assignment-global-only"]', t.globalOnlyLabel);
+                setTextContent('#global-maxpoints-container label', t.globalMaxLabel);
+                setTextContent('#copy-grades-container label', t.copyGrades);
+                setTextContent('#copy-grades-container p', t.copyGradesWarning);
+                setTextContent('#copy-grades-source option:first-child', t.noCopyGrades);
 
                 // Onglet Notes
                 setTextContent('#content-grades h2', t.gradesEntry);
@@ -1208,20 +1212,15 @@
             function updateDynamicTexts() {
                 const t = translations[currentLanguage];
 
-                // Mettre à jour les tooltips
-                const editButtons = document.querySelectorAll('button[onclick*="openAssignmentModal"]');
-                editButtons.forEach(btn => {
-                    btn.title = t.edit;
-                });
-
-                const deleteButtons = document.querySelectorAll('button[onclick*="deleteAssignment"]');
-                deleteButtons.forEach(btn => {
-                    btn.title = t.delete;
-                });
-
-                const duplicateButtons = document.querySelectorAll('button[onclick*="duplicateAssignment"]');
-                duplicateButtons.forEach(btn => {
-                    btn.title = t.duplicate;
+                // Mettre à jour les tooltips simples
+                document.querySelectorAll('button[onclick*="openAssignmentModal"]').forEach(btn => btn.title = t.edit);
+                document.querySelectorAll('button[onclick*="deleteAssignment"]').forEach(btn => btn.title = t.delete);
+                
+                // Ne pas écraser les tooltips spécifiques de duplication s'ils sont déjà précis
+                document.querySelectorAll('button[onclick*="duplicateAssignment"]').forEach(btn => {
+                    if (!btn.title || btn.title === t.duplicate) {
+                        btn.title = t.duplicate;
+                    }
                 });
 
                 const exportBtn = document.querySelector('#btn-export-json');
@@ -1513,7 +1512,7 @@
                 overlay.style.background = 'rgba(0,0,0,.5)';
                 overlay.innerHTML = `
                   <div class="bg-white rounded-xl p-6 w-full max-w-5xl mx-4 my-auto">
-                    <h3 id="assignment-modal-title" class="text-xl font-bold mb-4">${t.createAssignment || 'Créer un Devoir'}</h3>
+                    <h3 id="assignment-modal-title" class="text-xl font-bold mb-4">${t.createAssignmentTitle || 'Créer un Devoir'}</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                       <input type="text" id="assignment-name" placeholder="Nom du devoir ex: Devoir 1" class="w-full p-3 border rounded-lg">
                       <select id="assignment-class" class="w-full p-3 border rounded-lg">
@@ -1531,11 +1530,11 @@
                     <div id="exercises-builder" class="space-y-4 mb-4 max-h-[60vh] overflow-y-auto pr-2"></div>
                     
                     <div id="copy-grades-container" class="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg hidden">
-                        <label class="block text-sm font-medium text-amber-800 mb-2">Copier les notes d'un autre devoir :</label>
+                        <label class="block text-sm font-medium text-amber-800 mb-2">${t.copyGrades}</label>
                         <select id="copy-grades-source" class="w-full p-2 border border-amber-300 rounded bg-white text-sm">
-                            <option value="">-- Ne pas copier de notes --</option>
+                            <option value="">${t.noCopyGrades}</option>
                         </select>
-                        <p class="text-xs text-amber-600 mt-1 italic">⚠️ Cela écrasera les notes existantes de ce devoir si vous le modifiez.</p>
+                        <p class="text-xs text-amber-600 mt-1 italic">${t.copyGradesWarning}</p>
                     </div>
 
                     <button id="add-exercise-btn" onclick="addExercise()" class="w-full p-3 border-2 border-dashed border-blue-400 text-blue-600 rounded-lg hover:bg-blue-50 mb-4" data-translate="addExercise">${t.addExercise || 'Ajouter un exercice'}</button>
@@ -1581,7 +1580,7 @@
                             const sourceAssignments = data.assignments;
                             if (sourceAssignments.length > 0) {
                                 copyContainer.classList.remove('hidden');
-                                copySelect.innerHTML = '<option value="">-- Ne pas copier de notes --</option>' + 
+                                copySelect.innerHTML = `<option value="">${t.noCopyGrades}</option>` + 
                                     sourceAssignments.map(a => `<option value="${a.id}">${a.name} (${a.className})</option>`).join('');
                             }
                         }
@@ -2084,14 +2083,41 @@
                 icon.classList.toggle('open');
             }
 
+            let activeClassFilters = []; // État pour les filtres multiples
+
+            function toggleAssignmentClassFilter(className) {
+                if (className === '') {
+                    activeClassFilters = [];
+                } else {
+                    const index = activeClassFilters.indexOf(className);
+                    if (index > -1) {
+                        activeClassFilters.splice(index, 1);
+                    } else {
+                        activeClassFilters.push(className);
+                    }
+                }
+                renderAssignments();
+            }
+
             function renderAssignments() {
                 const t = translations[currentLanguage];
                 const container = document.getElementById('assignments-list');
-                const filterClass = document.getElementById('filter-class-assignments')?.value || '';
+                const chipsContainer = document.getElementById('assignment-class-chips');
                 const filterName = document.getElementById('filter-name-assignments')?.value.toLowerCase() || '';
 
+                // Gérer les Chips de classe
+                const allClasses = [...new Set(data.assignments.map(a => a.className))].filter(Boolean).sort();
+                if (chipsContainer) {
+                    const allChip = `<button onclick="toggleAssignmentClassFilter('')" class="px-4 py-1.5 rounded-full text-sm font-medium transition-all ${activeClassFilters.length === 0 ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-100'}">Toutes</button>`;
+                    const classChips = allClasses.map(c => {
+                        const isActive = activeClassFilters.includes(c);
+                        return `<button onclick="toggleAssignmentClassFilter('${c}')" class="px-4 py-1.5 rounded-full text-sm font-medium transition-all ${isActive ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-100'}">${c}</button>`;
+                    }).join('');
+                    chipsContainer.innerHTML = allChip + classChips;
+                }
+
                 let filteredAssignments = data.assignments.filter(a => {
-                    const matchClass = !filterClass || a.className === filterClass;
+                    const matchClass = activeClassFilters.length === 0 || activeClassFilters.includes(a.className);
                     const matchName = !filterName || a.name.toLowerCase().includes(filterName);
                     return matchClass && matchName;
                 });
@@ -2105,78 +2131,71 @@
                     container.innerHTML = `<p class="text-gray-500 text-center py-8">${t.noFilteredAssignments}</p>`;
                     return;
                 }
-                const groups = new Map();
-                filteredAssignments.forEach(a => {
-                    const key = a.className && a.className.trim() ? a.className : '(Sans classe)';
-                    if (!groups.has(key)) groups.set(key, []);
-                    groups.get(key).push(a);
-                });
 
-                const groupHtml = Array.from(groups.entries())
-                    .sort((a, b) => a[0].localeCompare(b[0]))
-                    .map(([className, list]) => {
-                        const cards = list.map(a => `
-                        <div class="border rounded-lg bg-white overflow-hidden shadow-sm">
-                            <div class="flex items-center justify-between p-4 bg-gray-50 cursor-pointer hover:bg-gray-100" onclick="toggleAccordion('${a.id}')">
-                                <div class="flex items-center gap-3">
-                                    <span id="icon-${a.id}" class="rotate-icon text-gray-400">▼</span>
-                                    <div>
-                                        <h3 class="font-bold">${a.name}</h3>
-                                        <span class="text-xs text-gray-500">
-                                            ${getAssignmentMaxPoints(a)} ${t.points} • ${a.exercises.length} ${t.exerciseAbbr}
-                                        </span>
+                // Rendu compact avec Cards Modernes et Accordéon pour les détails
+                container.innerHTML = filteredAssignments.map(a => {
+                    const totalPoints = getAssignmentMaxPoints(a);
+                    const nbStudents = data.students.filter(s => s.className === a.className).length;
+                    const nbGrades = Object.values(data.grades).filter(g => g[a.id]).length;
+                    const completionRate = nbStudents > 0 ? Math.round((nbGrades / nbStudents) * 100) : 0;
+                    
+                    return `
+                    <div class="bg-white border rounded-xl overflow-hidden hover:shadow-md transition-all group mb-4">
+                        <div class="p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 cursor-pointer" onclick="toggleAccordion('${a.id}')">
+                            <div class="flex-1 min-w-0 flex items-center gap-3">
+                                <span id="icon-${a.id}" class="rotate-icon text-gray-400">▼</span>
+                                <div>
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-bold rounded uppercase tracking-wider">${a.className || 'Sans classe'}</span>
+                                        <h4 class="text-lg font-bold text-gray-800 truncate group-hover:text-blue-600 transition-colors">${a.name}</h4>
+                                    </div>
+                                    <div class="flex items-center gap-4 text-sm text-gray-500">
+                                        <span title="Total des points" class="flex items-center gap-1">🎯 ${totalPoints} pts</span>
+                                        <span title="Progression" class="flex items-center gap-1">📊 ${nbGrades}/${nbStudents} (${completionRate}%)</span>
                                     </div>
                                 </div>
-                                <div class="flex gap-2" onclick="event.stopPropagation()">
-                                    <button onclick="openAssignmentModal('${a.id}')" class="p-2 text-blue-500 hover:bg-blue-50 rounded" title="${t.edit}">✏️</button>
-                                    <button onclick="duplicateAssignment('${a.id}')" class="p-2 text-green-500 hover:bg-green-50 rounded" title="${t.duplicate} (Squelette)">⎘</button>
-                                    <button onclick="duplicateAssignment('${a.id}', true)" class="p-2 text-amber-500 hover:bg-amber-50 rounded" title="${t.duplicate} (Squelette + Notes)">📋</button>
-                                    <button onclick="deleteAssignment('${a.id}')" class="p-2 text-red-500 hover:bg-red-50 rounded" title="${t.delete}">🗑️</button>
-                                </div>
                             </div>
-                            <div id="accordion-${a.id}" class="accordion-content">
-                                <div class="p-4 border-t space-y-3 bg-white text-sm">
-                                    ${a.exercises.map((ex, i) => {
-                            const parts = ex.parts || [];
-                            const directQuestions = ex.questions || [];
-                            let exContent = '';
-                            if (directQuestions.length > 0) {
-                                exContent += `<div class=\"ml-4 text-gray-600 mt-1\">${directQuestions.map(q => `<span class=\"inline-block mr-2\">${q.name || 'Q?'}: ${getQuestionMaxPoints(q)} ${t.points}</span>`).join(' • ')}</div>`;
-                            }
-                            if (parts.length > 0) {
-                                exContent += parts.map(part => `
-                                                <div class=\"ml-4 mt-1 border-l pl-2\">
-                                                    <span class=\"text-purple-600 font-medium\">${part.name}:</span>
-                                                    <span class=\"text-gray-500 italic\">(${(part.questions || []).map(q => q.name || 'Q?').join(', ')})</span>
-                                                </div>
-                                            `).join('');
-                            }
-                            return `
-                                            <div class=\"bg-gray-50 p-2 rounded border-l-4 border-blue-400\">
-                                                <strong>${t.exercise} ${i + 1}${ex.name ? ' - ' + ex.name : ''}</strong> (${getExerciseMaxPoints(ex)} ${t.points})
-                                                ${exContent}
+                            
+                            <div class="flex items-center gap-2" onclick="event.stopPropagation()">
+                                <button onclick="openAssignmentModal('${a.id}')" class="p-2.5 text-blue-600 hover:bg-blue-50 rounded-lg border border-transparent hover:border-blue-200 transition-colors" title="${t.edit}">✏️</button>
+                                <button onclick="duplicateAssignment('${a.id}')" class="p-2.5 text-green-600 hover:bg-green-50 rounded-lg border border-transparent hover:border-green-200 transition-colors" title="${t.duplicate} (Squelette)">⎘</button>
+                                <button onclick="duplicateAssignment('${a.id}', true)" class="p-2.5 text-amber-600 hover:bg-amber-50 rounded-lg border border-transparent hover:border-amber-200 transition-colors" title="${t.duplicate} (Squelette + Notes)">📋</button>
+                                <button onclick="deleteAssignment('${a.id}')" class="p-2.5 text-red-600 hover:bg-red-50 rounded-lg border border-transparent hover:border-red-200 transition-colors" title="${t.delete}">🗑️</button>
+                            </div>
+                        </div>
+
+                        <!-- Accordéon Détails Exercices -->
+                        <div id="accordion-${a.id}" class="accordion-content">
+                            <div class="p-4 border-t space-y-3 bg-gray-50 text-sm">
+                                ${a.exercises.map((ex, i) => {
+                                    const parts = ex.parts || [];
+                                    const directQuestions = ex.questions || [];
+                                    let exContent = '';
+                                    if (directQuestions.length > 0) {
+                                        exContent += `<div class="ml-4 text-gray-600 mt-1">${directQuestions.map(q => `<span class="inline-block mr-2">${q.name || 'Q?'}: ${getQuestionMaxPoints(q)} ${t.points}</span>`).join(' • ')}</div>`;
+                                    }
+                                    if (parts.length > 0) {
+                                        exContent += parts.map(part => `
+                                            <div class="ml-4 mt-1 border-l pl-2">
+                                                <span class="text-purple-600 font-medium">${part.name}:</span>
+                                                <span class="text-gray-500 italic">(${(part.questions || []).map(q => q.name || 'Q?').join(', ')})</span>
                                             </div>
-                                        `;
-                        }).join('')}
-                                </div>
+                                        `).join('');
+                                    }
+                                    return `
+                                        <div class="bg-white p-3 rounded-lg border shadow-sm">
+                                            <div class="flex justify-between items-center mb-1">
+                                                <strong>${t.exercise} ${i + 1}${ex.name ? ' - ' + ex.name : ''}</strong>
+                                                <span class="text-blue-600 font-bold">${getExerciseMaxPoints(ex)} ${t.points}</span>
+                                            </div>
+                                            ${exContent}
+                                        </div>
+                                    `;
+                                }).join('')}
                             </div>
                         </div>
-                    `).join('');
-
-                        return `
-                        <div class="mb-6">
-                            <div class="flex items-center gap-2 mb-3">
-                                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded text-xs font-semibold uppercase">${className}</span>
-                                <span class="text-xs text-gray-500">${list.length} devoir(s)</span>
-                            </div>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                                ${cards}
-                            </div>
-                        </div>
-                    `;
-                    }).join('');
-
-                container.innerHTML = groupHtml;
+                    </div>`;
+                }).join('');
                 translatePage();
             }
             // ===== GRADES =====
