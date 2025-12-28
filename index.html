@@ -836,7 +836,7 @@
                     </div>
                 </div>
 
-                <div id="assignments-list" class="space-y-4"></div>
+                <div id="assignments-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
             </div>
         </div>
 
@@ -1566,6 +1566,20 @@
                             if (globalCheckbox) globalCheckbox.checked = false;
                             tempExercises = JSON.parse(JSON.stringify(exs));
                         }
+
+                        // Si c'est une modification, on peut proposer de copier les notes (pour écraser/remplir)
+                        const copyContainer = document.getElementById('copy-grades-container');
+                        const copySelect = document.getElementById('copy-grades-source');
+                        if (copyContainer && copySelect) {
+                            const sourceAssignments = data.assignments.filter(a => a.id !== assignmentId);
+                            if (sourceAssignments.length > 0) {
+                                copyContainer.classList.remove('hidden');
+                                copySelect.innerHTML = `<option value="">${t.noCopyGrades}</option>` + 
+                                    sourceAssignments.map(a => `<option value="${a.id}">${a.name} (${a.className})</option>`).join('');
+                            } else {
+                                copyContainer.classList.add('hidden');
+                            }
+                        }
                     } else {
                         tempExercises = [];
                         isGlobalAssignment = false;
@@ -1573,17 +1587,9 @@
                         globalMaxPoints = 20;
                         if (globalMaxInput) globalMaxInput.value = 20;
 
-                        // Si c'est une création, on peut proposer de copier les notes
+                        // On masque la copie des notes lors de la création (demande utilisateur)
                         const copyContainer = document.getElementById('copy-grades-container');
-                        const copySelect = document.getElementById('copy-grades-source');
-                        if (copyContainer && copySelect) {
-                            const sourceAssignments = data.assignments;
-                            if (sourceAssignments.length > 0) {
-                                copyContainer.classList.remove('hidden');
-                                copySelect.innerHTML = `<option value="">${t.noCopyGrades}</option>` + 
-                                    sourceAssignments.map(a => `<option value="${a.id}">${a.name} (${a.className})</option>`).join('');
-                            }
-                        }
+                        if (copyContainer) copyContainer.classList.add('hidden');
                     }
                     toggleGlobalAssignmentMode(isGlobalAssignment);
                 } catch (e) { }
@@ -1959,32 +1965,42 @@
                     exercisesToSave = JSON.parse(JSON.stringify(tempExercises));
                 }
 
+                let savedId = editingAssignmentId;
+
                 if (editingAssignmentId) {
                     // Mise à jour
                     const assignment = data.assignments.find(a => a.id === editingAssignmentId);
                     if (assignment) {
+                        // Si la classe a changé, on vide les notes car ce ne sont plus les mêmes élèves
+                        if (assignment.className !== className) {
+                            for (let studentId in data.grades) {
+                                if (data.grades[studentId][editingAssignmentId]) {
+                                    delete data.grades[studentId][editingAssignmentId];
+                                }
+                            }
+                        }
                         assignment.name = name;
                         assignment.className = className;
                         assignment.exercises = exercisesToSave;
                     }
                 } else {
                     // Création
-                    const newId = genId();
+                    savedId = genId();
                     data.assignments.push({
-                        id: newId,
+                        id: savedId,
                         name,
                         className,
                         exercises: exercisesToSave
                     });
+                }
 
-                    // Copie des notes si une source est sélectionnée
-                    const copySelect = document.getElementById('copy-grades-source');
-                    const sourceId = copySelect ? copySelect.value : '';
-                    if (sourceId) {
-                        for (const studentId in data.grades) {
-                            if (data.grades[studentId][sourceId]) {
-                                data.grades[studentId][newId] = JSON.parse(JSON.stringify(data.grades[studentId][sourceId]));
-                            }
+                // Copie des notes si une source est sélectionnée
+                const copySelect = document.getElementById('copy-grades-source');
+                const sourceId = copySelect ? copySelect.value : '';
+                if (sourceId && savedId) {
+                    for (const studentId in data.grades) {
+                        if (data.grades[studentId][sourceId]) {
+                            data.grades[studentId][savedId] = JSON.parse(JSON.stringify(data.grades[studentId][sourceId]));
                         }
                     }
                 }
@@ -2135,32 +2151,33 @@
                 // Rendu compact avec Cards Modernes et Accordéon pour les détails
                 container.innerHTML = filteredAssignments.map(a => {
                     const totalPoints = getAssignmentMaxPoints(a);
-                    const nbStudents = data.students.filter(s => s.className === a.className).length;
-                    const nbGrades = Object.values(data.grades).filter(g => g[a.id]).length;
+                    const classStudents = data.students.filter(s => s.className === a.className);
+                    const nbStudents = classStudents.length;
+                    const nbGrades = classStudents.filter(s => data.grades[s.id] && data.grades[s.id][a.id]).length;
                     const completionRate = nbStudents > 0 ? Math.round((nbGrades / nbStudents) * 100) : 0;
                     
                     return `
-                    <div class="bg-white border rounded-xl overflow-hidden hover:shadow-md transition-all group mb-4">
-                        <div class="p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 cursor-pointer" onclick="toggleAccordion('${a.id}')">
-                            <div class="flex-1 min-w-0 flex items-center gap-3">
-                                <span id="icon-${a.id}" class="rotate-icon text-gray-400">▼</span>
-                                <div>
-                                    <div class="flex items-center gap-2 mb-1">
+                    <div class="bg-white border rounded-xl overflow-hidden hover:shadow-md transition-all group flex flex-col">
+                        <div class="p-4 flex-1 cursor-pointer" onclick="toggleAccordion('${a.id}')">
+                            <div class="flex items-start gap-3 mb-4">
+                                <span id="icon-${a.id}" class="rotate-icon text-gray-400 mt-1">▼</span>
+                                <div class="min-w-0">
+                                    <div class="flex flex-wrap items-center gap-2 mb-1">
                                         <span class="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-bold rounded uppercase tracking-wider">${a.className || 'Sans classe'}</span>
-                                        <h4 class="text-lg font-bold text-gray-800 truncate group-hover:text-blue-600 transition-colors">${a.name}</h4>
+                                        <h4 class="text-base font-bold text-gray-800 truncate group-hover:text-blue-600 transition-colors">${a.name}</h4>
                                     </div>
-                                    <div class="flex items-center gap-4 text-sm text-gray-500">
+                                    <div class="flex items-center gap-3 text-xs text-gray-500">
                                         <span title="Total des points" class="flex items-center gap-1">🎯 ${totalPoints} pts</span>
                                         <span title="Progression" class="flex items-center gap-1">📊 ${nbGrades}/${nbStudents} (${completionRate}%)</span>
                                     </div>
                                 </div>
                             </div>
                             
-                            <div class="flex items-center gap-2" onclick="event.stopPropagation()">
-                                <button onclick="openAssignmentModal('${a.id}')" class="p-2.5 text-blue-600 hover:bg-blue-50 rounded-lg border border-transparent hover:border-blue-200 transition-colors" title="${t.edit}">✏️</button>
-                                <button onclick="duplicateAssignment('${a.id}')" class="p-2.5 text-green-600 hover:bg-green-50 rounded-lg border border-transparent hover:border-green-200 transition-colors" title="${t.duplicate}">⎘</button>
-                                <button onclick="duplicateAssignment('${a.id}', true)" class="p-2.5 text-amber-600 hover:bg-amber-50 rounded-lg border border-transparent hover:border-amber-200 transition-colors" title="${t.duplicateNotes} ">📋</button>
-                                <button onclick="deleteAssignment('${a.id}')" class="p-2.5 text-red-600 hover:bg-red-50 rounded-lg border border-transparent hover:border-red-200 transition-colors" title="${t.delete}">🗑️</button>
+                            <div class="flex items-center justify-end gap-1 mt-auto" onclick="event.stopPropagation()">
+                                <button onclick="openAssignmentModal('${a.id}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="${t.edit}">✏️</button>
+                                <button onclick="duplicateAssignment('${a.id}')" class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="${t.duplicate}">⎘</button>
+                                <button onclick="duplicateAssignment('${a.id}', true)" class="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="${t.duplicateNotes}">📋</button>
+                                <button onclick="deleteAssignment('${a.id}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="${t.delete}">🗑️</button>
                             </div>
                         </div>
 
