@@ -2618,6 +2618,11 @@
 
                 const totalEl = document.getElementById('grade-total');
                 if (totalEl) totalEl.textContent = grandTotal;
+
+                // Synchroniser la note globale si elle existe pour ce devoir
+                if (studentGrades.global !== undefined && studentGrades.global !== '') {
+                    studentGrades.global = grandTotal;
+                }
             }
 
             function getStudentAssignmentTotal(studentId, assignmentId) {
@@ -2625,15 +2630,30 @@
                 if (!assignment) return 0;
                 const studentGrades = data.grades[studentId]?.[assignmentId] || {};
 
+                // On calcule d'abord le total via les exercices
+                let exerciseTotal = 0;
+                let hasAnyExGrade = false;
+                if (assignment.exercises && assignment.exercises.length > 0) {
+                    for (const ex of assignment.exercises) {
+                        if (hasAnyGradeForExercise(studentGrades, ex)) {
+                            exerciseTotal += getStudentExerciseTotal(studentGrades, ex);
+                            hasAnyExGrade = true;
+                        }
+                    }
+                }
+
+                // Si des notes d'exercices existent, elles priment sur la note globale 
+                // (cela permet de modifier une note par défaut dans le résumé)
+                if (hasAnyExGrade) {
+                    return exerciseTotal;
+                }
+
+                // Sinon, si une note globale est définie, on l'utilise
                 if (studentGrades.global !== undefined && studentGrades.global !== '') {
                     return parseFloat(studentGrades.global) || 0;
                 }
 
-                let total = 0;
-                for (const ex of assignment.exercises) {
-                    total += getStudentExerciseTotal(studentGrades, ex);
-                }
-                return total;
+                return 0;
             }
 
             function getStudentExerciseTotal(studentGrades, ex) {
@@ -3661,6 +3681,12 @@
                 if (v !== '' && v > max) v = max;
                 if (v !== '' && v < 0) v = 0;
                 data.grades[studentId][assignmentId][exId]['final']['final']['final'] = v;
+
+                // Synchroniser la note globale si elle existe pour ce devoir
+                if (data.grades[studentId][assignmentId].global !== undefined && data.grades[studentId][assignmentId].global !== '') {
+                    data.grades[studentId][assignmentId].global = getStudentAssignmentTotal(studentId, assignmentId);
+                }
+
                 saveData();
                 if (rerender) {
                     renderSummary();
