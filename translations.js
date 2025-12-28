@@ -59,6 +59,8 @@ const translations = {
         copyGradesWarning: "⚠️ Cela écrasera les notes existantes de ce devoir si vous le modifiez.",
         globalOnlyLabel: "Note globale uniquement (sans exercices détaillés)",
         globalMaxLabel: "Note maximale du devoir",
+        prefillGrade: "Pré-remplir les notes",
+        defaultGrade: "Note par défaut",
 
 
         // Exercices et questions
@@ -236,6 +238,8 @@ const translations = {
         copyGradesWarning: "⚠️ This will overwrite existing grades for this assignment if you modify it.",
         globalOnlyLabel: "Global grade only (without detailed exercises)",
         globalMaxLabel: "Maximum assignment grade",
+        prefillGrade: "Pre-fill grades",
+        defaultGrade: "Default grade",
 
         // Exercices et questions
         exercise: "Exercise",
@@ -414,6 +418,8 @@ const translations = {
         copyGradesWarning: "⚠️ سيؤدي هذا إلى الكتابة فوق النقط الحالية لهذا الواجب إذا قمت بتعديله.",
         globalOnlyLabel: "نقطة إجمالية فقط (بدون تمارين مفصلة)",
         globalMaxLabel: "النقطة القصوى للواجب",
+        prefillGrade: "تعبئة مسبقة للنقاط",
+        defaultGrade: "النقطة الافتراضية",
 
         // Exercices et questions
         exercise: "تمرين",
