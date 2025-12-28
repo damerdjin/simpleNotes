@@ -1529,6 +1529,15 @@
                       <input type="number" id="assignment-global-maxpoints" class="w-32 p-2 border rounded" min="0" step="0.25" value="20">
                     </div>
                     <div id="exercises-builder" class="space-y-4 mb-4 max-h-[60vh] overflow-y-auto pr-2"></div>
+                    
+                    <div id="copy-grades-container" class="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg hidden">
+                        <label class="block text-sm font-medium text-amber-800 mb-2">Copier les notes d'un autre devoir :</label>
+                        <select id="copy-grades-source" class="w-full p-2 border border-amber-300 rounded bg-white text-sm">
+                            <option value="">-- Ne pas copier de notes --</option>
+                        </select>
+                        <p class="text-xs text-amber-600 mt-1 italic">⚠️ Cela écrasera les notes existantes de ce devoir si vous le modifiez.</p>
+                    </div>
+
                     <button id="add-exercise-btn" onclick="addExercise()" class="w-full p-3 border-2 border-dashed border-blue-400 text-blue-600 rounded-lg hover:bg-blue-50 mb-4" data-translate="addExercise">${t.addExercise || 'Ajouter un exercice'}</button>
                     <div class="flex gap-3 justify-end">
                       <button onclick="closeAssignmentModal()" class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400" data-translate="cancel">${t.cancel || 'Annuler'}</button>
@@ -1564,6 +1573,18 @@
                         if (globalCheckbox) globalCheckbox.checked = false;
                         globalMaxPoints = 20;
                         if (globalMaxInput) globalMaxInput.value = 20;
+
+                        // Si c'est une création, on peut proposer de copier les notes
+                        const copyContainer = document.getElementById('copy-grades-container');
+                        const copySelect = document.getElementById('copy-grades-source');
+                        if (copyContainer && copySelect) {
+                            const sourceAssignments = data.assignments;
+                            if (sourceAssignments.length > 0) {
+                                copyContainer.classList.remove('hidden');
+                                copySelect.innerHTML = '<option value="">-- Ne pas copier de notes --</option>' + 
+                                    sourceAssignments.map(a => `<option value="${a.id}">${a.name} (${a.className})</option>`).join('');
+                            }
+                        }
                     }
                     toggleGlobalAssignmentMode(isGlobalAssignment);
                 } catch (e) { }
@@ -1949,12 +1970,24 @@
                     }
                 } else {
                     // Création
+                    const newId = genId();
                     data.assignments.push({
-                        id: genId(),
+                        id: newId,
                         name,
                         className,
                         exercises: exercisesToSave
                     });
+
+                    // Copie des notes si une source est sélectionnée
+                    const copySelect = document.getElementById('copy-grades-source');
+                    const sourceId = copySelect ? copySelect.value : '';
+                    if (sourceId) {
+                        for (const studentId in data.grades) {
+                            if (data.grades[studentId][sourceId]) {
+                                data.grades[studentId][newId] = JSON.parse(JSON.stringify(data.grades[studentId][sourceId]));
+                            }
+                        }
+                    }
                 }
 
                 saveData();
@@ -1974,18 +2007,30 @@
                 renderAssignments();
             }
 
-            function duplicateAssignment(id) {
+            function duplicateAssignment(id, includeGrades = false) {
                 const original = data.assignments.find(a => a.id === id);
                 if (!original) return;
 
+                const newId = genId();
                 const newAssignment = {
-                    id: genId(),
-                    name: original.name + ' (copie)',
+                    id: newId,
+                    name: original.name + (includeGrades ? ' (copie intégrale)' : ' (copie)'),
                     className: original.className,
                     exercises: JSON.parse(JSON.stringify(original.exercises))
                 };
 
                 data.assignments.push(newAssignment);
+
+                // Duplication des notes si demandé
+                if (includeGrades) {
+                    for (const studentId in data.grades) {
+                        if (data.grades[studentId][id]) {
+                            // On copie l'objet des notes de l'élève pour cet assignment
+                            data.grades[studentId][newId] = JSON.parse(JSON.stringify(data.grades[studentId][id]));
+                        }
+                    }
+                }
+
                 saveData();
                 renderAssignments();
             }
@@ -2084,7 +2129,8 @@
                                 </div>
                                 <div class="flex gap-2" onclick="event.stopPropagation()">
                                     <button onclick="openAssignmentModal('${a.id}')" class="p-2 text-blue-500 hover:bg-blue-50 rounded" title="${t.edit}">✏️</button>
-                                    <button onclick="duplicateAssignment('${a.id}')" class="p-2 text-green-500 hover:bg-green-50 rounded" title="${t.duplicate}">⎘</button>
+                                    <button onclick="duplicateAssignment('${a.id}')" class="p-2 text-green-500 hover:bg-green-50 rounded" title="${t.duplicate} (Squelette)">⎘</button>
+                                    <button onclick="duplicateAssignment('${a.id}', true)" class="p-2 text-amber-500 hover:bg-amber-50 rounded" title="${t.duplicate} (Squelette + Notes)">📋</button>
                                     <button onclick="deleteAssignment('${a.id}')" class="p-2 text-red-500 hover:bg-red-50 rounded" title="${t.delete}">🗑️</button>
                                 </div>
                             </div>
