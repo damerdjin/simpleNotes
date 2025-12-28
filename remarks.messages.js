@@ -5,9 +5,9 @@
 export const REMARKS = {
   // Paliers moyenne pour les conseils
   avgBands: [
-    { min: 0.00, max: 5.99 },    // 0
-    { min: 6.00, max: 8.99 },    // 1
-    { min: 9.00, max: 9.99 },    // 2
+    { min: 0.00, max: 4.99 },    // 0
+    { min: 5.00, max: 7.50 },    // 1
+    { min: 7.51, max: 9.99 },    // 2
     { min: 10.00, max: 11.90 },    // 3
     { min: 12.00, max: 13.99 },    // 4
     { min: 14.00, max: 15.99 },    // 5
@@ -293,76 +293,76 @@ export const REMARKS = {
   },
 
   // Conseils par moyenne (professionnels, précis, actionnables)
-  advice: {
-    FR: [
-      ["Reprendre les bases pas à pas avec rigueur. Une heure chaque jour, c'est plus efficace qu'une marathon hebdomadaire. Utilisez des fiches, des exemples concrets."],
-      ["Consolider les essentiels. Maîtrisez chaque concept avant de passer au suivant. Révisez régulièrement (une fois par semaine minimum). Ne laissez rien au hasard."],
-      ["Objectif clair : atteindre 10. Identifiez vos trois points faibles prioritaires. Entraînez-vous spécifiquement dessus avec des exercices ciblés chaque jour."],
-      ["Cap bon : viser la stabilité et la méthode. Développez un système de révision régulière (15 min par jour). Posez des questions quand vous êtes bloqué."],
-      ["Résultats corrects. Visez la précision : éliminez les erreurs bêtes par une relecture systématique. Chaque point compte : travaillez les détails."],
-      ["Bon niveau. Visez l'excellence en approfondissant les concepts : ne restez pas en surface. Explorez différentes approches et variez vos méthodes."],
-      ["Très bon travail. Passez à des problèmes plus complexes et originaux. Posez-vous des questions, tirez des fils, allez au-delà du cours."],
-      ["Excellent. Aidez les autres, explorez des chemins alternatifs, challengez-vous avec des exercices avancés. Visez la maîtrise complète."],
-      ["Performance exceptionnelle. Vous êtes un modèle. Partagez vos techniques, mentalisez sur les sujets les plus durs, visez la perfection."]
-    ],
-    EN: [
-      ["Rebuild fundamentals step by step, rigorously. One hour daily beats a marathon session weekly. Use flashcards, concrete examples."],
-      ["Solidify essentials. Master each concept before moving forward. Review regularly (weekly minimum). Leave nothing to chance."],
-      ["Clear goal: reach 10+. Identify your top three weak points. Train specifically on them daily with targeted exercises."],
-      ["Good direction. Build stability and method. Create a regular revision habit (15 min daily). Ask questions when stuck."],
-      ["Solid results. Target precision: eliminate careless errors through systematic review. Every point counts: work on details."],
-      ["Good level. Chase excellence by deepening concepts: don't stay at surface. Explore different approaches and vary methods."],
-      ["Very good work. Move to complex, original problems. Question yourself, dig deeper, go beyond course content."],
-      ["Excellent. Help peers, explore alternatives, challenge yourself with advanced exercises. Aim for complete mastery."],
-      ["Exceptional performance. You're a model. Share your methods, deep dive into hard topics, aim for perfection."]
-    ],
-    AR: [
-      ["أعد البناء خطوة بخطوة بجدية. ساعة واحدة يومياً أفضل من جلسة ماراثونية. استخدم بطاقات، أمثلة ملموسة."],
-      ["ثبّت الأساسيات. أتقن كل مفهوم قبل الانتقال. راجع بانتظام (أسبوعياً على الأقل). لا تترك شيئاً للصدفة."],
-      ["هدف واضح: تجاوز 10. حدد نقاطك الثلاث الأضعف. تدرب عليها يومياً بتمارين مستهدفة."],
-      ["اتجاه جيد. ابنِ الاستقرار والمنهج. طور عادة مراجعة منتظمة (15 دقيقة يومياً). اسأل عندما تكون عالقاً."],
-      ["نتائج سليمة. استهدف الدقة: احذر الأخطاء السخيفة بمراجعة منهجية. كل نقطة تهم: اعمل على التفاصيل."],
-      ["مستوى جيد. اسعَ للتميز بتعميق المفاهيم: لا تبقَ على السطح. استكشف طرقاً مختلفة ونوّع أساليبك."],
-      ["عمل ممتاز. انتقل لمسائل معقدة وأصلية. تساءل عن نفسك، احفر أعمق، تجاوز محتوى الدرس."],
-      ["ممتاز. ساعد زملاءك، استكشف بدائل، تحدَّ نفسك بتمارين متقدمة. استهدف الإتقان الكامل."],
-      ["أداء استثنائي. أنت قدوة. شارك تقنياتك، انغمس في المواضيع الصعبة، استهدف الكمال."]
-    ]
-  },
-  //Obs par moyenne
-  observationsAvg: {
-    FR: [
-      ["Résultats très insuffisants. Un travail plus régulier est nécessaire.", "Les bases doivent être consolidées pour progresser."],
-      ["Résultats faibles. Il faut stabiliser les acquis et s’entraîner.", "Des efforts réguliers amélioreront nettement la situation."],
-      ["Moyenne fragile. Un petit gain de rigueur fera la différence.", "Des progrès sont possibles rapidement avec plus de constance."],
-      ["Ensemble correct. Continuez et visez plus de précision.", "Bon niveau, il faut consolider les points faibles."],
-      ["Résultats satisfaisants. Travail sérieux à maintenir.", "Bon travail, continuez avec la même régularité."],
-      ["Très bon niveau. Continuez à approfondir.", "Performance solide, gardez ce rythme."],
-      ["Excellent niveau. Bravo, continuez ainsi.", "Très bon travail, visez l’excellence durable."],
-      ["Niveau remarquable. Travail très maîtrisé.", "Excellence presque totale, continuez."],
-      ["Performance exceptionnelle. Félicitations.", "Maîtrise complète, continuez sur cette lancée."]
-    ],
-    EN: [
-      ["Résultats très insuffisants. Un travail plus régulier est nécessaire.", "Les bases doivent être consolidées pour progresser."],
-      ["Résultats faibles. Il faut stabiliser les acquis et s’entraîner.", "Des efforts réguliers amélioreront nettement la situation."],
-      ["Moyenne fragile. Un petit gain de rigueur fera la différence.", "Des progrès sont possibles rapidement avec plus de constance."],
-      ["Ensemble correct. Continuez et visez plus de précision.", "Bon niveau, il faut consolider les points faibles."],
-      ["Résultats satisfaisants. Travail sérieux à maintenir.", "Bon travail, continuez avec la même régularité."],
-      ["Très bon niveau. Continuez à approfondir.", "Performance solide, gardez ce rythme."],
-      ["Excellent niveau. Bravo, continuez ainsi.", "Très bon travail, visez l’excellence durable."],
-      ["Niveau remarquable. Travail très maîtrisé.", "Excellence presque totale, continuez."],
-      ["Performance exceptionnelle. Félicitations.", "Maîtrise complète, continuez sur cette lancée."]
-    ],
-    AR: [
-      ["Résultats très insuffisants. Un travail plus régulier est nécessaire.", "Les bases doivent être consolidées pour progresser."],
-      ["Résultats faibles. Il faut stabiliser les acquis et s’entraîner.", "Des efforts réguliers amélioreront nettement la situation."],
-      ["Moyenne fragile. Un petit gain de rigueur fera la différence.", "Des progrès sont possibles rapidement avec plus de constance."],
-      ["Ensemble correct. Continuez et visez plus de précision.", "Bon niveau, il faut consolider les points faibles."],
-      ["Résultats satisfaisants. Travail sérieux à maintenir.", "Bon travail, continuez avec la même régularité."],
-      ["Très bon niveau. Continuez à approfondir.", "Performance solide, gardez ce rythme."],
-      ["Excellent niveau. Bravo, continuez ainsi.", "Très bon travail, visez l’excellence durable."],
-      ["Niveau remarquable. Travail très maîtrisé.", "Excellence presque totale, continuez."],
-      ["Performance exceptionnelle. Félicitations.", "Maîtrise complète, continuez sur cette lancée."]
-    ]
-  }
+observationsAvg: {
+  FR: [
+    ["Difficultés importantes.", "Bases à reconstruire.", "Appui pédagogique nécessaire."],
+    ["En cours d'acquisition.", "Les efforts paieront.", "Persévérance requise."],
+    ["En progression nette.", "Moyenne à portée.", "Encourageant."],
+    ["Résultats convenables.", "Acquis essentiels validés.", "Stabilisation en cours."],
+    ["Bon travail.", "Élève sérieux.", "Sérieux et volontaire."],
+    ["Très bon niveau.", "Travail régulier.", "Maîtrise satisfaisante."],
+    ["Excellent trimestre.", "Maîtrise confirmée.", "Solide throughout."],
+    ["Niveau remarquable.", "Performance de haut vol.", "Très impressif."],
+    ["Parcours exceptionnel.", "Maîtrise totale.", "Un modèle."]
+  ],
+  EN: [
+    ["Needs some support.", "Building foundations.", "We'll get there together."],
+    ["Developing steadily.", "Don't give up.", "Progress is happening."],
+    ["Getting closer.", "Almost there.", "Good momentum building."],
+    ["Satisfactory results.", "Core skills in place.", "On the right track."],
+    ["Good solid work.", "Reliable performance.", "Consistent effort."],
+    ["Very good work.", "Strong understanding.", "High quality output."],
+    ["Excellent performance.", "Deep comprehension.", "Outstanding work."],
+    ["Top-tier results.", "Remarkable mastery.", "Impressive achievement."],
+    ["Exceptional outcome.", "Flawless mastery.", "A true benchmark."]
+  ],
+  AR: [
+    ["يحتاج بعض الدعم.", "الأساسيات تتشكّل.", "سننجح معاً."],
+    ["يتطور بثبات.", "لا تستسلم.", "التقدم ملموس."],
+    ["أصبح قريباً.", "على الأعتاب.", "زخم جيد."],
+    ["نتائج مقبولة.", "المهارات الأساسية قائمة.", "في المسار الصحيح."],
+    ["عمل متين.", "أداء موثوق.", "جهد متناسق."],
+    ["عمل جيد جداً.", "فهم راسخ.", "جودة عالية."],
+    ["أداء ممتاز.", "فهم عميق.", "عمل استثنائي."],
+    ["نتائج من الطراز الأول.", "تميّز لافت.", "إنجاز مبهر."],
+    ["نتيجة استثنائية.", "إتقان بلا أخطاء.", "معيار يُحتذى به."]
+  ]
+},
+
+advice: {
+  FR: [
+    ["Revenus aux bases étape par étape.", "Travaillez little et souvent.", "Demandez de l'aide sans hésiter."],
+    ["Chaque progrès compte, même petit.", "La constance finit par payer.", "Maintenez vos efforts."],
+    ["Le but est en vue.", "Encore un petit effort.", "Restez concentré."],
+    ["Consolidez vos acquis.", "Vérifiez vos fondamentaux.", "Renforcez la régularité."],
+    ["Osez prendre des initiatives.", "Approfondissez vos connaissances.", "Travaillez la précision."],
+    ["Soignez les détails.", "Gardez ce rythme.", "Variez vos méthodes."],
+    ["Cherchez la complexité.", "Explorez les nuances.", "Poussez plus loin."],
+    ["Partagez votre savoir.", "Aidez les autres.", "Inspirez autour de vous."],
+    ["Continuez à vous dépasser.", "Visez toujours plus haut.", "Restez affamé."]
+  ],
+  EN: [
+    ["Rebuild step by step.", "Little and often wins.", "Don't hesitate to ask."],
+    ["Every gain matters.", "Consistency pays off.", "Keep pushing forward."],
+    ["Goal is within reach.", "Just a bit more.", "Stay focused."],
+    ["Lock in your skills.", "Review fundamentals.", "Build stability."],
+    ["Take more initiative.", "Dive deeper.", "Refine your precision."],
+    ["Polish the details.", "Keep this pace.", "Mix up your methods."],
+    ["Embrace complexity.", "Explore nuances.", "Push boundaries."],
+    ["Share your knowledge.", "Help others grow.", "Be an inspiration."],
+    ["Never stop growing.", "Aim higher still.", "Stay hungry."]
+  ],
+  AR: [
+    ["أعيدوا البناء خطوة بخطوة.", "القليل والمستمر ينجح.", "لا تترددوا في السؤال."],
+    ["كل تقدم مهم.", "الاستمرارية تؤتي ثمارها.", "واصلوا جهودكم."],
+    ["الهدف في المتناول.", "قليل المزيد.", "ابقوا مركزين."],
+    ["ثبّتوا مهاراتكم.", "راجعوا الأساسيات.", "ابنوا الاستقرار."],
+    ["خذوا المبادرات.", "تعمّقوا أكثر.", "دقّقوا أكثر."],
+    ["أتقنوا التفاصيل.", "حافظوا على الإيقاع.", "نوّعوا أساليبكم."],
+    ["احتضنوا التعقيد.", "استكشفوا الدقة.", "تدافعوا حدودكم."],
+    ["شاركوا علمكم.", "ساعدوا الآخرين.", "كونوا إلهاماً."],
+    ["لا تتوقفوا عن النمو.", "استهدفوا الأعلى.", "ابقوا متعطشين."]
+  ]
+}
 
 };

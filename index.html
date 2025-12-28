@@ -5719,37 +5719,17 @@
                 }
                 return -1;
             }
-            function getObsCandidatesForRow(devoir, comp, avg) {
+            function getObsCandidatesForRow(avg) {
                 const R = window.REMARKSMESSAGES || window.REMARKS_MESSAGES;
                 if (!R) return [];
                 
-                const d = Number(devoir);
-                const c = Number(comp);
                 const a = Number(avg);
-                
-                // Si on a les notes, on cherche l'observation par rapport à l'écart (diffBands)
-                if (Number.isFinite(d) && Number.isFinite(c)) {
-                    const diff = d - c;
-                    const diffIdx = findBandIndexLocal(R.diffBands, diff);
-                    const avgIdx = findBandIndexLocal(R.avgBands, a);
-                    
-                    if (diffIdx >= 0 && avgIdx >= 0) {
-                        // Dans remarks.messages.js, observations[lang][diffIdx][avgIdx]
-                        const lang = langKey();
-                        const pool = R.observations?.[lang]?.[diffIdx];
-                        // Si c'est une matrice [diff][avg]
-                        if (Array.isArray(pool) && Array.isArray(pool[0])) {
-                             return pool[avgIdx] ? [pool[avgIdx]] : [];
-                        }
-                        // Si c'est une liste de listes [diff][messages]
-                        return Array.isArray(pool) ? pool : [];
-                    }
-                }
-                
-                // Sinon repli sur la moyenne (avgBands)
                 const idx = findBandIndexLocal(R.avgBands, a);
                 if (idx < 0) return [];
-                return (R.observationsAvg?.[langKey()]?.[idx]) || [];
+                
+                const lang = langKey();
+                // On utilise exclusivement observationsAvg (basé sur la moyenne) pour les suggestions UI
+                return R.observationsAvg?.[lang]?.[idx] || [];
             }
 
             window.getConsCandidatesForRow = function (avg) {
@@ -5835,7 +5815,7 @@
                     // Récupération des suggestions pour le modal (UI seulement)
                     const teacherObsBand = getTeacherMessages(`obs@${obsBandIdx}`) || [];
                     const teacherConsBand = getTeacherMessages(`cons@${consBandIdx}`) || [];
-                    const obsCandidates = getObsCandidatesForRow(devoir, comp, moyenne) || [];
+                    const obsCandidates = getObsCandidatesForRow(moyenne) || [];
                     const consCandidates = getConsCandidatesForRow(moyenne) || [];
 
                     return `
