@@ -18,19 +18,6 @@
             text-align: right;
         }
 
-        /* ===== FLEX & LAYOUT GÉNÉRAUX ===== */
-        .rtl-layout .flex {
-            flex-direction: row-reverse;
-        }
-
-        .rtl-layout .justify-between {
-            justify-content: space-between;
-        }
-
-        .rtl-layout .flex-wrap {
-            flex-direction: row-reverse;
-        }
-
         /* ===== MARGINS INVERSÉS ===== */
         .rtl-layout .ml-auto {
             margin-left: 0 !important;
@@ -99,10 +86,6 @@
             align-items: center !important;
         }
 
-        .rtl-layout #students-list .flex {
-            flex-direction: row-reverse !important;
-        }
-
         .rtl-layout #students-list button {
             order: 1 !important;
         }
@@ -116,24 +99,10 @@
             margin-right: 0.75rem !important;
         }
 
-        /* ===== EN-TÊTE ÉLÈVES ===== */
-        .rtl-layout #content-students .flex.justify-between {
-            flex-direction: row-reverse !important;
-        }
-
-        .rtl-layout #content-students .flex.justify-between>div:first-child {
-            order: 2 !important;
-        }
-
-        .rtl-layout #content-students .flex.justify-between>div:last-child {
-            order: 1 !important;
-        }
-
         /* ===== CLASSES - FIX COMPLET ===== */
         .rtl-layout #class-list {
             display: flex !important;
             flex-wrap: wrap !important;
-            flex-direction: row-reverse !important;
             justify-content: flex-end !important;
             gap: 0.5rem !important;
         }
@@ -168,15 +137,6 @@
         .rtl-layout .exercise-item,
         .rtl-layout .hw-exercise {
             direction: rtl !important;
-        }
-
-        /* Tous les conteneurs exercices */
-        .rtl-layout .exercises-list,
-        .rtl-layout #exercises-list,
-        .rtl-layout #homework-exercises,
-        .rtl-layout #exercises-container,
-        .rtl-layout #homework-exercises-list {
-            flex-direction: row-reverse !important;
         }
 
         /* ACTIONS/ICÔNES TOUJOURS À GAUCHE */
@@ -389,12 +349,6 @@
             /* Espace uniforme */
         }
 
-        /* 3. Icônes actions dans cartes Devoirs à gauche en RTL */
-        .rtl-layout .flex.items-center.justify-end[onclick*="event.stopPropagation()"] {
-            justify-content: flex-start !important;
-            /* Aligne les boutons à gauche en RTL */
-        }
-
         /* Extension pour tous les titres (h1-h6) en RTL */
         .rtl-layout h1,
         .rtl-layout h2,
@@ -404,43 +358,6 @@
         .rtl-layout h6 {
             text-align: right !important;
             margin-left: auto !important;
-            margin-right: 0 !important;
-        }
-
-        /* Ajustement général flex en RTL (évite double-inversion) */
-        .rtl-layout .flex {
-            flex-direction: row !important;
-            /* Naturel en RTL */
-        }
-
-        /* Pour headers de sections (ex. dans devoirs, notes) : Inverser ordre */
-        .rtl-layout .flex.justify-between {
-            flex-direction: row-reverse !important;
-            justify-content: space-between !important;
-        }
-
-        .rtl-layout .flex.justify-between>*:first-child {
-            order: 2 !important;
-            /* Titre à droite */
-        }
-
-        .rtl-layout .flex.justify-between>*:last-child {
-            order: 1 !important;
-            /* Boutons/ajouts à gauche */
-        }
-
-        .rtl-layout .flex.flex-wrap.gap-2.mb-6 {
-            /* Cible le conteneur des tabs */
-            justify-content: flex-start !important;
-            /* Début du flux RTL : à droite */
-            flex-direction: row !important;
-            /* Flux naturel RTL : droite-gauche, garde ordre HTML */
-            text-align: start !important;
-            /* Renforce alignement RTL */
-            gap: 0.5rem !important;
-            /* Espace uniforme */
-            margin-left: auto !important;
-            /* Pousse tout le bloc à droite si besoin */
             margin-right: 0 !important;
         }
 
@@ -2145,7 +2062,7 @@
                     const completionRate = nbStudents > 0 ? Math.round((nbGrades / nbStudents) * 100) : 0;
                     
                     return `
-                    <div class="bg-white border rounded-xl overflow-hidden hover:shadow-md transition-all group flex flex-col h-full">
+                    <div class="bg-white border rounded-xl overflow-hidden hover:shadow-md transition-all group flex flex-col h-full" style="flex-direction: column !important;">
                         <!-- En-tête de la carte (cliquable pour accordéon) -->
                         <div class="p-5 flex-1 cursor-pointer select-none" onclick="toggleAccordion('${a.id}')">
                             <div class="flex items-start justify-between gap-4 mb-3">
@@ -2175,11 +2092,19 @@
                         </div>
                         
                         <!-- Barre d'actions -->
-                        <div class="px-4 py-2 bg-gray-50 border-t flex items-center justify-end gap-1" onclick="event.stopPropagation()">
-                            <button onclick="openAssignmentModal('${a.id}')" class="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors" title="${t.edit}">✏️</button>
-                            <button onclick="duplicateAssignment('${a.id}')" class="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors" title="${t.duplicate}">⎘</button>
-                            <button onclick="duplicateAssignment('${a.id}', true)" class="p-2 text-amber-600 hover:bg-amber-100 rounded-lg transition-colors" title="${t.duplicateNotes}">📋</button>
-                            <button onclick="deleteAssignment('${a.id}')" class="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors" title="${t.delete}">🗑️</button>
+                        <div class="px-4 py-2 bg-gray-50 border-t flex items-center justify-end gap-2" onclick="event.stopPropagation()">
+                            <button onclick="openAssignmentModal('${a.id}')" class="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors flex items-center gap-2" title="${t.edit}">
+                                <span class="text-lg">✏️</span>
+                            </button>
+                            <button onclick="duplicateAssignment('${a.id}')" class="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors flex items-center gap-2" title="${t.duplicate}">
+                                <span class="text-lg">⎘</span>
+                            </button>
+                            <button onclick="duplicateAssignment('${a.id}', true)" class="p-2 text-amber-600 hover:bg-amber-100 rounded-lg transition-colors flex items-center gap-2" title="${t.duplicateNotes}">
+                                <span class="text-lg">📋</span>
+                            </button>
+                            <button onclick="deleteAssignment('${a.id}')" class="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors flex items-center gap-2" title="${t.delete}">
+                                <span class="text-lg">🗑️</span>
+                            </button>
                         </div>
 
                         <!-- Accordéon Détails Exercices -->
