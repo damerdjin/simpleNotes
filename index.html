@@ -5475,7 +5475,7 @@
 
                 const R = window.REMARKSMESSAGES;
                 const maxBands = baseKind === "obs"
-                    ? (R?.diffBands?.length ?? 0)
+                    ? (R?.avgBands?.length ?? 0)
                     : (R?.avgBands?.length ?? 0);
 
                 // Remplir le select band
@@ -5719,6 +5719,10 @@
                 }
                 return -1;
             }
+            window.getObsCandidatesForRow = function (avg) {
+                return []; // temporaire
+            };
+
 
             function getObsCandidatesForRow(avg) {
                 const R = window.REMARKSMESSAGES;
@@ -5728,13 +5732,13 @@
                 return R.observationsAvg?.[langKey()]?.[idx]; // nouveau dataset
             }
 
-window.getConsCandidatesForRow = function (avg) {
-  const R = window.REMARKSMESSAGES;
-  if (!R) return [];
-  const idx = findBandIndexLocal(R.avgBands, avg);
-  if (idx < 0) return [];
-  return R.advice?.[langKey()]?.[idx] || [];
-};
+            window.getConsCandidatesForRow = function (avg) {
+                const R = window.REMARKSMESSAGES;
+                if (!R) return [];
+                const idx = findBandIndexLocal(R.avgBands, avg);
+                if (idx < 0) return [];
+                return R.advice?.[langKey()]?.[idx] || [];
+            };
 
             function renderExportPreviewTable(className, cfg) {
                 const t = translations[currentLanguage];
