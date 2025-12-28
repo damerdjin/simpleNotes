@@ -295,288 +295,450 @@ export const REMARKS = {
   // Conseils par moyenne (professionnels, précis, actionnables)
 advice: {
     FR: [
+        // Palier 0 (0-4) : Rebondir
         [
             "Ne restez pas seul face aux difficultés, sollicitez-nous.",
             "Reprenons ensemble les bases étape par étape.",
-            "Courage, c'est en essayant qu'on finit par réussir."
+            "Courage, c'est en essayant qu'on finit par réussir.",
+            "L'important est de ne pas décrocher. Accrochez-vous.",
+            "Une remise à plat des méthodes s'impose. On y croit."
         ],
+        // Palier 1 (4-6) : Persévérer
         [
             "Chaque petit progrès compte. Ne baissez pas les bras.",
             "La persévérance est votre meilleure alliée.",
-            "Ciblez une notion à la fois pour reprendre confiance."
+            "Ciblez une notion à la fois pour reprendre confiance.",
+            "Votre volonté finira par payer. Gardez le cap.",
+            "Ne regardez pas la note, regardez ce que vous avez appris."
         ],
+        // Palier 2 (6-10) : Franchir le cap
         [
             "Le but est en vue. Encore un peu de rigueur.",
             "Vous progressez. Structurez davantage vos révisions.",
-            "Ne lâchez rien, la moyenne est à votre portée."
+            "Ne lâchez rien, la moyenne est à votre portée.",
+            "Soyez plus attentif aux consignes, c'est la clé.",
+            "Il manque un déclic méthodologique. Cherchez-le."
         ],
+        // Palier 3 (10-12) : Stabiliser
         [
             "La moyenne est franchie. Visez maintenant la solidité.",
             "Régularisez vos efforts pour sécuriser vos acquis.",
-            "Participez davantage pour gagner en assurance."
+            "Participez davantage pour gagner en assurance.",
+            "Ne vous reposez pas sur vos lauriers. Consolidez.",
+            "Visez plus haut, vous en avez la capacité."
         ],
+        // Palier 4 (12-14) : S'affirmer
         [
             "C'est sérieux. Osez prendre plus d'initiatives.",
             "Continuez ainsi, vous êtes sur une très bonne dynamique.",
-            "Approfondissez les cours pour viser la mention."
+            "Approfondissez les cours pour viser la mention.",
+            "Gagnez en rapidité, vous avez la technique.",
+            "Votre travail est propre. Ajoutez-y de l'audace."
         ],
+        // Palier 5 (14-16) : Approfondir
         [
             "Belle dynamique. Continuez à soigner les détails.",
             "Votre méthode porte ses fruits, gardez ce rythme.",
-            "Soyez curieux, allez au-delà des exercices types."
+            "Soyez curieux, allez au-delà des exercices types.",
+            "Vous maîtrisez le cours. Explorez ses subtilités.",
+            "Une belle régularité. Visez maintenant l'excellence."
         ],
+        // Palier 6 (16-18) : Challenger
         [
             "Très solide. Cherchez la nuance et la complexité.",
             "Challengez-vous sur des problèmes plus ardus.",
-            "Votre réflexion s'affine, continuez à creuser."
+            "Votre réflexion s'affine, continuez à creuser.",
+            "Ne laissez rien au hasard. Visez la perfection.",
+            "Vous avez l'aisance. Travaillez l'originalité."
         ],
+        // Palier 7 (18-19) : Exceller
         [
             "Remarquable. Aidez les autres à progresser.",
             "Diversifiez vos sources pour enrichir votre culture.",
-            "Visez l'originalité, vous avez les moyens de briller."
+            "Visez l'originalité, vous avez les moyens de briller.",
+            "Votre niveau vous permet d'explorer des hors-pistes.",
+            "Restez curieux et ouvert, c'est votre force."
         ],
+        // Palier 8 (19-20) : Inspirer
         [
             "Un parcours inspirant. Continuez à vous dépasser.",
             "Votre soif d'apprendre est un modèle pour la classe.",
-            "Conservez cette humilité face au savoir, c'est la clé."
+            "Conservez cette humilité face au savoir, c'est la clé.",
+            "Vous avez l'étoffe des grands. Foncez.",
+            "Transmettez votre passion, c'est la prochaine étape."
         ]
     ],
     EN: [
+        // Tier 0
         [
             "Don't worry about the start. Let's rebuild together.",
             "Ask questions. There is no shame in learning.",
-            "Small steps forward are better than standing still."
+            "Small steps forward are better than standing still.",
+            "Trust the process. We are here to support you.",
+            "Focus on one simple goal at a time."
         ],
+        // Tier 1
         [
             "Stay strong. Persistence beats talent.",
             "Keep trying. Mistakes are part of the process.",
-            "Focus on one topic at a time. You can do this."
+            "Focus on one topic at a time. You can do this.",
+            "Don't give up. Your effort matters more than grades.",
+            "Consistency is key. Keep showing up."
         ],
+        // Tier 2
         [
             "You are closing the gap. Keep pushing.",
             "Almost there. Organizing your notes will help.",
-            "Don't stop now. Your efforts are showing."
+            "Don't stop now. Your efforts are showing.",
+            "Read instructions carefully. You are close.",
+            "Believe in yourself. The target is within reach."
         ],
+        // Tier 3
         [
             "Safe zone reached. Now build a fortress.",
             "Good job. Consistency is your next challenge.",
-            "Believe in yourself and participate more."
+            "Believe in yourself and participate more.",
+            "Don't settle for average. Aim higher.",
+            "Review your lessons daily to stay safe."
         ],
+        // Tier 4
         [
             "Solid work. Try to participate more.",
             "You're on the right track. Keep the focus.",
-            "Challenge yourself to do a bit more each day."
+            "Challenge yourself to do a bit more each day.",
+            "Your foundation is good. Build on it.",
+            "Add a bit more depth to your answers."
         ],
+        // Tier 5
         [
             "Great momentum. Focus on precision.",
             "Your hard work is paying off. Stay curious.",
-            "Don't settle for 'good'. Aim for 'great'."
+            "Don't settle for 'good'. Aim for 'great'.",
+            "Master the details. You are ready.",
+            "Show more autonomy. You have the skills."
         ],
+        // Tier 6
         [
             "Impressive. Challenge yourself with harder topics.",
             "Think outside the box. Innovation suits you.",
-            "Deepen your analysis. You have the skills."
+            "Deepen your analysis. You have the skills.",
+            "Aim for flawless execution. You can do it.",
+            "Explore complex ideas. You are ready."
         ],
+        // Tier 7
         [
             "Mastery achieved. Share your knowledge.",
             "Be a leader in the classroom. Help others.",
-            "Explore advanced concepts on your own."
+            "Explore advanced concepts on your own.",
+            "Your insight is valuable. Speak up.",
+            "Broaden your horizons. Keep exploring."
         ],
+        // Tier 8
         [
             "Limitless potential. Truly outstanding.",
             "You set the standard. Keep inspiring us.",
-            "The sky is the limit. Wonderful attitude."
+            "The sky is the limit. Wonderful attitude.",
+            "A model student. Stay humble and hungry.",
+            "Your passion is contagious. Keep it up."
         ]
     ],
     AR: [
+        // Tier 0
         [
             "لا تخجل من السؤال. نحن هنا لمساعدتك.",
             "بداية الألف ميل تبدأ بخطوة. ثق بنفسك.",
-            "لا تستسلم، كلنا نتعلم من البدايات."
+            "لا تستسلم، كلنا نتعلم من البدايات.",
+            "كل مشكلة ولها حل. لنبدأ من جديد.",
+            "لا تيأس، الفرصة ما زالت أمامك للتدارك."
         ],
+        // Tier 1
         [
             "طريق النجاح يحتاج للصبر. تفاءل خيراً.",
             "المثابرة تصنع المستحيل. واصل المحاولة.",
-            "ركز على القليل المتقن خير من الكثير المنقطع."
+            "ركز على القليل المتقن خير من الكثير المنقطع.",
+            "عزيمتك هي رأس مالك. حافظ عليها.",
+            "الأخطاء هي دروس مجانية. تعلم منها."
         ],
+        // Tier 2
         [
             "أنت قريب جداً من الهدف. ضاعف الجهد.",
             "نتائجك في تحسن. التنظيم هو الحل.",
-            "لا تتوقف، أنت تثبت قدرتك على التجاوز."
+            "لا تتوقف، أنت تثبت قدرتك على التجاوز.",
+            "الانتباه للتفاصيل سيصنع الفارق.",
+            "أنت على بعد خطوة من النجاح. تقدم."
         ],
+        // Tier 3
         [
             "تجاوزت العقبة. ركّز الآن على التثبيت.",
             "خطوة جيدة. الاستمرارية هي سر التفوق.",
-            "ثق بقدراتك وشارك في الفصل بفعالية."
+            "ثق بقدراتك وشارك في الفصل بفعالية.",
+            "لا تكتفِ بالنجاح البسيط. طموحك أعلى.",
+            "راجع دروسك بانتظام لضمان الاستقرار."
         ],
+        // Tier 4
         [
             "عمل جاد. ثق بقدراتك أكثر.",
             "أداء طيب. حافظ على هذا النسق المتصاعد.",
-            "اجتهادك واضح. ارفع سقف طموحك."
+            "اجتهادك واضح. ارفع سقف طموحك.",
+            "بداية التميز. كن أكثر جرأة في الطرح.",
+            "عمل منظم. أضف إليه لمسة إبداع."
         ],
+        // Tier 5
         [
             "نسق رائع. اهتم بدقة التفاصيل.",
             "أحسنت، جهدك اليومي يؤتي ثماره.",
-            "كن فضولياً، فالعلم بحر لا ساحل له."
+            "كن فضولياً، فالعلم بحر لا ساحل له.",
+            "تملك الأدوات اللازمة. تعمّق أكثر.",
+            "أداء مستقر. ابحث عن التحدي الآن."
         ],
+        // Tier 6
         [
             "مستوى راقٍ. تعمّق في البحث.",
             "تفكيرك ناضج. ابحث عن التحديات الصعبة.",
-            "أداؤك متميز. واصل البحث عن التميز."
+            "أداؤك متميز. واصل البحث عن التميز.",
+            "لا ترضَ بأقل من الإتقان. أنت قادر.",
+            "ذكاؤك يحتاج لمسائل أكثر تعقيداً."
         ],
+        // Tier 7
         [
             "إتقان مذهل. كُن عوناً لزملائك.",
             "علمك ينمو. شارك معرفتك لترسخ.",
-            "تميزك دليل على شغفك. واصل الإبداع."
+            "تميزك دليل على شغفك. واصل الإبداع.",
+            "أنت مشروع عالم صغير. وسّع آفاقك.",
+            "قيادة فكرية رائعة. استمر في العطاء."
         ],
+        // Tier 8
         [
             "همة تعانق السماء. زادك الله علماً.",
             "أنت قدوة لزملائك. بوركت جهودك.",
-            "أداء استثنائي. المستقبل بانتظارك."
+            "أداء استثنائي. المستقبل بانتظارك.",
+            "نبوغ مبكر. حافظ على تواضع العلماء.",
+            "تجمع بين العلم والأخلاق. هنيئاً لك."
         ]
     ]
 },
 
 observationsAvg: {
     FR: [
+        // Tier 0
         [
             "Difficultés importantes. Bases à reconstruire sereinement.",
             "Niveau fragile. Un accompagnement est nécessaire.",
-            "Des lacunes. Il faut reprendre confiance en soi."
+            "Des lacunes. Il faut reprendre confiance en soi.",
+            "Résultats inquiétants. Ne pas se décourager.",
+            "Ensemble trop juste. Une réaction est attendue."
         ],
+        // Tier 1
         [
             "En cours d'acquisition. Les efforts finiront par payer.",
             "Volontaire mais fragile. Il faut persévérer.",
-            "Des progrès timides. Ne relâchez pas l'attention."
+            "Des progrès timides. Ne relâchez pas l'attention.",
+            "Des fragilités persistent. Accrochez-vous.",
+            "L'investissement est là. Le niveau va monter."
         ],
+        // Tier 2
         [
             "En progrès. La moyenne est à portée de main.",
             "Encourageant. Il manque juste un peu de méthode.",
-            "Résultats ascendants. La dynamique est bonne."
+            "Résultats ascendants. La dynamique est bonne.",
+            "Proche du but. Quelques ajustements nécessaires.",
+            "Ensemble perfectible. Le potentiel est là."
         ],
+        // Tier 3
         [
             "Résultats convenables. Acquis essentiels validés.",
             "Ensemble correct. De la bonne volonté.",
-            "Passable. Il faut consolider pour être tranquille."
+            "Passable. Il faut consolider pour être tranquille.",
+            "Moyenne atteinte. Il faut confirmer l'essai.",
+            "Début de trimestre correct. Restez vigilant."
         ],
+        // Tier 4
         [
             "Bon travail. Élève sérieux et volontaire.",
             "Trimestre satisfaisant. Les efforts sont réguliers.",
-            "Une année positive. Continuez ainsi."
+            "Une année positive. Continuez ainsi.",
+            "Bilan positif. De l'intérêt pour la matière.",
+            "Des acquis solides. Une attitude constructive."
         ],
+        // Tier 5
         [
             "Très bon niveau. Travail régulier et approfondi.",
             "Des résultats solides. Une attitude exemplaire.",
-            "Bravo. De la rigueur et de l'intérêt."
+            "Bravo. De la rigueur et de l'intérêt.",
+            "Très satisfaisant. Une belle progression.",
+            "Niveau maîtrisé. Des interventions pertinentes."
         ],
+        // Tier 6
         [
             "Excellent trimestre. Une maîtrise évidente.",
             "Niveau très solide. Beaucoup de finesse.",
-            "Très belle réussite. Élève investi et curieux."
+            "Très belle réussite. Élève investi et curieux.",
+            "Résultats brillants. Une grande maturité.",
+            "Excellence. La réflexion est aboutie."
         ],
+        // Tier 7
         [
             "Niveau remarquable. Performance de haute volée.",
             "Brillant. Une compréhension rapide et juste.",
-            "Excellence. Une régularité impressionnante."
+            "Excellence. Une régularité impressionnante.",
+            "Prestations de grande qualité. Félicitations.",
+            "Un trimestre modèle. Rien à redire."
         ],
+        // Tier 8
         [
             "Exceptionnel. Une réussite totale.",
             "Parfait. Rien à ajouter, continuez.",
-            "Hors pair. Une maîtrise absolue du sujet."
+            "Hors pair. Une maîtrise absolue du sujet.",
+            "Sommet atteint. Une aisance déconcertante.",
+            "Prestation magistrale. Bravo."
         ]
     ],
     EN: [
+        // Tier 0
         [
             "Needs support. Focus on the basics.",
             "Foundational gaps. Let's start fresh.",
-            "Significant hurdles. Requires guidance."
+            "Significant hurdles. Requires guidance.",
+            "struggling with concepts. Keep asking for help.",
+            "Requires attention. Don't lose hope."
         ],
+        // Tier 1
         [
             "Developing. Keep trying, don't give up.",
             "Effort is there. Results will follow.",
-            "Gaining ground. Consistency is needed."
+            "Gaining ground. Consistency is needed.",
+            "Slow but steady progress. Keep going.",
+            "Potential visible. Needs more practice."
         ],
+        // Tier 2
         [
             "Improving. Almost at the target.",
             "Promising. Needs a bit more structure.",
-            "Upward trend. Keep the momentum going."
+            "Upward trend. Keep the momentum going.",
+            "Close to passing. Focus on details.",
+            "Encouraging signs. Work on methodology."
         ],
+        // Tier 3
         [
             "Satisfactory. Core skills unlocked.",
             "Fair results. Good attitude shown.",
-            "Average. Foundation is set, now build."
+            "Average. Foundation is set, now build.",
+            "Passable. Needs reinforcement.",
+            "Decent start. Stay focused."
         ],
+        // Tier 4
         [
             "Good results. Reliable and steady work.",
             "Solid performance. Keep it up.",
-            "Pleasing progress. Well done."
+            "Pleasing progress. Well done.",
+            "Positive outcome. Good engagement.",
+            "Serious student. Reliable effort."
         ],
+        // Tier 5
         [
             "Very good. Consistent high quality.",
             "Strong level. Great work ethic.",
-            "Very capable. Shows deep interest."
+            "Very capable. Shows deep interest.",
+            "Highly satisfactory. Great progress.",
+            "Commendable effort. Strong skills."
         ],
+        // Tier 6
         [
             "Excellent. Deep understanding shown.",
             "Superior work. Insightful analysis.",
-            "Impressive. High standards met."
+            "Impressive. High standards met.",
+            "Top quality work. Very mature.",
+            "Brilliant results. Sharp thinking."
         ],
+        // Tier 7
         [
             "Outstanding. Top-tier performance.",
             "Brilliant. Quick and sharp mind.",
-            "Distinction. Truly remarkable effort."
+            "Distinction. Truly remarkable effort.",
+            "First-class work. Congratulations.",
+            "Model performance. Flawless."
         ],
+        // Tier 8
         [
             "Flawless. A standard of its own.",
             "Exceptional. Simply the best.",
-            "Perfect score. A joy to teach."
+            "Perfect score. A joy to teach.",
+            "Unmatched mastery. Incredible.",
+            "Legendary performance. Well done."
         ]
     ],
     AR: [
+        // Tier 0
         [
             "يحتاج مرافقة. الأساسيات قيد البناء.",
             "يواجه صعوبات. يجب إعادة التأسيس.",
-            "يحتاج للدعم. لا بد من تدارك الأمر."
+            "يحتاج للدعم. لا بد من تدارك الأمر.",
+            "النتائج مقلقة. لكن الأمل موجود.",
+            "بداية متعثرة. نستطيع تجاوزها معاً."
         ],
+        // Tier 1
         [
             "محاولات طيبة. التحسن مسألة وقت.",
             "في طور التعلم. الإرادة موجودة.",
-            "بداية الفهم. يحتاج لمزيد من التدريب."
+            "بداية الفهم. يحتاج لمزيد من التدريب.",
+            "تطور طفيف. الصبر مفتاح الفرج.",
+            "الجهد مبذول. النتائج ستتحسن قريباً."
         ],
+        // Tier 2
         [
             "في تصاعد. النجاح أصبح قريباً.",
             "مؤشرات جيدة. ينقصه بعض التنظيم.",
-            "يتحسن تدريجياً. العزيمة واضحة."
+            "يتحسن تدريجياً. العزيمة واضحة.",
+            "قريب من المعدل. واصل الاجتهاد.",
+            "يمكنه التدارك. المؤشرات إيجابية."
         ],
+        // Tier 3
         [
             "مقبول. تم تحصيل الأساسيات.",
             "نتيجة مرضية. بداية الاستقرار.",
-            "لا بأس به. يجب تثبيت المعلومات."
+            "لا بأس به. يجب تثبيت المعلومات.",
+            "معدل مطمئن. احذر من التراجع.",
+            "بداية موفقة. حافظ على مكانتك."
         ],
+        // Tier 4
         [
             "عمل جيد. انضباط وجدية.",
             "مستوى طيب. جهد محترم ومقدر.",
-            "نتائج إيجابية. استمرار في العطاء."
+            "نتائج إيجابية. استمرار في العطاء.",
+            "أداء منظم. مشاركة فعالة.",
+            "تحصيل جيد. التزام واضح."
         ],
+        // Tier 5
         [
             "مستوى رفيع. جهد متميز ومستمر.",
             "استيعاب قوي. مشاركة فعالة.",
-            "أداء عالٍ. حرص واضح على التعلم."
+            "أداء عالٍ. حرص واضح على التعلم.",
+            "تطور ملحوظ. نتائج مشرفة.",
+            "تحكم ممتاز في المادة. أحسنت."
         ],
+        // Tier 6
         [
             "ممتاز. استيعاب عميق للمادة.",
             "متفوق. دقة في الإجابة والتحليل.",
-            "رائع. ذكاء واجتهاد في آن واحد."
+            "رائع. ذكاء واجتهاد في آن واحد.",
+            "أداء باهر. فكر نير.",
+            "تميز واضح. استيعاب شامل."
         ],
+        // Tier 7
         [
             "مبهر. أداء يفوق التوقعات.",
             "نبوغ واضح. فهم سريع ودقيق.",
-            "متميز جداً. إتقان يثير الإعجاب."
+            "متميز جداً. إتقان يثير الإعجاب.",
+            "نتائج راقية. مستوى يبعث الفخر.",
+            "تفوق كاسح. هنيئاً لك."
         ],
+        // Tier 8
         [
             "قمة التميز. إنجاز بلا أخطاء.",
             "استثنائي. نموذج للطالب المثالي.",
-            "إبداع خالص. حفظك الله ووفقك."
+            "إبداع خالص. حفظك الله ووفقك.",
+            "علامة كاملة. أداء أسطوري.",
+            "لا مزيد لمستزيد. تبارك الله."
         ]
     ]
 }
