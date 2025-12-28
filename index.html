@@ -607,6 +607,19 @@
             font-size: 12px;
             background: #f3f4f6;
             color: #374151;
+            cursor: grab;
+            transition: transform 0.2s, box-shadow 0.2s;
+            user-select: none;
+        }
+
+        .assignment-tag:active {
+            cursor: grabbing;
+        }
+
+        .assignment-tag.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
 
         .assignment-tag.selected {
@@ -614,6 +627,26 @@
             color: #1d4ed8;
             border-color: #93c5fd;
             font-weight: 600;
+        }
+
+        .assignment-tag-container.drag-over {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-radius: 0.5rem;
+        }
+
+        .assignment-tag-wrapper {
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .drag-over-left {
+            border-left: 4px solid #3b82f6;
+            padding-left: 4px;
+        }
+
+        .drag-over-right {
+            border-right: 4px solid #3b82f6;
+            padding-right: 4px;
         }
     </style>
 </head>
@@ -2896,13 +2929,24 @@
                 if (tagContainer) {
                     const tagHtml = filteredAssignments.map(a => {
                         const selected = summaryAssignmentFilter.has(a.id);
-                        return `<div class="flex items-center gap-1">
-                <button class="assignment-tag ${selected ? 'selected' : ''}" onclick="toggleSummaryAssignmentTag('${a.id}')">${a.name}</button>
-                <button class="px-2 py-1 text-xs bg-gray-100 rounded" onclick="moveSummaryAssignmentLeft('${a.id}')">◀</button>
-                <button class="px-2 py-1 text-xs bg-gray-100 rounded" onclick="moveSummaryAssignmentRight('${a.id}')">▶</button>
-            </div>`;
+                        return `
+                            <div class="assignment-tag-wrapper flex items-center gap-1" 
+                                 draggable="true" 
+                                 ondragstart="handleAssignmentDragStart(event, '${a.id}')"
+                                 ondragend="handleAssignmentDragEnd(event)"
+                                 ondragover="handleAssignmentDragOver(event, '${a.id}')"
+                                 onmouseleave="handleAssignmentDragLeave(event)"
+                                 ondragleave="handleAssignmentDragLeave(event)"
+                                 ondrop="handleAssignmentDrop(event, '${a.id}')">
+                                <button class="assignment-tag ${selected ? 'selected' : ''}" 
+                                        onclick="toggleSummaryAssignmentTag('${a.id}')"
+                                        title="${t.dragToReorder || 'Glisser pour réorganiser'}">
+                                    ${a.name}
+                                </button>
+                            </div>`;
                     }).join('');
                     tagContainer.innerHTML = tagHtml;
+                    tagContainer.className = "flex flex-wrap gap-2 mb-4 p-2 bg-gray-50 rounded-lg assignment-tag-container";
                 }
 
                 for (const a of filteredAssignments) {
@@ -3216,11 +3260,21 @@
 
                         classAssignments.forEach(a => {
                             const selected = summaryAssignmentFilter.has(a.id);
-                            tagHtml += `<div class="flex items-center gap-1">
-                    <button class="assignment-tag ${selected ? 'selected' : ''}" onclick="toggleSummaryAssignmentTag('${a.id}')">${a.name}</button>
-                    <button class="px-2 py-1 text-xs bg-white rounded hover:bg-gray-200" onclick="moveSummaryAssignmentLeft('${a.id}')">◀</button>
-                    <button class="px-2 py-1 text-xs bg-white rounded hover:bg-gray-200" onclick="moveSummaryAssignmentRight('${a.id}')">▶</button>
-                </div>`;
+                            tagHtml += `
+                                <div class="assignment-tag-wrapper flex items-center gap-1" 
+                                     draggable="true" 
+                                     ondragstart="handleAssignmentDragStart(event, '${a.id}')"
+                                     ondragend="handleAssignmentDragEnd(event)"
+                                     ondragover="handleAssignmentDragOver(event, '${a.id}')"
+                                     onmouseleave="handleAssignmentDragLeave(event)"
+                                     ondragleave="handleAssignmentDragLeave(event)"
+                                     ondrop="handleAssignmentDrop(event, '${a.id}')">
+                                    <button class="assignment-tag ${selected ? 'selected' : ''}" 
+                                            onclick="toggleSummaryAssignmentTag('${a.id}')"
+                                            title="${t.dragToReorder || 'Glisser pour réorganiser'}">
+                                        ${a.name}
+                                    </button>
+                                </div>`;
                         });
 
                         tagHtml += `</div>`;
@@ -3509,13 +3563,24 @@
                 if (tagContainer) {
                     const tagHtml = filteredAssignments.map(a => {
                         const selected = summaryAssignmentFilter.has(a.id);
-                        return `<div class="flex items-center gap-1">
-                <button class="assignment-tag ${selected ? 'selected' : ''}" onclick="toggleSummaryAssignmentTag('${a.id}')">${a.name} <span class="text-xs opacity-70">(${a.className || '?'})</span></button>
-                <button class="px-2 py-1 text-xs bg-gray-100 rounded hover:bg-gray-200" onclick="moveSummaryAssignmentLeft('${a.id}')">◀</button>
-                <button class="px-2 py-1 text-xs bg-gray-100 rounded hover:bg-gray-200" onclick="moveSummaryAssignmentRight('${a.id}')">▶</button>
-            </div>`;
+                        return `
+                            <div class="assignment-tag-wrapper flex items-center gap-1" 
+                                 draggable="true" 
+                                 ondragstart="handleAssignmentDragStart(event, '${a.id}')"
+                                 ondragend="handleAssignmentDragEnd(event)"
+                                 ondragover="handleAssignmentDragOver(event, '${a.id}')"
+                                 onmouseleave="handleAssignmentDragLeave(event)"
+                                 ondragleave="handleAssignmentDragLeave(event)"
+                                 ondrop="handleAssignmentDrop(event, '${a.id}')">
+                                <button class="assignment-tag ${selected ? 'selected' : ''}" 
+                                        onclick="toggleSummaryAssignmentTag('${a.id}')"
+                                        title="${t.dragToReorder || 'Glisser pour réorganiser'}">
+                                    ${a.name} <span class="text-xs opacity-70">(${a.className || '?'})</span>
+                                </button>
+                            </div>`;
                     }).join('');
                     tagContainer.innerHTML = tagHtml;
+                    tagContainer.className = "flex flex-wrap gap-2 mb-4 p-2 bg-gray-50 rounded-lg assignment-tag-container";
                 }
 
                 // =====================================================
@@ -3810,28 +3875,79 @@
                 renderSummary();
             }
 
-            function moveSummaryAssignmentLeft(id) {
-                try {
-                    const arr = window.summaryAssignmentOrder || [];
-                    const i = arr.indexOf(id);
-                    if (i > 0) {
-                        [arr[i - 1], arr[i]] = [arr[i], arr[i - 1]];
-                        localStorage.setItem('summary-assignment-order', JSON.stringify(arr));
-                        renderSummary();
-                    }
-                } catch (e) { }
+            // --- DRAG & DROP POUR LES DEVOIRS ---
+            let draggedAssignmentId = null;
+
+            function handleAssignmentDragStart(e, id) {
+                draggedAssignmentId = id;
+                e.target.closest('.assignment-tag-wrapper').classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                // Pour Firefox
+                e.dataTransfer.setData('text/plain', id);
             }
 
-            function moveSummaryAssignmentRight(id) {
-                try {
-                    const arr = window.summaryAssignmentOrder || [];
-                    const i = arr.indexOf(id);
-                    if (i >= 0 && i < arr.length - 1) {
-                        [arr[i + 1], arr[i]] = [arr[i], arr[i + 1]];
-                        localStorage.setItem('summary-assignment-order', JSON.stringify(arr));
-                        renderSummary();
-                    }
-                } catch (e) { }
+            function handleAssignmentDragEnd(e) {
+                const draggingEl = document.querySelector('.assignment-tag-wrapper.dragging');
+                if (draggingEl) draggingEl.classList.remove('dragging');
+                
+                // Nettoyer les styles de survol
+                document.querySelectorAll('.assignment-tag-wrapper').forEach(el => {
+                    el.classList.remove('drag-over-left', 'drag-over-right');
+                });
+            }
+
+            function handleAssignmentDragOver(e, id) {
+                e.preventDefault();
+                if (draggedAssignmentId === id) return;
+                
+                const target = e.target.closest('.assignment-tag-wrapper');
+                const rect = target.getBoundingClientRect();
+                const midpoint = rect.left + rect.width / 2;
+                
+                target.classList.remove('drag-over-left', 'drag-over-right');
+                if (e.clientX < midpoint) {
+                    target.classList.add('drag-over-left');
+                } else {
+                    target.classList.add('drag-over-right');
+                }
+                
+                e.dataTransfer.dropEffect = 'move';
+            }
+
+            function handleAssignmentDragLeave(e) {
+                const target = e.target.closest('.assignment-tag-wrapper');
+                if (target) {
+                    target.classList.remove('drag-over-left', 'drag-over-right');
+                }
+            }
+
+            function handleAssignmentDrop(e, targetId) {
+                e.preventDefault();
+                if (!draggedAssignmentId || draggedAssignmentId === targetId) return;
+
+                const target = e.target.closest('.assignment-tag-wrapper');
+                const rect = target.getBoundingClientRect();
+                const midpoint = rect.left + rect.width / 2;
+                const dropAfter = e.clientX >= midpoint;
+
+                const arr = window.summaryAssignmentOrder || [];
+                const fromIndex = arr.indexOf(draggedAssignmentId);
+                let toIndex = arr.indexOf(targetId);
+
+                if (fromIndex === -1 || toIndex === -1) return;
+
+                // Retirer l'élément de sa position actuelle
+                arr.splice(fromIndex, 1);
+                
+                // Recalculer l'index cible après retrait
+                toIndex = arr.indexOf(targetId);
+                if (dropAfter) toIndex++;
+
+                // Insérer à la nouvelle position
+                arr.splice(toIndex, 0, draggedAssignmentId);
+
+                localStorage.setItem('summary-assignment-order', JSON.stringify(arr));
+                renderSummary();
             }
 
             function handleStudentImport(event) {
@@ -3957,8 +4073,6 @@
                     // Si vous avez une fonction spécifique pour rafraichir les tableaux de notes :
                     if (typeof renderSummary === 'function') renderSummary();
                     if (typeof loadGradeSelectors === 'function') loadGradeSelectors();
-                    // ⭐ NOUVEAU : RAFFRAICHISSEMENT COMPLET
-                    console.log("🔄 RAFFRAICHISSEMENT COMPLET...");
                     try {
                         showTab('export'); // ou 'students'
                         renderAssignments?.();
@@ -5787,7 +5901,42 @@
                         table { width: 100%; border-collapse: collapse; font-size: 14px; }
                         th, td { border: 1px solid #444; padding: 6px 8px; text-align: center; vertical-align: top; }
                         th { background: #eee; }
-                        </style>
+                            .assignment-tag {
+                cursor: grab;
+                transition: transform 0.2s, box-shadow 0.2s;
+                user-select: none;
+            }
+
+            .assignment-tag:active {
+                cursor: grabbing;
+            }
+
+            .assignment-tag.dragging {
+                opacity: 0.5;
+                transform: scale(0.95);
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            }
+
+            .assignment-tag-container.drag-over {
+                background-color: rgba(59, 130, 246, 0.1);
+                border-radius: 0.5rem;
+            }
+
+            .assignment-tag-wrapper {
+                transition: all 0.2s;
+                position: relative;
+            }
+
+            .drag-over-left {
+                border-left: 4px solid #3b82f6;
+                padding-left: 4px;
+            }
+
+            .drag-over-right {
+                border-right: 4px solid #3b82f6;
+                padding-right: 4px;
+            }
+        </style>
                     </head>
                     <body>
                         <h3 style="margin-bottom:20px;">${escapeHtml(className)}</h3>
