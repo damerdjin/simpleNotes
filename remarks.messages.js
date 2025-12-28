@@ -293,76 +293,292 @@ export const REMARKS = {
   },
 
   // Conseils par moyenne (professionnels, précis, actionnables)
-observationsAvg: {
-  FR: [
-    ["Difficultés importantes.", "Bases à reconstruire.", "Appui pédagogique nécessaire."],
-    ["En cours d'acquisition.", "Les efforts paieront.", "Persévérance requise."],
-    ["En progression nette.", "Moyenne à portée.", "Encourageant."],
-    ["Résultats convenables.", "Acquis essentiels validés.", "Stabilisation en cours."],
-    ["Bon travail.", "Élève sérieux.", "Sérieux et volontaire."],
-    ["Très bon niveau.", "Travail régulier.", "Maîtrise satisfaisante."],
-    ["Excellent trimestre.", "Maîtrise confirmée.", "Solide throughout."],
-    ["Niveau remarquable.", "Performance de haut vol.", "Très impressif."],
-    ["Parcours exceptionnel.", "Maîtrise totale.", "Un modèle."]
-  ],
-  EN: [
-    ["Needs some support.", "Building foundations.", "We'll get there together."],
-    ["Developing steadily.", "Don't give up.", "Progress is happening."],
-    ["Getting closer.", "Almost there.", "Good momentum building."],
-    ["Satisfactory results.", "Core skills in place.", "On the right track."],
-    ["Good solid work.", "Reliable performance.", "Consistent effort."],
-    ["Very good work.", "Strong understanding.", "High quality output."],
-    ["Excellent performance.", "Deep comprehension.", "Outstanding work."],
-    ["Top-tier results.", "Remarkable mastery.", "Impressive achievement."],
-    ["Exceptional outcome.", "Flawless mastery.", "A true benchmark."]
-  ],
-  AR: [
-    ["يحتاج بعض الدعم.", "الأساسيات تتشكّل.", "سننجح معاً."],
-    ["يتطور بثبات.", "لا تستسلم.", "التقدم ملموس."],
-    ["أصبح قريباً.", "على الأعتاب.", "زخم جيد."],
-    ["نتائج مقبولة.", "المهارات الأساسية قائمة.", "في المسار الصحيح."],
-    ["عمل متين.", "أداء موثوق.", "جهد متناسق."],
-    ["عمل جيد جداً.", "فهم راسخ.", "جودة عالية."],
-    ["أداء ممتاز.", "فهم عميق.", "عمل استثنائي."],
-    ["نتائج من الطراز الأول.", "تميّز لافت.", "إنجاز مبهر."],
-    ["نتيجة استثنائية.", "إتقان بلا أخطاء.", "معيار يُحتذى به."]
-  ]
+advice: {
+    FR: [
+        [
+            "Ne restez pas seul face aux difficultés, sollicitez-nous.",
+            "Reprenons ensemble les bases étape par étape.",
+            "Courage, c'est en essayant qu'on finit par réussir."
+        ],
+        [
+            "Chaque petit progrès compte. Ne baissez pas les bras.",
+            "La persévérance est votre meilleure alliée.",
+            "Ciblez une notion à la fois pour reprendre confiance."
+        ],
+        [
+            "Le but est en vue. Encore un peu de rigueur.",
+            "Vous progressez. Structurez davantage vos révisions.",
+            "Ne lâchez rien, la moyenne est à votre portée."
+        ],
+        [
+            "La moyenne est franchie. Visez maintenant la solidité.",
+            "Régularisez vos efforts pour sécuriser vos acquis.",
+            "Participez davantage pour gagner en assurance."
+        ],
+        [
+            "C'est sérieux. Osez prendre plus d'initiatives.",
+            "Continuez ainsi, vous êtes sur une très bonne dynamique.",
+            "Approfondissez les cours pour viser la mention."
+        ],
+        [
+            "Belle dynamique. Continuez à soigner les détails.",
+            "Votre méthode porte ses fruits, gardez ce rythme.",
+            "Soyez curieux, allez au-delà des exercices types."
+        ],
+        [
+            "Très solide. Cherchez la nuance et la complexité.",
+            "Challengez-vous sur des problèmes plus ardus.",
+            "Votre réflexion s'affine, continuez à creuser."
+        ],
+        [
+            "Remarquable. Aidez les autres à progresser.",
+            "Diversifiez vos sources pour enrichir votre culture.",
+            "Visez l'originalité, vous avez les moyens de briller."
+        ],
+        [
+            "Un parcours inspirant. Continuez à vous dépasser.",
+            "Votre soif d'apprendre est un modèle pour la classe.",
+            "Conservez cette humilité face au savoir, c'est la clé."
+        ]
+    ],
+    EN: [
+        [
+            "Don't worry about the start. Let's rebuild together.",
+            "Ask questions. There is no shame in learning.",
+            "Small steps forward are better than standing still."
+        ],
+        [
+            "Stay strong. Persistence beats talent.",
+            "Keep trying. Mistakes are part of the process.",
+            "Focus on one topic at a time. You can do this."
+        ],
+        [
+            "You are closing the gap. Keep pushing.",
+            "Almost there. Organizing your notes will help.",
+            "Don't stop now. Your efforts are showing."
+        ],
+        [
+            "Safe zone reached. Now build a fortress.",
+            "Good job. Consistency is your next challenge.",
+            "Believe in yourself and participate more."
+        ],
+        [
+            "Solid work. Try to participate more.",
+            "You're on the right track. Keep the focus.",
+            "Challenge yourself to do a bit more each day."
+        ],
+        [
+            "Great momentum. Focus on precision.",
+            "Your hard work is paying off. Stay curious.",
+            "Don't settle for 'good'. Aim for 'great'."
+        ],
+        [
+            "Impressive. Challenge yourself with harder topics.",
+            "Think outside the box. Innovation suits you.",
+            "Deepen your analysis. You have the skills."
+        ],
+        [
+            "Mastery achieved. Share your knowledge.",
+            "Be a leader in the classroom. Help others.",
+            "Explore advanced concepts on your own."
+        ],
+        [
+            "Limitless potential. Truly outstanding.",
+            "You set the standard. Keep inspiring us.",
+            "The sky is the limit. Wonderful attitude."
+        ]
+    ],
+    AR: [
+        [
+            "لا تخجل من السؤال. نحن هنا لمساعدتك.",
+            "بداية الألف ميل تبدأ بخطوة. ثق بنفسك.",
+            "لا تستسلم، كلنا نتعلم من البدايات."
+        ],
+        [
+            "طريق النجاح يحتاج للصبر. تفاءل خيراً.",
+            "المثابرة تصنع المستحيل. واصل المحاولة.",
+            "ركز على القليل المتقن خير من الكثير المنقطع."
+        ],
+        [
+            "أنت قريب جداً من الهدف. ضاعف الجهد.",
+            "نتائجك في تحسن. التنظيم هو الحل.",
+            "لا تتوقف، أنت تثبت قدرتك على التجاوز."
+        ],
+        [
+            "تجاوزت العقبة. ركّز الآن على التثبيت.",
+            "خطوة جيدة. الاستمرارية هي سر التفوق.",
+            "ثق بقدراتك وشارك في الفصل بفعالية."
+        ],
+        [
+            "عمل جاد. ثق بقدراتك أكثر.",
+            "أداء طيب. حافظ على هذا النسق المتصاعد.",
+            "اجتهادك واضح. ارفع سقف طموحك."
+        ],
+        [
+            "نسق رائع. اهتم بدقة التفاصيل.",
+            "أحسنت، جهدك اليومي يؤتي ثماره.",
+            "كن فضولياً، فالعلم بحر لا ساحل له."
+        ],
+        [
+            "مستوى راقٍ. تعمّق في البحث.",
+            "تفكيرك ناضج. ابحث عن التحديات الصعبة.",
+            "أداؤك متميز. واصل البحث عن التميز."
+        ],
+        [
+            "إتقان مذهل. كُن عوناً لزملائك.",
+            "علمك ينمو. شارك معرفتك لترسخ.",
+            "تميزك دليل على شغفك. واصل الإبداع."
+        ],
+        [
+            "همة تعانق السماء. زادك الله علماً.",
+            "أنت قدوة لزملائك. بوركت جهودك.",
+            "أداء استثنائي. المستقبل بانتظارك."
+        ]
+    ]
 },
 
-advice: {
-  FR: [
-    ["Revenus aux bases étape par étape.", "Travaillez little et souvent.", "Demandez de l'aide sans hésiter."],
-    ["Chaque progrès compte, même petit.", "La constance finit par payer.", "Maintenez vos efforts."],
-    ["Le but est en vue.", "Encore un petit effort.", "Restez concentré."],
-    ["Consolidez vos acquis.", "Vérifiez vos fondamentaux.", "Renforcez la régularité."],
-    ["Osez prendre des initiatives.", "Approfondissez vos connaissances.", "Travaillez la précision."],
-    ["Soignez les détails.", "Gardez ce rythme.", "Variez vos méthodes."],
-    ["Cherchez la complexité.", "Explorez les nuances.", "Poussez plus loin."],
-    ["Partagez votre savoir.", "Aidez les autres.", "Inspirez autour de vous."],
-    ["Continuez à vous dépasser.", "Visez toujours plus haut.", "Restez affamé."]
-  ],
-  EN: [
-    ["Rebuild step by step.", "Little and often wins.", "Don't hesitate to ask."],
-    ["Every gain matters.", "Consistency pays off.", "Keep pushing forward."],
-    ["Goal is within reach.", "Just a bit more.", "Stay focused."],
-    ["Lock in your skills.", "Review fundamentals.", "Build stability."],
-    ["Take more initiative.", "Dive deeper.", "Refine your precision."],
-    ["Polish the details.", "Keep this pace.", "Mix up your methods."],
-    ["Embrace complexity.", "Explore nuances.", "Push boundaries."],
-    ["Share your knowledge.", "Help others grow.", "Be an inspiration."],
-    ["Never stop growing.", "Aim higher still.", "Stay hungry."]
-  ],
-  AR: [
-    ["أعيدوا البناء خطوة بخطوة.", "القليل والمستمر ينجح.", "لا تترددوا في السؤال."],
-    ["كل تقدم مهم.", "الاستمرارية تؤتي ثمارها.", "واصلوا جهودكم."],
-    ["الهدف في المتناول.", "قليل المزيد.", "ابقوا مركزين."],
-    ["ثبّتوا مهاراتكم.", "راجعوا الأساسيات.", "ابنوا الاستقرار."],
-    ["خذوا المبادرات.", "تعمّقوا أكثر.", "دقّقوا أكثر."],
-    ["أتقنوا التفاصيل.", "حافظوا على الإيقاع.", "نوّعوا أساليبكم."],
-    ["احتضنوا التعقيد.", "استكشفوا الدقة.", "تدافعوا حدودكم."],
-    ["شاركوا علمكم.", "ساعدوا الآخرين.", "كونوا إلهاماً."],
-    ["لا تتوقفوا عن النمو.", "استهدفوا الأعلى.", "ابقوا متعطشين."]
-  ]
+observationsAvg: {
+    FR: [
+        [
+            "Difficultés importantes. Bases à reconstruire sereinement.",
+            "Niveau fragile. Un accompagnement est nécessaire.",
+            "Des lacunes. Il faut reprendre confiance en soi."
+        ],
+        [
+            "En cours d'acquisition. Les efforts finiront par payer.",
+            "Volontaire mais fragile. Il faut persévérer.",
+            "Des progrès timides. Ne relâchez pas l'attention."
+        ],
+        [
+            "En progrès. La moyenne est à portée de main.",
+            "Encourageant. Il manque juste un peu de méthode.",
+            "Résultats ascendants. La dynamique est bonne."
+        ],
+        [
+            "Résultats convenables. Acquis essentiels validés.",
+            "Ensemble correct. De la bonne volonté.",
+            "Passable. Il faut consolider pour être tranquille."
+        ],
+        [
+            "Bon travail. Élève sérieux et volontaire.",
+            "Trimestre satisfaisant. Les efforts sont réguliers.",
+            "Une année positive. Continuez ainsi."
+        ],
+        [
+            "Très bon niveau. Travail régulier et approfondi.",
+            "Des résultats solides. Une attitude exemplaire.",
+            "Bravo. De la rigueur et de l'intérêt."
+        ],
+        [
+            "Excellent trimestre. Une maîtrise évidente.",
+            "Niveau très solide. Beaucoup de finesse.",
+            "Très belle réussite. Élève investi et curieux."
+        ],
+        [
+            "Niveau remarquable. Performance de haute volée.",
+            "Brillant. Une compréhension rapide et juste.",
+            "Excellence. Une régularité impressionnante."
+        ],
+        [
+            "Exceptionnel. Une réussite totale.",
+            "Parfait. Rien à ajouter, continuez.",
+            "Hors pair. Une maîtrise absolue du sujet."
+        ]
+    ],
+    EN: [
+        [
+            "Needs support. Focus on the basics.",
+            "Foundational gaps. Let's start fresh.",
+            "Significant hurdles. Requires guidance."
+        ],
+        [
+            "Developing. Keep trying, don't give up.",
+            "Effort is there. Results will follow.",
+            "Gaining ground. Consistency is needed."
+        ],
+        [
+            "Improving. Almost at the target.",
+            "Promising. Needs a bit more structure.",
+            "Upward trend. Keep the momentum going."
+        ],
+        [
+            "Satisfactory. Core skills unlocked.",
+            "Fair results. Good attitude shown.",
+            "Average. Foundation is set, now build."
+        ],
+        [
+            "Good results. Reliable and steady work.",
+            "Solid performance. Keep it up.",
+            "Pleasing progress. Well done."
+        ],
+        [
+            "Very good. Consistent high quality.",
+            "Strong level. Great work ethic.",
+            "Very capable. Shows deep interest."
+        ],
+        [
+            "Excellent. Deep understanding shown.",
+            "Superior work. Insightful analysis.",
+            "Impressive. High standards met."
+        ],
+        [
+            "Outstanding. Top-tier performance.",
+            "Brilliant. Quick and sharp mind.",
+            "Distinction. Truly remarkable effort."
+        ],
+        [
+            "Flawless. A standard of its own.",
+            "Exceptional. Simply the best.",
+            "Perfect score. A joy to teach."
+        ]
+    ],
+    AR: [
+        [
+            "يحتاج مرافقة. الأساسيات قيد البناء.",
+            "يواجه صعوبات. يجب إعادة التأسيس.",
+            "يحتاج للدعم. لا بد من تدارك الأمر."
+        ],
+        [
+            "محاولات طيبة. التحسن مسألة وقت.",
+            "في طور التعلم. الإرادة موجودة.",
+            "بداية الفهم. يحتاج لمزيد من التدريب."
+        ],
+        [
+            "في تصاعد. النجاح أصبح قريباً.",
+            "مؤشرات جيدة. ينقصه بعض التنظيم.",
+            "يتحسن تدريجياً. العزيمة واضحة."
+        ],
+        [
+            "مقبول. تم تحصيل الأساسيات.",
+            "نتيجة مرضية. بداية الاستقرار.",
+            "لا بأس به. يجب تثبيت المعلومات."
+        ],
+        [
+            "عمل جيد. انضباط وجدية.",
+            "مستوى طيب. جهد محترم ومقدر.",
+            "نتائج إيجابية. استمرار في العطاء."
+        ],
+        [
+            "مستوى رفيع. جهد متميز ومستمر.",
+            "استيعاب قوي. مشاركة فعالة.",
+            "أداء عالٍ. حرص واضح على التعلم."
+        ],
+        [
+            "ممتاز. استيعاب عميق للمادة.",
+            "متفوق. دقة في الإجابة والتحليل.",
+            "رائع. ذكاء واجتهاد في آن واحد."
+        ],
+        [
+            "مبهر. أداء يفوق التوقعات.",
+            "نبوغ واضح. فهم سريع ودقيق.",
+            "متميز جداً. إتقان يثير الإعجاب."
+        ],
+        [
+            "قمة التميز. إنجاز بلا أخطاء.",
+            "استثنائي. نموذج للطالب المثالي.",
+            "إبداع خالص. حفظك الله ووفقك."
+        ]
+    ]
 }
 
 };
