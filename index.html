@@ -1905,6 +1905,18 @@
                     }
                 }
 
+                // Vérifier l'unicité du nom dans la classe
+                const isDuplicate = data.assignments.some(a => 
+                    a.id !== editingAssignmentId && 
+                    a.className.trim() === className.trim() && 
+                    a.name.trim().toLowerCase() === name.trim().toLowerCase()
+                );
+
+                if (isDuplicate) {
+                    alert(t.duplicateAssignmentName || "Ce nom de devoir existe déjà pour cette classe.");
+                    return;
+                }
+
                 let exercisesToSave;
 
                 if (isGlobalAssignment) {
