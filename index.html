@@ -4749,8 +4749,18 @@
             function resetExportConfig() {
                 const className = document.getElementById('select-class-export')?.value || '';
                 if (!className) return;
+                
+                // 1) Nettoyer la configuration de mapping des notes
                 delete exportPrepConfig.byClass[className];
                 saveExportPrepConfig();
+                
+                // 2) Nettoyer les commentaires personnalisés (overrides) pour cette classe
+                const scopeKey = getRemarksScopeKey(className);
+                if (remarksOverrides[scopeKey]) {
+                    delete remarksOverrides[scopeKey];
+                    saveRemarksOverrides(remarksOverrides);
+                }
+                
                 renderExportPrep();
             }
 
@@ -5225,17 +5235,12 @@
                 const d2Issue = groupHasExportScaleIssue(className, cfg, 'devoir2');
                 const devoirScaleIssue = d1Issue || d2Issue;
 
-                const fmt = (v) => (v === null ? '' : round2(v).toFixed(2));
-
-                const rows = students.map(s => {
+                const studentsWithAverages = students.map(s => {
                     const cc = ccA ? calcScaledScore(s.id, ccA) : null;
                     const tp = tpA ? calcScaledScore(s.id, tpA) : null;
                     const comp = compA ? calcScaledScore(s.id, compA) : null;
                     const devoir = computeDevoirFinal(s.id, className, cfg);
 
-                    // Moyenne:
-                    // sans TP: (devoir + CC + 2*Compo) / 4
-                    // avec TP: (devoir + CC + TP + 2*Compo) / 5
                     let moyenne = null;
                     const requiredOk = (devoir !== null && cc !== null && comp !== null && (!hasTP || tp !== null));
                     if (requiredOk) {
@@ -5243,6 +5248,15 @@
                             ? (devoir + cc + tp + 2 * comp) / 5
                             : (devoir + cc + 2 * comp) / 4;
                     }
+                    return { s, cc, tp, comp, devoir, moyenne };
+                });
+
+                const hasAnyMoyenne = studentsWithAverages.some(item => item.moyenne !== null);
+
+                const fmt = (v) => (v === null ? '' : round2(v).toFixed(2));
+
+                const rows = studentsWithAverages.map(item => {
+                    const { s, cc, tp, comp, devoir, moyenne } = item;
 
 
                     //console.log(s.name, { devoir, comp, moyenne })
@@ -5295,8 +5309,13 @@
                     const consPool = [...teacherConsBand, ...consCandidates];
                     const autoCons = pickDeterministic(consPool, `${className}|${s.id}|cons|${moyenne}|band:${consBandIdx}`);
 
-                    const finalObs = (ov.obs && ov.obs.trim()) ? ov.obs : (autoObs || rm.obs);
-                    const finalCons = (ov.cons && ov.cons.trim()) ? ov.cons : (autoCons || rm.cons);
+                    const finalObs = (moyenne !== null && (ov.obs && ov.obs.trim())) ? ov.obs : (autoObs || rm.obs);
+                    const finalCons = (moyenne !== null && (ov.cons && ov.cons.trim())) ? ov.cons : (autoCons || rm.cons);
+
+                    // Si pas de moyenne, on vide tout
+                    const displayObs = (moyenne !== null) ? finalObs : "";
+                    const displayCons = (moyenne !== null) ? finalCons : "";
+
                     return `
                         <tr class="border-b hover:bg-gray-50">
                             <td class="p-3 bg-gray-50 sticky left-0 z-10 font-medium">${s.name}</td>
@@ -5321,15 +5340,16 @@
                             <td class="p-3 text-center font-bold ${avgClass}">
                             ${fmt(moyenne)}
                             </td>
+                            ${hasAnyMoyenne ? `
                             <td class="p-3 text-left">
                             <div class="remark-cell" data-scope="${escapeHtml(scopeKey)}" data-student-id="${escapeHtml(s.id)}" data-kind="obs" data-avg="${escapeHtml(moyenne)}" data-obs-band="${obsBandIdx}">
-                                <div class="remark-text text-sm leading-snug">${escapeHtml(finalObs)}</div>
+                                <div class="remark-text text-sm leading-snug">${escapeHtml(displayObs)}</div>
                                 <div class="mt-1 flex gap-2">
                                     <button type="button" class="remark-edit-btn text-xs px-2 py-1 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 rounded">Modifier / Perso</button>
                                     <button type="button" class="remark-auto-btn text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded">Auto</button>
                                 </div>
                                 <div class="remark-editor mt-2 hidden p-2 bg-indigo-50 rounded border border-indigo-100 space-y-2">
-                                    <textarea class="remark-textarea w-full p-2 border rounded bg-white text-sm h-20" placeholder="Commentaire personnalisé...">${escapeHtml(finalObs)}</textarea>
+                                    <textarea class="remark-textarea w-full p-2 border rounded bg-white text-sm h-20" placeholder="Commentaire personnalisé...">${escapeHtml(displayObs)}</textarea>
                                     <div class="flex flex-wrap gap-2 items-center">
                                         <select class="remark-select flex-1 p-1 border rounded bg-white text-xs">
                                             <option value="">(Suggestions / Bibliothèque)</option>                                    
@@ -5349,13 +5369,13 @@
 
                             <td class="p-3 text-left">
                             <div class="remark-cell" data-scope="${escapeHtml(scopeKey)}" data-student-id="${escapeHtml(s.id)}" data-kind="cons" data-avg="${escapeHtml(moyenne)}" data-cons-band="${consBandIdx}">
-                                <div class="remark-text text-sm leading-snug">${escapeHtml(finalCons)}</div>
+                                <div class="remark-text text-sm leading-snug">${escapeHtml(displayCons)}</div>
                                 <div class="mt-1 flex gap-2">
                                     <button type="button" class="remark-edit-btn text-xs px-2 py-1 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 rounded">Modifier / Perso</button>
                                     <button type="button" class="remark-auto-btn text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded">Auto</button>
                                 </div>
                                 <div class="remark-editor mt-2 hidden p-2 bg-indigo-50 rounded border border-indigo-100 space-y-2">
-                                    <textarea class="remark-textarea w-full p-2 border rounded bg-white text-sm h-20" placeholder="Conseil personnalisé...">${escapeHtml(finalCons)}</textarea>
+                                    <textarea class="remark-textarea w-full p-2 border rounded bg-white text-sm h-20" placeholder="Conseil personnalisé...">${escapeHtml(displayCons)}</textarea>
                                     <div class="flex flex-wrap gap-2 items-center">
                                         <select class="remark-select flex-1 p-1 border rounded bg-white text-xs">
                                             <option value="">(Suggestions / Bibliothèque)</option>
@@ -5371,7 +5391,8 @@
                                     </div>
                                 </div>
                             </div>
-                            </td>
+                            </td>` : ``}
+
 
                         </tr>
                         `;
@@ -5384,9 +5405,11 @@
                 ];
                 if (hasTP) cols.push('<col style="width:110px">');
                 cols.push('<col style="width:130px">'); // Composition
-                cols.push('<col style="width:130px">');
-                cols.push('<col style="width:220px">');
-                cols.push('<col style="width:220px">');
+                cols.push('<col style="width:130px">'); // Moyenne
+                if (hasAnyMoyenne) {
+                    cols.push('<col style="width:220px">');
+                    cols.push('<col style="width:220px">');
+                }
                 const classHeader = `
                 <div class="mb-2 font-bold text-lg text-gray-700">
                     ${t.class || ' '}  ${className}
@@ -5396,7 +5419,7 @@
                 // Nom + CC + Devoir + (TP?) + Compo + Moyenne
                 let colCount = 1 + 1 + 1 + 1 + 1;
                 if (hasTP) colCount += 1;
-                colCount += 2;
+                if (hasAnyMoyenne) colCount += 2;
 
                 preview.innerHTML = `
                         <table class="w-full table-fixed border-collapse">
@@ -5424,8 +5447,10 @@
 
                             <th class="p-3 text-center bg-gray-100" data-translate="compositionShort">${t.compositionShort || 'Composition'}</th>
                             <th class="p-3 text-center bg-green-100" data-translate="avgShort">${t.avgShort || 'Moyenne'}</th>
+                            ${hasAnyMoyenne ? `
                             <th class="p-3 text-center bg-gray-100" data-translate="observationShort">${t.observationShort || 'Observation'}</th>
                             <th class="p-3 text-center bg-gray-100" data-translate="adviceShort">${t.adviceShort || 'Conseil'}</th>
+                            ` : ``}
                             </tr>
                         </thead>
                         <tbody>${rows}</tbody>
