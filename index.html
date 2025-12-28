@@ -5719,17 +5719,37 @@
                 }
                 return -1;
             }
-            window.getObsCandidatesForRow = function (avg) {
-                return []; // temporaire
-            };
-
-
-            function getObsCandidatesForRow(avg) {
-                const R = window.REMARKSMESSAGES;
-                if (!R) return;
-                const idx = findBandIndexLocal(R.avgBands, avg);
-                if (idx < 0) return;
-                return R.observationsAvg?.[langKey()]?.[idx]; // nouveau dataset
+            function getObsCandidatesForRow(devoir, comp, avg) {
+                const R = window.REMARKSMESSAGES || window.REMARKS_MESSAGES;
+                if (!R) return [];
+                
+                const d = Number(devoir);
+                const c = Number(comp);
+                const a = Number(avg);
+                
+                // Si on a les notes, on cherche l'observation par rapport à l'écart (diffBands)
+                if (Number.isFinite(d) && Number.isFinite(c)) {
+                    const diff = d - c;
+                    const diffIdx = findBandIndexLocal(R.diffBands, diff);
+                    const avgIdx = findBandIndexLocal(R.avgBands, a);
+                    
+                    if (diffIdx >= 0 && avgIdx >= 0) {
+                        // Dans remarks.messages.js, observations[lang][diffIdx][avgIdx]
+                        const lang = langKey();
+                        const pool = R.observations?.[lang]?.[diffIdx];
+                        // Si c'est une matrice [diff][avg]
+                        if (Array.isArray(pool) && Array.isArray(pool[0])) {
+                             return pool[avgIdx] ? [pool[avgIdx]] : [];
+                        }
+                        // Si c'est une liste de listes [diff][messages]
+                        return Array.isArray(pool) ? pool : [];
+                    }
+                }
+                
+                // Sinon repli sur la moyenne (avgBands)
+                const idx = findBandIndexLocal(R.avgBands, a);
+                if (idx < 0) return [];
+                return (R.observationsAvg?.[langKey()]?.[idx]) || [];
             }
 
             window.getConsCandidatesForRow = function (avg) {
@@ -5797,49 +5817,26 @@
                     const avgClass = cellClassForValue(moyenne, (ccExpected && compExpected && (!hasTP || tpExpected)));
 
 
+                    const res = window.computeFinalObsCons({
+                        className,
+                        studentId: s.id,
+                        devoir,
+                        comp,
+                        avg: moyenne,
+                        currentLanguage
+                    });
+
                     const scopeKey = getRemarksScopeKey(className);
-                    const ov = getOverride(scopeKey, s.id) || {};
-                    const R = window.REMARKS_MESSAGES;
+                    const displayObs = res.obs;
+                    const displayCons = res.cons;
+                    const obsBandIdx = res.bandIdx;
+                    const consBandIdx = res.bandIdx;
 
-                    // Calcul des indices de paliers pour Obs et Cons
-                    const obsBandIdx = R ? findBandIndexLocal(R.avgBands, moyenne) : -1;
-                    const consBandIdx = R ? findBandIndexLocal(R.avgBands, moyenne) : -1;
-
-
-                    // Récupération des messages personnalisés (bibliothèque prof)
-                    const teacherObsBand = getTeacherMessages(`obs@${obsBandIdx}`);
-                    const teacherConsBand = getTeacherMessages(`cons@${consBandIdx}`);
-
-                    const rm = (window.computeExportRemarks)
-                        ? window.computeExportRemarks({
-                            devoir,
-                            comp,
-                            avg: moyenne,
-                            currentLanguage,
-                            seed: s.id || 0
-                        })
-                        : { obs: "", cons: "" };
-
-                    // Logique Auto Obs: moteur + bibliothèque band-specific
-                    const obsPool = [...teacherObsBand];
-                    if (rm.obs) obsPool.push(rm.obs);
-                    const autoObs = obsPool.length
-                        ? pickDeterministic(obsPool, `${className}|${s.id}|obs|${moyenne}|band:${obsBandIdx}`)
-                        : "";
-
-                    const obsCandidates = getObsCandidatesForRow(moyenne);
-                    const consCandidates = getConsCandidatesForRow(moyenne);
-
-                    // Logique Auto Cons: moteur + bibliothèque band-specific
-                    const consPool = [...teacherConsBand, ...consCandidates];
-                    const autoCons = pickDeterministic(consPool, `${className}|${s.id}|cons|${moyenne}|band:${consBandIdx}`);
-
-                    const finalObs = (moyenne !== null && (ov.obs && ov.obs.trim())) ? ov.obs : (autoObs || rm.obs);
-                    const finalCons = (moyenne !== null && (ov.cons && ov.cons.trim())) ? ov.cons : (autoCons || rm.cons);
-
-                    // Si pas de moyenne, on vide tout
-                    const displayObs = (moyenne !== null) ? finalObs : "";
-                    const displayCons = (moyenne !== null) ? finalCons : "";
+                    // Récupération des suggestions pour le modal (UI seulement)
+                    const teacherObsBand = getTeacherMessages(`obs@${obsBandIdx}`) || [];
+                    const teacherConsBand = getTeacherMessages(`cons@${consBandIdx}`) || [];
+                    const obsCandidates = getObsCandidatesForRow(devoir, comp, moyenne) || [];
+                    const consCandidates = getConsCandidatesForRow(moyenne) || [];
 
                     return `
                         <tr class="border-b hover:bg-gray-50">
@@ -6699,62 +6696,19 @@
                         writeGrade(r, colIndices.comp, g.comp);
 
                         const avg = computeAverageFromGrades(g, cfg, hasTP);
-                        const scopeKey = getRemarksScopeKey(className);
+                        
+                        const res = window.computeFinalObsCons({
+                            className,
+                            studentId: g.studentId,
+                            devoir: g.devoir,
+                            comp: g.comp,
+                            avg,
+                            currentLanguage
+                        });
 
-                        // 1) Moteur principal, comme preview
-                        const rm = window.computeExportRemarks
-                            ? window.computeExportRemarks({
-                                devoir: g.devoir,
-                                comp: g.comp,
-                                avg,
-                                currentLanguage,
-                                seed: g.studentId || 0
-                            })
-                            : { obs: "", cons: "" };
+                        const obs = res.obs;
+                        const cons = res.cons;
 
-                        // 2) Overrides, comme preview
-                        const ov = getOverride(scopeKey, g.studentId) || {};
-                        const R = window.REMARKS_MESSAGES;
-
-                        const diff = (g.devoir !== null && g.comp !== null) ? (g.devoir - g.comp) : null;
-                        const obsBandIdx = (R && diff !== null) ? findBandIndexLocal(R.diffBands, diff) : -1;
-                        const consBandIdx = R ? findBandIndexLocal(R.avgBands, avg) : -1;
-
-                        // 3) Pools et auto, comme preview
-                        const teacherObsBand = getTeacherMessages(`obs@${obsBandIdx}`) || [];
-                        const obsPool = [...teacherObsBand];
-                        if (rm.obs) obsPool.push(rm.obs);
-                        const autoObs = obsPool.length
-                            ? pickDeterministic(obsPool, `${className}|${g.studentId}|obs|${avg}|band:${obsBandIdx}`)
-                            : rm.obs;
-
-                        const obsCandidates = getObsCandidatesForRow(avg) || [];
-                        const consCandidates = getConsCandidatesForRow(avg) || [];
-                        const teacherConsBand = getTeacherMessages(`cons@${consBandIdx}`) || [];
-                        const consPool = [...teacherConsBand, ...consCandidates];
-
-                        const autoCons = consPool.length
-                            ? pickDeterministic(consPool, `${className}|${g.studentId}|cons|${avg}|band:${consBandIdx}`)
-                            : rm.cons;
-
-                        // 4) Final, EXACTEMENT comme preview
-                        let obs = (ov.obs && ov.obs.trim()) ? ov.obs : (autoObs || rm.obs);
-                        let cons = (ov.cons && ov.cons.trim()) ? ov.cons : (autoCons || rm.cons);
-
-                        // 5) Debug pour comparer avec preview
-                        /*console.log("=== DEBUG", g.studentId);
-                        console.log("devoir/comp/avg:", g.devoir, g.comp, avg);
-                        console.log("rm:", rm);
-                        console.log("ov:", ov);
-                        console.log("consBandIdx:", consBandIdx);
-                        console.log("teacherObsAll.length:", teacherObsAll.length);
-                        console.log("obsCandidates[0]:", obsCandidates[0]);
-                        console.log("consCandidates[0]:", consCandidates[0]);
-                        console.log("teacherConsBand[0]:", teacherConsBand[0]);
-                        console.log("autoObs:", autoObs);
-                        console.log("autoCons:", autoCons);
-                        console.log("FINAL Excel:", obs, "|", cons);
-                        */
                         // 6) Écriture
                         ws.getRow(r).getCell(colIndices.obs).value = obs;
                         ws.getRow(r).getCell(colIndices.cons).value = cons;
@@ -6901,6 +6855,79 @@
                 alert(`✅ ${plan.length} classe(s) mises à jour\n✅ ${totalMatches} élève(s) mis à jour`);
                 return { correctedBuffer, totalMatches, perClassStats }; // optionnel si tu veux utiliser ces infos ensuite
             }
+            window.computeFinalObsCons = function ({
+                className,
+                studentId,
+                devoir,
+                comp,
+                avg,
+                currentLanguage
+            }) {
+                const avgNum = Number(avg);
+                if (!Number.isFinite(avgNum)) return { obs: "", cons: "", bandIdx: -1 };
+
+                const scopeKey = getRemarksScopeKey(className);
+                const ov = getOverride(scopeKey, studentId) || {};
+
+                // IMPORTANT: nom canonique (dans ton app c’est REMARKSMESSAGES)
+                const R = window.REMARKSMESSAGES || window.REMARKS_MESSAGES;
+
+                // Palier unique (moyenne) pour Obs & Cons
+                const bandIdx = R ? findBandIndexLocal(R.avgBands, avgNum) : -1;
+
+                // Moteur global (messages “conseil de classe”)
+                const rm = window.computeExportRemarks
+                    ? window.computeExportRemarks({
+                        devoir,
+                        comp,
+                        avg: avgNum,
+                        currentLanguage,
+                        seed: studentId || 0,
+                        customRemarks: ensureGlobalRemarks()
+                    })
+                    : { obs: "", cons: "" };
+
+                // Bibliothèque prof (par palier)
+                const teacherObsBand = getTeacherMessages(`obs@${bandIdx}`) || [];
+                const teacherConsBand = getTeacherMessages(`cons@${bandIdx}`) || [];
+
+                // Suggestions moteur: compat avec les 2 signatures possibles
+                let obsCandidates = [];
+                try {
+                    if (typeof window.getObsCandidatesForRow === "function") {
+                        obsCandidates = (window.getObsCandidatesForRow.length >= 2)
+                            ? (window.getObsCandidatesForRow(devoir, comp) || [])
+                            : (window.getObsCandidatesForRow(avgNum) || []);
+                    }
+                } catch (e) { obsCandidates = []; }
+
+                let consCandidates = [];
+                try {
+                    if (typeof window.getConsCandidatesForRow === "function") {
+                        consCandidates = window.getConsCandidatesForRow(avgNum) || [];
+                    }
+                } catch (e) { consCandidates = []; }
+
+                // Pools (ordre stable)
+                const obsPool = [...teacherObsBand, ...obsCandidates];
+                if (rm.obs) obsPool.push(rm.obs);
+
+                const consPool = [...teacherConsBand, ...consCandidates];
+                if (rm.cons) consPool.push(rm.cons);
+
+                // Seed identique partout
+                const seedObs = `${className}|${studentId}|obs|${avgNum}|band:${bandIdx}`;
+                const seedCons = `${className}|${studentId}|cons|${avgNum}|band:${bandIdx}`;
+
+                const autoObs = obsPool.length ? pickDeterministic(obsPool, seedObs) : (rm.obs || "");
+                const autoCons = consPool.length ? pickDeterministic(consPool, seedCons) : (rm.cons || "");
+
+                // Final: override > auto
+                const finalObs = (ov.obs && ov.obs.trim()) ? ov.obs : autoObs;
+                const finalCons = (ov.cons && ov.cons.trim()) ? ov.cons : autoCons;
+
+                return { obs: finalObs || "", cons: finalCons || "", bandIdx };
+            };
 
             function getObsConsFromLocalStorageOnly(scopeKey, studentId) {
                 const REMARKSOVERRIDEKEY = "corrections-remarks-overrides-v1";
