@@ -605,11 +605,15 @@
             border: 1px solid #d1d5db;
             border-radius: 9999px;
             font-size: 12px;
-            background: #f3f4f6;
+            background: white;
             color: #374151;
             cursor: grab;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.2s;
             user-select: none;
+        }
+
+        .assignment-tag:hover {
+            filter: brightness(0.95);
         }
 
         .assignment-tag:active {
@@ -623,10 +627,8 @@
         }
 
         .assignment-tag.selected {
-            background: #dbeafe;
-            color: #1d4ed8;
-            border-color: #93c5fd;
             font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .assignment-tag-container.drag-over {
@@ -1177,6 +1179,35 @@
             // Tri du récapitulatif
             let summarySort = { key: 'name', direction: 'asc' };
             let summaryAssignmentFilter = new Set();
+
+            // Gestion des couleurs par classe
+            const classColorsMap = {};
+            const availableClassColors = [
+                '#3b82f6', // blue-500
+                '#10b981', // emerald-500
+                '#f59e0b', // amber-500
+                '#ef4444', // red-500
+                '#8b5cf6', // violet-500
+                '#ec4899', // pink-500
+                '#06b6d4', // cyan-500
+                '#f97316', // orange-500
+                '#14b8a6', // teal-500
+                '#6366f1', // indigo-500
+            ];
+
+            function getClassColor(className) {
+                if (!className) return '#6b7280'; // gray-500
+                const trimmed = className.trim();
+                if (classColorsMap[trimmed]) return classColorsMap[trimmed];
+                
+                let hash = 0;
+                for (let i = 0; i < trimmed.length; i++) {
+                    hash = trimmed.charCodeAt(i) + ((hash << 5) - hash);
+                }
+                const colorIndex = Math.abs(hash) % availableClassColors.length;
+                classColorsMap[trimmed] = availableClassColors[colorIndex];
+                return classColorsMap[trimmed];
+            }
 
             // Current editing state
             let editingAssignmentId = null;
@@ -2839,6 +2870,20 @@
                     filteredAssignments = filteredAssignments.filter(a => classFilterSet.has(a.className));
                 }
 
+                // Sauvegarder tous les devoirs pertinents (pour les tags) avant de filtrer par sélection
+                const allRelevantAssignments = [...filteredAssignments];
+
+                const sortAssignments = (arr) => {
+                    arr.sort((a, b) => {
+                        const oa = window.summaryAssignmentOrder.indexOf(a.id);
+                        const ob = window.summaryAssignmentOrder.indexOf(b.id);
+                        if (oa === -1 && ob === -1) return 0;
+                        if (oa === -1) return 1;
+                        if (ob === -1) return -1;
+                        return oa - ob;
+                    });
+                };
+
                 if (summaryAssignmentFilter && summaryAssignmentFilter.size > 0) {
                     filteredAssignments = filteredAssignments.filter(a => summaryAssignmentFilter.has(a.id));
                 }
@@ -2854,19 +2899,13 @@
                     } catch (e) { window.summaryAssignmentOrder = []; }
                 }
                 const ensureOrderIds = () => {
-                    const ids = filteredAssignments.map(a => a.id);
+                    const ids = allRelevantAssignments.map(a => a.id);
                     const set = new Set(window.summaryAssignmentOrder);
                     ids.forEach(id => { if (!set.has(id)) window.summaryAssignmentOrder.push(id); });
                 };
                 ensureOrderIds();
-                filteredAssignments.sort((a, b) => {
-                    const oa = window.summaryAssignmentOrder.indexOf(a.id);
-                    const ob = window.summaryAssignmentOrder.indexOf(b.id);
-                    if (oa === -1 && ob === -1) return 0;
-                    if (oa === -1) return 1;
-                    if (ob === -1) return -1;
-                    return oa - ob;
-                });
+                sortAssignments(filteredAssignments);
+                sortAssignments(allRelevantAssignments);
 
                 const isAllStudents = !selectedClass && !searchTerm && filteredStudents.length === data.students.length;
                 const assignmentsFiltered = (summaryAssignmentFilter && summaryAssignmentFilter.size > 0) || filteredAssignments.length < data.assignments.length;
@@ -2927,8 +2966,9 @@
 
                 const tagContainer = document.getElementById('summary-assignment-tags');
                 if (tagContainer) {
-                    const tagHtml = filteredAssignments.map(a => {
+                    const tagHtml = allRelevantAssignments.map(a => {
                         const selected = summaryAssignmentFilter.has(a.id);
+                        const classColor = getClassColor(a.className);
                         return `
                             <div class="assignment-tag-wrapper flex items-center gap-1" 
                                  draggable="true" 
@@ -2940,6 +2980,7 @@
                                  ondrop="handleAssignmentDrop(event, '${a.id}')">
                                 <button class="assignment-tag ${selected ? 'selected' : ''}" 
                                         onclick="toggleSummaryAssignmentTag('${a.id}')"
+                                        style="${selected ? `background-color: ${classColor}; border-color: ${classColor}; color: white;` : `border-color: ${classColor}; color: ${classColor};`}"
                                         title="${t.dragToReorder || 'Glisser pour réorganiser'}">
                                     ${a.name}
                                 </button>
@@ -3099,6 +3140,20 @@
                     filteredAssignments = filteredAssignments.filter(a => classFilterSet.has(a.className));
                 }
 
+                // Sauvegarder tous les devoirs pertinents (pour les tags) avant de filtrer par sélection
+                const allRelevantAssignments = [...filteredAssignments];
+
+                const sortAssignments = (arr) => {
+                    arr.sort((a, b) => {
+                        const oa = window.summaryAssignmentOrder.indexOf(a.id);
+                        const ob = window.summaryAssignmentOrder.indexOf(b.id);
+                        if (oa === -1 && ob === -1) return 0;
+                        if (oa === -1) return 1;
+                        if (ob === -1) return -1;
+                        return oa - ob;
+                    });
+                };
+
                 if (summaryAssignmentFilter && summaryAssignmentFilter.size > 0) {
                     filteredAssignments = filteredAssignments.filter(a => summaryAssignmentFilter.has(a.id));
                 }
@@ -3114,7 +3169,7 @@
                     } catch (e) { window.summaryAssignmentOrder = []; }
                 }
                 const ensureOrderIds = () => {
-                    const ids = filteredAssignments.map(a => a.id);
+                    const ids = allRelevantAssignments.map(a => a.id);
                     const set = new Set(window.summaryAssignmentOrder);
                     ids.forEach(id => { if (!set.has(id)) window.summaryAssignmentOrder.push(id); });
                 };
@@ -3127,9 +3182,24 @@
 
                 // Créer un map des devoirs par classe
                 const assignmentsByClass = {};
+                const allRelevantAssignmentsByClass = {};
+
                 classesInOrder.forEach(className => {
-                    assignmentsByClass[className] = filteredAssignments
-                        .filter(a => (a.className || '').trim() === className)
+                    const trimmedClass = className.trim();
+                    
+                    assignmentsByClass[trimmedClass] = filteredAssignments
+                        .filter(a => (a.className || '').trim() === trimmedClass)
+                        .sort((a, b) => {
+                            const oa = window.summaryAssignmentOrder.indexOf(a.id);
+                            const ob = window.summaryAssignmentOrder.indexOf(b.id);
+                            if (oa === -1 && ob === -1) return 0;
+                            if (oa === -1) return 1;
+                            if (ob === -1) return -1;
+                            return oa - ob;
+                        });
+
+                    allRelevantAssignmentsByClass[trimmedClass] = allRelevantAssignments
+                        .filter(a => (a.className || '').trim() === trimmedClass)
                         .sort((a, b) => {
                             const oa = window.summaryAssignmentOrder.indexOf(a.id);
                             const ob = window.summaryAssignmentOrder.indexOf(b.id);
@@ -3252,11 +3322,12 @@
                 if (tagContainer) {
                     let tagHtml = '';
                     classesInOrder.forEach(className => {
-                        const classAssignments = assignmentsByClass[className] || [];
+                        const classAssignments = allRelevantAssignmentsByClass[className.trim()] || [];
                         if (classAssignments.length === 0) return;
 
+                        const classColor = getClassColor(className);
                         tagHtml += `<div class="flex flex-wrap items-center gap-1 p-2 bg-gray-100 rounded mb-2">
-                <span class="font-bold text-sm text-gray-600 mr-2">${className}:</span>`;
+                <span class="font-bold text-sm mr-2" style="color: ${classColor}">${className}:</span>`;
 
                         classAssignments.forEach(a => {
                             const selected = summaryAssignmentFilter.has(a.id);
@@ -3271,6 +3342,7 @@
                                      ondrop="handleAssignmentDrop(event, '${a.id}')">
                                     <button class="assignment-tag ${selected ? 'selected' : ''}" 
                                             onclick="toggleSummaryAssignmentTag('${a.id}')"
+                                            style="${selected ? `background-color: ${classColor}; border-color: ${classColor}; color: white;` : `border-color: ${classColor}; color: ${classColor};`}"
                                             title="${t.dragToReorder || 'Glisser pour réorganiser'}">
                                         ${a.name}
                                     </button>
@@ -3453,6 +3525,20 @@
                     filteredAssignments = filteredAssignments.filter(a => classFilterSet.has(a.className));
                 }
 
+                // Sauvegarder tous les devoirs pertinents (pour les tags) avant de filtrer par sélection
+                const allRelevantAssignments = [...filteredAssignments];
+
+                const sortAssignments = (arr) => {
+                    arr.sort((a, b) => {
+                        const oa = window.summaryAssignmentOrder.indexOf(a.id);
+                        const ob = window.summaryAssignmentOrder.indexOf(b.id);
+                        if (oa === -1 && ob === -1) return 0;
+                        if (oa === -1) return 1;
+                        if (ob === -1) return -1;
+                        return oa - ob;
+                    });
+                };
+
                 if (summaryAssignmentFilter && summaryAssignmentFilter.size > 0) {
                     filteredAssignments = filteredAssignments.filter(a => summaryAssignmentFilter.has(a.id));
                 }
@@ -3468,19 +3554,13 @@
                     } catch (e) { window.summaryAssignmentOrder = []; }
                 }
                 const ensureOrderIds = () => {
-                    const ids = filteredAssignments.map(a => a.id);
+                    const ids = allRelevantAssignments.map(a => a.id);
                     const set = new Set(window.summaryAssignmentOrder);
                     ids.forEach(id => { if (!set.has(id)) window.summaryAssignmentOrder.push(id); });
                 };
                 ensureOrderIds();
-                filteredAssignments.sort((a, b) => {
-                    const oa = window.summaryAssignmentOrder.indexOf(a.id);
-                    const ob = window.summaryAssignmentOrder.indexOf(b.id);
-                    if (oa === -1 && ob === -1) return 0;
-                    if (oa === -1) return 1;
-                    if (ob === -1) return -1;
-                    return oa - ob;
-                });
+                sortAssignments(filteredAssignments);
+                sortAssignments(allRelevantAssignments);
 
                 const isAllStudents = !selectedClass && !searchTerm && filteredStudents.length === data.students.length;
                 const assignmentsFiltered = (summaryAssignmentFilter && summaryAssignmentFilter.size > 0) || filteredAssignments.length < data.assignments.length;
@@ -3561,8 +3641,9 @@
                 // Tags des devoirs (tous les devoirs filtrés)
                 const tagContainer = document.getElementById('summary-assignment-tags');
                 if (tagContainer) {
-                    const tagHtml = filteredAssignments.map(a => {
+                    const tagHtml = allRelevantAssignments.map(a => {
                         const selected = summaryAssignmentFilter.has(a.id);
+                        const classColor = getClassColor(a.className);
                         return `
                             <div class="assignment-tag-wrapper flex items-center gap-1" 
                                  draggable="true" 
@@ -3574,6 +3655,7 @@
                                  ondrop="handleAssignmentDrop(event, '${a.id}')">
                                 <button class="assignment-tag ${selected ? 'selected' : ''}" 
                                         onclick="toggleSummaryAssignmentTag('${a.id}')"
+                                        style="${selected ? `background-color: ${classColor}; border-color: ${classColor}; color: white;` : `border-color: ${classColor}; color: ${classColor};`}"
                                         title="${t.dragToReorder || 'Glisser pour réorganiser'}">
                                     ${a.name} <span class="text-xs opacity-70">(${a.className || '?'})</span>
                                 </button>
@@ -5901,42 +5983,7 @@
                         table { width: 100%; border-collapse: collapse; font-size: 14px; }
                         th, td { border: 1px solid #444; padding: 6px 8px; text-align: center; vertical-align: top; }
                         th { background: #eee; }
-                            .assignment-tag {
-                cursor: grab;
-                transition: transform 0.2s, box-shadow 0.2s;
-                user-select: none;
-            }
-
-            .assignment-tag:active {
-                cursor: grabbing;
-            }
-
-            .assignment-tag.dragging {
-                opacity: 0.5;
-                transform: scale(0.95);
-                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            }
-
-            .assignment-tag-container.drag-over {
-                background-color: rgba(59, 130, 246, 0.1);
-                border-radius: 0.5rem;
-            }
-
-            .assignment-tag-wrapper {
-                transition: all 0.2s;
-                position: relative;
-            }
-
-            .drag-over-left {
-                border-left: 4px solid #3b82f6;
-                padding-left: 4px;
-            }
-
-            .drag-over-right {
-                border-right: 4px solid #3b82f6;
-                padding-right: 4px;
-            }
-        </style>
+                        </style>
                     </head>
                     <body>
                         <h3 style="margin-bottom:20px;">${escapeHtml(className)}</h3>
