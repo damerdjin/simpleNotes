@@ -623,12 +623,12 @@
         .assignment-tag.dragging {
             opacity: 0.5;
             transform: scale(0.95);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
 
         .assignment-tag.selected {
             font-weight: 600;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .assignment-tag-container.drag-over {
@@ -766,11 +766,12 @@
                             <!-- Chips will be injected here -->
                         </div>
                     </div>
-                    
+
                     <div class="flex gap-4 flex-wrap">
                         <div class="flex-1 min-w-48">
                             <input type="text" id="filter-name-assignments" placeholder="Rechercher un devoir..."
-                                onkeyup="renderAssignments()" class="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 outline-none">
+                                onkeyup="renderAssignments()"
+                                class="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 outline-none">
                         </div>
                     </div>
                 </div>
@@ -1063,13 +1064,13 @@
                         element.textContent = t[key];
                     }
                 });
-                
+
                 // Mettre à jour le placeholder du champ de recherche
                 const searchInput = document.getElementById('student-search');
                 if (searchInput && t.search) {
                     searchInput.placeholder = t.search;
                 }
-                
+
                 // Titre et sous-titre
                 setTextContent('h1', t.appTitle);
                 setTextContent('header p', t.appSubtitle);
@@ -1098,13 +1099,13 @@
                 // Onglet Devoirs
                 setTextContent('#content-assignments h2', t.assignmentsManagement);
                 setTextContent('button[onclick="openAssignmentModal()"]', t.createAssignment);
-                
+
                 // Labels des filtres
                 const chipsContainer = document.querySelector('#assignment-class-chips');
                 if (chipsContainer && chipsContainer.previousElementSibling) {
                     chipsContainer.previousElementSibling.textContent = t.filterByClass;
                 }
-                
+
                 setAttribute('#filter-name-assignments', 'placeholder', t.searchAssignment);
 
                 // Modal devoir
@@ -1114,7 +1115,7 @@
                 setTextContent('button[onclick="addExercise()"]', t.addExercise);
                 setTextContent('.modal button:first-child', t.cancel);
                 setTextContent('.modal button:last-child', t.save);
-                
+
                 // Traduction dynamique des éléments spécifiques au mode global si le modal est ouvert
                 setTextContent('label[for="assignment-global-only"]', t.globalOnlyLabel);
                 setTextContent('#global-maxpoints-container label', t.globalMaxLabel);
@@ -1154,7 +1155,7 @@
                 // Mettre à jour les tooltips simples
                 document.querySelectorAll('button[onclick*="openAssignmentModal"]').forEach(btn => btn.title = t.edit);
                 document.querySelectorAll('button[onclick*="deleteAssignment"]').forEach(btn => btn.title = t.delete);
-                
+
                 // Ne pas écraser les tooltips spécifiques de duplication s'ils sont déjà précis
                 document.querySelectorAll('button[onclick*="duplicateAssignment"]').forEach(btn => {
                     if (!btn.title || btn.title === t.duplicate) {
@@ -1199,7 +1200,7 @@
                 if (!className) return '#6b7280'; // gray-500
                 const trimmed = className.trim();
                 if (classColorsMap[trimmed]) return classColorsMap[trimmed];
-                
+
                 let hash = 0;
                 for (let i = 0; i < trimmed.length; i++) {
                     hash = trimmed.charCodeAt(i) + ((hash << 5) - hash);
@@ -1566,7 +1567,7 @@
                             const sourceAssignments = data.assignments.filter(a => a.id !== assignmentId && a.className === assignment.className);
                             if (sourceAssignments.length > 0) {
                                 copyContainer.classList.remove('hidden');
-                                copySelect.innerHTML = `<option value="">${t.noCopyGrades}</option>` + 
+                                copySelect.innerHTML = `<option value="">${t.noCopyGrades}</option>` +
                                     sourceAssignments.map(a => `<option value="${a.id}">${a.name} (${a.className})</option>`).join('');
                             } else {
                                 copyContainer.classList.add('hidden');
@@ -1970,9 +1971,9 @@
                 }
 
                 // Vérifier l'unicité du nom dans la classe
-                const isDuplicate = data.assignments.some(a => 
-                    a.id !== editingAssignmentId && 
-                    a.className.trim() === className.trim() && 
+                const isDuplicate = data.assignments.some(a =>
+                    a.id !== editingAssignmentId &&
+                    a.className.trim() === className.trim() &&
                     a.name.trim().toLowerCase() === name.trim().toLowerCase()
                 );
 
@@ -1988,7 +1989,7 @@
                     const globalDefaultInput = document.getElementById('assignment-global-defaultgrade');
                     const globalDefaultValue = globalDefaultInput ? globalDefaultInput.value.trim() : '';
                     const globalDefaultGrade = globalDefaultValue === '' ? '' : (parseFloat(globalDefaultValue) || 0);
-                    
+
                     let exId = genId();
                     if (editingAssignmentId) {
                         const oldAssignment = data.assignments.find(a => a.id === editingAssignmentId);
@@ -2050,11 +2051,11 @@
                 } else if (!editingAssignmentId && savedId) {
                     // Application des notes par défaut UNIQUEMENT lors de la création
                     const studentsInClass = data.students.filter(s => s.className === className);
-                    
+
                     if (isGlobalAssignment) {
                         const globalDefaultInput = document.getElementById('assignment-global-defaultgrade');
                         const globalDefaultValue = globalDefaultInput ? globalDefaultInput.value.trim() : '';
-                        
+
                         if (globalDefaultValue !== '') { // N'applique que si le champ n'est pas vide
                             const globalDefaultGrade = parseFloat(globalDefaultValue) || 0;
                             studentsInClass.forEach(student => {
@@ -2069,25 +2070,25 @@
                         const exId = ex.id;
                         const exDefaultStr = (ex.defaultGrade !== undefined && ex.defaultGrade !== null) ? ex.defaultGrade.toString().trim() : '';
                         const exDefault = parseFloat(exDefaultStr);
-                        
+
                         // Questions directes
                         const directQuestions = ex.questions || [];
                         const parts = ex.parts || [];
-                        
+
                         studentsInClass.forEach(student => {
                             if (!data.grades[student.id]) data.grades[student.id] = {};
                             if (!data.grades[student.id][savedId]) data.grades[student.id][savedId] = {};
                             if (!data.grades[student.id][savedId][exId]) data.grades[student.id][savedId][exId] = {};
-                            
+
                             const stExGrades = data.grades[student.id][savedId][exId];
-                            
+
                             // Cas 1: Pas de questions, note directe sur l'exercice
                             if (directQuestions.length === 0 && parts.length === 0) {
                                 if (exDefaultStr !== '' && !isNaN(exDefault)) {
                                     if (!stExGrades['direct']) stExGrades['direct'] = {};
                                     if (!stExGrades['direct']['direct']) stExGrades['direct']['direct'] = {};
                                     stExGrades['direct']['direct']['direct'] = exDefault;
-                                    
+
                                     if (!stExGrades['final']) stExGrades['final'] = {};
                                     if (!stExGrades['final']['final']) stExGrades['final']['final'] = {};
                                     stExGrades['final']['final']['final'] = exDefault;
@@ -2113,7 +2114,7 @@
                                         stExGrades['direct'][q.id]['direct'] = qDefault;
                                     }
                                 });
-                                
+
                                 // Cas 3: Parties
                                 parts.forEach(part => {
                                     (part.questions || []).forEach(q => {
@@ -2142,7 +2143,7 @@
                 }
 
                 saveData();
-                
+
                 // Forcer le recalcul des totaux pour tous les élèves de la classe
                 const studentsInClass = data.students.filter(s => s.className === className);
                 studentsInClass.forEach(student => {
@@ -2298,7 +2299,7 @@
                     const nbStudents = classStudents.length;
                     const nbGrades = classStudents.filter(s => hasAnyGradeForAssignment(s.id, a.id)).length;
                     const completionRate = nbStudents > 0 ? Math.round((nbGrades / nbStudents) * 100) : 0;
-                    
+
                     return `
                     <div class="bg-white border rounded-xl overflow-hidden hover:shadow-md transition-all group flex flex-col h-full" style="flex-direction: column !important;">
                         <!-- En-tête de la carte (cliquable pour accordéon) -->
@@ -2349,21 +2350,21 @@
                         <div id="accordion-${a.id}" class="accordion-content">
                             <div class="p-4 border-t space-y-3 bg-white text-sm">
                                 ${a.exercises.map((ex, i) => {
-                                    const parts = ex.parts || [];
-                                    const directQuestions = ex.questions || [];
-                                    let exContent = '';
-                                    if (directQuestions.length > 0) {
-                                        exContent += `<div class="ml-4 rtl:mr-4 rtl:ml-0 text-gray-600 mt-1">${directQuestions.map(q => `<span class="inline-block mr-2 rtl:ml-2 rtl:mr-0 text-xs">${q.name || 'Q?'}: ${getQuestionMaxPoints(q)} ${t.points}</span>`).join(' • ')}</div>`;
-                                    }
-                                    if (parts.length > 0) {
-                                        exContent += parts.map(part => `
+                        const parts = ex.parts || [];
+                        const directQuestions = ex.questions || [];
+                        let exContent = '';
+                        if (directQuestions.length > 0) {
+                            exContent += `<div class="ml-4 rtl:mr-4 rtl:ml-0 text-gray-600 mt-1">${directQuestions.map(q => `<span class="inline-block mr-2 rtl:ml-2 rtl:mr-0 text-xs">${q.name || 'Q?'}: ${getQuestionMaxPoints(q)} ${t.points}</span>`).join(' • ')}</div>`;
+                        }
+                        if (parts.length > 0) {
+                            exContent += parts.map(part => `
                                             <div class="ml-4 rtl:mr-4 rtl:ml-0 mt-1 border-l rtl:border-r rtl:border-l-0 pl-2 rtl:pr-2 rtl:pl-0">
                                                 <span class="text-purple-600 font-medium">${part.name}:</span>
                                                 <span class="text-gray-500 italic text-xs">(${(part.questions || []).map(q => q.name || 'Q?').join(', ')})</span>
                                             </div>
                                         `).join('');
-                                    }
-                                    return `
+                        }
+                        return `
                                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-100 shadow-sm">
                                             <div class="flex justify-between items-center mb-1">
                                                 <strong class="text-gray-700">${t.exercise} ${i + 1}${ex.name ? ' - ' + ex.name : ''}</strong>
@@ -2372,7 +2373,7 @@
                                             ${exContent}
                                         </div>
                                     `;
-                                }).join('')}
+                    }).join('')}
                             </div>
                         </div>
                     </div>`;
@@ -3186,7 +3187,7 @@
 
                 classesInOrder.forEach(className => {
                     const trimmedClass = className.trim();
-                    
+
                     assignmentsByClass[trimmedClass] = filteredAssignments
                         .filter(a => (a.className || '').trim() === trimmedClass)
                         .sort((a, b) => {
@@ -3971,7 +3972,7 @@
             function handleAssignmentDragEnd(e) {
                 const draggingEl = document.querySelector('.assignment-tag-wrapper.dragging');
                 if (draggingEl) draggingEl.classList.remove('dragging');
-                
+
                 // Nettoyer les styles de survol
                 document.querySelectorAll('.assignment-tag-wrapper').forEach(el => {
                     el.classList.remove('drag-over-left', 'drag-over-right');
@@ -3981,18 +3982,18 @@
             function handleAssignmentDragOver(e, id) {
                 e.preventDefault();
                 if (draggedAssignmentId === id) return;
-                
+
                 const target = e.target.closest('.assignment-tag-wrapper');
                 const rect = target.getBoundingClientRect();
                 const midpoint = rect.left + rect.width / 2;
-                
+
                 target.classList.remove('drag-over-left', 'drag-over-right');
                 if (e.clientX < midpoint) {
                     target.classList.add('drag-over-left');
                 } else {
                     target.classList.add('drag-over-right');
                 }
-                
+
                 e.dataTransfer.dropEffect = 'move';
             }
 
@@ -4020,7 +4021,7 @@
 
                 // Retirer l'élément de sa position actuelle
                 arr.splice(fromIndex, 1);
-                
+
                 // Recalculer l'index cible après retrait
                 toIndex = arr.indexOf(targetId);
                 if (dropAfter) toIndex++;
@@ -4191,7 +4192,7 @@
                     }
                     scopes.push("obs");
                     scopes.push("cons");
-                    
+
                     scopes.forEach(scope => {
                         const msgs = getTeacherMessages(scope) || [];
                         if (msgs.length > 0) {
@@ -4290,7 +4291,7 @@
                                     // 1) window.REMARKS_MESSAGES
                                     // On s'assure que addTeacherMessage fonctionnera
                                     msgs.forEach(m => addTeacherMessage(scope, m));
-                                    
+
                                     console.log(`✅ ${scope} importé dans la bibliothèque locale`);
                                 }
                             });
@@ -5153,18 +5154,18 @@
             function resetExportConfig() {
                 const className = document.getElementById('select-class-export')?.value || '';
                 if (!className) return;
-                
+
                 // 1) Nettoyer la configuration de mapping des notes
                 delete exportPrepConfig.byClass[className];
                 saveExportPrepConfig();
-                
+
                 // 2) Nettoyer les commentaires personnalisés (overrides) pour cette classe
                 const scopeKey = getRemarksScopeKey(className);
                 if (remarksOverrides[scopeKey]) {
                     delete remarksOverrides[scopeKey];
                     saveRemarksOverrides(remarksOverrides);
                 }
-                
+
                 renderExportPrep();
             }
 
@@ -5401,13 +5402,13 @@
                 translatePage();
             }
 
-function openRemarksModal() {
-  const t = translations[currentLanguage];
-  const overlay = document.createElement("div");
-  overlay.id = "remarks-modal";
-  overlay.className = "fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50";
+            function openRemarksModal() {
+                const t = translations[currentLanguage];
+                const overlay = document.createElement("div");
+                overlay.id = "remarks-modal";
+                overlay.className = "fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50";
 
-  overlay.innerHTML = `
+                overlay.innerHTML = `
     <div class="bg-white rounded-xl shadow-xl w-[92%] max-w-4xl" style="max-height:85vh; overflow-y:auto;">
       <div class="p-4 border-b flex items-center justify-between gap-3">
         <div class="font-bold">${escapeHtml(t?.libraryTitle || "Bibliothèque Obs/Cons")}</div>
@@ -5446,82 +5447,82 @@ function openRemarksModal() {
     </div>
   `;
 
-  document.body.appendChild(overlay);
+                document.body.appendChild(overlay);
 
-  // Langue par défaut = langue UI actuelle (via ton helper existant)
-  try {
-    document.getElementById("lib-lang").value = langKey(); // FR/EN/AR
-  } catch {}
+                // Langue par défaut = langue UI actuelle (via ton helper existant)
+                try {
+                    document.getElementById("lib-lang").value = langKey(); // FR/EN/AR
+                } catch { }
 
-  renderTeacherLibraryModal();
-}
+                renderTeacherLibraryModal();
+            }
 
-function closeRemarksModal() {
-  const el = document.getElementById("remarks-modal");
-  if (el) el.remove();
-}
+            function closeRemarksModal() {
+                const el = document.getElementById("remarks-modal");
+                if (el) el.remove();
+            }
 
-// --- RENDER / ACTIONS ---
+            // --- RENDER / ACTIONS ---
 
-function kindKeyOf(baseKind, bandIdx) {
-  return `${baseKind}@${bandIdx}`; // IMPORTANT: @
-}
+            function kindKeyOf(baseKind, bandIdx) {
+                return `${baseKind}@${bandIdx}`; // IMPORTANT: @
+            }
 
-function renderTeacherLibraryModal() {
-  const lang = document.getElementById("lib-lang")?.value || langKey();
-  const baseKind = document.getElementById("lib-kind")?.value || "obs"; // "obs"|"cons"
-  const q = (document.getElementById("lib-search")?.value || "").trim().toLowerCase();
+            function renderTeacherLibraryModal() {
+                const lang = document.getElementById("lib-lang")?.value || langKey();
+                const baseKind = document.getElementById("lib-kind")?.value || "obs"; // "obs"|"cons"
+                const q = (document.getElementById("lib-search")?.value || "").trim().toLowerCase();
 
-  const R = window.REMARKSMESSAGES;
-  const maxBands = baseKind === "obs"
-    ? (R?.diffBands?.length ?? 0)
-    : (R?.avgBands?.length ?? 0);
+                const R = window.REMARKSMESSAGES;
+                const maxBands = baseKind === "obs"
+                    ? (R?.diffBands?.length ?? 0)
+                    : (R?.avgBands?.length ?? 0);
 
-  // Remplir le select band
-  const bandSel = document.getElementById("lib-band");
-  if (bandSel && (!bandSel.options.length || bandSel.dataset.kind !== baseKind)) {
-    bandSel.dataset.kind = baseKind;
-    bandSel.innerHTML =
-      `<option value="ALL">Tous</option>` +
-      Array.from({ length: maxBands }, (_, i) => `<option value="${i}">Palier ${i}</option>`).join("");
-    bandSel.value = "ALL";
-  }
+                // Remplir le select band
+                const bandSel = document.getElementById("lib-band");
+                if (bandSel && (!bandSel.options.length || bandSel.dataset.kind !== baseKind)) {
+                    bandSel.dataset.kind = baseKind;
+                    bandSel.innerHTML =
+                        `<option value="ALL">Tous</option>` +
+                        Array.from({ length: maxBands }, (_, i) => `<option value="${i}">Palier ${i}</option>`).join("");
+                    bandSel.value = "ALL";
+                }
 
-  const bandValue = bandSel?.value ?? "ALL";
+                const bandValue = bandSel?.value ?? "ALL";
 
-  // Construire la liste (avec index réel pour supprimer proprement)
-  let items = [];
-  const bucket = teacherRemarksLibrary?.[lang] || {};
+                // Construire la liste (avec index réel pour supprimer proprement)
+                let items = [];
+                const bucket = teacherRemarksLibrary?.[lang] || {};
 
-  const pushFromKey = (k) => {
-    const arr = bucket[k];
-    if (!Array.isArray(arr)) return;
-    arr.forEach((msg, i) => items.push({ k, i, msg: String(msg) }));
-  };
+                const pushFromKey = (k) => {
+                    const arr = bucket[k];
+                    if (!Array.isArray(arr)) return;
+                    arr.forEach((msg, i) => items.push({ k, i, msg: String(msg) }));
+                };
 
-  if (bandValue === "ALL") {
-    // Uniquement obs@N / cons@N
-    const re = new RegExp(`^${baseKind}@\\d+$`);
-    Object.keys(bucket).filter(k => re.test(k)).sort((a,b) => a.localeCompare(b, "fr", { numeric:true }))
-      .forEach(pushFromKey);
-  } else {
-    pushFromKey(kindKeyOf(baseKind, bandValue));
-  }
+                if (bandValue === "ALL") {
+                    // Uniquement obs@N / cons@N
+                    const re = new RegExp(`^${baseKind}@\\d+$`);
+                    Object.keys(bucket).filter(k => re.test(k)).sort((a, b) => a.localeCompare(b, "fr", { numeric: true }))
+                        .forEach(pushFromKey);
+                } else {
+                    pushFromKey(kindKeyOf(baseKind, bandValue));
+                }
 
-  if (q) items = items.filter(x => x.msg.toLowerCase().includes(q));
+                if (q) items = items.filter(x => x.msg.toLowerCase().includes(q));
 
-  const meta = document.getElementById("lib-meta");
-  if (meta) meta.textContent = `${items.length} message(s)`;
+                const meta = document.getElementById("lib-meta");
+                if (meta) meta.textContent = `${items.length} message(s)`;
 
-  const box = document.getElementById("lib-list");
-  if (!box) return;
+                const box = document.getElementById("lib-list");
+                if (!box) return;
 
-  if (!items.length) {
-    box.innerHTML = `<div class="p-3 bg-gray-50 border rounded text-sm text-gray-600">Aucun message.</div>`;
-    return;
-  }
+                if (!items.length) {
+                    box.innerHTML = `<div class="p-3 bg-gray-50 border rounded text-sm text-gray-600">Aucun message.</div>`;
+                    return;
+                }
 
-  box.innerHTML = items.map(x => `
+                box.innerHTML = items.map(x => `
     <div class="p-3 border rounded flex items-start justify-between gap-3 bg-white">
       <div class="text-xs text-gray-400 w-20 flex-shrink-0">${escapeHtml(x.k)}</div>
       <div class="text-sm leading-snug whitespace-pre-wrap flex-1">${escapeHtml(x.msg)}</div>
@@ -5534,40 +5535,40 @@ function renderTeacherLibraryModal() {
     </div>
   `).join("");
 
-  // Bind safe (pas de onclick inline)
-  box.querySelectorAll("button.lib-del").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const L = btn.dataset.lang;
-      const K = btn.dataset.key;
-      const idx = parseInt(btn.dataset.index, 10);
-      const arr = teacherRemarksLibrary?.[L]?.[K];
-      if (!Array.isArray(arr)) return;
-      if (!(idx >= 0 && idx < arr.length)) return;
-      arr.splice(idx, 1);
-      saveTeacherLibrary(teacherRemarksLibrary);
-      renderTeacherLibraryModal();
-    });
-  });
-}
+                // Bind safe (pas de onclick inline)
+                box.querySelectorAll("button.lib-del").forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        const L = btn.dataset.lang;
+                        const K = btn.dataset.key;
+                        const idx = parseInt(btn.dataset.index, 10);
+                        const arr = teacherRemarksLibrary?.[L]?.[K];
+                        if (!Array.isArray(arr)) return;
+                        if (!(idx >= 0 && idx < arr.length)) return;
+                        arr.splice(idx, 1);
+                        saveTeacherLibrary(teacherRemarksLibrary);
+                        renderTeacherLibraryModal();
+                    });
+                });
+            }
 
-function deleteTeacherLibraryMessageByKey(lang, kindKey, msg) {
-  const arr = teacherRemarksLibrary?.[lang]?.[kindKey];
-  if (!Array.isArray(arr)) return;
-  const idx = arr.findIndex(x => String(x) === String(msg));
-  if (idx === -1) return;
-  arr.splice(idx, 1);
-  saveTeacherLibrary(teacherRemarksLibrary);
-  renderTeacherLibraryModal();
-}
+            function deleteTeacherLibraryMessageByKey(lang, kindKey, msg) {
+                const arr = teacherRemarksLibrary?.[lang]?.[kindKey];
+                if (!Array.isArray(arr)) return;
+                const idx = arr.findIndex(x => String(x) === String(msg));
+                if (idx === -1) return;
+                arr.splice(idx, 1);
+                saveTeacherLibrary(teacherRemarksLibrary);
+                renderTeacherLibraryModal();
+            }
 
-function deleteTeacherLibraryMessage(lang, kind, index) {
-  const arr = teacherRemarksLibrary?.[lang]?.[kind];
-  if (!Array.isArray(arr)) return;
-  if (index < 0 || index >= arr.length) return;
-  arr.splice(index, 1);
-  saveTeacherLibrary(teacherRemarksLibrary);
-  renderTeacherLibraryModal();
-}
+            function deleteTeacherLibraryMessage(lang, kind, index) {
+                const arr = teacherRemarksLibrary?.[lang]?.[kind];
+                if (!Array.isArray(arr)) return;
+                if (index < 0 || index >= arr.length) return;
+                arr.splice(index, 1);
+                saveTeacherLibrary(teacherRemarksLibrary);
+                renderTeacherLibraryModal();
+            }
 
 
 
@@ -5718,23 +5719,22 @@ function deleteTeacherLibraryMessage(lang, kind, index) {
                 }
                 return -1;
             }
-            function getObsCandidatesForRow(devoir, comp) {
-                const R = window.REMARKS_MESSAGES;
-                if (!R) return [];
-                const d = Number(devoir), c = Number(comp);
-                if (!Number.isFinite(d) || !Number.isFinite(c)) return [];
-                const diff = d - c;
-                const idx = findBandIndexLocal(R.diffBands, diff);
-                if (idx < 0) return [];
-                return (R.observations?.[langKey()]?.[idx]) || [];
-            }
-            function getConsCandidatesForRow(avg) {
-                const R = window.REMARKS_MESSAGES;
-                if (!R) return [];
+
+            function getObsCandidatesForRow(avg) {
+                const R = window.REMARKSMESSAGES;
+                if (!R) return;
                 const idx = findBandIndexLocal(R.avgBands, avg);
-                if (idx < 0) return [];
-                return (R.advice?.[langKey()]?.[idx]) || [];
+                if (idx < 0) return;
+                return R.observationsAvg?.[langKey()]?.[idx]; // nouveau dataset
             }
+
+window.getConsCandidatesForRow = function (avg) {
+  const R = window.REMARKSMESSAGES;
+  if (!R) return [];
+  const idx = findBandIndexLocal(R.avgBands, avg);
+  if (idx < 0) return [];
+  return R.advice?.[langKey()]?.[idx] || [];
+};
 
             function renderExportPreviewTable(className, cfg) {
                 const t = translations[currentLanguage];
@@ -5796,11 +5796,11 @@ function deleteTeacherLibraryMessage(lang, kind, index) {
                     const scopeKey = getRemarksScopeKey(className);
                     const ov = getOverride(scopeKey, s.id) || {};
                     const R = window.REMARKS_MESSAGES;
-                    
+
                     // Calcul des indices de paliers pour Obs et Cons
-                    const diff = (devoir !== null && comp !== null) ? (devoir - comp) : null;
-                    const obsBandIdx = (R && diff !== null) ? findBandIndexLocal(R.diffBands, diff) : -1;
+                    const obsBandIdx = R ? findBandIndexLocal(R.avgBands, moyenne) : -1;
                     const consBandIdx = R ? findBandIndexLocal(R.avgBands, moyenne) : -1;
+
 
                     // Récupération des messages personnalisés (bibliothèque prof)
                     const teacherObsBand = getTeacherMessages(`obs@${obsBandIdx}`);
@@ -5823,9 +5823,9 @@ function deleteTeacherLibraryMessage(lang, kind, index) {
                         ? pickDeterministic(obsPool, `${className}|${s.id}|obs|${moyenne}|band:${obsBandIdx}`)
                         : "";
 
-                    const obsCandidates = getObsCandidatesForRow(devoir, comp);
+                    const obsCandidates = getObsCandidatesForRow(moyenne);
                     const consCandidates = getConsCandidatesForRow(moyenne);
-                    
+
                     // Logique Auto Cons: moteur + bibliothèque band-specific
                     const consPool = [...teacherConsBand, ...consCandidates];
                     const autoCons = pickDeterministic(consPool, `${className}|${s.id}|cons|${moyenne}|band:${consBandIdx}`);
@@ -6001,7 +6001,7 @@ function deleteTeacherLibraryMessage(lang, kind, index) {
 
                     btnAuto.addEventListener("click", () => {
                         clearOverrideField(scopeKey, studentId, kind);
-                        renderExportPrep(); 
+                        renderExportPrep();
                     });
 
                     select.addEventListener("change", () => {
@@ -6027,12 +6027,12 @@ function deleteTeacherLibraryMessage(lang, kind, index) {
 
                         const bandIdx = parseInt(kind === "obs" ? (cell.dataset.obsBand || "-1") : (cell.dataset.consBand || "-1"), 10);
                         const label = kind === "obs" ? "obs" : "cons";
-                        
+
                         addTeacherMessage(`${label}@${bandIdx}`, msg);
-                        
+
                         // On enregistre aussi pour l'élève actuel
                         setOverride(scopeKey, studentId, { [kind]: msg });
-                        
+
                         renderExportPrep();
                     });
                 });
@@ -6711,7 +6711,7 @@ function deleteTeacherLibraryMessage(lang, kind, index) {
                         // 2) Overrides, comme preview
                         const ov = getOverride(scopeKey, g.studentId) || {};
                         const R = window.REMARKS_MESSAGES;
-                        
+
                         const diff = (g.devoir !== null && g.comp !== null) ? (g.devoir - g.comp) : null;
                         const obsBandIdx = (R && diff !== null) ? findBandIndexLocal(R.diffBands, diff) : -1;
                         const consBandIdx = R ? findBandIndexLocal(R.avgBands, avg) : -1;
@@ -6724,7 +6724,7 @@ function deleteTeacherLibraryMessage(lang, kind, index) {
                             ? pickDeterministic(obsPool, `${className}|${g.studentId}|obs|${avg}|band:${obsBandIdx}`)
                             : rm.obs;
 
-                        const obsCandidates = getObsCandidatesForRow(g.devoir, g.comp) || [];
+                        const obsCandidates = getObsCandidatesForRow(avg) || [];
                         const consCandidates = getConsCandidatesForRow(avg) || [];
                         const teacherConsBand = getTeacherMessages(`cons@${consBandIdx}`) || [];
                         const consPool = [...teacherConsBand, ...consCandidates];

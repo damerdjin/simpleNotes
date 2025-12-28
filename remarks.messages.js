@@ -5,9 +5,9 @@
 export const REMARKS = {
   // Paliers moyenne pour les conseils
   avgBands: [
-    { min: 0.00,  max: 5.99  },    // 0
-    { min: 6.00,  max: 8.99  },    // 1
-    { min: 9.00,  max: 9.99  },    // 2
+    { min: 0.00, max: 5.99 },    // 0
+    { min: 6.00, max: 8.99 },    // 1
+    { min: 9.00, max: 9.99 },    // 2
     { min: 10.00, max: 11.90 },    // 3
     { min: 12.00, max: 13.99 },    // 4
     { min: 14.00, max: 15.99 },    // 5
@@ -21,10 +21,10 @@ export const REMARKS = {
     { min: -20.0, max: -4.0 },   // 0: Comp >> Devoir (paradoxe)
     { min: -3.99, max: -2.0 },   // 1: Comp nettement mieux
     { min: -1.99, max: -0.5 },   // 2: Comp légèrement mieux
-    { min: -0.49, max:  0.49 },  // 3: Équilibré
-    { min:  0.5,  max:  1.99 },  // 4: Devoir légèrement mieux
-    { min:  2.0,  max:  3.99 },  // 5: Devoir nettement mieux
-    { min:  4.0,  max:  20.0 }   // 6: Devoir >> Comp (stress exam grave)
+    { min: -0.49, max: 0.49 },  // 3: Équilibré
+    { min: 0.5, max: 1.99 },  // 4: Devoir légèrement mieux
+    { min: 2.0, max: 3.99 },  // 5: Devoir nettement mieux
+    { min: 4.0, max: 20.0 }   // 6: Devoir >> Comp (stress exam grave)
   ],
 
   // Matrice observations: [diff_type][avg_band] → messages
@@ -327,5 +327,42 @@ export const REMARKS = {
       ["ممتاز. ساعد زملاءك، استكشف بدائل، تحدَّ نفسك بتمارين متقدمة. استهدف الإتقان الكامل."],
       ["أداء استثنائي. أنت قدوة. شارك تقنياتك، انغمس في المواضيع الصعبة، استهدف الكمال."]
     ]
+  },
+  //Obs par moyenne
+  observationsAvg: {
+    FR: [
+      ["Résultats très insuffisants. Un travail plus régulier est nécessaire.", "Les bases doivent être consolidées pour progresser."],
+      ["Résultats faibles. Il faut stabiliser les acquis et s’entraîner.", "Des efforts réguliers amélioreront nettement la situation."],
+      ["Moyenne fragile. Un petit gain de rigueur fera la différence.", "Des progrès sont possibles rapidement avec plus de constance."],
+      ["Ensemble correct. Continuez et visez plus de précision.", "Bon niveau, il faut consolider les points faibles."],
+      ["Résultats satisfaisants. Travail sérieux à maintenir.", "Bon travail, continuez avec la même régularité."],
+      ["Très bon niveau. Continuez à approfondir.", "Performance solide, gardez ce rythme."],
+      ["Excellent niveau. Bravo, continuez ainsi.", "Très bon travail, visez l’excellence durable."],
+      ["Niveau remarquable. Travail très maîtrisé.", "Excellence presque totale, continuez."],
+      ["Performance exceptionnelle. Félicitations.", "Maîtrise complète, continuez sur cette lancée."]
+    ],
+    EN: [
+      ["Résultats très insuffisants. Un travail plus régulier est nécessaire.", "Les bases doivent être consolidées pour progresser."],
+      ["Résultats faibles. Il faut stabiliser les acquis et s’entraîner.", "Des efforts réguliers amélioreront nettement la situation."],
+      ["Moyenne fragile. Un petit gain de rigueur fera la différence.", "Des progrès sont possibles rapidement avec plus de constance."],
+      ["Ensemble correct. Continuez et visez plus de précision.", "Bon niveau, il faut consolider les points faibles."],
+      ["Résultats satisfaisants. Travail sérieux à maintenir.", "Bon travail, continuez avec la même régularité."],
+      ["Très bon niveau. Continuez à approfondir.", "Performance solide, gardez ce rythme."],
+      ["Excellent niveau. Bravo, continuez ainsi.", "Très bon travail, visez l’excellence durable."],
+      ["Niveau remarquable. Travail très maîtrisé.", "Excellence presque totale, continuez."],
+      ["Performance exceptionnelle. Félicitations.", "Maîtrise complète, continuez sur cette lancée."]
+    ],
+    AR: [
+      ["Résultats très insuffisants. Un travail plus régulier est nécessaire.", "Les bases doivent être consolidées pour progresser."],
+      ["Résultats faibles. Il faut stabiliser les acquis et s’entraîner.", "Des efforts réguliers amélioreront nettement la situation."],
+      ["Moyenne fragile. Un petit gain de rigueur fera la différence.", "Des progrès sont possibles rapidement avec plus de constance."],
+      ["Ensemble correct. Continuez et visez plus de précision.", "Bon niveau, il faut consolider les points faibles."],
+      ["Résultats satisfaisants. Travail sérieux à maintenir.", "Bon travail, continuez avec la même régularité."],
+      ["Très bon niveau. Continuez à approfondir.", "Performance solide, gardez ce rythme."],
+      ["Excellent niveau. Bravo, continuez ainsi.", "Très bon travail, visez l’excellence durable."],
+      ["Niveau remarquable. Travail très maîtrisé.", "Excellence presque totale, continuez."],
+      ["Performance exceptionnelle. Félicitations.", "Maîtrise complète, continuez sur cette lancée."]
+    ]
   }
+
 };

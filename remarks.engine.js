@@ -96,6 +96,15 @@ export function computeAdviceByAverage(avg, currentLanguage, seed = 0) {
 
   return pick(Array.isArray(candidates) ? candidates : [], seed);
 }
+export function computeObservationByAverage(avg, currentLanguage, seed = 0) {
+  const lang = clampLang(currentLanguage);
+  const idx = findBandIndex(REMARKS.avgBands, avg);
+  if (idx < 0) return "";
+  const candidates = REMARKS.observationsAvg?.[lang]?.[idx] ?? [];
+  return pick(Array.isArray(candidates) ? candidates : [], seed);
+}
+
+
 
 /**
  * Export principal: croise les 2 dimensions pour un message hyper-personnalisé
@@ -111,7 +120,7 @@ export function computeExportRemarks(a, b, c, d, e) {
   if (a && typeof a === "object") {
     const { devoir, comp, avg, currentLanguage, seed = 0 } = a;
     return {
-      obs: computeObservationByDiff(devoir, comp, currentLanguage, seed),
+      obs: computeObservationByAverage(avg, currentLanguage, seed),
       cons: computeAdviceByAverage(avg, currentLanguage, seed + 1)
     };
   }
