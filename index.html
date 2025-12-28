@@ -5401,58 +5401,175 @@
                 translatePage();
             }
 
-            function openRemarksModal() {
-                const t = translations[currentLanguage];
-                const overlay = document.createElement('div');
-                overlay.id = 'remarks-modal';
-                overlay.className = 'fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50';
-                const gr = ensureGlobalRemarks();
-                const bands = gr.bands || [];
-                const lang = currentLanguage === 'fr' ? 'FR' : (currentLanguage === 'en' ? 'EN' : 'AR');
-                const msgs = gr[lang] || [];
-                const rows = bands.map((b, i) => {
-                    let items = '';
-                    for (let j = 0; j < 5; j++) {
-                        const m = (msgs[i] && msgs[i][j]) ? msgs[i][j] : { obs: '', cons: '' };
-                        items += `
-                          <tr>
-                            <td class="p-1 text-xs">${j + 1}</td>
-                            <td class="p-1"><textarea class="w-64 p-2 border rounded" data-band="${i}" data-msg="${j}" data-field="obs">${m.obs || ''}</textarea></td>
-                            <td class="p-1"><textarea class="w-64 p-2 border rounded" data-band="${i}" data-msg="${j}" data-field="cons">${m.cons || ''}</textarea></td>
-                          </tr>`;
-                    }
-                    return `
-                      <tr class="bg-gray-50">
-                        <td class="p-2"><input type="number" step="0.01" class="w-24 p-2 border rounded" value="${b.min}" data-band="${i}" data-field="min"></td>
-                        <td class="p-2"><input type="number" step="0.01" class="w-24 p-2 border rounded" value="${b.max}" data-band="${i}" data-field="max"></td>
-                        <td colspan="2" class="p-2">
-                          <table class="w-full text-sm"><thead><tr><th class="p-1">#</th><th class="p-1">${t.observationShort || 'Observation'}</th><th class="p-1">${t.adviceShort || 'Conseil'}</th></tr></thead><tbody>${items}</tbody></table>
-                        </td>
-                      </tr>`;
-                }).join('');
-                overlay.innerHTML = `
-                  <div class="bg-white rounded-xl shadow-xl w-[90%] max-w-5xl" style="max-height:85vh; overflow-y:auto;">
-                    <div class="p-4 border-b flex items-center justify-between">
-                      <div class="font-bold">${t.remarksTitle || 'Messages'}</div>
-                      <div class="flex items-center gap-2">
-                        <button class="px-3 py-1 rounded bg-amber-200" onclick="resetRemarksCurrentLanguage()">${t.reset || 'Réinitialiser'}</button>
-                        <button class="px-3 py-1 rounded bg-gray-200" onclick="closeRemarksModal()">${t.cancel || 'Annuler'}</button>
-                      </div>
-                    </div>
-                    <div class="p-4">
-                      <div class="mb-3 font-semibold">${t.gradeBands || ''} — ${lang}</div>
-                      <table class="w-full text-sm">
-                        <thead><tr><th class="p-2">${t.min || 'Min'}</th><th class="p-2">${t.max || 'Max'}</th><th class="p-2" colspan="2">${t.editRemarks || 'Messages'}</th></tr></thead>
-                        <tbody>${rows}</tbody>
-                      </table>
-                    </div>
-                    <div class="p-4 border-t flex justify-end gap-2">
-                      <button class="px-4 py-2 rounded bg-indigo-600 text-white" onclick="saveRemarksModal()">${t.save || 'Enregistrer'}</button>
-                    </div>
-                  </div>
-                `;
-                document.body.appendChild(overlay);
-            }
+function openRemarksModal() {
+  const t = translations[currentLanguage];
+  const overlay = document.createElement("div");
+  overlay.id = "remarks-modal";
+  overlay.className = "fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50";
+
+  overlay.innerHTML = `
+    <div class="bg-white rounded-xl shadow-xl w-[92%] max-w-4xl" style="max-height:85vh; overflow-y:auto;">
+      <div class="p-4 border-b flex items-center justify-between gap-3">
+        <div class="font-bold">${escapeHtml(t?.libraryTitle || "Bibliothèque Obs/Cons")}</div>
+        <button class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300"
+                onclick="closeRemarksModal()">
+          ${escapeHtml(t?.close || "Fermer")}
+        </button>
+      </div>
+
+      <div class="p-4 space-y-3">
+        <div class="flex flex-wrap items-center gap-2">
+          <label class="text-sm font-semibold text-gray-700">Type</label>
+          <select id="lib-kind" class="p-2 border rounded bg-white text-sm" onchange="renderTeacherLibraryModal()">
+            <option value="obs">Observation</option>
+            <option value="cons">Conseil</option>
+          </select>
+<label class="text-sm font-semibold text-gray-700 ml-3">Palier</label>
+<select id="lib-band" class="p-2 border rounded bg-white text-sm" onchange="renderTeacherLibraryModal()"></select>
+          <label class="text-sm font-semibold text-gray-700 ml-3">Langue</label>
+          <select id="lib-lang" class="p-2 border rounded bg-white text-sm" onchange="renderTeacherLibraryModal()">
+            <option value="FR">FR</option>
+            <option value="EN">EN</option>
+            <option value="AR">AR</option>
+          </select>
+
+          <input id="lib-search" class="flex-1 min-w-56 p-2 border rounded"
+                 placeholder="Rechercher..."
+                 oninput="renderTeacherLibraryModal()" />
+
+
+        </div>
+
+        <div id="lib-meta" class="text-sm text-gray-500"></div>
+        <div id="lib-list" class="space-y-2"></div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  // Langue par défaut = langue UI actuelle (via ton helper existant)
+  try {
+    document.getElementById("lib-lang").value = langKey(); // FR/EN/AR
+  } catch {}
+
+  renderTeacherLibraryModal();
+}
+
+function closeRemarksModal() {
+  const el = document.getElementById("remarks-modal");
+  if (el) el.remove();
+}
+
+// --- RENDER / ACTIONS ---
+
+function kindKeyOf(baseKind, bandIdx) {
+  return `${baseKind}@${bandIdx}`; // IMPORTANT: @
+}
+
+function renderTeacherLibraryModal() {
+  const lang = document.getElementById("lib-lang")?.value || langKey();
+  const baseKind = document.getElementById("lib-kind")?.value || "obs"; // "obs"|"cons"
+  const q = (document.getElementById("lib-search")?.value || "").trim().toLowerCase();
+
+  const R = window.REMARKSMESSAGES;
+  const maxBands = baseKind === "obs"
+    ? (R?.diffBands?.length ?? 0)
+    : (R?.avgBands?.length ?? 0);
+
+  // Remplir le select band
+  const bandSel = document.getElementById("lib-band");
+  if (bandSel && (!bandSel.options.length || bandSel.dataset.kind !== baseKind)) {
+    bandSel.dataset.kind = baseKind;
+    bandSel.innerHTML =
+      `<option value="ALL">Tous</option>` +
+      Array.from({ length: maxBands }, (_, i) => `<option value="${i}">Palier ${i}</option>`).join("");
+    bandSel.value = "ALL";
+  }
+
+  const bandValue = bandSel?.value ?? "ALL";
+
+  // Construire la liste (avec index réel pour supprimer proprement)
+  let items = [];
+  const bucket = teacherRemarksLibrary?.[lang] || {};
+
+  const pushFromKey = (k) => {
+    const arr = bucket[k];
+    if (!Array.isArray(arr)) return;
+    arr.forEach((msg, i) => items.push({ k, i, msg: String(msg) }));
+  };
+
+  if (bandValue === "ALL") {
+    // Uniquement obs@N / cons@N
+    const re = new RegExp(`^${baseKind}@\\d+$`);
+    Object.keys(bucket).filter(k => re.test(k)).sort((a,b) => a.localeCompare(b, "fr", { numeric:true }))
+      .forEach(pushFromKey);
+  } else {
+    pushFromKey(kindKeyOf(baseKind, bandValue));
+  }
+
+  if (q) items = items.filter(x => x.msg.toLowerCase().includes(q));
+
+  const meta = document.getElementById("lib-meta");
+  if (meta) meta.textContent = `${items.length} message(s)`;
+
+  const box = document.getElementById("lib-list");
+  if (!box) return;
+
+  if (!items.length) {
+    box.innerHTML = `<div class="p-3 bg-gray-50 border rounded text-sm text-gray-600">Aucun message.</div>`;
+    return;
+  }
+
+  box.innerHTML = items.map(x => `
+    <div class="p-3 border rounded flex items-start justify-between gap-3 bg-white">
+      <div class="text-xs text-gray-400 w-20 flex-shrink-0">${escapeHtml(x.k)}</div>
+      <div class="text-sm leading-snug whitespace-pre-wrap flex-1">${escapeHtml(x.msg)}</div>
+      <button class="lib-del px-2 py-1 text-xs rounded bg-red-100 text-red-700 hover:bg-red-200"
+              data-lang="${escapeHtml(lang)}"
+              data-key="${escapeHtml(x.k)}"
+              data-index="${x.i}">
+        Supprimer
+      </button>
+    </div>
+  `).join("");
+
+  // Bind safe (pas de onclick inline)
+  box.querySelectorAll("button.lib-del").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const L = btn.dataset.lang;
+      const K = btn.dataset.key;
+      const idx = parseInt(btn.dataset.index, 10);
+      const arr = teacherRemarksLibrary?.[L]?.[K];
+      if (!Array.isArray(arr)) return;
+      if (!(idx >= 0 && idx < arr.length)) return;
+      arr.splice(idx, 1);
+      saveTeacherLibrary(teacherRemarksLibrary);
+      renderTeacherLibraryModal();
+    });
+  });
+}
+
+function deleteTeacherLibraryMessageByKey(lang, kindKey, msg) {
+  const arr = teacherRemarksLibrary?.[lang]?.[kindKey];
+  if (!Array.isArray(arr)) return;
+  const idx = arr.findIndex(x => String(x) === String(msg));
+  if (idx === -1) return;
+  arr.splice(idx, 1);
+  saveTeacherLibrary(teacherRemarksLibrary);
+  renderTeacherLibraryModal();
+}
+
+function deleteTeacherLibraryMessage(lang, kind, index) {
+  const arr = teacherRemarksLibrary?.[lang]?.[kind];
+  if (!Array.isArray(arr)) return;
+  if (index < 0 || index >= arr.length) return;
+  arr.splice(index, 1);
+  saveTeacherLibrary(teacherRemarksLibrary);
+  renderTeacherLibraryModal();
+}
+
+
 
             function closeRemarksModal() {
                 const el = document.getElementById('remarks-modal');
