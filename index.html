@@ -1912,8 +1912,17 @@
                     const globalDefaultInput = document.getElementById('assignment-global-defaultgrade');
                     const globalDefaultValue = globalDefaultInput ? globalDefaultInput.value.trim() : '';
                     const globalDefaultGrade = globalDefaultValue === '' ? '' : (parseFloat(globalDefaultValue) || 0);
+                    
+                    let exId = genId();
+                    if (editingAssignmentId) {
+                        const oldAssignment = data.assignments.find(a => a.id === editingAssignmentId);
+                        if (oldAssignment && oldAssignment.exercises && oldAssignment.exercises.length > 0) {
+                            exId = oldAssignment.exercises[0].id;
+                        }
+                    }
+
                     exercisesToSave = [{
-                        id: genId(),
+                        id: exId,
                         name: '',          // tu peux mettre 'Global' si tu veux l’afficher
                         maxPoints: globalMaxPoints,
                         defaultGrade: globalDefaultGrade,
@@ -1930,8 +1939,8 @@
                     // Mise à jour
                     const assignment = data.assignments.find(a => a.id === editingAssignmentId);
                     if (assignment) {
-                        // Si la classe a changé, on vide les notes car ce ne sont plus les mêmes élèves
-                        if (assignment.className !== className) {
+                        // Si la classe a vraiment changé, on vide les notes car ce ne sont plus les mêmes élèves
+                        if (assignment.className.trim() !== className.trim()) {
                             for (let studentId in data.grades) {
                                 if (data.grades[studentId][editingAssignmentId]) {
                                     delete data.grades[studentId][editingAssignmentId];
