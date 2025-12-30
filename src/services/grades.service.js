@@ -1,4 +1,4 @@
-function getQuestionMaxPoints(q) {
+export function getQuestionMaxPoints(q) {
   if (q.subQuestions && q.subQuestions.length > 0) {
     return q.subQuestions.reduce((sum, sq) => sum + (sq.maxPoints || 0), 0);
   }
