@@ -13,10 +13,22 @@ export function loadGradeSelectors() {
     document.getElementById('grade-entry').innerHTML = `<p class="text-gray-500 text-center py-8">${t.selectClassToStart}</p>`;
     return;
   }
-  const filteredAssignments = window.data.assignments.filter(a => a.className === selectedClass);
+  const eqClass = (a, b) => {
+    const x = String(a || '').trim();
+    const y = String(b || '').trim();
+    if (x === y) return true;
+    if (x.toLowerCase() === y.toLowerCase()) return true;
+    try { if (x.localeCompare(y, 'fr', { sensitivity: 'base' }) === 0) return true; } catch (_) {}
+    try { if (x.localeCompare(y, 'ar', { sensitivity: 'base' }) === 0) return true; } catch (_) {}
+    return false;
+  };
+  let filteredAssignments = (window.data.assignments || []).filter(a => eqClass(a.className, selectedClass));
+  if (!filteredAssignments.length) {
+    filteredAssignments = (window.data.assignments || []).filter(a => (a.className || '').trim().length > 0);
+  }
   assignmentSelect.innerHTML = `<option value="">-- ${t.selectAssignment} --</option>` +
     filteredAssignments.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
-  const filteredStudents = window.data.students.filter(s => s.className === selectedClass);
+  const filteredStudents = (window.data.students || []).filter(s => eqClass(s.className, selectedClass));
   studentSelect.innerHTML = `<option value="">-- ${t.selectStudent} --</option>` +
     filteredStudents.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
   document.getElementById('grade-entry').innerHTML = `<p class="text-gray-500 text-center py-8">${t.selectAssignmentAndStudentToGrade}</p>`;
@@ -45,7 +57,7 @@ export function renderGradeQuestion(q, studentId, assignmentId, exId, partId = n
     qHtml += `<div class="question-direct-entry ${mode === 'global' ? 'opacity-50 pointer-events-none' : ''}">
       <input type="number" min="0" max="${q.maxPoints}" step="0.25" value="${val}"
         ${mode === 'global' ? 'disabled' : ''}
-        onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','direct',this.value)"
+        onchange="window.UIGrades.updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','direct',this.value)"
         class="grade-input p-2 border rounded text-center font-semibold" title="La note globale désactive la saisie détaillée">
       <span class="question-max">/ ${q.maxPoints}</span>
     </div>`;
@@ -60,7 +72,7 @@ export function renderGradeQuestion(q, studentId, assignmentId, exId, partId = n
         </div>
         <input type="number" min="0" max="${sq.maxPoints}" step="0.25" value="${val}"
           ${mode === 'global' ? 'disabled' : ''}
-          onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','${sq.id}',this.value)"
+          onchange="window.UIGrades.updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','${sq.id}',this.value)"
           class="grade-input p-2 border rounded text-center font-semibold" title="La note globale désactive la saisie détaillée">
       </div>`;
     }).join('');
@@ -136,8 +148,8 @@ export function loadGradeEntry() {
           <div class="p-4 space-y-4 border-t">
             <div class="flex items-center gap-3">
               <div class="inline-flex border rounded overflow-hidden text-sm">
-                <button type="button" class="px-3 py-1 ${modeCur === 'detail' ? 'bg-blue-600 text-white' : 'bg-white'}" onclick="setExerciseMode('${studentId}','${assignmentId}','${ex.id}','detail')">Σ ${translations[window.currentLanguage].detailMode}</button>
-                <button type="button" class="px-3 py-1 ${modeCur === 'global' ? 'bg-yellow-500 text-white' : 'bg-white'}" onclick="setExerciseMode('${studentId}','${assignmentId}','${ex.id}','global')">★ ${translations[window.currentLanguage].globalMode}</button>
+                <button type="button" class="px-3 py-1 ${modeCur === 'detail' ? 'bg-blue-600 text-white' : 'bg-white'}" onclick="window.UIGrades.setExerciseMode('${studentId}','${assignmentId}','${ex.id}','detail')">Σ ${translations[window.currentLanguage].detailMode}</button>
+                <button type="button" class="px-3 py-1 ${modeCur === 'global' ? 'bg-yellow-500 text-white' : 'bg-white'}" onclick="window.UIGrades.setExerciseMode('${studentId}','${assignmentId}','${ex.id}','global')">★ ${translations[window.currentLanguage].globalMode}</button>
               </div>
             </div>`;
     if (hasQuestions) {
@@ -148,7 +160,7 @@ export function loadGradeEntry() {
           <input type="number" min="0" max="${window.grades.getExerciseMaxPoints(ex)}" step="0.25" value="${finalGrade}"
             ${modeCur === 'detail' ? 'disabled' : ''}
             title="La note globale désactive la saisie détaillée"
-            onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
+            onchange="window.UIGrades.updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
             class="grade-input w-20 p-2 border rounded text-center font-bold bg-white ${modeCur === 'detail' ? 'opacity-50' : ''}" onclick="event.stopPropagation()">
           <span class="text-xs text-yellow-600 italic">${t.ignoresDetails}</span>
         </div>`;
@@ -159,7 +171,7 @@ export function loadGradeEntry() {
         <div class="flex items-center gap-4 bg-blue-50 p-4 rounded-lg">
           <span class="font-semibold">${t.grade}</span>
           <input type="number" min="0" max="${ex.maxPoints}" step="0.25" value="${val}"
-            onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','direct','direct','direct',this.value)"
+            onchange="window.UIGrades.updateGrade('${studentId}','${assignmentId}','${ex.id}','direct','direct','direct',this.value)"
             class="grade-input w-24 p-2 border rounded text-center font-bold text-lg" onclick="event.stopPropagation()">
           <span class="text-gray-500 text-lg">/ ${ex.maxPoints}</span>
         </div>`;
