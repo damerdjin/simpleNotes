@@ -785,7 +785,7 @@
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <h2 class="text-2xl font-bold text-gray-800 mb-6">Saisie des Notes</h2>
                 <div class="flex gap-4 mb-6 flex-wrap">
-                    <select id="select-class-grades" onchange="loadGradeSelectors()"
+                    <select id="select-class-grades" onchange="(window.UIGrades&&window.UIGrades.loadGradeSelectors&&window.UIGrades.loadGradeSelectors())"
                         class="flex-1 min-w-48 p-3 border rounded-lg">
                         <option value="">-- Sélectionner une classe --</option>
                     </select>
@@ -1060,7 +1060,7 @@
                 if (typeof renderStudents === 'function') renderStudents();
                 if (typeof renderAssignments === 'function') renderAssignments();
                 if (typeof renderSummary === 'function') renderSummary();
-                if (typeof loadGradeSelectors === 'function') loadGradeSelectors();
+                if (window.UIGrades && typeof window.UIGrades.loadGradeSelectors === 'function') window.UIGrades.loadGradeSelectors();
                 if (typeof renderExportPrep === 'function') renderExportPrep();
                 if (typeof loadClassSelectorsForExport === 'function') loadClassSelectorsForExport();
             }
@@ -1267,7 +1267,11 @@
 
                 if (tab === 'grades') {
                     loadClassSelectors();
-                    loadGradeSelectors();
+                    if (window.UIGrades && typeof window.UIGrades.loadGradeSelectors === 'function') {
+                        window.UIGrades.loadGradeSelectors();
+                    } else if (typeof window.loadGradeSelectors === 'function') {
+                        window.loadGradeSelectors();
+                    }
                 }
                 if (tab === 'summary') {
                     loadClassSelectors();
@@ -3727,7 +3731,7 @@
                     renderStudents();
                     // Si vous avez une fonction spécifique pour rafraichir les tableaux de notes :
                     if (typeof renderSummary === 'function') renderSummary();
-                    if (typeof loadGradeSelectors === 'function') loadGradeSelectors();
+                    if (window.UIGrades && typeof window.UIGrades.loadGradeSelectors === 'function') window.UIGrades.loadGradeSelectors();
                     try {
                         showTab('export'); // ou 'students'
                         renderAssignments?.();
@@ -3900,7 +3904,7 @@
 
                         saveData();
                         renderStudents();
-                        if (typeof loadGradeSelectors === 'function') loadGradeSelectors();
+                        if (window.UIGrades && typeof window.UIGrades.loadGradeSelectors === 'function') window.UIGrades.loadGradeSelectors();
                         if (typeof renderSummary === 'function') renderSummary();
 
                         alert(`Importation réussie !\nÉlèves mis à jour: ${updated}\nÉlèves ajoutés: ${added}`);
@@ -6734,13 +6738,15 @@
                 return arr[idx];
             }
 
-            // Initialize
-            loadData();
-            initLanguage(); // Ajoutez cette ligne
-            renderStudents();
-            renderAssignments();
-            loadExportPrepConfig();
-            loadClassSelectorsForExport();
+            // Initialize after document + modules are ready
+            document.addEventListener('DOMContentLoaded', () => {
+                loadData();
+                initLanguage();
+                renderStudents();
+                renderAssignments();
+                loadExportPrepConfig();
+                loadClassSelectorsForExport();
+            });
         </script>
         <!-- Input caché pour charger le fichier Rakmana -->
         <input type="file" id="rakmana-file-input" accept=".xlsx" style="display: none;"

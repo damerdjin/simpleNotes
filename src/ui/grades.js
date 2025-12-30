@@ -286,11 +286,13 @@ export function recalculateTotals(assignmentId, studentId) {
 }
 
 // Attach to window for inline handlers
-window.loadGradeSelectors = loadGradeSelectors;
-window.renderGradeQuestion = renderGradeQuestion;
-window.getQuestionDisplayName = getQuestionDisplayName;
-window.getSubQuestionLetter = getSubQuestionLetter;
-window.loadGradeEntry = loadGradeEntry;
-window.updateGrade = updateGrade;
-window.setExerciseMode = setExerciseMode;
-window.recalculateTotals = recalculateTotals;
+window.UIGrades = {
+  loadGradeSelectors,
+  renderGradeQuestion,
+  getQuestionDisplayName,
+  getSubQuestionLetter,
+  loadGradeEntry,
+  updateGrade,
+  setExerciseMode,
+  recalculateTotals
+};
