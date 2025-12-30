@@ -9,7 +9,7 @@
     // Import helpers from window.grades if needed, or use the exposed window functions
     const getAssignmentMaxPoints = (a) => window.getAssignmentMaxPoints(a);
     const getStudentAssignmentTotal = (sid, aid) => window.getStudentAssignmentTotal(sid, aid);
-    const hasAnyGradeForAssignment = (sid, aid) => window.hasAnyGradeForAssignment(getData(), sid, aid);
+    const hasAnyGradeForAssignment = (sid, aid) => window.hasAnyGradeForAssignment(sid, aid);
 
     // --- EXPORT PREP CONFIG ---
     const EXPORT_CONFIG_KEY = 'corrections-export-config-v1';
