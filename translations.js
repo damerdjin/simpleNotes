@@ -1,5 +1,5 @@
 // translations.js
-const translations = {
+window.translations = {
     fr: {
         // Interface générale
         appTitle: "📝 Gestion des Corrections",
