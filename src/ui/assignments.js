@@ -1,4 +1,3 @@
-
 (function () {
     // Helper to access globals
     const getData = () => window.data;
@@ -18,7 +17,7 @@
 
     // State specific to Assignments UI
     let editingAssignmentId = null;
-    let tempExercises = [];
+    window.tempExercises = [];
     let isGlobalAssignment = false;
     let globalMaxPoints = 20;
     let activeClassFilters = []; // État pour les filtres multiples
@@ -106,11 +105,11 @@
                     if (globalMaxInput) globalMaxInput.value = globalMaxPoints;
                     const globalDefaultInput = document.getElementById('assignment-global-defaultgrade');
                     if (globalDefaultInput) globalDefaultInput.value = ''; // Vider par défaut en modification
-                    tempExercises = [];
+                    window.tempExercises = [];
                 } else {
                     isGlobalAssignment = false;
                     if (globalCheckbox) globalCheckbox.checked = false;
-                    tempExercises = assignmentsSvc().deepCloneExercisesForEdit(exs);
+                    window.tempExercises = assignmentsSvc().deepCloneExercisesForEdit(exs);
                 }
 
                 // Si c'est une modification, on peut proposer de copier les notes (pour écraser/remplir)
@@ -129,7 +128,7 @@
                 }
 
             } else {
-                tempExercises = [];
+                window.tempExercises = [];
                 isGlobalAssignment = false;
                 if (globalCheckbox) globalCheckbox.checked = false;
                 if (globalMaxInput) globalMaxInput.value = 20;
@@ -163,9 +162,86 @@
             builder.classList.remove('hidden');
             btn.classList.remove('hidden');
             globalContainer.classList.add('hidden');
-            if (tempExercises.length === 0) window.addExercise();
+            if (window.tempExercises.length === 0) window.addExercise();
         }
     };
+
+    function getQuestionMaxPoints(q) {
+        if (q.subQuestions && q.subQuestions.length > 0) {
+            return q.subQuestions.reduce((sum, sq) => sum + (sq.maxPoints || 0), 0);
+        }
+        return q.maxPoints || 0;
+    }
+
+    function renderQuestionBuilder(q, exIndex, qIndex, partIndex = null) {
+        const t = getTranslations()[getLang()];
+        const hasSubQuestions = q.subQuestions && q.subQuestions.length > 0;
+        
+        const basePath = partIndex !== null 
+            ? `window.tempExercises[${exIndex}].parts[${partIndex}].questions[${qIndex}]`
+            : `window.tempExercises[${exIndex}].questions[${qIndex}]`;
+
+        const removeCall = partIndex !== null
+            ? `window.removeQuestion(${exIndex}, ${qIndex}, ${partIndex})`
+            : `window.removeQuestion(${exIndex}, ${qIndex})`;
+            
+        const addSubCall = `window.addSubQuestion(${exIndex}, ${qIndex}, ${partIndex !== null ? partIndex : 'null'})`;
+
+        return `
+        <div class="border border-green-200 rounded p-3 bg-green-50">
+            <div class="flex items-center gap-2 mb-2 flex-wrap">
+                <input type="text" placeholder="${t.questionPrefix || 'Q'}1, ${t.questionPrefix || 'Q'}2..." value="${q.name || ''}"
+                    onchange="${basePath}.name = this.value"
+                    class="w-20 p-1 border rounded text-sm font-semibold text-green-700 bg-white">
+                
+                ${!hasSubQuestions ? `
+                    <div class="flex items-center gap-1">
+                        <input type="number" placeholder="${t.points}" value="${q.maxPoints || ''}" min="0" step="0.25"
+                            onchange="${basePath}.maxPoints = parseFloat(this.value); window.renderExercisesBuilder()"
+                            class="w-16 p-1 border rounded text-sm" title="${t.questionPoints}">
+                        ${!editingAssignmentId ? `
+                            <span class="text-xs text-gray-400">/</span>
+                            <input type="number" placeholder="Def" value="${q.defaultGrade || ''}" min="0" step="0.25"
+                                onchange="${basePath}.defaultGrade = this.value === '' ? '' : parseFloat(this.value)"
+                                class="w-14 p-1 border rounded text-sm bg-amber-50" title="${t.defaultGrade}">
+                        ` : ''}
+                    </div>
+                ` : `
+                    <span class="text-xs text-gray-500 px-2">${t.totalPoints}: ${getQuestionMaxPoints(q)} ${t.points}</span>
+                `}
+                
+                <button onclick="${addSubCall}" class="text-blue-500 hover:text-blue-700 text-sm px-2 py-1 bg-blue-50 rounded">+a,b,c</button>
+                <button onclick="${removeCall}" class="text-red-500 hover:text-red-700 ml-auto" title="${t.delete}">✕</button>
+            </div>
+            
+            ${hasSubQuestions ? `
+                <div class="flex flex-wrap gap-2 ml-4">
+                    ${(q.subQuestions || []).map((sq, sqIdx) => `
+                        <div class="flex items-center gap-1 bg-white px-2 py-1 rounded border">
+                            <input type="text" value="${sq.name || ''}" 
+                                onchange="${basePath}.subQuestions[${sqIdx}].name = this.value"
+                                class="w-8 p-0 border-0 text-orange-600 font-medium text-center text-sm">
+                            <span class="text-orange-400">)</span>
+                            <input type="number" placeholder="Pts" value="${sq.maxPoints || ''}" min="0" step="0.25"
+                                onchange="${basePath}.subQuestions[${sqIdx}].maxPoints = parseFloat(this.value); window.renderExercisesBuilder()"
+                                class="w-14 p-1 border rounded text-sm">
+                            ${!editingAssignmentId ? `
+                                <span class="text-xs text-gray-400">/</span>
+                                <input type="number" placeholder="Def" value="${sq.defaultGrade || ''}" min="0" step="0.25"
+                                    onchange="${basePath}.subQuestions[${sqIdx}].defaultGrade = this.value === '' ? '' : parseFloat(this.value)"
+                                    class="w-12 p-1 border rounded text-sm bg-amber-50" title="${t.defaultGrade}">
+                            ` : ''}
+                            <button onclick="${basePath}.subQuestions.splice(${sqIdx}, 1); window.renderExercisesBuilder()" class="text-red-400 hover:text-red-600 text-xs">✕</button>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="text-xs text-gray-500 mt-2 ml-4">
+                    ${t.autoTotalPoints || 'Total auto'}: ${getQuestionMaxPoints(q)} ${t.points} (${t.sumSubQuestions || 'somme'})
+                </div>
+            ` : ''}
+        </div>
+        `;
+    }
 
     window.renderExercisesBuilder = function () {
         const container = document.getElementById('exercises-builder');
@@ -177,69 +253,89 @@
             return;
         }
 
-        container.innerHTML = tempExercises.map((ex, i) => `
-    <div class="border rounded-lg p-4 bg-gray-50 relative">
-      <div class="flex justify-between items-start mb-3">
-        <div class="flex items-center gap-2">
-           <span class="font-bold text-gray-700">${t.exercise} ${i + 1}</span>
-           <span class="text-sm text-gray-500">(${gradesSvc().getExerciseMaxPoints(ex)} ${t.points})</span>
-        </div>
-        <button onclick="removeExercise(${i})" class="text-red-500 hover:text-red-700 text-sm font-medium">✕ ${t.delete}</button>
-      </div>
-      
-      <div class="mb-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-         <input type="text" 
-                placeholder="${t.exerciseName}" 
-                value="${ex.name || ''}" 
-                onchange="tempExercises[${i}].name = this.value"
-                class="p-2 border rounded text-sm w-full">
-         <div class="flex items-center gap-2">
-             <label class="text-sm text-gray-600">${t.totalPoints || 'Total:'}</label>
-             <span class="font-bold text-gray-700 text-sm">${gradesSvc().getExerciseMaxPoints(ex)} ${t.points}</span>
-         </div>
-      </div>
+        if (window.tempExercises.length === 0) {
+             container.innerHTML = `<p class="text-gray-500 text-center py-4">${t.noExercises || 'Aucun exercice'}. ${t.clickAddExercise || 'Cliquez sur Ajouter'}.</p>`;
+             return;
+        }
 
-      <div class="space-y-3 pl-4 border-l-2 border-gray-200">
-         <!-- Parts -->
-         ${(ex.parts || []).map((part, pIdx) => `
-             <div class="flex items-center gap-2 bg-white p-2 rounded border border-gray-100">
-                 <span class="text-sm font-bold text-gray-600">${t.part} ${pIdx + 1}</span>
-                 <input type="text" placeholder="Nom partie" value="${part.name || ''}" onchange="tempExercises[${i}].parts[${pIdx}].name = this.value" class="p-1 border rounded text-xs flex-1">
-                 <input type="number" placeholder="Pts" value="${part.maxPoints || ''}" onchange="tempExercises[${i}].parts[${pIdx}].maxPoints = parseFloat(this.value); renderExercisesBuilder()" class="p-1 border rounded text-xs w-16">
-                 <button onclick="removePart(${i}, ${pIdx})" class="text-red-400 hover:text-red-600 text-xs">✕</button>
-             </div>
-         `).join('')}
-         <button onclick="addPart(${i})" class="text-xs text-blue-600 hover:text-blue-800 font-medium">${t.addPart}</button>
+        container.innerHTML = window.tempExercises.map((ex, i) => {
+            ex.parts = ex.parts || [];
+            ex.questions = ex.questions || [];
+            const exerciseTotal = getExerciseMaxPoints(ex);
 
-         <!-- Questions -->
-         ${(ex.questions || []).map((q, qIdx) => `
-             <div class="flex flex-col gap-1 bg-white p-2 rounded border border-gray-100">
+            return `
+            <div class="border-2 border-blue-200 rounded-lg p-4 bg-blue-50 relative mb-4">
+              <div class="flex items-center gap-2 mb-3 flex-wrap">
+                <span class="font-bold text-blue-700 text-lg">${t.exercise} ${i + 1}</span>
+                <input type="text" 
+                       placeholder="${t.exerciseName}" 
+                       value="${ex.name || ''}" 
+                       onchange="window.tempExercises[${i}].name = this.value"
+                       class="flex-1 min-w-32 p-2 border rounded text-sm bg-white">
+                
+                ${!editingAssignmentId ? `
+                    <div class="flex items-center gap-1">
+                        <input type="number" placeholder="Def" value="${ex.defaultGrade || ''}" min="0" step="0.25"
+                            onchange="window.tempExercises[${i}].defaultGrade = this.value === '' ? '' : parseFloat(this.value)"
+                            class="w-14 p-2 border rounded text-sm bg-amber-50" title="${t.defaultGrade}">
+                    </div>
+                ` : ''}
+
                 <div class="flex items-center gap-2">
-                    <span class="text-sm font-bold text-blue-600">Q${qIdx + 1}</span>
-                    <input type="number" placeholder="Pts" value="${q.maxPoints || ''}" onchange="tempExercises[${i}].questions[${qIdx}].maxPoints = parseFloat(this.value); renderExercisesBuilder()" class="p-1 border rounded text-xs w-16">
-                    <button onclick="removeQuestion(${i}, ${qIdx})" class="text-red-400 hover:text-red-600 text-xs ml-auto">✕</button>
+                    <span class="text-sm font-semibold text-blue-600 px-2">${t.totalPoints || 'Total'}: ${exerciseTotal} ${t.points}</span>
                 </div>
-                <!-- SubQuestions -->
-                 <div class="pl-4 flex flex-wrap gap-2">
-                    ${(q.subQuestions || []).map((sq, sqIdx) => `
-                       <div class="flex items-center gap-1">
-                          <span class="text-xs text-gray-500">${String.fromCharCode(97 + sqIdx)})</span>
-                          <input type="number" placeholder="Pts" value="${sq.maxPoints || ''}" onchange="tempExercises[${i}].questions[${qIdx}].subQuestions[${sqIdx}].maxPoints = parseFloat(this.value); renderExercisesBuilder()" class="p-1 border rounded text-xs w-12">
-                          <button onclick="tempExercises[${i}].questions[${qIdx}].subQuestions.splice(${sqIdx}, 1); renderExercisesBuilder()" class="text-red-300 hover:text-red-500 text-xs">×</button>
-                       </div>
-                    `).join('')}
-                    <button onclick="tempExercises[${i}].questions[${qIdx}].subQuestions = tempExercises[${i}].questions[${qIdx}].subQuestions || []; tempExercises[${i}].questions[${qIdx}].subQuestions.push({maxPoints:1}); renderExercisesBuilder()" class="text-xs text-green-600 hover:text-green-800 px-1 border border-green-200 rounded">${t.addSubQuestions}</button>
-                 </div>
-             </div>
-         `).join('')}
-         <button onclick="addQuestion(${i})" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">${t.addQuestion}</button>
-      </div>
-    </div>
-  `).join('');
+                <button onclick="window.removeExercise(${i})" class="text-red-500 hover:text-red-700 text-lg" title="${t.delete}">✕</button>
+              </div>
+
+              <div class="text-xs text-gray-500 mb-3">
+                  ${ex.questions.length === 0 && ex.parts.length === 0 ?
+                      (t.noQuestions || 'Sans questions') + ' - ' + (t.directPointsOnly || 'points directs') :
+                      (t.autoTotalPoints || 'Total auto') + ': ' + exerciseTotal + ' ' + t.points}
+              </div>
+
+              ${ex.questions.length > 0 || ex.parts.length === 0 ? `
+                  <div class="space-y-2 ml-4 mb-3">
+                      ${ex.questions.map((q, qIdx) => renderQuestionBuilder(q, i, qIdx, null)).join('')}
+                  </div>
+                  <button onclick="window.addQuestion(${i})" class="ml-4 text-sm text-green-600 hover:text-green-800 px-3 py-1 bg-green-100 rounded">
+                       ${t.addQuestion}
+                  </button>
+              ` : ''}
+
+              ${ex.parts.length > 0 ? `
+                  <div class="space-y-3 mt-4">
+                      ${ex.parts.map((part, pIdx) => `
+                          <div class="border-2 border-purple-200 rounded-lg p-3 bg-purple-50 ml-2">
+                              <div class="flex items-center gap-2 mb-2">
+                                  <input type="text" value="${part.name || ''}" 
+                                      onchange="window.tempExercises[${i}].parts[${pIdx}].name = this.value"
+                                      class="font-semibold text-purple-700 p-1 border rounded bg-white">
+                                  <button onclick="window.removePart(${i}, ${pIdx})" class="text-red-500 hover:text-red-700 ml-auto">✕</button>
+                              </div>
+                              
+                              <div class="space-y-2 ml-4">
+                                  ${(part.questions || []).map((q, qIdx) => renderQuestionBuilder(q, i, qIdx, pIdx)).join('')}
+                              </div>
+                              
+                              <button onclick="window.addQuestion(${i}, ${pIdx})" class="mt-2 ml-4 text-sm text-green-600 hover:text-green-800 px-3 py-1 bg-green-100 rounded">
+                                   ${t.addQuestion}
+                              </button>
+                          </div>
+                      `).join('')}
+                  </div>
+              ` : ''}
+
+              <button onclick="window.addPart(${i})" class="mt-3 ml-4 text-sm text-purple-600 hover:text-purple-800 px-3 py-1 bg-purple-100 rounded">
+                  + ${t.addPart}
+              </button>
+
+            </div>
+            `;
+        }).join('');
     };
 
     window.addExercise = function () {
-        tempExercises.push({
+        window.tempExercises.push({
             id: genId(),
             name: '',
             maxPoints: null,
@@ -250,40 +346,77 @@
     };
 
     window.addPart = function (exIndex) {
-        tempExercises[exIndex].parts = tempExercises[exIndex].parts || [];
-        tempExercises[exIndex].parts.push({
+        window.tempExercises[exIndex].parts = window.tempExercises[exIndex].parts || [];
+        window.tempExercises[exIndex].parts.push({
             id: genId(),
             name: '',
-            maxPoints: 5
+            maxPoints: 5,
+            questions: []
         });
         window.renderExercisesBuilder();
     };
 
-    window.addQuestion = function (exIndex) {
-        tempExercises[exIndex].questions.push({
+    window.addQuestion = function (exIndex, partIndex = null) {
+        const question = {
             id: genId(),
+            name: '',
             maxPoints: 1,
             subQuestions: []
-        });
+        };
+        
+        if (partIndex !== null && partIndex !== undefined) {
+             window.tempExercises[exIndex].parts[partIndex].questions = window.tempExercises[exIndex].parts[partIndex].questions || [];
+             window.tempExercises[exIndex].parts[partIndex].questions.push(question);
+        } else {
+             window.tempExercises[exIndex].questions = window.tempExercises[exIndex].questions || [];
+             window.tempExercises[exIndex].questions.push(question);
+        }
         window.renderExercisesBuilder();
+    };
+
+    window.addSubQuestion = function(exIndex, qIndex, partIndex = null) {
+        const t = getTranslations()[getLang()];
+        const letters = t.subQuestionLetters || ['a', 'b', 'c', 'd', 'e'];
+        
+        let q;
+        if (partIndex !== null && partIndex !== undefined) {
+            q = window.tempExercises[exIndex].parts[partIndex].questions[qIndex];
+        } else {
+            q = window.tempExercises[exIndex].questions[qIndex];
+        }
+        
+        if (q) {
+            q.subQuestions = q.subQuestions || [];
+            const letter = letters[q.subQuestions.length] || '?';
+            q.subQuestions.push({ id: genId(), name: letter, maxPoints: 0, defaultGrade: '' });
+            
+            if (q.subQuestions.length === 1) {
+                q.maxPoints = 0;
+            }
+            window.renderExercisesBuilder();
+        }
     };
 
     window.removeExercise = function (index) {
         const t = getTranslations()[getLang()];
         if (!confirm(t.deleteExercise)) return;
-        tempExercises.splice(index, 1);
+        window.tempExercises.splice(index, 1);
         window.renderExercisesBuilder();
     };
 
     window.removePart = function (exIndex, partIndex) {
         const t = getTranslations()[getLang()];
         if (!confirm(t.deletePart)) return;
-        tempExercises[exIndex].parts.splice(partIndex, 1);
+        window.tempExercises[exIndex].parts.splice(partIndex, 1);
         window.renderExercisesBuilder();
     };
 
-    window.removeQuestion = function (exIndex, qIndex) {
-        tempExercises[exIndex].questions.splice(qIndex, 1);
+    window.removeQuestion = function (exIndex, qIndex, partIndex = null) {
+        if (partIndex !== null && partIndex !== undefined) {
+             window.tempExercises[exIndex].parts[partIndex].questions.splice(qIndex, 1);
+        } else {
+             window.tempExercises[exIndex].questions.splice(qIndex, 1);
+        }
         window.renderExercisesBuilder();
     };
 
@@ -317,8 +450,8 @@
                 parts: []
             }];
         } else {
-            if (tempExercises.length === 0) return alert(t.addExerciseFirst);
-            finalExercises = tempExercises;
+            if (window.tempExercises.length === 0) return alert(t.addExerciseFirst);
+            finalExercises = window.tempExercises;
         }
 
         if (editingAssignmentId) {
