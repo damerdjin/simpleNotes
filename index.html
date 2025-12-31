@@ -760,7 +760,7 @@
                 <!-- Grades Tab -->
                 <div id="content-grades" class="tab-content">
                     <div class="bg-white rounded-xl shadow-lg p-6">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-6">Saisie des Notes</h2>
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6" data-translate="gradesEntry">Saisie des Notes</h2>
                         <div class="flex gap-4 mb-6 flex-wrap">
                             <select id="select-class-grades" onchange="loadGradeSelectors()"
                                 class="flex-1 min-w-48 p-3 border rounded-lg">
@@ -783,32 +783,32 @@
                 <div id="content-summary" class="tab-content">
                     <div class="bg-white rounded-xl shadow-lg p-6 overflow-x-auto">
                         <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
-                            <h2 class="text-2xl font-bold text-gray-800">Récapitulatif des Notes</h2>
+                            <h2 class="text-2xl font-bold text-gray-800" data-translate="summaryTitle">Récapitulatif des Notes</h2>
                             <div class="flex items-center gap-2 mb-4">
                                 <label class="flex items-center gap-2">
                                     <input type="radio" name="summaryMode" value="default" checked
                                         onchange="setSummaryMode('default')">
-                                    <span>Vue par défaut</span>
+                                    <span data-translate="defaultView">Vue par défaut</span>
                                 </label>
                                 <label class="flex items-center gap-2">
                                     <input type="radio" name="summaryMode" value="view1" onchange="setSummaryMode('view1')">
-                                    <span>Vue 1</span>
+                                    <span data-translate="view1">Vue 1</span>
                                 </label>
                                 <label class="flex items-center gap-2">
                                     <input type="radio" name="summaryMode" value="grouped"
                                         onchange="setSummaryMode('grouped')">
-                                    <span>Vue 2</span>
+                                    <span data-translate="view2">Vue 2</span>
                                 </label>
                             </div>
                             <div class="flex items-center gap-4 flex-wrap">
-                                <input type="text" id="summary-search" placeholder="Rechercher (nom, prénom, classe)"
+                                <input type="text" id="summary-search" placeholder="Rechercher (nom, prénom, classe)" data-translate-placeholder="searchPlaceholderSummary"
                                     oninput="renderSummary()" class="p-3 border rounded-lg min-w-60">
                                 <select id="select-class-summary" onchange="renderSummary()" class="p-3 border rounded-lg">
                                     <option value="">-- Sélectionner une classe --</option>
                                 </select>
                                 <label class="flex items-center gap-2">
                                     <input type="checkbox" id="show-details" onchange="renderSummary()" class="w-5 h-5">
-                                    <span>Afficher les détails (exercices)</span>
+                                    <span data-translate="showDetailsExercises">Afficher les détails (exercices)</span>
                                 </label>
                                 <div id="summary-assignment-tags" class="flex flex-wrap gap-2"></div>
                                 <button id="btn-export-excel" onclick="exportSummaryToExcel()"

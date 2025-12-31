@@ -215,6 +215,14 @@
             }
         });
 
+        // Traduire les placeholders avec data-translate-placeholder
+        document.querySelectorAll('[data-translate-placeholder]').forEach(element => {
+            const key = element.getAttribute('data-translate-placeholder');
+            if (t[key]) {
+                element.placeholder = t[key];
+            }
+        });
+
         // Mettre à jour le placeholder du champ de recherche
         const searchInput = document.getElementById('student-search');
         if (searchInput && t.search) {

@@ -147,7 +147,7 @@
 
 /* RTL SUPPORT AMÉLIORÉ */
 .rtl-layout .tab-buttons-container {
-  flex-direction: row-reverse;
+  flex-direction: row;
 }
 
 .rtl-layout .tab-content {

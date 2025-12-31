@@ -69,7 +69,7 @@
         const classes = window.getClasses();
 
         if (classes.length === 0) {
-            container.innerHTML = `<p class="text-gray-500 text-sm">${t.noClassesAutoCreated}</p>`;
+            container.innerHTML = `<p class="text-gray-500 text-sm">${t.noClassesAutoCreated || 'Aucune classe.'}</p>`;
             return;
         }
 
@@ -91,7 +91,10 @@
         const count = data.students.filter(s => s.className === className).length;
         
         // Confirmation plus détaillée
-        if (!confirm(`${t.deleteClassConfirm || 'Supprimer la classe'} "${className}" ?\n\nCela supprimera :\n- ${count} élèves\n- Tous les devoirs associés\n- Toutes les notes associées`)) return;
+        let detailMsg = t.deleteClassConfirmDetails || "Cela supprimera :\n- ${count} élèves\n- Tous les devoirs associés\n- Toutes les notes associées";
+        detailMsg = detailMsg.replace('${count}', count);
+        
+        if (!confirm(`${t.deleteClassConfirm || 'Supprimer la classe'} "${className}" ?\n\n${detailMsg}`)) return;
 
         // Remove students from this class
         const studentIds = data.students.filter(s => s.className === className).map(s => s.id);
