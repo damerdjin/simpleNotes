@@ -62,7 +62,7 @@
 
         if (orphans.length === 0) {
             console.log("No orphans found. Proceeding strictly.");
-            if (wizardState.onComplete) wizardState.onComplete();
+            checkStudentMatching();
             return;
         }
 
@@ -100,6 +100,213 @@
         });
 
         renderMappingModal();
+    }
+
+    // --- Step 2: Check Student Matching ---
+    function checkStudentMatching() {
+        const { excelRows, excelClasses } = wizardState;
+        const appStudents = window.data.students || [];
+        const studentMatches = []; // [{ excelIndex, appStudentId, excelName, appName, score }]
+        
+        // Build map of app students by class (normalized)
+        const appStudentsByClass = {};
+        appStudents.forEach(s => {
+            const c = normalize(s.className);
+            if (!appStudentsByClass[c]) appStudentsByClass[c] = [];
+            appStudentsByClass[c].push(s);
+        });
+
+        excelRows.forEach((row, index) => {
+            // Skip empty rows
+            if (!row || (!row.lastName && !row.firstName)) return;
+
+            const excelName = (row.lastName + ' ' + row.firstName).trim();
+            const excelClass = row.className;
+            const normExcelClass = normalize(excelClass);
+
+            // Determine Target Class (App Class)
+            // Note: If class was renamed in Step 1, it's already updated in App Data.
+            // But excelClass is from the file.
+            // So we look for App Students in 'excelClass' (since we renamed them to match Excel)
+            
+            // Wait! If we renamed "2M1 (old)" to "2M1 (Excel)", then app students are now in "2M1 (Excel)".
+            // So we can look directly in appStudentsByClass[normExcelClass].
+            
+            const candidates = appStudentsByClass[normExcelClass] || [];
+            
+            // 1. Check Exact Match (RegNum, NIN) - Standard Logic would handle this, but we want to exclude them from "Proposals"
+            const exactMatch = candidates.find(s => 
+                (row.regNumber && s.regNumber == row.regNumber) || 
+                (row.nin && s.nin == row.nin) ||
+                (normalize(s.name) === normalize(excelName))
+            );
+
+            if (exactMatch) return; // Already perfectly matched
+
+            // 2. Check Fuzzy/Partial Match
+            // Criteria: LastName matches, FirstName is compatible
+            const normExcelLast = normalize(row.lastName);
+            
+            const potentials = candidates.filter(s => {
+                const normAppLast = normalize(s.lastName);
+                if (normAppLast !== normExcelLast) return false;
+
+                // Check First Name Compatibility
+                const appFirst = normalize(s.firstName);
+                const excelFirst = normalize(row.firstName);
+                
+                // Case A: App First Name is empty -> Strong Candidate
+                if (!appFirst) return true;
+                
+                // Case B: App First Name is a prefix of Excel First Name (or vice versa)
+                if (excelFirst.startsWith(appFirst) || appFirst.startsWith(excelFirst)) return true;
+
+                // Case C: Fuzzy match on full name?
+                // User said: "Gouti" (App) vs "Gouti Abdenour" (Excel).
+                // If App has NO first name, it matches.
+                
+                return false;
+            });
+
+            if (potentials.length === 1) {
+                // Single candidate found!
+                const match = potentials[0];
+                studentMatches.push({
+                    excelIndex: row.originalIndex,
+                    appStudent: match,
+                    excelRow: row,
+                    confidence: !match.firstName ? 'high' : 'medium'
+                });
+            }
+            // If multiple potentials, it's ambiguous -> Skip or Show?
+            // For now, let's only handle the "Single Candidate" case to be safe and simple.
+        });
+
+        if (studentMatches.length === 0) {
+            finishWizard();
+            return;
+        }
+
+        wizardState.studentMatches = studentMatches;
+        renderStudentMatchingModal();
+    }
+
+    function renderStudentMatchingModal() {
+        const { studentMatches } = wizardState;
+
+        const modalHtml = `
+            <div id="import-wizard-modal-student" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]" style="backdrop-filter: blur(2px);">
+                <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh] animate-in fade-in zoom-in duration-200">
+                    
+                    <!-- Header -->
+                    <div class="p-6 border-b bg-gray-50 rounded-t-xl">
+                        <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                            <span>👥</span> Harmonisation des Élèves
+                        </h2>
+                        <p class="text-gray-600 text-sm mt-1">
+                            Nous avons détecté des élèves existants qui semblent correspondre à ceux du fichier Excel.
+                            Confirmez-vous qu'il s'agit des mêmes personnes ?
+                        </p>
+                    </div>
+                    
+                    <!-- Content -->
+                    <div class="p-0 overflow-y-auto">
+                        <table class="w-full text-sm border-separate border-spacing-0">
+                            <thead class="bg-gray-100 text-gray-700 sticky top-0 z-10 shadow-sm">
+                                <tr>
+                                    <th class="p-3 text-left font-semibold border-b pl-6">Élève Existant (App)</th>
+                                    <th class="p-3 text-center border-b w-8"></th>
+                                    <th class="p-3 text-left font-semibold border-b">Élève Importé (Excel)</th>
+                                    <th class="p-3 text-center border-b w-24">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-100">
+                                ${studentMatches.map((match, idx) => `
+                                    <tr class="hover:bg-blue-50 transition-colors group">
+                                        <td class="p-4 pl-6">
+                                            <div class="font-bold text-gray-800">${match.appStudent.name}</div>
+                                            <div class="text-xs text-gray-500">
+                                                Classe: ${match.appStudent.className} 
+                                                ${match.appStudent.nin ? `| NIN: ${match.appStudent.nin}` : ''}
+                                            </div>
+                                        </td>
+                                        <td class="p-4 text-center text-blue-400 font-bold">➜</td>
+                                        <td class="p-4">
+                                            <div class="font-bold text-blue-700">
+                                                ${match.excelRow.lastName} ${match.excelRow.firstName}
+                                            </div>
+                                            <div class="text-xs text-blue-600/70">
+                                                Classe: ${match.excelRow.className}
+                                                ${match.excelRow.nin ? `| NIN: ${match.excelRow.nin}` : ''}
+                                                ${match.excelRow.birthDate ? `| Né(e): ${match.excelRow.birthDate}` : ''}
+                                            </div>
+                                        </td>
+                                        <td class="p-4 text-center">
+                                            <label class="inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" class="student-match-checkbox w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300 transition-all" 
+                                                    data-index="${idx}" checked>
+                                            </label>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="p-4 border-t bg-gray-50 rounded-b-xl flex justify-between items-center">
+                        <div class="text-xs text-gray-500 italic">
+                            Décochez les lignes qui ne correspondent PAS à la même personne.
+                        </div>
+                        <div class="flex gap-3">
+                            <button id="wiz-student-cancel" class="px-4 py-2 text-gray-700 font-medium hover:bg-gray-200 rounded-lg transition-colors">
+                                Ignorer Tout
+                            </button>
+                            <button id="wiz-student-confirm" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+                                Valider les Correspondances
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const old = document.getElementById('import-wizard-modal-student');
+        if (old) old.remove();
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        document.getElementById('wiz-student-cancel').onclick = () => {
+            closeStudentModal();
+            finishWizard();
+        };
+        document.getElementById('wiz-student-confirm').onclick = submitStudentMatching;
+    }
+
+    function closeStudentModal() {
+        const el = document.getElementById('import-wizard-modal-student');
+        if (el) el.remove();
+    }
+
+    function submitStudentMatching() {
+        const checkboxes = document.querySelectorAll('.student-match-checkbox');
+        const finalMapping = {}; // excelIndex -> appStudentId
+
+        checkboxes.forEach(cb => {
+            if (cb.checked) {
+                const idx = parseInt(cb.getAttribute('data-index'));
+                const match = wizardState.studentMatches[idx];
+                finalMapping[match.excelIndex] = match.appStudent.id;
+            }
+        });
+
+        console.log("Confirmed Student Matches:", finalMapping);
+        closeStudentModal();
+        finishWizard(finalMapping);
+    }
+
+    function finishWizard(studentMapping = {}) {
+        if (wizardState.onComplete) wizardState.onComplete(studentMapping);
     }
 
     // --- UI: Render Modal ---
@@ -213,7 +420,9 @@
         }
 
         closeWizard();
-        if (wizardState.onComplete) wizardState.onComplete();
+        
+        // Proceed to Step 2: Student Matching
+        checkStudentMatching();
     }
 
     function applyRenames(renames) {

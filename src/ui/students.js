@@ -306,46 +306,66 @@
             // Extract unique classes from Excel for the wizard
             const excelClasses = [...new Set(rows.map(r => idxClasse >= 0 ? cleanStr(r[idxClasse]) : '').filter(c => c))];
 
-            const runImport = () => {
+            // Pre-parse rows for the wizard to avoid duplicating logic
+            const parsedRows = rows.map((row, index) => {
+                if (!row || row.length === 0) return null;
+                return {
+                    originalIndex: index,
+                    nin: idxNIN >= 0 ? cleanStr(row[idxNIN]) : '',
+                    lastName: idxNom >= 0 ? cleanStr(row[idxNom]) : '',
+                    firstName: idxPrenom >= 0 ? cleanStr(row[idxPrenom]) : '',
+                    className: idxClasse >= 0 ? cleanStr(row[idxClasse]) : '',
+                    sex: idxSexe >= 0 ? cleanStr(row[idxSexe]) : '',
+                    birthDate: idxBirth >= 0 ? cleanStr(row[idxBirth]) : '',
+                    regNumber: idxReg >= 0 ? cleanStr(row[idxReg]) : ''
+                };
+            }).filter(r => r !== null);
+
+            const runImport = (studentMapping = {}) => {
                 let added = 0;
-            let updated = 0;
-            const data = getData();
+                let updated = 0;
+                const data = getData();
 
-            rows.forEach(row => {
-                if (!row || row.length === 0) return;
+                rows.forEach((row, index) => {
+                    if (!row || row.length === 0) return;
 
-                // Extraction des données de base
-                const nin = idxNIN >= 0 ? cleanStr(row[idxNIN]) : '';
-                const lastName = idxNom >= 0 ? cleanStr(row[idxNom]) : '';
-                const firstName = idxPrenom >= 0 ? cleanStr(row[idxPrenom]) : '';
-                const className = idxClasse >= 0 ? cleanStr(row[idxClasse]) : '';
-                const sex = idxSexe >= 0 ? cleanStr(row[idxSexe]) : '';
-                const birthDate = idxBirth >= 0 ? cleanStr(row[idxBirth]) : '';
-                const regNumber = idxReg >= 0 ? cleanStr(row[idxReg]) : '';
+                    // Extraction des données de base
+                    const nin = idxNIN >= 0 ? cleanStr(row[idxNIN]) : '';
+                    const lastName = idxNom >= 0 ? cleanStr(row[idxNom]) : '';
+                    const firstName = idxPrenom >= 0 ? cleanStr(row[idxPrenom]) : '';
+                    const className = idxClasse >= 0 ? cleanStr(row[idxClasse]) : '';
+                    const sex = idxSexe >= 0 ? cleanStr(row[idxSexe]) : '';
+                    const birthDate = idxBirth >= 0 ? cleanStr(row[idxBirth]) : '';
+                    const regNumber = idxReg >= 0 ? cleanStr(row[idxReg]) : '';
 
-                if (!lastName && !firstName) return;
-                const name = (lastName + ' ' + firstName).trim();
+                    if (!lastName && !firstName) return;
+                    const name = (lastName + ' ' + firstName).trim();
 
-                // --- CORRECTION 1 : LOGIQUE DE RECHERCHE AMÉLIORÉE ---
-                let existing = null;
+                    // --- CORRECTION 1 : LOGIQUE DE RECHERCHE AMÉLIORÉE ---
+                    let existing = null;
 
-                // A. Essayer par Numéro d'Inscription (le plus fiable)
-                if (regNumber) {
-                    existing = data.students.find(s => s.regNumber == regNumber);
-                }
-                // B. Si pas trouvé, essayer par NIN
-                if (!existing && nin) {
-                    existing = data.students.find(s => s.nin == nin);
-                }
-                // C. Si pas trouvé, essayer Nom + Prénom + Classe (Comparaison stricte sans espaces)
-                if (!existing) {
-                    existing = data.students.find(s =>
-                        s.name.trim() === name &&
-                        s.className.trim() === className
-                    );
-                }
+                    // 0. Priorité absolue : Mapping manuel du Wizard
+                    if (studentMapping && studentMapping[index]) {
+                        existing = data.students.find(s => s.id === studentMapping[index]);
+                    }
 
-                // Objet contenant les données à sauvegarder
+                    // A. Essayer par Numéro d'Inscription (le plus fiable)
+                    if (!existing && regNumber) {
+                        existing = data.students.find(s => s.regNumber == regNumber);
+                    }
+                    // B. Si pas trouvé, essayer par NIN
+                    if (!existing && nin) {
+                        existing = data.students.find(s => s.nin == nin);
+                    }
+                    // C. Si pas trouvé, essayer Nom + Prénom + Classe (Comparaison stricte sans espaces)
+                    if (!existing) {
+                        existing = data.students.find(s =>
+                            s.name.trim() === name &&
+                            s.className.trim() === className
+                        );
+                    }
+
+                    // Objet contenant les données à sauvegarder
                 const studentData = {
                     name,
                     className,
@@ -413,7 +433,7 @@
         };
 
         if (window.startImportWizard) {
-            window.startImportWizard(rows, excelClasses, runImport);
+            window.startImportWizard(parsedRows, excelClasses, runImport);
         } else {
             runImport();
         }
