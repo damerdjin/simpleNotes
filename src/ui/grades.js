@@ -116,11 +116,13 @@
     window.toggleAccordion = function(id) {
         const content = document.getElementById('accordion-' + id);
         const icon = document.getElementById('icon-' + id);
-        if (content) {
-            content.classList.toggle('active');
-            if (icon) {
-                icon.style.transform = content.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
-            }
+        if (!content) return;
+        const willOpen = !content.classList.contains('open');
+        content.classList.toggle('open');
+        content.style.display = willOpen ? 'block' : 'none';
+        if (icon) {
+            icon.classList.toggle('open');
+            icon.style.transform = icon.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
         }
     };
 

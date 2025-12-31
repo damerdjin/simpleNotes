@@ -434,9 +434,10 @@
     window.toggleAccordion = function(id) {
         const content = document.getElementById('accordion-' + id);
         const icon = document.getElementById('icon-' + id);
-        
         if (content) {
+            const willOpen = !content.classList.contains('open');
             content.classList.toggle('open');
+            content.style.display = willOpen ? 'block' : 'none';
         }
         
         if (icon) {
@@ -505,7 +506,7 @@
                                 ${a.name}
                             </h4>
                         </div>
-                        <span id="icon-${a.id}" class="rotate-icon text-gray-400 mt-1 shrink-0 transition-transform duration-200">▲</span>
+                        <span id="icon-${a.id}" class="rotate-icon text-gray-400 mt-1 shrink-0 transition-transform duration-200">▼</span>
                     </div>
                     
                     <div class="flex flex-wrap items-center gap-y-2 gap-x-4 text-sm text-gray-500">
