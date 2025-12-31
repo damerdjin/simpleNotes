@@ -89,7 +89,9 @@
         const t = getTranslations()[getLang()];
         const data = getData();
         const count = data.students.filter(s => s.className === className).length;
-        if (!confirm(`${t.deleteClassConfirm} "${className}" ${t.andStudents} ${count} ${t.students}`)) return;
+        
+        // Confirmation plus détaillée
+        if (!confirm(`${t.deleteClassConfirm || 'Supprimer la classe'} "${className}" ?\n\nCela supprimera :\n- ${count} élèves\n- Tous les devoirs associés\n- Toutes les notes associées`)) return;
 
         // Remove students from this class
         const studentIds = data.students.filter(s => s.className === className).map(s => s.id);
@@ -97,8 +99,13 @@
 
         // Remove their grades
         studentIds.forEach(id => {
-            delete data.grades[id];
+            if (data.grades) delete data.grades[id];
         });
+
+        // Remove assignments for this class
+        if (data.assignments) {
+            data.assignments = data.assignments.filter(a => a.className !== className);
+        }
 
         saveData();
         window.renderStudents();
@@ -113,17 +120,36 @@
     window.openStudentModal = function() {
         const modal = document.getElementById('student-modal');
         if (modal) modal.classList.add('active');
-        const ln = document.getElementById('student-lastname');
-        if (ln) {
-            ln.value = '';
-            ln.focus();
+        
+        // Reset inputs
+        const inputs = ['student-lastname', 'student-firstname', 'student-nin', 'student-class-new'];
+        inputs.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        
+        // Hide new class input
+        const newClassInput = document.getElementById('student-class-new');
+        if (newClassInput) newClassInput.classList.add('hidden');
+
+        // Populate class select
+        const select = document.getElementById('student-class-select');
+        if (select) {
+            const classes = window.getClasses();
+            const t = getTranslations()[getLang()];
+            
+            let html = `<option value="">-- ${t.selectClass || 'Classe'} --</option>`;
+            classes.forEach(c => {
+                html += `<option value="${c}">${c}</option>`;
+            });
+            html += `<option value="__new__" class="font-bold text-blue-600">+ ${t.newClass || 'Nouvelle classe...'}</option>`;
+            
+            select.innerHTML = html;
+            select.value = '';
         }
-        const fn = document.getElementById('student-firstname');
-        if (fn) fn.value = '';
-        const cl = document.getElementById('student-class');
-        if (cl) cl.value = '';
-        const nin = document.getElementById('student-nin');
-        if (nin) nin.value = '';
+
+        const ln = document.getElementById('student-lastname');
+        if (ln) ln.focus();
     };
 
     window.closeStudentModal = function() {
@@ -136,9 +162,20 @@
         const data = getData();
         const lastName = document.getElementById('student-lastname').value.trim();
         const firstName = document.getElementById('student-firstname').value.trim();
-        const className = document.getElementById('student-class').value.trim();
+        
+        // Handle Class Selection
+        const classSelect = document.getElementById('student-class-select');
+        let className = classSelect.value;
+        if (className === '__new__') {
+            className = document.getElementById('student-class-new').value.trim();
+        }
+        
         const nin = document.getElementById('student-nin').value.trim();
+
         if (!lastName && !firstName) return alert(t.enterName);
+        if (!className) return alert(t.enterClass || "Veuillez sélectionner ou saisir une classe");
+        if (!nin) return alert(t.enterNIN || "Le NIN est obligatoire");
+
         const name = (lastName + ' ' + firstName).trim();
 
         data.students.push({ id: genId(), name, className, nin, firstName, lastName });
@@ -212,9 +249,7 @@
         <div class="student-info">
             <div class="student-name">${displayName}</div>
             <div class="student-meta">
-                <span class="student-chip gray">#${i + 1}</span>
                 ${s.className ? `<span class="student-chip">${s.className}</span>` : ''}
-                ${s.nin ? `<span class="student-chip gray">NIN ${s.nin}</span>` : ''}
                 ${birth ? `<span class="student-chip birth">🎂 ${birth}</span>` : ''}
             </div>
         </div>

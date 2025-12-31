@@ -136,7 +136,7 @@ window.translations = {
         newStudentsAdded: "", // Vide car déjà inclus dans importSuccess
 
         //RAKMANA
-        exportPrepTitle: "Préparation des notes (CC/Devoir/Composition)",
+        exportPrepTitle: "Préparation des notes",
         exportPrepHint: "Choisissez la classe, puis associez les devoirs existants aux trois notes à exporter.",
         exportPreview: "Aperçu (prêt pour export)",
         reset: "Réinitialiser",
@@ -316,7 +316,7 @@ window.translations = {
         importSuccess: "Import completed. New students added: ",
         newStudentsAdded: "", // Vide car déjà inclus dans importSuccess
         //RAKMANA
-        exportPrepTitle: "Grade export prep (CC/Homework/Exam)",
+        exportPrepTitle: "Grade export prep",
         exportPrepHint: "Choose the class, then map existing assignments to the 3 exported grades.",
         exportPreview: "Preview (ready for export)",
         reset: "Reset",
@@ -499,7 +499,7 @@ window.translations = {
         newStudentsAdded: "", // Vide car déjà inclus dans importSuccess
 
         //rakmana
-        exportPrepTitle: "تحضير التصدير (المراقبة/الفرض/التركيب)",
+        exportPrepTitle: "تحضير التصدير",
         exportPrepHint: "اختر القسم ثم اربط الفروض بالنقاط الثلاث المراد تصديرها.",
         exportPreview: "معاينة (جاهز للتصدير)",
         reset: "إعادة ضبط",

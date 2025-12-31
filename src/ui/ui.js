@@ -5,6 +5,32 @@
     const getTranslations = () => window.translations;
     const getLang = () => window.currentLanguage;
 
+    // --- Date Helpers ---
+    window.parseDateMaybeExcel = function(value) {
+        if (value === undefined || value === null) return null;
+        if (value instanceof Date && !isNaN(value)) return value;
+
+        const v = String(value).trim();
+        if (!v) return null;
+
+        const num = Number(v);
+        if (!isNaN(num) && num > 10000) {
+            const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+            return new Date(excelEpoch.getTime() + num * 86400 * 1000);
+        }
+
+        const d = new Date(v);
+        return isNaN(d) ? null : d;
+    };
+
+    window.formatDate = function(d) {
+        if (!d) return '';
+        const dd = String(d.getDate()).padStart(2, '0');
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const yyyy = d.getFullYear();
+        return `${dd}/${mm}/${yyyy}`;
+    };
+
     // --- UI Helpers ---
 
     window.setTextContent = function(selector, text) {
@@ -59,7 +85,7 @@
         // 1. Register Students Tab
         window.tabs.registerTab('students', {
             label: t.studentsTab || 'Élèves',
-            icon: '👥',
+            icon: '',
             onShow: () => {
                 if (window.renderStudents) window.renderStudents();
             }
@@ -68,7 +94,7 @@
         // 2. Register Assignments Tab
         window.tabs.registerTab('assignments', {
             label: t.assignmentsTab || 'Devoirs',
-            icon: '📚',
+            icon: '',
             onShow: () => {
                 if (window.loadClassSelectorsForAssignments) window.loadClassSelectorsForAssignments();
                 if (window.renderAssignments) window.renderAssignments();
@@ -78,7 +104,7 @@
         // 3. Register Grades Tab
         window.tabs.registerTab('grades', {
             label: t.gradesTab || 'Notes',
-            icon: '📝',
+            icon: '',
             onShow: () => {
                 if (window.loadClassSelectors) window.loadClassSelectors();
                 if (window.loadGradeSelectors) window.loadGradeSelectors();
@@ -88,7 +114,7 @@
         // 4. Register Summary Tab
         window.tabs.registerTab('summary', {
             label: t.summaryTab || 'Récapitulatif',
-            icon: '📊',
+            icon: '',
             onShow: () => {
                 if (window.loadClassSelectors) window.loadClassSelectors();
                 if (window.renderSummary) window.renderSummary();
@@ -98,7 +124,7 @@
         // 5. Register Export Tab
         window.tabs.registerTab('export', {
             label: 'Export', // Simple fallback
-            icon: '📤',
+            icon: '',
             onShow: () => {
                 if (window.loadClassSelectorsForExport) window.loadClassSelectorsForExport();
                 if (window.renderExportPrep) window.renderExportPrep();

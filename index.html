@@ -897,8 +897,13 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
                 <input type="text" id="student-lastname" placeholder="Nom" class="w-full p-3 border rounded-lg">
                 <input type="text" id="student-firstname" placeholder="Prénom" class="w-full p-3 border rounded-lg">
-                <input type="text" id="student-class" placeholder="Classe" class="w-full p-3 border rounded-lg">
-                <input type="text" id="student-nin" placeholder="NIN (optionnel)" class="w-full p-3 border rounded-lg">
+                <div>
+                    <select id="student-class-select" class="w-full p-3 border rounded-lg bg-white" onchange="if(this.value==='__new__'){document.getElementById('student-class-new').classList.remove('hidden');document.getElementById('student-class-new').focus();}else{document.getElementById('student-class-new').classList.add('hidden');}">
+                        <option value="">-- Classe --</option>
+                    </select>
+                    <input type="text" id="student-class-new" placeholder="Nouvelle classe" class="w-full p-3 border rounded-lg mt-2 hidden">
+                </div>
+                <input type="text" id="student-nin" placeholder="NIN (Obligatoire)" class="w-full p-3 border rounded-lg">
             </div>
             <div class="flex gap-3 justify-end">
                 <button onclick="closeStudentModal()"
