@@ -303,7 +303,11 @@
             // Liste des index connus (infos élèves) pour identifier les colonnes de NOTES
             const knownIndices = [idxNIN, idxNom, idxPrenom, idxClasse, idxSexe, idxBirth, idxReg];
 
-            let added = 0;
+            // Extract unique classes from Excel for the wizard
+            const excelClasses = [...new Set(rows.map(r => idxClasse >= 0 ? cleanStr(r[idxClasse]) : '').filter(c => c))];
+
+            const runImport = () => {
+                let added = 0;
             let updated = 0;
             const data = getData();
 
@@ -407,6 +411,13 @@
             alert(`${t.importSuccess}\nAjoutés: ${added}\nMis à jour: ${updated}`);
             event.target.value = '';
         };
+
+        if (window.startImportWizard) {
+            window.startImportWizard(rows, excelClasses, runImport);
+        } else {
+            runImport();
+        }
+    };
         reader.readAsArrayBuffer(file);
     };
 
