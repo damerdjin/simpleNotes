@@ -46,41 +46,90 @@
         return classColorsMap[trimmed];
     };
 
-    // --- Tab Navigation ---
+    // --- Tab Navigation (New System) ---
 
-    window.showTab = function(tab) {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-        document.querySelectorAll('.tab-btn').forEach(el => {
-            el.classList.remove('bg-white', 'text-blue-600', 'shadow');
-            el.classList.add('bg-gray-200', 'text-gray-600');
+    window.initTabs = function() {
+        if (!window.tabs) {
+            console.error("Tabs controller not loaded");
+            return;
+        }
+
+        const t = getTranslations() && getTranslations()[getLang()] ? getTranslations()[getLang()] : {};
+
+        // 1. Register Students Tab
+        window.tabs.registerTab('students', {
+            label: t.studentsTab || 'Élèves',
+            icon: '👥',
+            onShow: () => {
+                if (window.renderStudents) window.renderStudents();
+            }
         });
 
-        const content = document.getElementById('content-' + tab);
-        if (content) content.classList.remove('hidden');
-        
-        const btn = document.getElementById('tab-' + tab);
-        if (btn) {
-            btn.classList.remove('bg-gray-200', 'text-gray-600');
-            btn.classList.add('bg-white', 'text-blue-600', 'shadow');
-        }
+        // 2. Register Assignments Tab
+        window.tabs.registerTab('assignments', {
+            label: t.assignmentsTab || 'Devoirs',
+            icon: '📚',
+            onShow: () => {
+                if (window.loadClassSelectorsForAssignments) window.loadClassSelectorsForAssignments();
+                if (window.renderAssignments) window.renderAssignments();
+            }
+        });
 
-        if (tab === 'grades') {
-            if (window.loadClassSelectors) window.loadClassSelectors();
-            if (window.loadGradeSelectors) window.loadGradeSelectors();
+        // 3. Register Grades Tab
+        window.tabs.registerTab('grades', {
+            label: t.gradesTab || 'Notes',
+            icon: '📝',
+            onShow: () => {
+                if (window.loadClassSelectors) window.loadClassSelectors();
+                if (window.loadGradeSelectors) window.loadGradeSelectors();
+            }
+        });
+
+        // 4. Register Summary Tab
+        window.tabs.registerTab('summary', {
+            label: t.summaryTab || 'Récapitulatif',
+            icon: '📊',
+            onShow: () => {
+                if (window.loadClassSelectors) window.loadClassSelectors();
+                if (window.renderSummary) window.renderSummary();
+            }
+        });
+
+        // 5. Register Export Tab
+        window.tabs.registerTab('export', {
+            label: 'Export', // Simple fallback
+            icon: '📤',
+            onShow: () => {
+                if (window.loadClassSelectorsForExport) window.loadClassSelectorsForExport();
+                if (window.renderExportPrep) window.renderExportPrep();
+            }
+        });
+        
+        // Initial translation update to ensure correct labels
+        window.translateTabs();
+    };
+
+    window.showTab = function(tabId) {
+        if (window.tabs) {
+            window.tabs.activateTab(tabId);
+        } else {
+            console.error("Tabs system not ready");
+            // Fallback legacy
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            const content = document.getElementById('content-' + tabId);
+            if (content) content.classList.remove('hidden');
         }
-        if (tab === 'summary') {
-            if (window.loadClassSelectors) window.loadClassSelectors();
-            if (window.renderSummary) window.renderSummary();
-        }
-        if (tab === 'assignments') {
-            if (window.loadClassSelectorsForAssignments) window.loadClassSelectorsForAssignments();
-            if (window.renderAssignments) window.renderAssignments();
-        }
-        if (tab === 'export') {
-            if (window.loadClassSelectorsForExport) window.loadClassSelectorsForExport();
-            if (window.renderExportPrep) window.renderExportPrep();
-        }
-        window.translatePage();
+    };
+
+    window.translateTabs = function() {
+        const t = getTranslations()[getLang()];
+        if (!t || !window.tabs) return;
+
+        window.tabs.updateTab('students', { label: t.studentsTab || 'Élèves' });
+        window.tabs.updateTab('assignments', { label: t.assignmentsTab || 'Devoirs' });
+        window.tabs.updateTab('grades', { label: t.gradesTab || 'Notes' });
+        window.tabs.updateTab('summary', { label: t.summaryTab || 'Récapitulatif' });
+        window.tabs.updateTab('export', { label: t.exportPrepTitle || 'Préparation Export' });
     };
 
     // --- Language & Translation ---
@@ -150,11 +199,8 @@
         window.setTextContent('h1', t.appTitle);
         window.setTextContent('header p', t.appSubtitle);
 
-        // Navigation
-        window.setTextContent('#tab-students', t.studentsTab);
-        window.setTextContent('#tab-assignments', t.assignmentsTab);
-        window.setTextContent('#tab-grades', t.gradesTab);
-        window.setTextContent('#tab-summary', t.summaryTab);
+        // Update Tabs
+        window.translateTabs();
 
         // Onglet Étudiants
         window.setTextContent('#content-students h2', t.studentsList);

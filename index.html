@@ -656,6 +656,7 @@
             padding-right: 4px;
         }
     </style>
+    <link rel="stylesheet" href="./src/ui/tabs/tabs.styles.css">
 </head>
 
 <body class="bg-gray-100 min-h-screen">
@@ -685,308 +686,290 @@
             </div>
         </header>
 
-        <!-- Tabs -->
-        <div class="flex flex-wrap gap-2 mb-6">
-            <button onclick="showTab('students')" id="tab-students"
-                class="tab-btn px-6 py-3 rounded-lg font-semibold transition-all bg-white text-blue-600 shadow">
-                👥 Élèves
-            </button>
-            <button onclick="showTab('assignments')" id="tab-assignments"
-                class="tab-btn px-6 py-3 rounded-lg font-semibold transition-all bg-gray-200 text-gray-600 hover:bg-gray-300">
-                📋 Devoirs
-            </button>
-            <button onclick="showTab('grades')" id="tab-grades"
-                class="tab-btn px-6 py-3 rounded-lg font-semibold transition-all bg-gray-200 text-gray-600 hover:bg-gray-300">
-                🎯 Notes
-            </button>
-            <button onclick="showTab('summary')" id="tab-summary"
-                class="tab-btn px-6 py-3 rounded-lg font-semibold transition-all bg-gray-200 text-gray-600 hover:bg-gray-300">
-                📊 Récapitulatif
-            </button>
-            <button onclick="showTab('export')" id="tab-export"
-                class="tab-btn px-6 py-3 rounded-lg font-semibold transition-all bg-gray-200 text-gray-600 hover:bg-gray-300">
-                🧾 Préparation Export
-            </button>
-        </div>
+        <!-- ===== NOUVEAU SYSTÈME D'ONGLETS ===== -->
+        <div class="tab-system">
+            <!-- Boutons dynamiques -->
+            <div class="tab-buttons-container" id="tab-buttons"></div>
 
-        <!-- Students Tab -->
-        <div id="content-students" class="tab-content">
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
-                    <h2 class="text-2xl font-bold text-gray-800">Liste des Élèves</h2>
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <label
-                            class="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-lg border cursor-pointer text-sm">
-                            <span class="text-gray-700" data-translate="importExcel">Importer (.xlsx)</span>
-                            <input type="file" id="student-import" accept=".xlsx,.xls" class="hidden"
-                                onchange="handleStudentImport(event)">
-                        </label>
-
-                        <label
-                            class="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-lg border cursor-pointer text-sm">
-                            <span class="text-gray-700" data-translate="importJson">Importer (.json)</span>
-                            <input type="file" id="json-import" accept=".json" class="hidden"
-                                onchange="handleJsonImportData(event)">
-                        </label>
-
-                        <button id="btn-export-json" onclick="handleJsonExportData()"
-                            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold transition"
-                            data-translate="exportJson">Exporter JSON</button>
-
-                        <button onclick="openStudentModal()"
-                            class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition">
-                            + Ajouter un élève
-                        </button>
-                        <input type="text" id="student-search" placeholder="Rechercher (nom, prénom, classe)"
-                            oninput="renderStudents()" class="flex-1 min-w-48 p-3 border rounded-lg">
+            <!-- Contenu des onglets -->
+            <div class="tab-content-container">
+                <!-- Students Tab -->
+                <div id="content-students" class="tab-content">
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
+                            <h2 class="text-2xl font-bold text-gray-800">Liste des Élèves</h2>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <label
+                                    class="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-lg border cursor-pointer text-sm">
+                                    <span class="text-gray-700" data-translate="importExcel">Importer (.xlsx)</span>
+                                    <input type="file" id="student-import" accept=".xlsx,.xls" class="hidden"
+                                        onchange="handleStudentImport(event)">
+                                </label>
+                                <label
+                                    class="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-lg border cursor-pointer text-sm">
+                                    <span class="text-gray-700" data-translate="importJson">Importer (.json)</span>
+                                    <input type="file" id="json-import" accept=".json" class="hidden"
+                                        onchange="handleJsonImportData(event)">
+                                </label>
+                                <button id="btn-export-json" onclick="handleJsonExportData()"
+                                    class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold transition"
+                                    data-translate="exportJson">Exporter JSON</button>
+                                <button onclick="openStudentModal()"
+                                    class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition">+
+                                    Ajouter un élève</button>
+                                <input type="text" id="student-search" placeholder="Rechercher (nom, prénom, classe)"
+                                    oninput="renderStudents()" class="flex-1 min-w-48 p-3 border rounded-lg">
+                            </div>
+                        </div>
+                        <!-- Class Management -->
+                        <div class="mb-4 p-4 bg-gray-50 rounded-lg">
+                            <h3 class="font-semibold mb-2">Gestion des Classes</h3>
+                            <div class="flex flex-wrap gap-2" id="class-list"></div>
+                        </div>
+                        <div id="students-list" class="space-y-2"></div>
                     </div>
                 </div>
 
-                <!-- Class Management -->
-                <div class="mb-4 p-4 bg-gray-50 rounded-lg">
-                    <h3 class="font-semibold mb-2">Gestion des Classes</h3>
-                    <div class="flex flex-wrap gap-2" id="class-list"></div>
+                <!-- Assignments Tab -->
+                <div id="content-assignments" class="tab-content">
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+                            <h2 class="text-2xl font-bold text-gray-800">Gestion des Devoirs</h2>
+                            <button onclick="openAssignmentModal()"
+                                class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition">+
+                                Créer un devoir</button>
+                        </div>
+                        <!-- Filters + assignments-list existants -->
+                        <div class="mb-6 space-y-4">
+                            <div class="p-4 bg-gray-50 rounded-lg">
+                                <label class="block text-sm font-medium text-gray-700 mb-3">Filtrer par classe :</label>
+                                <div id="assignment-class-chips" class="flex flex-wrap gap-2"></div>
+                            </div>
+                            <div class="flex gap-4 flex-wrap">
+                                <div class="flex-1 min-w-48">
+                                    <input type="text" id="filter-name-assignments" placeholder="Rechercher un devoir..."
+                                        onkeyup="renderAssignments()"
+                                        class="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 outline-none">
+                                </div>
+                            </div>
+                        </div>
+                        <div id="assignments-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                    </div>
                 </div>
 
-                <div id="students-list" class="space-y-2"></div>
-            </div>
-        </div>
-
-        <!-- Assignments Tab -->
-        <div id="content-assignments" class="tab-content hidden">
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
-                    <h2 class="text-2xl font-bold text-gray-800">Gestion des Devoirs</h2>
-                    <button onclick="openAssignmentModal()"
-                        class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition">
-                        + Créer un devoir
-                    </button>
+                <!-- Grades Tab -->
+                <div id="content-grades" class="tab-content">
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">Saisie des Notes</h2>
+                        <div class="flex gap-4 mb-6 flex-wrap">
+                            <select id="select-class-grades" onchange="loadGradeSelectors()"
+                                class="flex-1 min-w-48 p-3 border rounded-lg">
+                                <option value="">-- Sélectionner une classe --</option>
+                            </select>
+                            <select id="select-assignment" onchange="loadGradeEntry()"
+                                class="flex-1 min-w-48 p-3 border rounded-lg">
+                                <option value="">-- Sélectionner un devoir --</option>
+                            </select>
+                            <select id="select-student" onchange="loadGradeEntry()"
+                                class="flex-1 min-w-48 p-3 border rounded-lg">
+                                <option value="">-- Sélectionner un élève --</option>
+                            </select>
+                        </div>
+                        <div id="grade-entry" class="space-y-4"></div>
+                    </div>
                 </div>
 
-                <!-- Filters -->
-                <div class="mb-6 space-y-4">
-                    <div class="p-4 bg-gray-50 rounded-lg">
-                        <label class="block text-sm font-medium text-gray-700 mb-3">Filtrer par classe :</label>
-                        <div id="assignment-class-chips" class="flex flex-wrap gap-2">
-                            <!-- Chips will be injected here -->
+                <!-- Summary Tab -->
+                <div id="content-summary" class="tab-content">
+                    <div class="bg-white rounded-xl shadow-lg p-6 overflow-x-auto">
+                        <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+                            <h2 class="text-2xl font-bold text-gray-800">Récapitulatif des Notes</h2>
+                            <div class="flex items-center gap-2 mb-4">
+                                <label class="flex items-center gap-2">
+                                    <input type="radio" name="summaryMode" value="default" checked
+                                        onchange="setSummaryMode('default')">
+                                    <span>Vue par défaut</span>
+                                </label>
+                                <label class="flex items-center gap-2">
+                                    <input type="radio" name="summaryMode" value="view1" onchange="setSummaryMode('view1')">
+                                    <span>Vue 1</span>
+                                </label>
+                                <label class="flex items-center gap-2">
+                                    <input type="radio" name="summaryMode" value="grouped"
+                                        onchange="setSummaryMode('grouped')">
+                                    <span>Vue 2</span>
+                                </label>
+                            </div>
+                            <div class="flex items-center gap-4 flex-wrap">
+                                <input type="text" id="summary-search" placeholder="Rechercher (nom, prénom, classe)"
+                                    oninput="renderSummary()" class="p-3 border rounded-lg min-w-60">
+                                <select id="select-class-summary" onchange="renderSummary()" class="p-3 border rounded-lg">
+                                    <option value="">-- Sélectionner une classe --</option>
+                                </select>
+                                <label class="flex items-center gap-2">
+                                    <input type="checkbox" id="show-details" onchange="renderSummary()" class="w-5 h-5">
+                                    <span>Afficher les détails (exercices)</span>
+                                </label>
+                                <div id="summary-assignment-tags" class="flex flex-wrap gap-2"></div>
+                                <button id="btn-export-excel" onclick="exportSummaryToExcel()"
+                                    class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition">Exporter
+                                    Excel</button>
+                            </div>
+                        </div>
+                        <div id="summary-table"></div>
+                    </div>
+                </div>
+
+                <!-- Export Tab -->
+                <div id="content-export" class="tab-content">
+                    <div class="container mx-auto px-4 max-w-6xl">
+                        <div class="bg-white rounded-xl shadow-lg p-6">
+                            <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+                                <h2 class="text-2xl font-bold text-gray-800" data-translate="exportPrepTitle">Préparation
+                                    des notes
+                                    (CC/Devoir/Composition)</h2>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="resetExportConfig()"
+                                        class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg font-semibold transition"
+                                        data-translate="reset">Réinitialiser</button>
+                                    <button onclick="openRemarksModal()"
+                                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-semibold transition"
+                                        data-translate="editRemarks">Messages</button>
+                                </div>
+                            </div>
+
+                            <!-- Choix classe -->
+                            <div id="export-class-card" class="mb-4 p-4 bg-gray-50 rounded-lg">
+                                <label class="block text-sm font-medium text-gray-700 mb-2" data-translate="selectClass">
+                                    -- Sélectionner une classe --
+                                </label>
+                                <select id="select-class-export"
+                                    onchange="onExportClassChange(); updateExportClassCardColor();"
+                                    class="w-full md:w-80 p-3 border rounded-lg">
+                                    <option value="">-- Sélectionner une classe --</option>
+                                </select>
+                                <p class="text-xs text-gray-500 mt-2" data-translate="exportPrepHint">
+                                    Choisissez la classe, puis associez les devoirs existants aux trois notes à exporter.
+                                </p>
+                            </div>
+
+                            <!-- Config -->
+                            <div id="export-config" class="space-y-4"></div>
+
+                            <!-- Aperçu table -->
+                            <div class="mt-6">
+                                <div class="flex items-center justify-between flex-wrap gap-3 mb-3">
+                                    <h3 class="text-lg font-bold text-gray-800" data-translate="exportPreview">
+                                        Aperçu (prêt pour export)
+                                    </h3>
+
+                                    <!-- BOUTONS -->
+                                    <div class="flex items-center gap-3">
+                                        <button onclick="printExportTable()"
+                                            class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold shadow-sm transition"
+                                            data-translate="print">Imprimer</button>
+
+                                        <button onclick="exportExportTableXLSX()"
+                                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow-sm transition"
+                                            data-translate="exportXlsx">Exporter XLSX</button>
+
+                                        <button onclick="doRakamna()"
+                                            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold shadow-sm transition"
+                                            data-translate="rakamna">Rakamna</button>
+                                    </div>
+
+                                    <div class="text-sm text-gray-500" id="export-preview-meta"></div>
+                                </div>
+
+                                <div id="export-preview-table" class="overflow-x-auto"></div>
+                            </div>
                         </div>
                     </div>
-
-                    <div class="flex gap-4 flex-wrap">
-                        <div class="flex-1 min-w-48">
-                            <input type="text" id="filter-name-assignments" placeholder="Rechercher un devoir..."
-                                onkeyup="renderAssignments()"
-                                class="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 outline-none">
-                        </div>
-                    </div>
                 </div>
-
-                <div id="assignments-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-            </div>
-        </div>
-
-        <!-- Grades Tab -->
-        <div id="content-grades" class="tab-content hidden">
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6">Saisie des Notes</h2>
-                <div class="flex gap-4 mb-6 flex-wrap">
-                    <select id="select-class-grades" onchange="loadGradeSelectors()"
-                        class="flex-1 min-w-48 p-3 border rounded-lg">
-                        <option value="">-- Sélectionner une classe --</option>
-                    </select>
-                    <select id="select-assignment" onchange="loadGradeEntry()"
-                        class="flex-1 min-w-48 p-3 border rounded-lg">
-                        <option value="">-- Sélectionner un devoir --</option>
-                    </select>
-                    <select id="select-student" onchange="loadGradeEntry()"
-                        class="flex-1 min-w-48 p-3 border rounded-lg">
-                        <option value="">-- Sélectionner un élève --</option>
-                    </select>
-                </div>
-                <div id="grade-entry" class="space-y-4"></div>
-            </div>
-        </div>
-
-        <!-- Summary Tab -->
-        <div id="content-summary" class="tab-content hidden">
-            <div class="bg-white rounded-xl shadow-lg p-6 overflow-x-auto">
-                <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
-                    <h2 class="text-2xl font-bold text-gray-800">Récapitulatif des Notes</h2>
-                    <div class="flex items-center gap-2 mb-4">
-                        <label class="flex items-center gap-2">
-                            <input type="radio" name="summaryMode" value="default" checked
-                                onchange="setSummaryMode('default')">
-                            <span>Vue par défaut</span>
-                        </label>
-                        <label class="flex items-center gap-2">
-                            <input type="radio" name="summaryMode" value="view1" onchange="setSummaryMode('view1')">
-                            <span>Vue 1</span>
-                        </label>
-                        <label class="flex items-center gap-2">
-                            <input type="radio" name="summaryMode" value="grouped" onchange="setSummaryMode('grouped')">
-                            <span>Vue 2</span>
-                        </label>
-                    </div>
-
-
-                    <div class="flex items-center gap-4 flex-wrap">
-                        <input type="text" id="summary-search" placeholder="Rechercher (nom, prénom, classe)"
-                            oninput="renderSummary()" class="p-3 border rounded-lg min-w-60">
-                        <select id="select-class-summary" onchange="renderSummary()" class="p-3 border rounded-lg">
-                            <option value="">-- Sélectionner une classe --</option>
-                        </select>
-                        <label class="flex items-center gap-2">
-                            <input type="checkbox" id="show-details" onchange="renderSummary()" class="w-5 h-5">
-                            <span>Afficher les détails (exercices)</span>
-                        </label>
-                        <div id="summary-assignment-tags" class="flex flex-wrap gap-2"></div>
-                        <button id="btn-export-excel" onclick="exportSummaryToExcel()"
-                            class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition">Exporter
-                            Excel</button>
-                    </div>
-                </div>
-                <div id="summary-table"></div>
             </div>
         </div>
     </div>
-    <!-- Export Prep Tab -->
-    <div id="content-export" class="tab-content hidden">
-        <!-- Ajout du wrapper "container" identique aux autres onglets -->
-        <div class="container mx-auto px-4 max-w-6xl">
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
-                    <h2 class="text-2xl font-bold text-gray-800" data-translate="exportPrepTitle">Préparation des notes
-                        (CC/Devoir/Composition)</h2>
-                    <div class="flex items-center gap-2">
-                        <button onclick="resetExportConfig()"
-                            class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg font-semibold transition"
-                            data-translate="reset">Réinitialiser</button>
-                        <button onclick="openRemarksModal()"
-                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-semibold transition"
-                            data-translate="editRemarks">Messages</button>
-                    </div>
-                </div>
 
-                <!-- Choix classe -->
-                <div id="export-class-card" class="mb-4 p-4 bg-gray-50 rounded-lg">
-                    <label class="block text-sm font-medium text-gray-700 mb-2" data-translate="selectClass">
-                        -- Sélectionner une classe --
-                    </label>
-                    <select id="select-class-export" onchange="onExportClassChange(); updateExportClassCardColor();"
-                        class="w-full md:w-80 p-3 border rounded-lg">
-                        <option value="">-- Sélectionner une classe --</option>
-                    </select>
-                    <p class="text-xs text-gray-500 mt-2" data-translate="exportPrepHint">
-                        Choisissez la classe, puis associez les devoirs existants aux trois notes à exporter.
-                    </p>
-                </div>
-
-                <!-- Config -->
-                <div id="export-config" class="space-y-4"></div>
-
-                <!-- Aperçu table -->
-                <div class="mt-6">
-                    <div class="flex items-center justify-between flex-wrap gap-3 mb-3">
-                        <h3 class="text-lg font-bold text-gray-800" data-translate="exportPreview">
-                            Aperçu (prêt pour export)
-                        </h3>
-
-                        <!-- BOUTONS -->
-                        <div class="flex items-center gap-3">
-                            <button onclick="printExportTable()"
-                                class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold shadow-sm transition"
-                                data-translate="print">Imprimer</button>
-
-                            <button onclick="exportExportTableXLSX()"
-                                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow-sm transition"
-                                data-translate="exportXlsx">Exporter XLSX</button>
-
-                            <button onclick="doRakamna()"
-                                class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold shadow-sm transition"
-                                data-translate="rakamna">Rakamna</button>
-                        </div>
-
-                        <div class="text-sm text-gray-500" id="export-preview-meta"></div>
-                    </div>
-
-                    <div id="export-preview-table" class="overflow-x-auto"></div>
-                </div>
+    <!-- Student Modal -->
+    <div id="student-modal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+            <h3 class="text-xl font-bold mb-4">Ajouter un élève</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                <input type="text" id="student-lastname" placeholder="Nom" class="w-full p-3 border rounded-lg">
+                <input type="text" id="student-firstname" placeholder="Prénom" class="w-full p-3 border rounded-lg">
+                <input type="text" id="student-class" placeholder="Classe" class="w-full p-3 border rounded-lg">
+                <input type="text" id="student-nin" placeholder="NIN (optionnel)" class="w-full p-3 border rounded-lg">
+            </div>
+            <div class="flex gap-3 justify-end">
+                <button onclick="closeStudentModal()"
+                    class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">Annuler</button>
+                <button onclick="addStudent()"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Ajouter</button>
             </div>
         </div>
-        <!-- Student Modal -->
-        <div id="student-modal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-50">
-            <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
-                <h3 class="text-xl font-bold mb-4">Ajouter un élève</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                    <input type="text" id="student-lastname" placeholder="Nom" class="w-full p-3 border rounded-lg">
-                    <input type="text" id="student-firstname" placeholder="Prénom" class="w-full p-3 border rounded-lg">
-                    <input type="text" id="student-class" placeholder="Classe" class="w-full p-3 border rounded-lg">
-                    <input type="text" id="student-nin" placeholder="NIN (optionnel)"
-                        class="w-full p-3 border rounded-lg">
-                </div>
-                <div class="flex gap-3 justify-end">
-                    <button onclick="closeStudentModal()"
-                        class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">Annuler</button>
-                    <button onclick="addStudent()"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Ajouter</button>
-                </div>
-            </div>
-        </div>
+    </div>
 
-        <!-- Assignment Modal will be injected dynamically -->
+    <!-- Assignment Modal will be injected dynamically -->
 
 
 
-        <script src="./translations.js"></script>
-        <script type="module">
-            import { computeExportRemarks } from "./remarks.engine.js";
-            import { REMARKS } from "./remarks.messages.js";
+    <script src="./translations.js"></script>
+    <script type="module">
+        import { computeExportRemarks } from "./remarks.engine.js";
+        import { REMARKS } from "./remarks.messages.js";
 
-            window.computeExportRemarks = computeExportRemarks;
+        window.computeExportRemarks = computeExportRemarks;
 
-            // 1) Ton nom "underscore" (si tu l'utilises ailleurs)
-            window.REMARKS_MESSAGES = REMARKS;
+        // 1) Ton nom "underscore" (si tu l'utilises ailleurs)
+        window.REMARKS_MESSAGES = REMARKS;
 
-            // 2) Alias pour index.html (getObsCandidatesForRow / getConsCandidatesForRow / preview)
-            window.REMARKSMESSAGES = REMARKS;
-        </script>
+        // 2) Alias pour index.html (getObsCandidatesForRow / getConsCandidatesForRow / preview)
+        window.REMARKSMESSAGES = REMARKS;
+    </script>
 
 
 
-        <script type="module">
-            import { store } from "./src/storage/store.js";
-            window.store = store;
-        </script>
-        <script type="module">
-            import * as grades from "./src/services/grades.service.js";
-            window.grades = grades;
-        </script>
-        <script type="module">
-            import * as assignmentsSvc from "./src/services/assignments.service.js";
-            window.assignmentsSvc = assignmentsSvc;
-        </script>
-        <script type="module" src="./src/ui/summary.js"></script>
-        <script type="module" src="./src/ui/export.js"></script>
-        <script type="module" src="./src/ui/students.js"></script>
-        <script type="module" src="./src/ui/assignments.js"></script>
-        <script type="module" src="./src/ui/grades.js"></script>
-        <script type="module" src="./src/ui/data-management.js"></script>
-        <script type="module" src="./src/ui/ui.js"></script>
+    <script type="module">
+        import { store } from "./src/storage/store.js";
+        window.store = store;
+    </script>
+    <script type="module">
+        import { tabs } from "./src/ui/tabs/tabs.controller.js";
+        window.tabs = tabs;
+    </script>
+    <script type="module">
+        import * as grades from "./src/services/grades.service.js";
+        window.grades = grades;
+    </script>
+    <script type="module">
+        import * as assignmentsSvc from "./src/services/assignments.service.js";
+        window.assignmentsSvc = assignmentsSvc;
+    </script>
+    <script type="module" src="./src/ui/summary.js"></script>
+    <script type="module" src="./src/ui/export.js"></script>
+    <script type="module" src="./src/ui/students.js"></script>
+    <script type="module" src="./src/ui/assignments.js"></script>
+    <script type="module" src="./src/ui/grades.js"></script>
+    <script type="module" src="./src/ui/data-management.js"></script>
+    <script type="module" src="./src/ui/ui.js"></script>
 
-        <script>
-            // Language Management
-            document.addEventListener('DOMContentLoaded', () => {
-                loadData();
-                initLanguage();
-                renderStudents();
-                renderAssignments();
-                loadExportPrepConfig();
-                loadClassSelectorsForExport();
-            });
-        </script>
-        <!-- Input caché pour charger le fichier Rakmana -->
-        <input type="file" id="rakmana-file-input" accept=".xlsx" style="display: none;"
-            onchange="onRakmanaFileSelected(this)">
+    <script>
+        // Language Management
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            initLanguage();
+            // Initialize new tab system
+            if (window.initTabs) window.initTabs();
+            
+            renderStudents();
+            renderAssignments();
+            loadExportPrepConfig();
+            loadClassSelectorsForExport();
+        });
+    </script>
+    <!-- Input caché pour charger le fichier Rakmana -->
+    <input type="file" id="rakmana-file-input" accept=".xlsx" style="display: none;"
+        onchange="onRakmanaFileSelected(this)">
 </body>
 
 </html>
