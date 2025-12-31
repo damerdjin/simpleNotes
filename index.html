@@ -193,11 +193,16 @@
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.3s ease-out;
+            visibility: hidden;
+            opacity: 0;
         }
 
         .accordion-content.open {
             max-height: 5000px;
             transition: max-height 0.5s ease-in;
+            visibility: visible;
+            opacity: 1;
+            padding-bottom: 1rem;
         }
 
         .rotate-icon {

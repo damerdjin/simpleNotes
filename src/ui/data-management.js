@@ -5,6 +5,11 @@
     const getLang = () => window.currentLanguage;
     const genId = () => window.genId();
     
+    // Expose genId if needed elsewhere, but ideally it should be here
+    window.genId = function() {
+        return Math.random().toString(36).substr(2, 9);
+    };
+
     // Default data structure
     if (!window.data) {
         window.data = {
