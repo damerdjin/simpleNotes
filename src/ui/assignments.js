@@ -195,11 +195,7 @@
                 class="p-2 border rounded text-sm w-full">
          <div class="flex items-center gap-2">
              <label class="text-sm text-gray-600">${t.totalPoints || 'Total:'}</label>
-             <input type="number" 
-                    placeholder="${t.automaticTotal}" 
-                    value="${ex.maxPoints || ''}" 
-                    onchange="tempExercises[${i}].maxPoints = this.value ? parseFloat(this.value) : null; renderExercisesBuilder()"
-                    class="p-2 border rounded text-sm w-24">
+             <span class="font-bold text-gray-700 text-sm">${gradesSvc().getExerciseMaxPoints(ex)} ${t.points}</span>
          </div>
       </div>
 

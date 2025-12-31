@@ -640,6 +640,7 @@
     }
 
     window.renderTeacherLibraryModal = function() {
+        const t = getTranslations()[getLang()];
         const lang = document.getElementById("lib-lang")?.value || langKey();
         const baseKind = document.getElementById("lib-kind")?.value || "obs";
         const q = (document.getElementById("lib-search")?.value || "").trim().toLowerCase();
@@ -648,7 +649,7 @@
         const bandSel = document.getElementById("lib-band");
         if (bandSel && (!bandSel.options.length || bandSel.dataset.kind !== baseKind)) {
             bandSel.dataset.kind = baseKind;
-            bandSel.innerHTML = `<option value="ALL">Tous</option>` + Array.from({ length: maxBands }, (_, i) => `<option value="${i}">Palier ${i}</option>`).join("");
+            bandSel.innerHTML = `<option value="ALL">${escapeHtml(t?.allBands || "Tous")}</option>` + Array.from({ length: maxBands }, (_, i) => `<option value="${i}">${escapeHtml(t?.bandPrefix || "Palier")} ${i}</option>`).join("");
             bandSel.value = "ALL";
         }
         const bandValue = bandSel?.value ?? "ALL";
@@ -667,18 +668,18 @@
         }
         if (q) items = items.filter(x => x.msg.toLowerCase().includes(q));
         const meta = document.getElementById("lib-meta");
-        if (meta) meta.textContent = `${items.length} message(s)`;
+        if (meta) meta.textContent = `${items.length} ${t?.messagesCount || "message(s)"}`;
         const box = document.getElementById("lib-list");
         if (!box) return;
         if (!items.length) {
-            box.innerHTML = `<div class="p-3 bg-gray-50 border rounded text-sm text-gray-600">Aucun message.</div>`;
+            box.innerHTML = `<div class="p-3 bg-gray-50 border rounded text-sm text-gray-600">${escapeHtml(t?.noMessages || "Aucun message.")}</div>`;
             return;
         }
         box.innerHTML = items.map(x => `
             <div class="p-3 border rounded flex items-start justify-between gap-3 bg-white">
                 <div class="text-xs text-gray-400 w-20 flex-shrink-0">${escapeHtml(x.k)}</div>
                 <div class="text-sm leading-snug whitespace-pre-wrap flex-1">${escapeHtml(x.msg)}</div>
-                <button class="lib-del px-2 py-1 text-xs rounded bg-red-100 text-red-700 hover:bg-red-200" data-lang="${escapeHtml(lang)}" data-key="${escapeHtml(x.k)}" data-index="${x.i}">Supprimer</button>
+                <button class="lib-del px-2 py-1 text-xs rounded bg-red-100 text-red-700 hover:bg-red-200" data-lang="${escapeHtml(lang)}" data-key="${escapeHtml(x.k)}" data-index="${x.i}">${escapeHtml(t?.deleteMessage || "Supprimer")}</button>
             </div>`).join("");
         box.querySelectorAll("button.lib-del").forEach(btn => {
             btn.addEventListener("click", () => {

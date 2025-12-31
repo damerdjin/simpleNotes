@@ -303,6 +303,32 @@
             return map[key] || '?';
         };
 
+        const cleanClassName = (className = '') => {
+            let parts = className.trim().split(/\s+/);
+            if (parts.length === 0) return '';
+            
+            const first = parts[0].toLowerCase();
+            const levels = [
+                'أولى', 'اولى', '1ere', '1ère', '1',
+                'ثانية', '2nde', '2',
+                'ثالثة', '3eme', '3ème', '3',
+                'رابعة', '4eme', '4ème', '4',
+                'خامسة', '5eme', '5ème', '5',
+                'سادسة', '6eme', '6ème', '6'
+            ];
+            
+            if (levels.includes(first)) {
+                parts.shift();
+                if (parts.length > 0) {
+                    const second = parts[0].toLowerCase();
+                    if (['ثانوي', 'secondary', 'année', 'annee'].includes(second)) {
+                        parts.shift();
+                    }
+                }
+            }
+            return parts.join(' ');
+        };
+
         const items = filteredStudents.map((s, i) => {
             const first = (s.firstName || '').trim();
             const last = (s.lastName || '').trim();
@@ -322,7 +348,7 @@
         <div class="student-info">
             <div class="student-name">${displayName}</div>
             <div class="student-meta">
-                ${s.className ? `<span class="student-chip">${s.className}</span>` : ''}
+                ${s.className ? `<span class="student-chip">${cleanClassName(s.className)}</span>` : ''}
                 ${birth ? `<span class="student-chip birth">🎂 ${birth}</span>` : ''}
             </div>
         </div>

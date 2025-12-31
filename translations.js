@@ -571,6 +571,21 @@ window.translations = {
         exportDevoirOk: "السلم صحيح (/20)",
         print: "طباعة",
         exportXlsx: "تصدير XLSX",
-        rakamna: "رقمنة"
+        rakamna: "رقمنة",
+
+        // Library Modal
+        libraryTitle: "مكتبة الملاحظات/النصائح",
+        close: "إغلاق",
+        type: "النوع",
+        band: "الشريحة",
+        language: "اللغة",
+        searchPlaceholderLibrary: "بحث...",
+        observation: "ملاحظة",
+        advice: "نصيحة",
+        allBands: "الكل",
+        bandPrefix: "الشريحة",
+        messagesCount: "رسالة",
+        noMessages: "لا توجد رسائل.",
+        deleteMessage: "حذف"
     }
 };
