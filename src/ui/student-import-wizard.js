@@ -38,6 +38,27 @@
         return String(str || '').trim().toLowerCase().replace(/\s+/g, ' ');
     }
 
+    // Helper: Calculate token overlap score (0 to 1)
+    function calculateTokenOverlap(str1, str2) {
+        const tokens1 = normalize(str1).split(' ').filter(t => t.length > 0);
+        const tokens2 = normalize(str2).split(' ').filter(t => t.length > 0);
+
+        if (tokens1.length === 0 || tokens2.length === 0) return 0;
+
+        const set1 = new Set(tokens1);
+        const set2 = new Set(tokens2);
+
+        let matchCount = 0;
+        set1.forEach(t => { if (set2.has(t)) matchCount++; });
+
+        // Score based on how much of the SHORTER name is present in the LONGER name
+        // Example: "Nourine Taha Abdelmalek" (4) vs "Nourine Abdelmalek" (3)
+        // Intersection: 3. MinLength: 3. Score: 1.0 (Perfect subset)
+        
+        const minLen = Math.min(tokens1.length, tokens2.length);
+        return matchCount / minLen;
+    }
+
     // --- Entry Point ---
     window.startImportWizard = function(excelRows, excelClasses, onComplete) {
         console.log("Starting Import Wizard...");
@@ -144,27 +165,26 @@
             if (exactMatch) return; // Already perfectly matched
 
             // 2. Check Fuzzy/Partial Match
-            // Criteria: LastName matches, FirstName is compatible
             const normExcelLast = normalize(row.lastName);
             
             const potentials = candidates.filter(s => {
+                // Method A: Legacy First Name Check (if LastName strictly matches)
                 const normAppLast = normalize(s.lastName);
-                if (normAppLast !== normExcelLast) return false;
+                if (normAppLast === normExcelLast) {
+                    const appFirst = normalize(s.firstName);
+                    const excelFirst = normalize(row.firstName);
+                    if (!appFirst) return true;
+                    if (excelFirst.startsWith(appFirst) || appFirst.startsWith(excelFirst)) return true;
+                }
 
-                // Check First Name Compatibility
-                const appFirst = normalize(s.firstName);
-                const excelFirst = normalize(row.firstName);
+                // Method B: Full Name Token Overlap (Handles "Nourine Taha Abdelmalek" vs "Nourine Abdelmalek")
+                const appFullName = s.name || (s.lastName + ' ' + s.firstName);
+                const overlapScore = calculateTokenOverlap(appFullName, excelName);
                 
-                // Case A: App First Name is empty -> Strong Candidate
-                if (!appFirst) return true;
-                
-                // Case B: App First Name is a prefix of Excel First Name (or vice versa)
-                if (excelFirst.startsWith(appFirst) || appFirst.startsWith(excelFirst)) return true;
+                // If the shorter name is FULLY contained in the longer name (score === 1), it's a very strong match.
+                // We also accept 0.75+ to account for minor typos if names are long enough.
+                if (overlapScore >= 0.8) return true;
 
-                // Case C: Fuzzy match on full name?
-                // User said: "Gouti" (App) vs "Gouti Abdenour" (Excel).
-                // If App has NO first name, it matches.
-                
                 return false;
             });
 
