@@ -117,44 +117,84 @@
     };
 
     // ===== STUDENTS =====
-    window.openStudentModal = function() {
+    let editingStudentId = null;
+
+    window.openStudentModal = function(studentId = null) {
         const modal = document.getElementById('student-modal');
+        const t = getTranslations()[getLang()];
+        
         if (modal) modal.classList.add('active');
         
-        // Reset inputs
-        const inputs = ['student-lastname', 'student-firstname', 'student-nin', 'student-class-new'];
-        inputs.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.value = '';
-        });
-        
-        // Hide new class input
+        // Find elements
+        const titleEl = modal.querySelector('h3');
+        const btnAdd = modal.querySelector('button[onclick="addStudent()"]');
+        const lastNameInput = document.getElementById('student-lastname');
+        const firstNameInput = document.getElementById('student-firstname');
+        const ninInput = document.getElementById('student-nin');
+        const classSelect = document.getElementById('student-class-select');
         const newClassInput = document.getElementById('student-class-new');
-        if (newClassInput) newClassInput.classList.add('hidden');
 
-        // Populate class select
-        const select = document.getElementById('student-class-select');
-        if (select) {
+        // Reset class selector first to ensure options are loaded
+        if (classSelect) {
             const classes = window.getClasses();
-            const t = getTranslations()[getLang()];
-            
             let html = `<option value="">-- ${t.selectClass || 'Classe'} --</option>`;
             classes.forEach(c => {
                 html += `<option value="${c}">${c}</option>`;
             });
             html += `<option value="__new__" class="font-bold text-blue-600">+ ${t.newClass || 'Nouvelle classe...'}</option>`;
-            
-            select.innerHTML = html;
-            select.value = '';
+            classSelect.innerHTML = html;
         }
 
-        const ln = document.getElementById('student-lastname');
-        if (ln) ln.focus();
+        if (studentId) {
+            // EDIT MODE
+            editingStudentId = studentId;
+            const student = getData().students.find(s => s.id === studentId);
+            if (!student) return window.closeStudentModal();
+
+            if (titleEl) titleEl.textContent = t.editStudentTitle || "Modifier l'élève";
+            if (btnAdd) btnAdd.textContent = t.save || "Enregistrer";
+
+            if (lastNameInput) lastNameInput.value = student.lastName || '';
+            if (firstNameInput) firstNameInput.value = student.firstName || '';
+            if (ninInput) ninInput.value = student.nin || '';
+            
+            if (classSelect) {
+                if (student.className && Array.from(classSelect.options).some(o => o.value === student.className)) {
+                    classSelect.value = student.className;
+                    if (newClassInput) newClassInput.classList.add('hidden');
+                } else {
+                    // Class not in list (should not happen usually, but handle it)
+                    classSelect.value = '__new__';
+                    if (newClassInput) {
+                        newClassInput.classList.remove('hidden');
+                        newClassInput.value = student.className || '';
+                    }
+                }
+            }
+        } else {
+            // ADD MODE
+            editingStudentId = null;
+            if (titleEl) titleEl.textContent = t.addStudentTitle;
+            if (btnAdd) btnAdd.textContent = t.add || "Ajouter";
+
+            // Reset inputs
+            const inputs = ['student-lastname', 'student-firstname', 'student-nin', 'student-class-new'];
+            inputs.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            
+            if (newClassInput) newClassInput.classList.add('hidden');
+            if (classSelect) classSelect.value = '';
+        }
+
+        if (lastNameInput) lastNameInput.focus();
     };
 
     window.closeStudentModal = function() {
         const modal = document.getElementById('student-modal');
         if (modal) modal.classList.remove('active');
+        editingStudentId = null;
     };
 
     window.addStudent = function() {
@@ -174,14 +214,44 @@
 
         if (!lastName && !firstName) return alert(t.enterName);
         if (!className) return alert(t.enterClass || "Veuillez sélectionner ou saisir une classe");
+        // NIN is optional in edit? User said "update NIN". Let's keep it required if it was required before, or optional.
+        // Original code: if (!nin) return alert(t.enterNIN || "Le NIN est obligatoire");
+        // User asked for NIN update capability, so better keep it validated if it was.
+        // Wait, original code Line 177: if (!nin) return alert...
+        // But Translations say "nin: "NIN (optionnel)"" in FR/EN/AR. 
+        // Yet the code enforces it? "if (!nin) return alert(t.enterNIN || "Le NIN est obligatoire");"
+        // I will keep the validation consistent with existing code, OR relax it if the label says optional.
+        // The label in translation says "optionnel", but code forces it.
+        // I'll stick to the existing code behavior to avoid regression, unless user complained. 
+        // Actually, the user wants to update NIN, so they will provide it.
+        
         if (!nin) return alert(t.enterNIN || "Le NIN est obligatoire");
 
         const name = (lastName + ' ' + firstName).trim();
 
-        data.students.push({ id: genId(), name, className, nin, firstName, lastName });
+        if (editingStudentId) {
+            // UPDATE
+            const student = data.students.find(s => s.id === editingStudentId);
+            if (student) {
+                student.lastName = lastName;
+                student.firstName = firstName;
+                student.name = name;
+                student.className = className;
+                student.nin = nin;
+                // Preserve other fields like grades (linked by ID), sex, birthDate, etc.
+            }
+        } else {
+            // CREATE
+            data.students.push({ id: genId(), name, className, nin, firstName, lastName });
+        }
+
         saveData();
         window.renderStudents();
         window.closeStudentModal();
+        
+        // Refresh class lists if a new class was created or changed
+        window.renderClassList();
+        window.loadClassSelectors();
     };
 
     window.deleteStudent = function(id) {
@@ -254,6 +324,7 @@
             </div>
         </div>
         <div class="student-actions">
+            <button onclick="openStudentModal('${s.id}')" title="${t.edit}">✏️</button>
             <button onclick="deleteStudent('${s.id}')" title="${t.delete}">🗑️</button>
         </div>
     </div>`;

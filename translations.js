@@ -26,6 +26,7 @@ window.translations = {
 
         // Modal étudiant
         addStudentTitle: "Ajouter un élève",
+        editStudentTitle: "Modifier l'élève",
         lastName: "Nom",
         firstName: "Prénom",
         className: "Classe",
@@ -207,6 +208,7 @@ window.translations = {
 
         // Modal étudiant
         addStudentTitle: "Add Student",
+        editStudentTitle: "Edit Student",
         lastName: "Last Name",
         firstName: "First Name",
         className: "Class",
@@ -389,6 +391,7 @@ window.translations = {
 
         // Modal étudiant
         addStudentTitle: "إضافة طالب",
+        editStudentTitle: "تعديل الطالب",
         lastName: "اللقب",
         firstName: "الاسم",
         className: "الفصل",
