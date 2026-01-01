@@ -688,13 +688,15 @@
 
             saveData();
             window.renderStudents();
-            
+            window.renderClassList();
+            window.loadClassSelectors();
+
             // Recharger les sélecteurs et le récapitulatif si nécessaire
             if (typeof window.renderSummary === 'function') window.renderSummary();
             if (typeof window.loadGradeSelectors === 'function') window.loadGradeSelectors();
             
             try {
-                if (window.showTab) window.showTab('export'); // ou 'students'
+                if (window.showTab) window.showTab('students');
                 if (window.renderAssignments) window.renderAssignments();
                 if (window.loadClassSelectors) window.loadClassSelectors();
                 if (window.loadClassSelectorsForExport) window.loadClassSelectorsForExport();

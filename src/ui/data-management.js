@@ -202,6 +202,7 @@
                 if (window.renderStudents) window.renderStudents();
                 if (window.renderAssignments) window.renderAssignments();
                 if (window.loadClassSelectors) window.loadClassSelectors();
+                if (window.renderClassList) window.renderClassList();
                 
                 alert(`${t.importSuccess}\nAjoutés: ${added}\nMis à jour: ${updated}`);
                 event.target.value = '';
