@@ -449,9 +449,12 @@
                         existing = data.students.find(s => s.id === studentMapping[index]);
                     }
 
-                    // A. Essayer par Numéro d'Inscription (le plus fiable)
-                    if (!existing && regNumber) {
-                        existing = data.students.find(s => s.regNumber == regNumber);
+                    // A. Essayer par Numéro d'Inscription ET Classe (le plus fiable)
+                    if (!existing && regNumber && className) {
+                        existing = data.students.find(s => 
+                            s.regNumber == regNumber && 
+                            s.className.trim() === className.trim()
+                        );
                     }
                     // B. Si pas trouvé, essayer par NIN
                     if (!existing && nin) {
