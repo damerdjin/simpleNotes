@@ -213,7 +213,7 @@
 
     window.deleteClassSafely = function(className) {
         const t = getTranslations()[getLang()];
-        const typed = prompt(`${t.deleteClassConfirm || 'Supprimer la classe'} "${className}"\n\n${getLang() === 'ar' ? 'نعم' : getLang() === 'en' ? 'Yes' : 'OUI'}`);
+        const typed = prompt(`${t.deleteClassConfirm || 'Supprimer la classe'} "${className}"\n\n${getLang() === 'ar' ? 'للتأكيد أكتب : نعم' : getLang() === 'en' ? 'To confirm, type: Yes' : 'Pour confirmer, tapez : OUI'}`);
         if (typed !== (getLang() === 'ar' ? 'نعم' : getLang() === 'en' ? 'Yes' : 'OUI')) return;
         window.deleteClass(className);
         window.renderClassesManagerList();
@@ -230,7 +230,7 @@
         let detailMsg = t.deleteClassConfirmDetails || "Cela supprimera :\n- ${count} élèves\n- Tous les devoirs associés\n- Toutes les notes associées";
         detailMsg = detailMsg.replace('${count}', count);
         
-        if (!confirm(`${t.deleteClassConfirm || 'Supprimer la classe'} "${className}" ?\n\n${detailMsg}\n\nTapez OUI, AR نعم, or EN yes pour confirmer`)) return;
+        if (!confirm(`${t.deleteClassConfirm || 'Supprimer la classe'} "${className}" ?\n\n${detailMsg}`)) return;
 
         // Remove students from this class
         const studentIds = data.students.filter(s => s.className === className).map(s => s.id);
