@@ -726,11 +726,13 @@
                                     <div class="flex items-center justify-between gap-2 mb-3">
                                         <h3 class="font-semibold" data-translate="classManagement">Gestion des Classes</h3>
                                         <button onclick="openClassesManager()"
-                                            class="text-sm bg-white border px-3 py-2 rounded-lg hover:bg-gray-100 transition">
+                                            class="text-sm bg-white border px-3 py-2 rounded-lg hover:bg-gray-100 transition"
+                                            data-translate="manageClasses">
                                             Gérer
                                         </button>
                                     </div>
                                     <input type="text" id="students-class-search" placeholder="Rechercher une classe..."
+                                        data-translate-placeholder="searchClassPlaceholder"
                                         oninput="renderClassList()" class="w-full p-2 border rounded-lg bg-white text-sm">
                                     <div id="students-class-list" class="mt-3 space-y-2 max-h-[45vh] lg:max-h-[65vh] overflow-auto"></div>
                                 </div>
@@ -752,7 +754,8 @@
                                             <option value="100">100</option>
                                         </select>
                                         <button onclick="clearStudentsFilters()"
-                                            class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-semibold transition">
+                                            class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-semibold transition"
+                                            data-translate="reset">
                                             Réinitialiser
                                         </button>
                                     </div>

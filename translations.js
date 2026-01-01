@@ -7,6 +7,12 @@ window.translations = {
 
         // Navigation
         studentsTab: "👥 Élèves",
+
+        // Students specific
+        manageClasses: "Gérer les classes",
+        reset: "Réinitialiser",
+        searchClassPlaceholder: "Rechercher une classe...",
+        
         assignmentsTab: "📋 Devoirs",
         gradesTab: "🎯 Notes",
         summaryTab: "📊 Récapitulatif",
@@ -212,6 +218,9 @@ window.translations = {
         student: "Student",
         students: "student(s)",
         noStudentsAddFirst: "No students. Add your first student!",
+        manageClasses: "Manage Classes",
+        reset: "Reset",
+        searchClassPlaceholder: "Search a class...",
 
         // Modal étudiant
         addStudentTitle: "Add Student",
@@ -402,6 +411,9 @@ window.translations = {
         deleteStudent: "حذف هذا الطالب وجميع نقاطه ؟",
         student: "الطالب",
         students: "طلاب",
+        manageClasses: "إدارة الفصول",
+        reset: "إعادة الضبط",
+        searchClassPlaceholder: "بحث في الفصول...",
 
         // Modal étudiant
         addStudentTitle: "إضافة طالب",
