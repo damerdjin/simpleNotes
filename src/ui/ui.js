@@ -87,6 +87,8 @@
             label: t.studentsTab || 'Élèves',
             icon: '',
             onShow: () => {
+                if (window.loadClassSelectors) window.loadClassSelectors();
+                if (window.renderClassList) window.renderClassList();
                 if (window.renderStudents) window.renderStudents();
             }
         });
@@ -196,6 +198,7 @@
 
         // Re-rendre les composants dynamiques
         if (typeof window.renderStudents === 'function') window.renderStudents();
+        if (typeof window.renderClassList === 'function') window.renderClassList();
         if (typeof window.renderAssignments === 'function') window.renderAssignments();
         if (typeof window.renderSummary === 'function') window.renderSummary();
         if (typeof window.loadGradeSelectors === 'function') window.loadGradeSelectors();

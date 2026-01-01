@@ -12,6 +12,9 @@
     const translatePage = () => { if (typeof window.translatePage === 'function') window.translatePage(); };
     const genId = () => window.genId();
 
+    const studentsUiState = window.studentsUiState || { selectedClass: '', page: 1, pageSize: 48 };
+    window.studentsUiState = studentsUiState;
+
     // ===== CLASSES =====
     window.getClasses = function() {
         const classes = new Set();
@@ -48,6 +51,14 @@
             assignmentSelect.innerHTML = `<option value="">${t.selectClass}</option>` +
                 classes.map(c => `<option value="${c}" ${c === currentValue ? 'selected' : ''}>${c}</option>`).join('');
         }
+
+        const filterStudentsSelect = document.getElementById('filter-class-students');
+        if (filterStudentsSelect) {
+            const currentValue = filterStudentsSelect.value || studentsUiState.selectedClass || '';
+            filterStudentsSelect.innerHTML = '<option value="">' + (t.allClasses || '-- Toutes les classes --') + '</option>' +
+                classes.map(c => `<option value="${c}" ${c === currentValue ? 'selected' : ''}>${c}</option>`).join('');
+            studentsUiState.selectedClass = filterStudentsSelect.value;
+        }
     };
 
     window.loadClassSelectorsForAssignments = function() {
@@ -65,24 +76,149 @@
 
     window.renderClassList = function() {
         const t = getTranslations()[getLang()];
-        const container = document.getElementById('class-list');
-        const classes = window.getClasses();
+        const container = document.getElementById('students-class-list') || document.getElementById('class-list');
+        if (!container) return;
+
+        const search = (document.getElementById('students-class-search')?.value || '').toLowerCase();
+        const classes = window.getClasses().filter(c => c.toLowerCase().includes(search));
+        const selected = document.getElementById('filter-class-students')?.value || studentsUiState.selectedClass || '';
 
         if (classes.length === 0) {
             container.innerHTML = `<p class="text-gray-500 text-sm">${t.noClassesAutoCreated || 'Aucune classe.'}</p>`;
             return;
         }
 
-        container.innerHTML = classes.map(c => {
+        const allCount = (getData().students || []).length;
+        const allLabel = t.allClassesFilter || 'Toutes';
+        const allActive = !selected;
+        const allBtn = `
+            <button onclick="setStudentsSelectedClass('')" class="w-full flex items-center justify-between gap-3 p-3 rounded-lg border ${allActive ? 'bg-blue-50 border-blue-200' : 'bg-white hover:bg-gray-50 border-gray-200'} transition">
+                <div class="min-w-0 text-left">
+                    <div class="font-semibold text-gray-800 truncate">${allLabel}</div>
+                </div>
+                <span class="text-xs bg-gray-100 px-2 py-1 rounded font-medium text-gray-700 whitespace-nowrap">${allCount} ${t.students}</span>
+            </button>
+        `;
+
+        const rows = classes.map(c => {
+            const count = getData().students.filter(s => s.className === c).length;
+            const active = c === selected;
+            const color = typeof window.getClassColor === 'function' ? window.getClassColor(c) : '#3b82f6';
+            return `
+                <button onclick="setStudentsSelectedClass('${c}')" class="w-full flex items-center justify-between gap-3 p-3 rounded-lg border ${active ? 'bg-blue-50 border-blue-200' : 'bg-white hover:bg-gray-50 border-gray-200'} transition">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:${color}"></span>
+                        <div class="min-w-0 text-left">
+                            <div class="font-semibold text-gray-800 truncate">${c}</div>
+                        </div>
+                    </div>
+                    <span class="text-xs bg-gray-100 px-2 py-1 rounded font-medium text-gray-700 whitespace-nowrap">${count} ${t.students}</span>
+                </button>
+            `;
+        }).join('');
+
+        container.innerHTML = allBtn + rows;
+    };
+
+    window.setStudentsSelectedClass = function(className = '') {
+        studentsUiState.selectedClass = className || '';
+        studentsUiState.page = 1;
+        const filter = document.getElementById('filter-class-students');
+        if (filter) filter.value = studentsUiState.selectedClass;
+        window.renderStudents();
+        window.renderClassList();
+    };
+
+    window.clearStudentsFilters = function() {
+        studentsUiState.selectedClass = '';
+        studentsUiState.page = 1;
+        const filter = document.getElementById('filter-class-students');
+        if (filter) filter.value = '';
+        const search = document.getElementById('student-search');
+        if (search) search.value = '';
+        window.renderStudents();
+        window.renderClassList();
+    };
+
+    window.setStudentsPageSize = function(value) {
+        const n = Number(value);
+        studentsUiState.pageSize = Number.isFinite(n) && n > 0 ? n : 48;
+        studentsUiState.page = 1;
+        window.renderStudents();
+    };
+
+    window.goStudentsPage = function(page) {
+        const p = Number(page);
+        studentsUiState.page = Number.isFinite(p) && p > 0 ? p : 1;
+        window.renderStudents();
+    };
+
+    window.openClassesManager = function() {
+        const t = getTranslations()[getLang()];
+        const existing = document.getElementById('classes-manager-modal');
+        if (existing) existing.remove();
+
+        const wrapper = document.createElement('div');
+        wrapper.id = 'classes-manager-modal';
+        wrapper.className = 'fixed inset-0 z-50 flex items-center justify-center p-4';
+        wrapper.innerHTML = `
+            <div class="absolute inset-0 bg-black/40" onclick="closeClassesManager()"></div>
+            <div class="relative w-full max-w-lg bg-white rounded-xl shadow-xl border p-5">
+                <div class="flex items-center justify-between gap-3 mb-4">
+                    <h3 class="text-lg font-bold text-gray-800">${t.classManagement || 'Gestion des Classes'}</h3>
+                    <button onclick="closeClassesManager()" class="text-gray-500 hover:text-gray-700 text-xl leading-none">✕</button>
+                </div>
+                <div class="text-sm text-gray-600 mb-3">${t.noClassesAutoCreated ? '' : ''}</div>
+                <div id="classes-manager-list" class="space-y-2 max-h-[60vh] overflow-auto"></div>
+                <div class="flex justify-end gap-2 mt-4">
+                    <button onclick="closeClassesManager()" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">${t.cancel || 'Fermer'}</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(wrapper);
+        document.body.style.overflow = 'hidden';
+        window.renderClassesManagerList();
+    };
+
+    window.closeClassesManager = function() {
+        const modal = document.getElementById('classes-manager-modal');
+        if (modal) modal.remove();
+        document.body.style.overflow = '';
+    };
+
+    window.renderClassesManagerList = function() {
+        const t = getTranslations()[getLang()];
+        const list = document.getElementById('classes-manager-list');
+        if (!list) return;
+        const classes = window.getClasses();
+
+        if (classes.length === 0) {
+            list.innerHTML = `<p class="text-gray-500 text-sm">${t.noClassesAutoCreated || 'Aucune classe.'}</p>`;
+            return;
+        }
+
+        list.innerHTML = classes.map(c => {
             const count = getData().students.filter(s => s.className === c).length;
             return `
-    <div class="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-2 rounded-lg hover:bg-blue-200 transition-all">
-        <button onclick="deleteClass('${c}')" class="text-red-600 hover:text-red-800 text-lg font-bold p-1 rounded hover:bg-red-100 transition-all">✕</button>
-        <span class="font-medium">${c}</span>
-        <span class="text-xs bg-blue-200 px-2 py-1 rounded font-medium">${count} ${t.students}</span>
-    </div>
-`;
+                <div class="flex items-center justify-between gap-3 p-3 rounded-lg border bg-gray-50">
+                    <div class="min-w-0">
+                        <div class="font-semibold text-gray-800 truncate">${c}</div>
+                        <div class="text-xs text-gray-600">${count} ${t.students}</div>
+                    </div>
+                    <button onclick="deleteClassSafely('${c}')" class="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold">${t.delete || 'Supprimer'}</button>
+                </div>
+            `;
         }).join('');
+    };
+
+    window.deleteClassSafely = function(className) {
+        const t = getTranslations()[getLang()];
+        const typed = prompt(`${t.deleteClassConfirm || 'Supprimer la classe'} "${className}"\n\n${getLang() === 'ar' ? 'نعم' : getLang() === 'en' ? 'Yes' : 'OUI'}`);
+        if (typed !== (getLang() === 'ar' ? 'نعم' : getLang() === 'en' ? 'Yes' : 'OUI')) return;
+        window.deleteClass(className);
+        window.renderClassesManagerList();
+        window.loadClassSelectors();
+        window.renderClassList();
     };
 
     window.deleteClass = function(className) {
@@ -94,7 +230,7 @@
         let detailMsg = t.deleteClassConfirmDetails || "Cela supprimera :\n- ${count} élèves\n- Tous les devoirs associés\n- Toutes les notes associées";
         detailMsg = detailMsg.replace('${count}', count);
         
-        if (!confirm(`${t.deleteClassConfirm || 'Supprimer la classe'} "${className}" ?\n\n${detailMsg}`)) return;
+        if (!confirm(`${t.deleteClassConfirm || 'Supprimer la classe'} "${className}" ?\n\n${detailMsg}\n\nTapez OUI, AR نعم, or EN yes pour confirmer`)) return;
 
         // Remove students from this class
         const studentIds = data.students.filter(s => s.className === className).map(s => s.id);
@@ -265,15 +401,22 @@
         delete data.grades[id];
         saveData();
         window.renderStudents();
+        window.renderClassList();
+        window.loadClassSelectors();
     };
 
     window.renderStudents = function() {
         const t = getTranslations()[getLang()];
         const container = document.getElementById('students-list');
         const searchTerm = document.getElementById('student-search')?.value.trim().toLowerCase() || '';
+        const filterSelect = document.getElementById('filter-class-students');
+        const selectedClass = filterSelect ? filterSelect.value : (studentsUiState.selectedClass || '');
         const data = getData();
 
         let filteredStudents = data.students.slice();
+        if (selectedClass) {
+            filteredStudents = filteredStudents.filter(s => (s.className || '') === selectedClass);
+        }
         if (searchTerm) {
             filteredStudents = filteredStudents.filter(s => {
                 const haystack = `${s.name || ''} ${s.firstName || ''} ${s.lastName || ''} ${s.className || ''}`.toLowerCase();
@@ -284,10 +427,23 @@
         if (data.students.length === 0) {
             container.className = '';
             container.innerHTML = `<p class="text-gray-500 text-center py-8">${t.noStudentsAddFirst}</p>`;
+            const pagination = document.getElementById('students-pagination');
+            if (pagination) pagination.innerHTML = '';
             return;
         }
 
         container.className = 'student-grid';
+
+        const pageSizeSelect = document.getElementById('students-page-size');
+        const pageSize = Number(pageSizeSelect?.value) || studentsUiState.pageSize || 48;
+        studentsUiState.pageSize = pageSize;
+        studentsUiState.selectedClass = selectedClass;
+
+        const totalPages = Math.max(1, Math.ceil(filteredStudents.length / pageSize));
+        if (studentsUiState.page > totalPages) studentsUiState.page = totalPages;
+        if (studentsUiState.page < 1) studentsUiState.page = 1;
+        const start = (studentsUiState.page - 1) * pageSize;
+        const pageStudents = filteredStudents.slice(start, start + pageSize);
 
         const levelFromClass = (className = '') => {
             const first = className.trim().split(/\s+/)[0] || '';
@@ -329,7 +485,11 @@
             return parts.join(' ');
         };
 
-        const items = filteredStudents.map((s, i) => {
+        if (filteredStudents.length === 0) {
+            container.className = '';
+            container.innerHTML = `<p class="text-gray-500 text-center py-8">${t.noResults || 'Aucun résultat.'}</p>`;
+        } else {
+            const items = pageStudents.map((s, i) => {
             const first = (s.firstName || '').trim();
             const last = (s.lastName || '').trim();
             const displayName = (s.name || `${last} ${first}`).trim();
@@ -357,12 +517,31 @@
             <button onclick="deleteStudent('${s.id}')" title="${t.delete}">🗑️</button>
         </div>
     </div>`;
-        }).join('');
+            }).join('');
 
-        container.innerHTML = items;
+            container.className = 'student-grid';
+            container.innerHTML = items;
+        }
 
-        window.renderClassList();
-        translatePage();
+        const pagination = document.getElementById('students-pagination');
+        if (pagination) {
+            const total = filteredStudents.length;
+            const from = total === 0 ? 0 : (start + 1);
+            const to = Math.min(start + pageSize, total);
+            const prevDisabled = studentsUiState.page <= 1 ? 'opacity-50 pointer-events-none' : '';
+            const nextDisabled = studentsUiState.page >= totalPages ? 'opacity-50 pointer-events-none' : '';
+
+            pagination.innerHTML = `
+                <div class="text-sm text-gray-600">
+                    ${from}-${to} / ${total}
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="goStudentsPage(${studentsUiState.page - 1})" class="px-3 py-2 rounded-lg border bg-white hover:bg-gray-50 ${prevDisabled}">←</button>
+                    <div class="text-sm font-semibold text-gray-700">${studentsUiState.page} / ${totalPages}</div>
+                    <button onclick="goStudentsPage(${studentsUiState.page + 1})" class="px-3 py-2 rounded-lg border bg-white hover:bg-gray-50 ${nextDisabled}">→</button>
+                </div>
+            `;
+        }
     };
 
     window.handleStudentImport = function(event) {
