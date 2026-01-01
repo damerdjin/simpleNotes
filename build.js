@@ -99,6 +99,12 @@ async function build() {
     await fs.copy(srcRemarksMessages, path.join(distDir, 'remarks.messages.js'));
   }
 
+  // Copy src directory (recursively) to ensure modules are available
+  const srcDir = path.join(root, 'src');
+  if (await fs.pathExists(srcDir)) {
+    await fs.copy(srcDir, path.join(distDir, 'src'));
+  }
+
   console.log('Build complete. Output in ./dist');
 }
 
