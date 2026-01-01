@@ -323,8 +323,8 @@
                 if (el) el.value = '';
             });
 
-            // Auto-generate NIN
-            if (ninInput) ninInput.value = genId();
+            // Auto-generate NIN as a long number
+            if (ninInput) ninInput.value = (1000 + Date.now()).toString();
 
             if (newClassInput) newClassInput.classList.add('hidden');
             if (classSelect) classSelect.value = '';
@@ -358,6 +358,11 @@
         if (!className) return alert(t.enterClass || "Veuillez sélectionner ou saisir une classe");
 
         const name = (lastName + ' ' + firstName).trim();
+
+        // Check for duplicate student in the same class
+        if (!editingStudentId && data.students.some(s => s.name === name && s.className === className)) {
+            return alert(t.studentAlreadyExists);
+        }
 
         if (editingStudentId) {
             // UPDATE

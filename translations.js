@@ -29,6 +29,7 @@ window.translations = {
         student: "Élève",
         students: "élève(s)",
         noStudentsAddFirst: "Aucun élève. Ajoutez votre premier élève !",
+        studentAlreadyExists: "Cet élève existe déjà dans cette classe.",
 
         // Modal étudiant
         addStudentTitle: "Ajouter un élève",
@@ -218,6 +219,7 @@ window.translations = {
         student: "Student",
         students: "student(s)",
         noStudentsAddFirst: "No students. Add your first student!",
+        studentAlreadyExists: "This student already exists in this class.",
         manageClasses: "Manage Classes",
         reset: "Reset",
         searchClassPlaceholder: "Search a class...",
@@ -411,6 +413,7 @@ window.translations = {
         deleteStudent: "حذف هذا الطالب وجميع نقاطه ؟",
         student: "الطالب",
         students: "طلاب",
+        studentAlreadyExists: "هذا الطالب موجود بالفعل في هذا الفصل.",
         manageClasses: "إدارة الفصول",
         reset: "إعادة الضبط",
         searchClassPlaceholder: "بحث في الفصول...",
