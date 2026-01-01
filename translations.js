@@ -36,7 +36,7 @@ window.translations = {
         lastName: "Nom",
         firstName: "Prénom",
         className: "Classe",
-        nin: "NIN (optionnel)",
+        nin: "NIN (auto-généré)",
         cancel: "Annuler",
         add: "Ajouter",
 
@@ -228,7 +228,7 @@ window.translations = {
         lastName: "Last Name",
         firstName: "First Name",
         className: "Class",
-        nin: "NIN (optional)",
+        nin: "NIN (auto-generated)",
         cancel: "Cancel",
         add: "Add",
 
@@ -421,7 +421,7 @@ window.translations = {
         lastName: "اللقب",
         firstName: "الاسم",
         className: "الفصل",
-        nin: "الرقم الوطني (اختياري)",
+        nin: "الرقم الوطني (يتم إنشاؤه تلقائياً)",
         cancel: "إلغاء",
         add: "إضافة",
 

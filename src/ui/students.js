@@ -317,12 +317,15 @@
             if (btnAdd) btnAdd.textContent = t.add || "Ajouter";
 
             // Reset inputs
-            const inputs = ['student-lastname', 'student-firstname', 'student-nin', 'student-class-new'];
+            const inputs = ['student-lastname', 'student-firstname', 'student-class-new'];
             inputs.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.value = '';
             });
-            
+
+            // Auto-generate NIN
+            if (ninInput) ninInput.value = genId();
+
             if (newClassInput) newClassInput.classList.add('hidden');
             if (classSelect) classSelect.value = '';
         }
@@ -353,18 +356,6 @@
 
         if (!lastName && !firstName) return alert(t.enterName);
         if (!className) return alert(t.enterClass || "Veuillez sélectionner ou saisir une classe");
-        // NIN is optional in edit? User said "update NIN". Let's keep it required if it was required before, or optional.
-        // Original code: if (!nin) return alert(t.enterNIN || "Le NIN est obligatoire");
-        // User asked for NIN update capability, so better keep it validated if it was.
-        // Wait, original code Line 177: if (!nin) return alert...
-        // But Translations say "nin: "NIN (optionnel)"" in FR/EN/AR. 
-        // Yet the code enforces it? "if (!nin) return alert(t.enterNIN || "Le NIN est obligatoire");"
-        // I will keep the validation consistent with existing code, OR relax it if the label says optional.
-        // The label in translation says "optionnel", but code forces it.
-        // I'll stick to the existing code behavior to avoid regression, unless user complained. 
-        // Actually, the user wants to update NIN, so they will provide it.
-        
-        if (!nin) return alert(t.enterNIN || "Le NIN est obligatoire");
 
         const name = (lastName + ' ' + firstName).trim();
 
@@ -376,12 +367,12 @@
                 student.firstName = firstName;
                 student.name = name;
                 student.className = className;
-                student.nin = nin;
+                if (nin) student.nin = nin; // Only update if provided
                 // Preserve other fields like grades (linked by ID), sex, birthDate, etc.
             }
         } else {
             // CREATE
-            data.students.push({ id: genId(), name, className, nin, firstName, lastName });
+            data.students.push({ id: genId(), name, className, nin: nin || genId(), firstName, lastName });
         }
 
         saveData();
