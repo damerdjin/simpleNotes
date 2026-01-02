@@ -34,3 +34,40 @@ ALTER TABLE public.users ADD CONSTRAINT fk_users_school FOREIGN KEY (school_id) 
 -- Index pour la performance
 CREATE INDEX users_email_idx ON public.users (email);
 CREATE INDEX schools_approved_idx ON public.schools (approved);
+
+-- =============================================
+-- 1. NETTOYAGE ET CRÉATION DES TABLES
+-- =============================================
+
+DROP TABLE IF EXISTS communes CASCADE;
+DROP TABLE IF EXISTS wilayas CASCADE;
+
+-- TABLE : WILAYAS
+CREATE TABLE wilayas (
+    id VARCHAR(2) PRIMARY KEY, -- Code "01", "02"...
+    code VARCHAR(2) NOT NULL UNIQUE, -- Redondant avec ID mais gardé selon ta demande
+    name_fr VARCHAR(100) NOT NULL,
+    name_ar VARCHAR(100) NOT NULL,
+    nb_communes INTEGER NOT NULL CHECK (nb_communes > 0),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_wilayas_code ON wilayas(code);
+
+-- TABLE : COMMUNES
+CREATE TABLE communes (
+    id SERIAL PRIMARY KEY,
+    wilaya_id VARCHAR(2) NOT NULL REFERENCES wilayas(id) ON DELETE CASCADE,
+    name_fr VARCHAR(150) NOT NULL,
+    name_ar VARCHAR(150) NOT NULL, -- On remplira avec le nom FR temporairement si l'AR est manquant
+    code_postal VARCHAR(5),
+    latitude DECIMAL(10, 8),
+    longitude DECIMAL(11, 8),
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_communes_wilaya_id ON communes(wilaya_id);
+CREATE INDEX idx_communes_name_fr ON communes(name_fr);

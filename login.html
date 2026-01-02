@@ -8,17 +8,9 @@
     <script src="/translations.js"></script>
 </head>
 <body class="bg-gray-100 h-screen flex items-center justify-center relative">
-    <div class="absolute top-4 end-4">
-        <select id="language-selector" class="bg-white border border-gray-300 text-gray-700 py-1 px-2 rounded focus:outline-none focus:shadow-outline text-sm">
-            <option value="fr">Français</option>
-            <option value="en">English</option>
-            <option value="ar">العربية</option>
-        </select>
-    </div>
-
     <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
         <h2 class="text-2xl font-bold mb-6 text-center text-blue-600" data-translate="loginTitle">Connexion</h2>
-        
+
         <div id="error-message" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"></div>
 
         <form id="login-form">
@@ -26,16 +18,25 @@
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="email" data-translate="emailLabel">
                     Email
                 </label>
-                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                     id="email" type="email" placeholder="email@exemple.com" data-translate-placeholder="emailPlaceholder" autocomplete="email" required>
             </div>
             <div class="mb-6">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="password" data-translate="passwordLabel">
                     Mot de passe
                 </label>
-                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                     id="password" type="password" placeholder="******************" autocomplete="current-password" required>
             </div>
+
+            <div class="mb-4 flex justify-center">
+                <select id="language-selector" class="bg-gray-50 border border-gray-300 text-gray-700 py-1 px-2 rounded focus:outline-none focus:shadow-outline text-sm">
+                    <option value="fr">Français</option>
+                    <option value="en">English</option>
+                    <option value="ar">العربية</option>
+                </select>
+            </div>
+
             <div class="flex items-center justify-between">
                 <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full" 
                     type="submit" id="submit-btn" data-translate="loginButton">
