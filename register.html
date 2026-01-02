@@ -125,19 +125,23 @@
             try {
                 const schools = await getSchools(params);
                 schoolSelect.innerHTML = '<option value="" data-translate="selectSchoolPlaceholder">Sélectionner un lycée...</option>';
-                schools.forEach(school => {
+                if (schools.length === 0) {
                     const option = document.createElement('option');
-                    option.value = school.id;
-                    option.textContent = school.name;
+                    option.disabled = true;
+                    option.textContent = 'Aucun lycée n\'est disponible';
                     schoolSelect.appendChild(option);
-                });
+                } else {
+                    schools.forEach(school => {
+                        const option = document.createElement('option');
+                        option.value = school.id;
+                        option.textContent = school.name;
+                        schoolSelect.appendChild(option);
+                    });
+                }
             } catch (e) {
                 console.error('Error loading schools', e);
             }
         };
-
-        // Load schools initially
-        loadSchools();
 
         // Load wilayas
         (async () => {
@@ -204,6 +208,8 @@
         communeSelect.addEventListener('change', () => {
             if (communeSelect.value) {
                 loadSchools({commune_id: communeSelect.value});
+            } else {
+                schoolSelect.innerHTML = '<option value="" data-translate="selectSchoolPlaceholder">Sélectionner un lycée...</option>';
             }
         });
 
