@@ -42,7 +42,14 @@ export const t = (key) => {
 export const applyLanguage = (lang) => {
     const isRTL = lang === 'ar';
     document.body.dir = isRTL ? 'rtl' : 'ltr';
-    document.body.className = isRTL ? 'rtl-layout' : 'ltr-layout';
+    
+    if (isRTL) {
+        document.body.classList.add('rtl-layout');
+        document.body.classList.remove('ltr-layout');
+    } else {
+        document.body.classList.add('ltr-layout');
+        document.body.classList.remove('rtl-layout');
+    }
     
     // Update translations if window.translations is available
     if (window.translations && window.translations[lang]) {
