@@ -37,19 +37,18 @@ const handler = async (req, res) => {
   // Handle new school creation
   if (new_school) {
     // Validate new school data
-    validateRequired(new_school, ['name', 'city', 'wilaya']);
-    
+    validateRequired(new_school, ['name', 'commune_id']);
+
     const { data: createdSchool, error: schoolError } = await supabase
       .from('schools')
       .insert([{
         name: new_school.name,
-        city: new_school.city,
-        wilaya: new_school.wilaya,
+        commune_id: new_school.commune_id,
         approved: false // Default to not approved
       }])
       .select('id')
       .single();
-      
+
     if (schoolError) {
       console.error('Create School Error:', schoolError);
       return res.status(500).json({ error: 'Error creating school' });

@@ -21,8 +21,7 @@ CREATE TABLE public.users (
 CREATE TABLE public.schools (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
-  city TEXT NOT NULL,
-  wilaya TEXT NOT NULL,
+  commune_id INTEGER NOT NULL REFERENCES communes(id),
   created_by UUID REFERENCES public.users(id),
   approved BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL

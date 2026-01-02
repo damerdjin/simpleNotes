@@ -72,20 +72,8 @@
                 <div id="new-school-container" class="hidden">
                     <div class="mb-3">
                         <label class="block text-gray-700 text-xs font-bold mb-1" data-translate="schoolNameLabel">Nom du lycée</label>
-                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                             id="new-school-name" type="text" placeholder="Ex: Lycée Emir Abdelkader" data-translate-placeholder="schoolNamePlaceholder">
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-gray-700 text-xs font-bold mb-1" data-translate="newSchoolCityLabel">Ville</label>
-                            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
-                                id="new-school-city" type="text">
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 text-xs font-bold mb-1" data-translate="newSchoolWilayaLabel">Wilaya</label>
-                            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
-                                id="new-school-wilaya" type="text">
-                        </div>
                     </div>
                 </div>
             </div>
@@ -133,14 +121,14 @@
 
 
 
-        const loadSchools = async (city, wilaya) => {
+        const loadSchools = async (params = {}) => {
             try {
-                const schools = await getSchools({city, wilaya});
+                const schools = await getSchools(params);
                 schoolSelect.innerHTML = '<option value="" data-translate="selectSchoolPlaceholder">Sélectionner un lycée...</option>';
                 schools.forEach(school => {
                     const option = document.createElement('option');
                     option.value = school.id;
-                    option.textContent = `${school.name} (${school.city})`;
+                    option.textContent = school.name;
                     schoolSelect.appendChild(option);
                 });
             } catch (e) {
@@ -214,30 +202,14 @@
 
         // Commune select change
         communeSelect.addEventListener('change', () => {
-            const communeOption = communeSelect.options[communeSelect.selectedIndex];
-            const wilayaOption = wilayaSelect.options[wilayaSelect.selectedIndex];
-            if (communeOption && wilayaOption && communeSelect.value) {
-                const communeName = communeOption.textContent.split(' (')[0];
-                const wilayaName = wilayaOption.textContent.split(' - ')[1];
-                loadSchools(communeName, wilayaName);
+            if (communeSelect.value) {
+                loadSchools({commune_id: communeSelect.value});
             }
         });
 
 
 
-        // Auto-fill new school city/wilaya from user commune/wilaya if empty
-        wilayaSelect.addEventListener('change', (e) => {
-            if (!document.getElementById('new-school-wilaya').value) {
-                const wilayaName = e.target.options[e.target.selectedIndex].textContent.split(' - ')[1];
-                document.getElementById('new-school-wilaya').value = wilayaName;
-            }
-        });
-        communeSelect.addEventListener('change', (e) => {
-            if (!document.getElementById('new-school-city').value) {
-                const communeName = e.target.options[e.target.selectedIndex].textContent.split(' (')[0];
-                document.getElementById('new-school-city').value = communeName;
-            }
-        });
+
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -257,8 +229,7 @@
             if (isNewSchoolMode) {
                 userData.new_school = {
                     name: document.getElementById('new-school-name').value,
-                    city: document.getElementById('new-school-city').value,
-                    wilaya: document.getElementById('new-school-wilaya').value
+                    commune_id: communeSelect.value
                 };
             } else {
                 userData.school_id = schoolSelect.value;

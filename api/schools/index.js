@@ -6,20 +6,16 @@ const handler = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { city, wilaya } = req.query;
+  const { commune_id } = req.query;
 
   let query = supabase
     .from('schools')
-    .select('id, name, city, wilaya, approved')
+    .select('id, name, commune_id, approved')
     .eq('approved', true)
     .order('name');
 
-  if (city) {
-    query = query.ilike('city', `%${city}%`);
-  }
-
-  if (wilaya) {
-    query = query.ilike('wilaya', `%${wilaya}%`);
+  if (commune_id) {
+    query = query.eq('commune_id', commune_id);
   }
 
   const { data: schools, error } = await query;
