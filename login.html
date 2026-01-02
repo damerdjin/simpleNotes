@@ -6,10 +6,27 @@
     <title>Connexion - Gestion des Corrections</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="/translations.js"></script>
+    <style>
+        /* Custom styles for notifications */
+        .notification-toast {
+            transition: all 0.3s ease-in-out;
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        .notification-toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
 </head>
 <body class="bg-gray-100 h-screen flex items-center justify-center relative">
-    <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
+    <div class="bg-white p-8 rounded shadow-md w-full max-w-md relative">
         <h2 class="text-2xl font-bold mb-6 text-center text-blue-600" data-translate="loginTitle">Connexion</h2>
+
+        <!-- Notification Area -->
+        <div id="notification-area" class="mb-4 hidden">
+            <!-- Notifications will be injected here -->
+        </div>
 
         <div id="error-message" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"></div>
 
@@ -27,6 +44,12 @@
                 </label>
                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                     id="password" type="password" placeholder="******************" autocomplete="current-password" required>
+                <!-- Changed text-right to text-end for RTL support -->
+                <div class="text-end mt-1">
+                    <a class="inline-block align-baseline font-bold text-xs text-blue-500 hover:text-blue-800" href="#" id="forgot-password-link" data-translate="forgotPasswordLink">
+                        Mot de passe oublié ?
+                    </a>
+                </div>
             </div>
 
             <div class="mb-4 flex justify-center">
@@ -52,7 +75,7 @@
     </div>
 
     <script type="module">
-        import { login, checkAuth } from './src/ui/auth.js';
+        import { login, checkAuth, resetPassword } from './src/ui/auth.js';
         import { initLanguage, changeLanguage, t } from './src/ui/i18n.js';
 
         // Initialize language
@@ -65,20 +88,68 @@
             });
         }
 
-        // Redirect if already logged in
-        // checkAuth().then(user => {
-        //     if (user) {
-        //         window.location.href = '/index.html';
-        //     }
-        // });
-
         const form = document.getElementById('login-form');
         const errorDiv = document.getElementById('error-message');
         const submitBtn = document.getElementById('submit-btn');
+        const forgotPasswordLink = document.getElementById('forgot-password-link');
+        const notificationArea = document.getElementById('notification-area');
+
+        // Helper function to show notifications instead of alert()
+        function showNotification(message, type = 'info') {
+            const bgColor = type === 'error' ? 'bg-red-100' : 'bg-green-100';
+            const borderColor = type === 'error' ? 'border-red-400' : 'border-green-400';
+            const textColor = type === 'error' ? 'text-red-700' : 'text-green-700';
+
+            notificationArea.className = `mb-4 px-4 py-3 rounded border ${bgColor} ${borderColor} ${textColor} notification-toast show`;
+            notificationArea.textContent = message;
+            notificationArea.classList.remove('hidden');
+
+            // Auto hide after 5 seconds
+            setTimeout(() => {
+                notificationArea.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Custom confirm using a non-blocking UI approach is harder without a modal.
+        // For now, we will use a simple two-step process or just send it (less secure against spam but UX friendly).
+        // Or we can use a custom modal overlay.
+        // Given the requirement "plus de messages d'alerte", let's make a simple inline confirmation.
+        
+        let resetConfirmationPending = false;
+
+        forgotPasswordLink.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            
+            if (!email) {
+                showNotification(t('emailRequired') || 'Veuillez entrer votre email pour réinitialiser le mot de passe.', 'error');
+                return;
+            }
+            
+            // Simple inline confirmation logic
+            if (!resetConfirmationPending) {
+                showNotification((t('confirmReset') || 'Cliquez à nouveau pour confirmer l\'envoi à : ') + email, 'info');
+                resetConfirmationPending = true;
+                // Reset state after 3 seconds if not confirmed
+                setTimeout(() => resetConfirmationPending = false, 3000);
+                return;
+            }
+            
+            // Confirmed
+            resetConfirmationPending = false;
+            try {
+                showNotification(t('sending') || 'Envoi en cours...', 'info');
+                await resetPassword(email);
+                showNotification(t('resetEmailSent') || 'Email de réinitialisation envoyé ! Vérifiez votre boîte mail.', 'success');
+            } catch (err) {
+                showNotification('Erreur: ' + err.message, 'error');
+            }
+        });
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             errorDiv.classList.add('hidden');
+            notificationArea.classList.add('hidden');
             submitBtn.disabled = true;
             submitBtn.textContent = t('loginLoading');
 
