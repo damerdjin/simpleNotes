@@ -699,6 +699,31 @@
             </div>
         </header>
 
+        <!-- Global Filters -->
+        <div class="bg-white rounded-xl shadow-lg p-4 mb-6">
+            <div class="flex items-center gap-6 flex-wrap">
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium text-gray-700">Année scolaire :</label>
+                    <select id="global-academic-year" onchange="setGlobalAcademicYear(this.value)"
+                        class="p-2 border rounded-lg bg-white min-w-32">
+                        <option value="">-- Choisir --</option>
+                        <option value="2025/2026">2025/2026</option>
+                        <option value="2024/2025">2024/2025</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium text-gray-700">Trimestre :</label>
+                    <select id="global-trimester" onchange="setGlobalTrimester(this.value)"
+                        class="p-2 border rounded-lg bg-white min-w-32">
+                        <option value="">-- Choisir --</option>
+                        <option value="1">Trimestre 1</option>
+                        <option value="2">Trimestre 2</option>
+                        <option value="3">Trimestre 3</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
         <!-- ===== NOUVEAU SYSTÈME D'ONGLETS ===== -->
         <div class="tab-system">
             <!-- Boutons dynamiques -->
@@ -954,6 +979,11 @@
                     </select>
                     <input type="text" id="student-class-new" placeholder="Nouvelle classe" class="w-full p-3 border rounded-lg mt-2 hidden">
                 </div>
+                <select id="student-academic-year" class="w-full p-3 border rounded-lg bg-white">
+                    <option value="">-- Année scolaire --</option>
+                    <option value="2025/2026">2025/2026</option>
+                    <option value="2024/2025">2024/2025</option>
+                </select>
                 <input type="text" id="student-nin" placeholder="NIN (auto-généré)" class="w-full p-3 border rounded-lg">
             </div>
             <div class="flex gap-3 justify-end">
@@ -1017,7 +1047,10 @@
             initLanguage();
             // Initialize new tab system
             if (window.initTabs) window.initTabs();
-            
+
+            // Load global filters
+            if (window.loadGlobalFilters) window.loadGlobalFilters();
+
             renderStudents();
             renderAssignments();
             loadExportPrepConfig();

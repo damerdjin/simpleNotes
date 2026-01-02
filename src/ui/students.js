@@ -24,8 +24,17 @@
         return Array.from(classes).sort();
     };
 
+    window.getAcademicYears = function() {
+        const years = new Set();
+        (getData().students || []).forEach(s => {
+            if (s.academicYear) years.add(s.academicYear);
+        });
+        return Array.from(years).sort();
+    };
+
     window.loadClassSelectors = function() {
         const classes = window.getClasses();
+        const academicYears = window.getAcademicYears();
         const t = getTranslations()[getLang()];
 
         // For grades tab
@@ -296,7 +305,10 @@
             if (lastNameInput) lastNameInput.value = student.lastName || '';
             if (firstNameInput) firstNameInput.value = student.firstName || '';
             if (ninInput) ninInput.value = student.nin || '';
-            
+
+            const academicYearSelect = document.getElementById('student-academic-year');
+            if (academicYearSelect) academicYearSelect.value = student.academicYear || '';
+
             if (classSelect) {
                 if (student.className && Array.from(classSelect.options).some(o => o.value === student.className)) {
                     classSelect.value = student.className;
@@ -328,6 +340,10 @@
 
             if (newClassInput) newClassInput.classList.add('hidden');
             if (classSelect) classSelect.value = '';
+
+            // Pre-fill academic year with global value
+            const globalAcademicYear = window.getGlobalAcademicYear();
+            if (academicYearSelect) academicYearSelect.value = globalAcademicYear;
         }
 
         if (lastNameInput) lastNameInput.focus();
@@ -351,7 +367,9 @@
         if (className === '__new__') {
             className = document.getElementById('student-class-new').value.trim();
         }
-        
+
+        const academicYear = document.getElementById('student-academic-year').value.trim();
+
         const nin = document.getElementById('student-nin').value.trim();
 
         if (!lastName && !firstName) return alert(t.enterName);
@@ -372,12 +390,13 @@
                 student.firstName = firstName;
                 student.name = name;
                 student.className = className;
+                student.academicYear = academicYear;
                 if (nin) student.nin = nin; // Only update if provided
                 // Preserve other fields like grades (linked by ID), sex, birthDate, etc.
             }
         } else {
             // CREATE
-            data.students.push({ id: genId(), name, className, nin: nin || genId(), firstName, lastName });
+            data.students.push({ id: genId(), name, className, academicYear, nin: nin || genId(), firstName, lastName });
         }
 
         saveData();
@@ -418,6 +437,12 @@
                 const haystack = `${s.name || ''} ${s.firstName || ''} ${s.lastName || ''} ${s.className || ''}`.toLowerCase();
                 return haystack.includes(searchTerm);
             });
+        }
+
+        // Apply global academic year filter
+        const globalAcademicYear = window.getGlobalAcademicYear();
+        if (globalAcademicYear) {
+            filteredStudents = filteredStudents.filter(s => (s.academicYear || '') === globalAcademicYear);
         }
 
         if (data.students.length === 0) {
@@ -505,6 +530,7 @@
             <div class="student-name">${displayName}</div>
             <div class="student-meta">
                 ${s.className ? `<span class="student-chip">${cleanClassName(s.className)}</span>` : ''}
+                ${s.academicYear ? `<span class="student-chip">${s.academicYear}</span>` : ''}
                 ${birth ? `<span class="student-chip birth">🎂 ${birth}</span>` : ''}
             </div>
         </div>

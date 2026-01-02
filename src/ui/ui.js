@@ -352,6 +352,47 @@
         });
     };
     
+    // --- Global Filters (Academic Year & Trimester) ---
+
+    window.loadGlobalFilters = function() {
+        const academicYear = localStorage.getItem('corrections-global-academic-year') || '';
+        const trimester = localStorage.getItem('corrections-global-trimester') || '';
+
+        const academicSelect = document.getElementById('global-academic-year');
+        const trimesterSelect = document.getElementById('global-trimester');
+
+        if (academicSelect) academicSelect.value = academicYear;
+        if (trimesterSelect) trimesterSelect.value = trimester;
+    };
+
+    window.setGlobalAcademicYear = function(value) {
+        localStorage.setItem('corrections-global-academic-year', value);
+        // Re-render all tabs to apply the filter
+        if (window.renderStudents) window.renderStudents();
+        if (window.renderAssignments) window.renderAssignments();
+        if (window.renderSummary) window.renderSummary();
+        if (window.loadGradeSelectors) window.loadGradeSelectors();
+        if (window.renderExportPrep) window.renderExportPrep();
+    };
+
+    window.setGlobalTrimester = function(value) {
+        localStorage.setItem('corrections-global-trimester', value);
+        // Re-render all tabs to apply the filter
+        if (window.renderStudents) window.renderStudents();
+        if (window.renderAssignments) window.renderAssignments();
+        if (window.renderSummary) window.renderSummary();
+        if (window.loadGradeSelectors) window.loadGradeSelectors();
+        if (window.renderExportPrep) window.renderExportPrep();
+    };
+
+    window.getGlobalAcademicYear = function() {
+        return localStorage.getItem('corrections-global-academic-year') || '';
+    };
+
+    window.getGlobalTrimester = function() {
+        return localStorage.getItem('corrections-global-trimester') || '';
+    };
+
     // Auto-setup guard
     window.setupGlobalUiGuard();
 
