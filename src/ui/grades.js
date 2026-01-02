@@ -33,7 +33,12 @@
         }
 
         const data = getData();
-        const filteredAssignments = data.assignments.filter(a => a.className === selectedClass);
+        const globalTrimester = window.getGlobalTrimester();
+        const filteredAssignments = data.assignments.filter(a => {
+            const matchClass = a.className === selectedClass;
+            const matchTrimester = !globalTrimester || (a.trimester || '') === globalTrimester;
+            return matchClass && matchTrimester;
+        });
         assignmentSelect.innerHTML = `<option value="">-- ${t.selectAssignment} --</option>` +
             filteredAssignments.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
 

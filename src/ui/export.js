@@ -201,7 +201,12 @@
     window.getExportClassConfig = getExportClassConfig; // Needed globally for some calls
 
     function getAssignmentsForClass(className) {
-        return getData().assignments.filter(a => (a.className || '').trim() === (className || '').trim());
+        const globalTrimester = window.getGlobalTrimester();
+        return getData().assignments.filter(a => {
+            const matchClass = (a.className || '').trim() === (className || '').trim();
+            const matchTrimester = !globalTrimester || (a.trimester || '') === globalTrimester;
+            return matchClass && matchTrimester;
+        });
     }
 
     function toNumberOrNull(v) {

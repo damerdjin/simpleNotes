@@ -48,7 +48,7 @@
         overlay.innerHTML = `
       <div class="bg-white rounded-xl p-6 w-full max-w-5xl mx-4 my-auto">
         <h3 id="assignment-modal-title" class="text-xl font-bold mb-4">${t.createAssignmentTitle || 'Créer un Devoir'}</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <input type="text" id="assignment-name" placeholder="Nom du devoir ex: Devoir 1" class="w-full p-3 border rounded-lg">
           <select id="assignment-class" class="w-full p-3 border rounded-lg">
             <option value="" data-translate="selectClass">${t.selectClass || '-- Sélectionner une classe --'}</option>
@@ -428,10 +428,12 @@
         const t = getTranslations()[getLang()];
         const name = document.getElementById('assignment-name').value.trim();
         const className = document.getElementById('assignment-class').value;
+        const trimester = document.getElementById('assignment-trimester')?.value || window.getGlobalTrimester();
         const globalMax = parseFloat(document.getElementById('assignment-global-maxpoints').value) || 20;
         const copyFromId = document.getElementById('copy-grades-source')?.value || '';
         const globalDefaultGrade = document.getElementById('assignment-global-defaultgrade')?.value; // peut être vide
 
+        if (!trimester) return alert(t.needTrimester);
         if (!name) return alert(t.enterAssignmentName);
         if (!className) return alert(t.selectAssignmentClass);
 
@@ -464,7 +466,7 @@
                 // Modification
                 data.assignments[index].name = name;
                 data.assignments[index].className = className;
-                data.assignments[index].trimester = window.getGlobalTrimester();
+                data.assignments[index].trimester = trimester;
                 data.assignments[index].exercises = finalExercises;
 
                 // Copie des notes si demandé
@@ -493,7 +495,7 @@
                 id: newId,
                 name,
                 className,
-                trimester: window.getGlobalTrimester(),
+                trimester,
                 exercises: finalExercises
             });
 
@@ -594,6 +596,14 @@
         const filterName = document.getElementById('filter-name-assignments')?.value.toLowerCase() || '';
         const data = getData();
 
+        const globalTrimester = window.getGlobalTrimester();
+        const createBtn = document.querySelector('#content-assignments button[onclick="openAssignmentModal()"]');
+        if (createBtn) {
+            createBtn.disabled = !globalTrimester;
+            createBtn.classList.toggle('opacity-50', !globalTrimester);
+            createBtn.classList.toggle('cursor-not-allowed', !globalTrimester);
+        }
+
         // Gérer les Chips de classe
         const allClasses = [...new Set(data.assignments.map(a => a.className))].filter(Boolean).sort();
         if (chipsContainer) {
@@ -608,9 +618,8 @@
         let filteredAssignments = data.assignments.filter(a => {
             const matchClass = activeClassFilters.length === 0 || activeClassFilters.includes(a.className);
             const matchName = !filterName || a.name.toLowerCase().includes(filterName);
-            // Apply global trimester filter
             const globalTrimester = window.getGlobalTrimester();
-            const matchTrimester = !globalTrimester || (a.trimester || '') === globalTrimester;
+            const matchTrimester = globalTrimester ? (a.trimester || '') === globalTrimester : false;
             return matchClass && matchName && matchTrimester;
         });
 

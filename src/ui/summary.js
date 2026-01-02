@@ -44,6 +44,12 @@
         let selectedClass = classSelect ? classSelect.value : '';
         let searchMatches = data.students.slice();
 
+        // Apply global academic year filter to students
+        const globalAcademicYear = window.getGlobalAcademicYear();
+        if (globalAcademicYear) {
+            searchMatches = searchMatches.filter(s => (s.academicYear || '') === globalAcademicYear);
+        }
+
         if (searchTerm) {
             searchMatches = searchMatches.filter(s => {
                 const haystack = `${s.name || ''} ${s.firstName || ''} ${s.lastName || ''} ${s.className || ''}`.toLowerCase();
@@ -86,6 +92,16 @@
         }
 
         let filteredAssignments = data.assignments.slice();
+
+        // Apply global trimester filter
+        const globalTrimester = window.getGlobalTrimester();
+        if (globalTrimester) {
+            filteredAssignments = filteredAssignments.filter(a => (a.trimester || '') === globalTrimester);
+        } else {
+            // If no trimester selected, hide all assignments
+            filteredAssignments = [];
+        }
+
         if (selectedClass) {
             filteredAssignments = filteredAssignments.filter(a => a.className === selectedClass);
         } else {
@@ -520,6 +536,16 @@
         }
 
         let filteredAssignments = data.assignments.slice();
+
+        // Apply global trimester filter
+        const globalTrimester = window.getGlobalTrimester();
+        if (globalTrimester) {
+            filteredAssignments = filteredAssignments.filter(a => (a.trimester || '') === globalTrimester);
+        } else {
+            // If no trimester selected, hide all assignments
+            filteredAssignments = [];
+        }
+
         if (selectedClass) {
             filteredAssignments = filteredAssignments.filter(a => a.className === selectedClass);
         } else {
@@ -874,6 +900,16 @@
         }
 
         let filteredAssignments = data.assignments.slice();
+
+        // Apply global trimester filter
+        const globalTrimester = window.getGlobalTrimester();
+        if (globalTrimester) {
+            filteredAssignments = filteredAssignments.filter(a => (a.trimester || '') === globalTrimester);
+        } else {
+            // If no trimester selected, hide all assignments
+            filteredAssignments = [];
+        }
+
         if (selectedClass) {
             filteredAssignments = filteredAssignments.filter(a => a.className === selectedClass);
         } else {
