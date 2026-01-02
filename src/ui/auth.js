@@ -6,7 +6,8 @@ export async function login(email, password) {
         const response = await fetch(`${AUTH_API}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify({ email, password }),
+            credentials: 'include'
         });
 
         const data = await response.json();
@@ -27,7 +28,8 @@ export async function register(userData) {
         const response = await fetch(`${AUTH_API}/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(userData)
+            body: JSON.stringify(userData),
+            credentials: 'include'
         });
 
         const data = await response.json();
@@ -45,7 +47,7 @@ export async function register(userData) {
 
 export async function logout() {
     try {
-        await fetch(`${AUTH_API}/logout`);
+        await fetch(`${AUTH_API}/logout`, { credentials: 'include' });
         window.location.href = '/login.html';
     } catch (error) {
         console.error('Logout error:', error);
@@ -55,7 +57,7 @@ export async function logout() {
 export async function checkAuth() {
     try {
         console.log('Checking authentication...');
-        const response = await fetch(`${AUTH_API}/me`);
+        const response = await fetch(`${AUTH_API}/me`, { credentials: 'include' });
         if (!response.ok) {
             console.log('Auth check failed:', response.status);
             throw new Error('Not authenticated');

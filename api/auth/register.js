@@ -75,7 +75,7 @@ const handler = async (req, res) => {
 
   if (createError) {
     console.error('Create User Error:', createError);
-    return res.status(500).json({ error: 'Error creating user' });
+    return res.status(500).json({ error: 'Error creating user', details: createError });
   }
   
   // If we created a new school, update its created_by

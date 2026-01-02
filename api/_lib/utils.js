@@ -46,25 +46,62 @@ async function verifyTokenAndVersion(token) {
 }
 
 function setAuthCookie(res, token) {
-  const serialized = cookie.serialize('auth_token', token, {
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  console.log(`Setting auth cookie. Env: ${process.env.NODE_ENV}, Secure: ${isProduction}`);
+  
+  const cookieOptions = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    secure: isProduction,
     maxAge: 60 * 60 * 24 * 7, // 1 week
     path: '/',
-  });
-  res.setHeader('Set-Cookie', serialized);
+  };
+  
+  // Only set SameSite in production or if needed. 
+  // In dev, omitting it (defaults to Lax) is often safer for localhost.
+  if (isProduction) {
+    cookieOptions.sameSite = 'strict';
+  } else {
+    cookieOptions.sameSite = 'lax';
+  }
+
+  const serialized = cookie.serialize('auth_token', token, cookieOptions);
+  console.log('Set-Cookie Header Value:', serialized);
+  
+  // Safely add cookie without overwriting existing Set-Cookie headers
+  let prev = res.getHeader('Set-Cookie');
+  if (prev) {
+      if (!Array.isArray(prev)) {
+          prev = [prev];
+      }
+      prev.push(serialized);
+      res.setHeader('Set-Cookie', prev);
+  } else {
+      res.setHeader('Set-Cookie', serialized);
+  }
 }
 
 function clearAuthCookie(res) {
+    const isProduction = process.env.NODE_ENV === 'production';
     const serialized = cookie.serialize('auth_token', '', {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        secure: isProduction,
+        sameSite: isProduction ? 'strict' : 'lax',
         maxAge: -1,
         path: '/',
       });
-      res.setHeader('Set-Cookie', serialized);
+      
+    // Safely add cookie without overwriting existing Set-Cookie headers
+    let prev = res.getHeader('Set-Cookie');
+    if (prev) {
+        if (!Array.isArray(prev)) {
+            prev = [prev];
+        }
+        prev.push(serialized);
+        res.setHeader('Set-Cookie', prev);
+    } else {
+        res.setHeader('Set-Cookie', serialized);
+    }
 }
 
 async function getUserIdFromRequest(req) {

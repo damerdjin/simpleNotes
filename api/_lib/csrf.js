@@ -15,7 +15,18 @@ function setCsrfCookie(res, token) {
     maxAge: 60 * 60 * 24, // 1 day
     path: '/',
   });
-  res.setHeader('Set-Cookie', serialized);
+  
+  // Safely add cookie without overwriting existing Set-Cookie headers
+  let prev = res.getHeader('Set-Cookie');
+  if (prev) {
+      if (!Array.isArray(prev)) {
+          prev = [prev];
+      }
+      prev.push(serialized);
+      res.setHeader('Set-Cookie', prev);
+  } else {
+      res.setHeader('Set-Cookie', serialized);
+  }
 }
 
 // Verify CSRF token from request

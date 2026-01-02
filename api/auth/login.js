@@ -23,6 +23,7 @@ const handler = async (req, res) => {
     .single();
 
   if (error || !user) {
+    console.log(`Login failed: user not found for email ${email.replace(/(.{2})(.*)(@.*)/, '$1***$3')}`);
     return res.status(401).json({ error: 'Invalid credentials' });
   }
 
@@ -30,6 +31,7 @@ const handler = async (req, res) => {
   const isValid = await bcrypt.compare(password, user.password_hash);
 
   if (!isValid) {
+    console.log(`Login failed: invalid password for email ${email.replace(/(.{2})(.*)(@.*)/, '$1***$3')}`);
     return res.status(401).json({ error: 'Invalid credentials' });
   }
 

@@ -1,11 +1,11 @@
--- Enable UUID extension
+-- Active l'extension UUID
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Drop tables if they exist to ensure clean state for setup
+-- Nettoie les tables existantes pour repartir sur une base propre (ATTENTION : supprime les données)
 DROP TABLE IF EXISTS public.schools CASCADE;
 DROP TABLE IF EXISTS public.users CASCADE;
 
--- Create users table
+-- Création de la table users
 CREATE TABLE public.users (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
@@ -17,7 +17,7 @@ CREATE TABLE public.users (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Create schools table
+-- Création de la table schools
 CREATE TABLE public.schools (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
@@ -28,9 +28,9 @@ CREATE TABLE public.schools (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Add FK to users
+-- Ajout de la contrainte de clé étrangère
 ALTER TABLE public.users ADD CONSTRAINT fk_users_school FOREIGN KEY (school_id) REFERENCES public.schools(id);
 
--- Indexes
+-- Index pour la performance
 CREATE INDEX users_email_idx ON public.users (email);
 CREATE INDEX schools_approved_idx ON public.schools (approved);

@@ -31,24 +31,40 @@ export default function middleware(req) {
   
   // Parse auth token cookie
   let authToken = null;
-  // Try using req.cookies.get (Edge Middleware API)
-  if (req.cookies && req.cookies.get) {
-    authToken = req.cookies.get('auth_token');
-    // If it returns an object { name, value }, extract value
-    if (authToken && typeof authToken === 'object') {
-      authToken = authToken.value;
-    }
+  
+  // Log raw cookie header for debugging
+  const rawCookieHeader = req.headers.get('cookie');
+  console.log(`Middleware: Path=${pathname}`);
+  
+  if (rawCookieHeader) {
+      // Log full cookie header to see everything
+      console.log('Middleware: Full Cookie Header:', rawCookieHeader);
   } else {
-    // Fallback to manual parsing
-    const cookieHeader = req.headers.get('cookie');
-    if (cookieHeader) {
-      const cookies = cookieHeader.split(';').reduce((acc, curr) => {
-        const [key, val] = curr.trim().split('=');
-        acc[key] = val;
-        return acc;
-      }, {});
-      authToken = cookies['auth_token'];
+      console.log('Middleware: No cookie header received');
+  }
+
+  // Try using req.cookies.get (Edge Middleware API)
+  if (req.cookies && typeof req.cookies.get === 'function') {
+    const cookieObj = req.cookies.get('auth_token');
+    if (cookieObj && typeof cookieObj === 'object') {
+      authToken = cookieObj.value;
+    } else if (typeof cookieObj === 'string') {
+        authToken = cookieObj;
     }
+  } 
+  
+  if (!authToken && rawCookieHeader) {
+    // Fallback to manual parsing
+    const cookies = rawCookieHeader.split(';').reduce((acc, curr) => {
+      const parts = curr.trim().split('=');
+      const key = parts[0];
+      const val = parts.slice(1).join('='); // Handle values with =
+      acc[key] = val;
+      return acc;
+    }, {});
+    
+    console.log('Middleware: Parsed cookies keys:', Object.keys(cookies));
+    authToken = cookies['auth_token'];
   }
   
   console.log('Middleware: pathname', pathname, 'authToken present?', !!authToken);
