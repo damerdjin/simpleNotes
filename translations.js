@@ -1,6 +1,31 @@
 // translations.js
 window.translations = {
     fr: {
+        // Auth
+        loginTitle: "Connexion",
+        emailLabel: "Email",
+        emailPlaceholder: "email@exemple.com",
+        passwordLabel: "Mot de passe",
+        loginButton: "Se connecter",
+        loginLoading: "Connexion...",
+        createAccountLink: "Créer un compte",
+        registerTitle: "Inscription",
+        registerButton: "S'inscrire",
+        registerLoading: "Inscription...",
+        haveAccountLink: "Déjà un compte ? Se connecter",
+        languageLabel: "Langue",
+        selectLanguage: "Choisir la langue",
+        cityLabel: "Ville",
+        wilayaLabel: "Wilaya",
+        schoolLabel: "Lycée",
+        schoolNotFoundLink: "Je ne trouve pas mon lycée",
+        selectExistingSchoolLink: "Sélectionner un lycée existant",
+        selectSchoolPlaceholder: "Sélectionner un lycée...",
+        schoolNameLabel: "Nom du lycée",
+        schoolNamePlaceholder: "Ex: Lycée Emir Abdelkader",
+        newSchoolCityLabel: "Ville du lycée",
+        newSchoolWilayaLabel: "Wilaya du lycée",
+
         // Interface générale
         appTitle: "📝 Gestion des Corrections",
         appSubtitle: "Gérez vos élèves, devoirs et notes en toute simplicité",
@@ -197,6 +222,31 @@ window.translations = {
     },
 
     en: {
+        // Auth
+        loginTitle: "Login",
+        emailLabel: "Email",
+        emailPlaceholder: "email@example.com",
+        passwordLabel: "Password",
+        loginButton: "Sign In",
+        loginLoading: "Signing in...",
+        createAccountLink: "Create an account",
+        registerTitle: "Register",
+        registerButton: "Sign Up",
+        registerLoading: "Signing up...",
+        haveAccountLink: "Already have an account? Sign in",
+        languageLabel: "Language",
+        selectLanguage: "Select Language",
+        cityLabel: "City",
+        wilayaLabel: "Wilaya/State",
+        schoolLabel: "High School",
+        schoolNotFoundLink: "I can't find my school",
+        selectExistingSchoolLink: "Select an existing school",
+        selectSchoolPlaceholder: "Select a school...",
+        schoolNameLabel: "School Name",
+        schoolNamePlaceholder: "Ex: Emir Abdelkader High School",
+        newSchoolCityLabel: "School City",
+        newSchoolWilayaLabel: "School Wilaya",
+
         // Interface générale
         appTitle: "📝 Grading Management",
         appSubtitle: "Manage your students, assignments and grades easily",
@@ -392,6 +442,31 @@ window.translations = {
     },
 
     ar: {
+        // Auth
+        loginTitle: "تسجيل الدخول",
+        emailLabel: "البريد الإلكتروني",
+        emailPlaceholder: "email@example.com",
+        passwordLabel: "كلمة المرور",
+        loginButton: "تسجيل الدخول",
+        loginLoading: "جاري تسجيل الدخول...",
+        createAccountLink: "إنشاء حساب",
+        registerTitle: "تسجيل",
+        registerButton: "تسجيل",
+        registerLoading: "جاري التسجيل...",
+        haveAccountLink: "لديك حساب بالفعل؟ تسجيل الدخول",
+        languageLabel: "اللغة",
+        selectLanguage: "اختر اللغة",
+        cityLabel: "المدينة",
+        wilayaLabel: "الولاية",
+        schoolLabel: "الثانوية",
+        schoolNotFoundLink: "لا أجد ثانويتي",
+        selectExistingSchoolLink: "اختر ثانوية موجودة",
+        selectSchoolPlaceholder: "اختر ثانوية...",
+        schoolNameLabel: "اسم الثانوية",
+        schoolNamePlaceholder: "مثال: ثانوية الأمير عبد القادر",
+        newSchoolCityLabel: "مدينة الثانوية",
+        newSchoolWilayaLabel: "ولاية الثانوية",
+
         // Interface générale
         appTitle: "📝 إدارة التصحيح",
         appSubtitle: "إدارة طلابك، واجباتك و نقاطك بكل سهولة",

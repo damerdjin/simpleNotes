@@ -5,24 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inscription - Gestion des Corrections</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="/translations.js"></script>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+<body class="bg-gray-100 min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
+    <div class="absolute top-4 right-4">
+        <select id="language-selector" class="bg-white border border-gray-300 text-gray-700 py-1 px-2 rounded focus:outline-none focus:shadow-outline text-sm">
+            <option value="fr">Français</option>
+            <option value="en">English</option>
+            <option value="ar">العربية</option>
+        </select>
+    </div>
+
     <div class="bg-white p-8 rounded shadow-md w-full max-w-lg">
-        <h2 class="text-2xl font-bold mb-6 text-center text-blue-600">Inscription</h2>
+        <h2 class="text-2xl font-bold mb-6 text-center text-blue-600" data-translate="registerTitle">Inscription</h2>
         
         <div id="error-message" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"></div>
 
         <form id="register-form">
             <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="email">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="email" data-translate="emailLabel">
                     Email
                 </label>
                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
-                    id="email" type="email" autocomplete="email" required>
+                    id="email" type="email" placeholder="email@exemple.com" data-translate-placeholder="emailPlaceholder" autocomplete="email" required>
             </div>
             
             <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="password">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="password" data-translate="passwordLabel">
                     Mot de passe
                 </label>
                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
@@ -31,14 +40,14 @@
 
             <div class="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="city">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="city" data-translate="cityLabel">
                         Ville
                     </label>
                     <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
                         id="city" type="text" required>
                 </div>
                 <div>
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="wilaya">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="wilaya" data-translate="wilayaLabel">
                         Wilaya
                     </label>
                     <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
@@ -48,10 +57,10 @@
 
             <div class="mb-6 border-t pt-4">
                 <div class="flex justify-between items-center mb-4">
-                    <label class="block text-gray-700 text-sm font-bold" for="school-select">
+                    <label class="block text-gray-700 text-sm font-bold" for="school-select" data-translate="schoolLabel">
                         Lycée
                     </label>
-                    <button type="button" id="toggle-school-mode" class="text-sm text-blue-500 hover:text-blue-800">
+                    <button type="button" id="toggle-school-mode" class="text-sm text-blue-500 hover:text-blue-800" data-translate="schoolNotFoundLink">
                         Je ne trouve pas mon lycée
                     </button>
                 </div>
@@ -59,24 +68,24 @@
                 <div id="existing-school-container">
                     <select class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
                         id="school-select">
-                        <option value="">Sélectionner un lycée...</option>
+                        <option value="" data-translate="selectSchoolPlaceholder">Sélectionner un lycée...</option>
                     </select>
                 </div>
 
                 <div id="new-school-container" class="hidden">
                     <div class="mb-3">
-                        <label class="block text-gray-700 text-xs font-bold mb-1">Nom du lycée</label>
+                        <label class="block text-gray-700 text-xs font-bold mb-1" data-translate="schoolNameLabel">Nom du lycée</label>
                         <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
-                            id="new-school-name" type="text" placeholder="Ex: Lycée Emir Abdelkader">
+                            id="new-school-name" type="text" placeholder="Ex: Lycée Emir Abdelkader" data-translate-placeholder="schoolNamePlaceholder">
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-gray-700 text-xs font-bold mb-1">Ville</label>
+                            <label class="block text-gray-700 text-xs font-bold mb-1" data-translate="newSchoolCityLabel">Ville</label>
                             <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
                                 id="new-school-city" type="text">
                         </div>
                         <div>
-                            <label class="block text-gray-700 text-xs font-bold mb-1">Wilaya</label>
+                            <label class="block text-gray-700 text-xs font-bold mb-1" data-translate="newSchoolWilayaLabel">Wilaya</label>
                             <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
                                 id="new-school-wilaya" type="text">
                         </div>
@@ -86,12 +95,12 @@
 
             <div class="flex items-center justify-between">
                 <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full" 
-                    type="submit" id="submit-btn">
+                    type="submit" id="submit-btn" data-translate="registerButton">
                     S'inscrire
                 </button>
             </div>
             <div class="mt-4 text-center">
-                <a class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800" href="/login.html">
+                <a class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800" href="/login.html" data-translate="haveAccountLink">
                     Déjà un compte ? Se connecter
                 </a>
             </div>
@@ -100,6 +109,17 @@
 
     <script type="module">
         import { register, getSchools, checkAuth } from './src/ui/auth.js';
+        import { initLanguage, changeLanguage, t } from './src/ui/i18n.js';
+
+        // Initialize language
+        const currentLang = initLanguage();
+        const langSelector = document.getElementById('language-selector');
+        if (langSelector) {
+            langSelector.value = currentLang;
+            langSelector.addEventListener('change', (e) => {
+                changeLanguage(e.target.value);
+            });
+        }
 
         // Redirect if already logged in
         checkAuth().then(user => {
@@ -138,11 +158,11 @@
             if (isNewSchoolMode) {
                 existingSchoolContainer.classList.add('hidden');
                 newSchoolContainer.classList.remove('hidden');
-                toggleSchoolBtn.textContent = 'Sélectionner un lycée existant';
+                toggleSchoolBtn.textContent = t('selectExistingSchoolLink');
             } else {
                 existingSchoolContainer.classList.remove('hidden');
                 newSchoolContainer.classList.add('hidden');
-                toggleSchoolBtn.textContent = 'Je ne trouve pas mon lycée';
+                toggleSchoolBtn.textContent = t('schoolNotFoundLink');
             }
         });
 
@@ -162,7 +182,7 @@
             e.preventDefault();
             errorDiv.classList.add('hidden');
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Inscription...';
+            submitBtn.textContent = t('registerLoading');
 
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
@@ -189,7 +209,7 @@
                 errorDiv.classList.remove('hidden');
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'S\'inscrire';
+                submitBtn.textContent = t('registerButton');
             }
         });
     </script>

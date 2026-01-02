@@ -10,6 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="/translations.js"></script>
 
     <style>
         /* ===== RTL SUPPORT COMPLET ET OPTIMISÉ ===== */
@@ -659,10 +660,15 @@
     <link rel="stylesheet" href="./src/ui/tabs/tabs.styles.css">
     <script type="module">
         import { checkAuth, logout } from './src/ui/auth.js';
+        import { initLanguage } from './src/ui/i18n.js';
+        
         window.handleLogout = logout;
         
         async function initAuth() {
             try {
+                // Initialize language from storage
+                initLanguage();
+                
                 const user = await checkAuth();
                 if (user) {
                     document.body.style.display = 'block';
@@ -686,18 +692,6 @@
                     <p class="text-blue-100 mt-2">Gérez vos élèves, devoirs et notes en toute simplicité</p>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="changeLanguage('fr')"
-                        class="lang-btn px-3 py-1 rounded-lg font-semibold transition-all bg-white text-blue-600">
-                        FR
-                    </button>
-                    <button onclick="changeLanguage('en')"
-                        class="lang-btn px-3 py-1 rounded-lg font-semibold transition-all bg-gray-200 text-gray-600 hover:bg-gray-300">
-                        EN
-                    </button>
-                    <button onclick="changeLanguage('ar')"
-                        class="lang-btn px-3 py-1 rounded-lg font-semibold transition-all bg-gray-200 text-gray-600 hover:bg-gray-300">
-                        AR
-                    </button>
                     <button onclick="handleLogout()"
                         class="px-3 py-1 rounded-lg font-semibold transition-all bg-red-500 text-white hover:bg-red-600 ml-2" title="Déconnexion">
                         Logout
