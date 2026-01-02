@@ -56,23 +56,20 @@ export async function logout() {
 
 export async function checkAuth() {
     try {
-        console.log('Checking authentication...');
         const response = await fetch(`${AUTH_API}/me`, { credentials: 'include' });
         if (!response.ok) {
-            console.log('Auth check failed:', response.status);
             throw new Error('Not authenticated');
         }
         const data = await response.json();
-        console.log('Auth check success:', data.user.email);
         return data.user;
     } catch (error) {
-        console.error('CheckAuth error:', error);
         // If we are on login or register page, don't redirect
         const path = window.location.pathname;
-        if (!path.includes('login.html') && !path.includes('register.html')) {
-            console.log('Redirecting to login...');
-            window.location.href = '/login.html';
+        if (path.includes('login.html') || path.includes('register.html')) {
+            return null;
         }
+        console.error('CheckAuth error:', error);
+        window.location.href = '/login.html';
         return null;
     }
 }

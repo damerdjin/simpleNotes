@@ -325,18 +325,17 @@
         }
 
         /* ===== RÉAJUSTEMENTS RTL SPÉCIFIQUES ===== */
-        /* 1. Titre principal et header à droite en RTL */
+        /* 1. Échange des ordres pour placer boutons à gauche en RTL */
         .rtl-layout header .flex>div:first-child {
-            order: 2 !important;
-            /* Pousse le titre à droite */
+            order: 1 !important;
             text-align: right !important;
             margin-left: auto !important;
             margin-right: 0 !important;
         }
 
         .rtl-layout header .flex>div:last-child {
-            order: 1 !important;
-            /* Boutons langues à gauche */
+            order: 2 !important;
+            flex-direction: row-reverse !important;
         }
 
         .rtl-layout header h1,
