@@ -8,13 +8,7 @@
     <script src="/translations.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
-    <div class="absolute top-4 end-4">
-        <select id="language-selector" class="bg-white border border-gray-300 text-gray-700 py-1 px-2 rounded focus:outline-none focus:shadow-outline text-sm">
-            <option value="fr">Français</option>
-            <option value="en">English</option>
-            <option value="ar">العربية</option>
-        </select>
-    </div>
+
 
     <div class="bg-white p-8 rounded shadow-md w-full max-w-lg">
         <h2 class="text-2xl font-bold mb-6 text-center text-blue-600" data-translate="registerTitle">Inscription</h2>
@@ -38,21 +32,24 @@
                     id="password" type="password" minlength="6" autocomplete="new-password" required>
             </div>
 
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="city" data-translate="cityLabel">
-                        Ville
-                    </label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
-                        id="city" type="text" required>
-                </div>
-                <div>
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="wilaya" data-translate="wilayaLabel">
-                        Wilaya
-                    </label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
-                        id="wilaya" type="text" required>
-                </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="wilaya-select" data-translate="wilayaLabel">
+                    Wilaya
+                </label>
+                <select class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="wilaya-select" required disabled>
+                    <option value="">Chargement des wilayas...</option>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="commune-select" data-translate="communeLabel">
+                    Commune
+                </label>
+                <select class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="commune-select" required disabled>
+                    <option value="">Sélectionner une commune...</option>
+                </select>
             </div>
 
             <div class="mb-6 border-t pt-4">
@@ -112,14 +109,7 @@
         import { initLanguage, changeLanguage, t } from './src/ui/i18n.js';
 
         // Initialize language
-        const currentLang = initLanguage();
-        const langSelector = document.getElementById('language-selector');
-        if (langSelector) {
-            langSelector.value = currentLang;
-            langSelector.addEventListener('change', (e) => {
-                changeLanguage(e.target.value);
-            });
-        }
+        initLanguage();
 
         // Redirect if already logged in
         checkAuth().then(user => {
@@ -135,13 +125,18 @@
         const toggleSchoolBtn = document.getElementById('toggle-school-mode');
         const existingSchoolContainer = document.getElementById('existing-school-container');
         const newSchoolContainer = document.getElementById('new-school-container');
-        
-        let isNewSchoolMode = false;
+        const wilayaSelect = document.getElementById('wilaya-select');
+        const communeSelect = document.getElementById('commune-select');
 
-        // Load schools
-        (async () => {
+        let isNewSchoolMode = false;
+        let wilayas = [];
+
+
+
+        const loadSchools = async (city, wilaya) => {
             try {
-                const schools = await getSchools();
+                const schools = await getSchools({city, wilaya});
+                schoolSelect.innerHTML = '<option value="" data-translate="selectSchoolPlaceholder">Sélectionner un lycée...</option>';
                 schools.forEach(school => {
                     const option = document.createElement('option');
                     option.value = school.id;
@@ -150,6 +145,29 @@
                 });
             } catch (e) {
                 console.error('Error loading schools', e);
+            }
+        };
+
+        // Load schools initially
+        loadSchools();
+
+        // Load wilayas
+        (async () => {
+            try {
+                const wilRes = await fetch('/api/wilayas');
+                const wilData = await wilRes.json();
+                wilayas = wilData.wilayas;
+                wilayaSelect.innerHTML = '<option value="">Sélectionner une wilaya...</option>';
+                wilayas.forEach(w => {
+                    const option = document.createElement('option');
+                    option.value = w.id;
+                    option.textContent = `${w.code} - ${w.name_fr}`;
+                    wilayaSelect.appendChild(option);
+                });
+                wilayaSelect.disabled = false;
+            } catch (e) {
+                console.error('Error loading wilayas', e);
+                wilayaSelect.innerHTML = '<option value="">Erreur de chargement</option>';
             }
         })();
 
@@ -166,15 +184,58 @@
             }
         });
 
-        // Auto-fill new school city/wilaya from user city/wilaya if empty
-        document.getElementById('city').addEventListener('change', (e) => {
-            if (!document.getElementById('new-school-city').value) {
-                document.getElementById('new-school-city').value = e.target.value;
+        // Wilaya select change
+        wilayaSelect.addEventListener('change', async () => {
+            const wilayaId = wilayaSelect.value;
+            if (wilayaId) {
+                communeSelect.innerHTML = '<option value="">Chargement des communes...</option>';
+                communeSelect.disabled = true;
+                try {
+                    const comRes = await fetch(`/api/communes?wilaya_id=${wilayaId}`);
+                    const comData = await comRes.json();
+                    const communes = comData.communes;
+                    communeSelect.innerHTML = '<option value="">Sélectionner une commune...</option>';
+                    communes.forEach(c => {
+                        const option = document.createElement('option');
+                        option.value = c.id;
+                        option.textContent = c.code_postal ? `${c.name_fr} (${c.code_postal})` : c.name_fr;
+                        communeSelect.appendChild(option);
+                    });
+                    communeSelect.disabled = false;
+                } catch (e) {
+                    console.error('Error loading communes', e);
+                    communeSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+                }
+            } else {
+                communeSelect.innerHTML = '<option value="">Sélectionner une commune...</option>';
+                communeSelect.disabled = true;
             }
         });
-        document.getElementById('wilaya').addEventListener('change', (e) => {
+
+        // Commune select change
+        communeSelect.addEventListener('change', () => {
+            const communeOption = communeSelect.options[communeSelect.selectedIndex];
+            const wilayaOption = wilayaSelect.options[wilayaSelect.selectedIndex];
+            if (communeOption && wilayaOption && communeSelect.value) {
+                const communeName = communeOption.textContent.split(' (')[0];
+                const wilayaName = wilayaOption.textContent.split(' - ')[1];
+                loadSchools(communeName, wilayaName);
+            }
+        });
+
+
+
+        // Auto-fill new school city/wilaya from user commune/wilaya if empty
+        wilayaSelect.addEventListener('change', (e) => {
             if (!document.getElementById('new-school-wilaya').value) {
-                document.getElementById('new-school-wilaya').value = e.target.value;
+                const wilayaName = e.target.options[e.target.selectedIndex].textContent.split(' - ')[1];
+                document.getElementById('new-school-wilaya').value = wilayaName;
+            }
+        });
+        communeSelect.addEventListener('change', (e) => {
+            if (!document.getElementById('new-school-city').value) {
+                const communeName = e.target.options[e.target.selectedIndex].textContent.split(' (')[0];
+                document.getElementById('new-school-city').value = communeName;
             }
         });
 
@@ -186,8 +247,10 @@
 
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const city = document.getElementById('city').value;
-            const wilaya = document.getElementById('wilaya').value;
+            const wilayaOption = wilayaSelect.options[wilayaSelect.selectedIndex];
+            const communeOption = communeSelect.options[communeSelect.selectedIndex];
+            const city = communeOption ? communeOption.textContent.split(' (')[0] : '';
+            const wilaya = wilayaOption ? wilayaOption.textContent.split(' - ')[1] : '';
 
             const userData = { email, password, city, wilaya };
 

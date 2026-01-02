@@ -77,9 +77,11 @@ export async function checkAuth() {
     }
 }
 
-export async function getSchools() {
+export async function getSchools(params = {}) {
     try {
-        const response = await fetch(SCHOOLS_API);
+        const queryString = new URLSearchParams(params).toString();
+        const url = `${SCHOOLS_API}${queryString ? `?${queryString}` : ''}`;
+        const response = await fetch(url);
         if (!response.ok) throw new Error('Failed to fetch schools');
         const data = await response.json();
         return data.schools;
