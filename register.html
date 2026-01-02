@@ -100,11 +100,11 @@
         initLanguage();
 
         // Redirect if already logged in
-        checkAuth().then(user => {
-            if (user) {
-                window.location.href = '/index.html';
-            }
-        });
+        // checkAuth().then(user => {
+        //     if (user) {
+        //         window.location.href = '/index.html';
+        //     }
+        // });
 
         const form = document.getElementById('register-form');
         const errorDiv = document.getElementById('error-message');
