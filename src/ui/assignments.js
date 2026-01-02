@@ -48,16 +48,10 @@
         overlay.innerHTML = `
       <div class="bg-white rounded-xl p-6 w-full max-w-5xl mx-4 my-auto">
         <h3 id="assignment-modal-title" class="text-xl font-bold mb-4">${t.createAssignmentTitle || 'Créer un Devoir'}</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <input type="text" id="assignment-name" placeholder="Nom du devoir ex: Devoir 1" class="w-full p-3 border rounded-lg">
           <select id="assignment-class" class="w-full p-3 border rounded-lg">
             <option value="" data-translate="selectClass">${t.selectClass || '-- Sélectionner une classe --'}</option>
-          </select>
-          <select id="assignment-trimester" class="w-full p-3 border rounded-lg bg-white">
-            <option value="">-- Trimestre --</option>
-            <option value="1">Trimestre 1</option>
-            <option value="2">Trimestre 2</option>
-            <option value="3">Trimestre 3</option>
           </select>
         </div>
         <div class="mb-4 flex items-center gap-2">
@@ -141,10 +135,7 @@
                 if (globalMaxInput) globalMaxInput.value = 20;
             }
 
-            // Pre-fill trimester with global value
-            const globalTrimester = window.getGlobalTrimester();
-            const trimesterSelect = document.getElementById('assignment-trimester');
-            if (trimesterSelect) trimesterSelect.value = globalTrimester;
+
 
             window.toggleGlobalAssignmentMode(isGlobalAssignment);
             renderExercisesBuilder();
@@ -437,7 +428,6 @@
         const t = getTranslations()[getLang()];
         const name = document.getElementById('assignment-name').value.trim();
         const className = document.getElementById('assignment-class').value;
-        const trimester = document.getElementById('assignment-trimester').value;
         const globalMax = parseFloat(document.getElementById('assignment-global-maxpoints').value) || 20;
         const copyFromId = document.getElementById('copy-grades-source')?.value || '';
         const globalDefaultGrade = document.getElementById('assignment-global-defaultgrade')?.value; // peut être vide
@@ -474,7 +464,7 @@
                 // Modification
                 data.assignments[index].name = name;
                 data.assignments[index].className = className;
-                data.assignments[index].trimester = trimester;
+                data.assignments[index].trimester = window.getGlobalTrimester();
                 data.assignments[index].exercises = finalExercises;
 
                 // Copie des notes si demandé
@@ -503,7 +493,7 @@
                 id: newId,
                 name,
                 className,
-                trimester,
+                trimester: window.getGlobalTrimester(),
                 exercises: finalExercises
             });
 

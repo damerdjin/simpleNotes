@@ -676,6 +676,7 @@
                 const studentData = {
                     name,
                     className,
+                    academicYear: window.getGlobalAcademicYear(),
                     nin,
                     firstName,
                     lastName,
@@ -708,7 +709,8 @@
                 } else {
                     // CRÉATION d'un nouvel élève
                     data.students.push({
-                        id: genId(), 
+                        id: genId(),
+                        academicYear: window.getGlobalAcademicYear(),
                         ...studentData
                     });
                     added++;
