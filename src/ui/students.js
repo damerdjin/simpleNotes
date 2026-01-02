@@ -18,8 +18,11 @@
     // ===== CLASSES =====
     window.getClasses = function() {
         const classes = new Set();
+        const globalAcademicYear = window.getGlobalAcademicYear();
         (getData().students || []).forEach(s => {
-            if (s.className) classes.add(s.className);
+            if (s.className && (!globalAcademicYear || s.academicYear === globalAcademicYear)) {
+                classes.add(s.className);
+            }
         });
         return Array.from(classes).sort();
     };
