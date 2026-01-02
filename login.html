@@ -110,35 +110,16 @@
             }, 5000);
         }
 
-        // Custom confirm using a non-blocking UI approach is harder without a modal.
-        // For now, we will use a simple two-step process or just send it (less secure against spam but UX friendly).
-        // Or we can use a custom modal overlay.
-        // Given the requirement "plus de messages d'alerte", let's make a simple inline confirmation.
-        
-        let resetConfirmationPending = false;
-
         forgotPasswordLink.addEventListener('click', async (e) => {
             e.preventDefault();
             const email = document.getElementById('email').value;
-            
+
             if (!email) {
                 showNotification(t('emailRequired') || 'Veuillez entrer votre email pour réinitialiser le mot de passe.', 'error');
                 return;
             }
-            
-            // Simple inline confirmation logic
-            if (!resetConfirmationPending) {
-                showNotification((t('confirmReset') || 'Cliquez à nouveau pour confirmer l\'envoi à : ') + email, 'info');
-                resetConfirmationPending = true;
-                // Reset state after 3 seconds if not confirmed
-                setTimeout(() => resetConfirmationPending = false, 3000);
-                return;
-            }
-            
-            // Confirmed
-            resetConfirmationPending = false;
+
             try {
-                showNotification(t('sending') || 'Envoi en cours...', 'info');
                 await resetPassword(email);
                 showNotification(t('resetEmailSent') || 'Email de réinitialisation envoyé ! Vérifiez votre boîte mail.', 'success');
             } catch (err) {

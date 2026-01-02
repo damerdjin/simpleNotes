@@ -26,6 +26,11 @@ window.translations = {
         schoolNamePlaceholder: "Ex: Lycée Emir Abdelkader",
         newSchoolCityLabel: "Ville du lycée",
         newSchoolWilayaLabel: "Wilaya du lycée",
+        forgotPasswordLink: "Mot de passe oublié ?",
+        emailRequired: "Veuillez entrer votre email pour réinitialiser le mot de passe.",
+        confirmReset: "Cliquez à nouveau pour confirmer l'envoi à : ",
+        sending: "Envoi en cours...",
+        resetEmailSent: "Email de réinitialisation envoyé ! Vérifiez votre boîte mail.",
 
         // Interface générale
         appTitle: "📝 Gestion des Corrections",
@@ -248,6 +253,11 @@ window.translations = {
         schoolNamePlaceholder: "Ex: Emir Abdelkader High School",
         newSchoolCityLabel: "School City",
         newSchoolWilayaLabel: "School Wilaya",
+        forgotPasswordLink: "Forgot password?",
+        emailRequired: "Please enter your email to reset your password.",
+        confirmReset: "Click again to confirm sending to: ",
+        sending: "Sending...",
+        resetEmailSent: "Reset email sent! Check your inbox.",
 
         // Interface générale
         appTitle: "📝 Grading Management",
@@ -469,6 +479,11 @@ window.translations = {
         schoolNamePlaceholder: "مثال: ثانوية الأمير عبد القادر",
         newSchoolCityLabel: "مدينة الثانوية",
         newSchoolWilayaLabel: "ولاية الثانوية",
+        forgotPasswordLink: "نسيت كلمة المرور؟",
+        emailRequired: "يرجى إدخال بريدك الإلكتروني لإعادة تعيين كلمة المرور.",
+        confirmReset: "انقر مرة أخرى للتأكيد على الإرسال إلى: ",
+        sending: "جاري الإرسال...",
+        resetEmailSent: "تم إرسال بريد إعادة التعيين! تحقق من صندوق البريد الخاص بك.",
 
         // Interface générale
         appTitle: "📝 إدارة التصحيح",
