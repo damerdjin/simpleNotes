@@ -64,6 +64,32 @@ async function build() {
     await fs.copy(srcDir, path.join(distDir, 'src'));
   }
 
+  // Copy login.html
+  const srcLogin = path.join(root, 'login.html');
+  if (await fs.pathExists(srcLogin)) {
+    const html = await fs.readFile(srcLogin, 'utf8');
+    const minified = await minify(html, {
+        collapseWhitespace: true,
+        removeComments: true,
+        minifyCSS: true,
+        minifyJS: true
+    });
+    await fs.writeFile(path.join(distDir, 'login.html'), minified, 'utf8');
+  }
+
+  // Copy register.html
+  const srcRegister = path.join(root, 'register.html');
+  if (await fs.pathExists(srcRegister)) {
+     const html = await fs.readFile(srcRegister, 'utf8');
+     const minified = await minify(html, {
+         collapseWhitespace: true,
+         removeComments: true,
+         minifyCSS: true,
+         minifyJS: true
+     });
+    await fs.writeFile(path.join(distDir, 'register.html'), minified, 'utf8');
+  }
+
   console.log('Build complete. Output in ./dist');
 }
 

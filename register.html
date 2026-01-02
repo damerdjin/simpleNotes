@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription - Gestion des Corrections</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="bg-white p-8 rounded shadow-md w-full max-w-lg">
+        <h2 class="text-2xl font-bold mb-6 text-center text-blue-600">Inscription</h2>
+        
+        <div id="error-message" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"></div>
+
+        <form id="register-form">
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="email">
+                    Email
+                </label>
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                    id="email" type="email" required>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="password">
+                    Mot de passe
+                </label>
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                    id="password" type="password" minlength="6" required>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="city">
+                        Ville
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                        id="city" type="text" required>
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="wilaya">
+                        Wilaya
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                        id="wilaya" type="text" required>
+                </div>
+            </div>
+
+            <div class="mb-6 border-t pt-4">
+                <div class="flex justify-between items-center mb-4">
+                    <label class="block text-gray-700 text-sm font-bold" for="school-select">
+                        Lycée
+                    </label>
+                    <button type="button" id="toggle-school-mode" class="text-sm text-blue-500 hover:text-blue-800">
+                        Je ne trouve pas mon lycée
+                    </button>
+                </div>
+
+                <div id="existing-school-container">
+                    <select class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                        id="school-select">
+                        <option value="">Sélectionner un lycée...</option>
+                    </select>
+                </div>
+
+                <div id="new-school-container" class="hidden">
+                    <div class="mb-3">
+                        <label class="block text-gray-700 text-xs font-bold mb-1">Nom du lycée</label>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                            id="new-school-name" type="text" placeholder="Ex: Lycée Emir Abdelkader">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-gray-700 text-xs font-bold mb-1">Ville</label>
+                            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                                id="new-school-city" type="text">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-xs font-bold mb-1">Wilaya</label>
+                            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                                id="new-school-wilaya" type="text">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between">
+                <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full" 
+                    type="submit" id="submit-btn">
+                    S'inscrire
+                </button>
+            </div>
+            <div class="mt-4 text-center">
+                <a class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800" href="/login.html">
+                    Déjà un compte ? Se connecter
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <script type="module">
+        import { register, getSchools, checkAuth } from './src/ui/auth.js';
+
+        // Redirect if already logged in
+        checkAuth().then(user => {
+            if (user) {
+                window.location.href = '/index.html';
+            }
+        });
+
+        const form = document.getElementById('register-form');
+        const errorDiv = document.getElementById('error-message');
+        const submitBtn = document.getElementById('submit-btn');
+        const schoolSelect = document.getElementById('school-select');
+        const toggleSchoolBtn = document.getElementById('toggle-school-mode');
+        const existingSchoolContainer = document.getElementById('existing-school-container');
+        const newSchoolContainer = document.getElementById('new-school-container');
+        
+        let isNewSchoolMode = false;
+
+        // Load schools
+        (async () => {
+            try {
+                const schools = await getSchools();
+                schools.forEach(school => {
+                    const option = document.createElement('option');
+                    option.value = school.id;
+                    option.textContent = `${school.name} (${school.city})`;
+                    schoolSelect.appendChild(option);
+                });
+            } catch (e) {
+                console.error('Error loading schools', e);
+            }
+        })();
+
+        toggleSchoolBtn.addEventListener('click', () => {
+            isNewSchoolMode = !isNewSchoolMode;
+            if (isNewSchoolMode) {
+                existingSchoolContainer.classList.add('hidden');
+                newSchoolContainer.classList.remove('hidden');
+                toggleSchoolBtn.textContent = 'Sélectionner un lycée existant';
+            } else {
+                existingSchoolContainer.classList.remove('hidden');
+                newSchoolContainer.classList.add('hidden');
+                toggleSchoolBtn.textContent = 'Je ne trouve pas mon lycée';
+            }
+        });
+
+        // Auto-fill new school city/wilaya from user city/wilaya if empty
+        document.getElementById('city').addEventListener('change', (e) => {
+            if (!document.getElementById('new-school-city').value) {
+                document.getElementById('new-school-city').value = e.target.value;
+            }
+        });
+        document.getElementById('wilaya').addEventListener('change', (e) => {
+            if (!document.getElementById('new-school-wilaya').value) {
+                document.getElementById('new-school-wilaya').value = e.target.value;
+            }
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorDiv.classList.add('hidden');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Inscription...';
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const city = document.getElementById('city').value;
+            const wilaya = document.getElementById('wilaya').value;
+
+            const userData = { email, password, city, wilaya };
+
+            if (isNewSchoolMode) {
+                userData.new_school = {
+                    name: document.getElementById('new-school-name').value,
+                    city: document.getElementById('new-school-city').value,
+                    wilaya: document.getElementById('new-school-wilaya').value
+                };
+            } else {
+                userData.school_id = schoolSelect.value;
+            }
+
+            try {
+                await register(userData);
+                window.location.href = '/index.html';
+            } catch (err) {
+                errorDiv.textContent = err.message;
+                errorDiv.classList.remove('hidden');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'S\'inscrire';
+            }
+        });
+    </script>
+</body>
+</html>

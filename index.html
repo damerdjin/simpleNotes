@@ -657,9 +657,25 @@
         }
     </style>
     <link rel="stylesheet" href="./src/ui/tabs/tabs.styles.css">
+    <script type="module">
+        import { checkAuth, logout } from './src/ui/auth.js';
+        window.handleLogout = logout;
+        
+        async function initAuth() {
+            try {
+                const user = await checkAuth();
+                if (user) {
+                    document.body.style.display = 'block';
+                }
+            } catch (err) {
+                console.error('Auth error:', err);
+            }
+        }
+        initAuth();
+    </script>
 </head>
 
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-100 min-h-screen" style="display: none;">
     <div class="container mx-auto p-4 max-w-7xl">
         <!-- Header -->
         <!-- Header -->
@@ -681,6 +697,10 @@
                     <button onclick="changeLanguage('ar')"
                         class="lang-btn px-3 py-1 rounded-lg font-semibold transition-all bg-gray-200 text-gray-600 hover:bg-gray-300">
                         AR
+                    </button>
+                    <button onclick="handleLogout()"
+                        class="px-3 py-1 rounded-lg font-semibold transition-all bg-red-500 text-white hover:bg-red-600 ml-2" title="Déconnexion">
+                        Logout
                     </button>
                 </div>
             </div>
