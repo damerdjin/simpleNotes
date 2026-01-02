@@ -36,7 +36,7 @@
         const globalTrimester = window.getGlobalTrimester();
         const filteredAssignments = data.assignments.filter(a => {
             const matchClass = a.className === selectedClass;
-            const matchTrimester = !globalTrimester || (a.trimester || '') === globalTrimester;
+            const matchTrimester = globalTrimester ? (a.trimester || '') === globalTrimester : false;
             return matchClass && matchTrimester;
         });
         assignmentSelect.innerHTML = `<option value="">-- ${t.selectAssignment} --</option>` +

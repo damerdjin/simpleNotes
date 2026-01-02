@@ -204,7 +204,7 @@
         const globalTrimester = window.getGlobalTrimester();
         return getData().assignments.filter(a => {
             const matchClass = (a.className || '').trim() === (className || '').trim();
-            const matchTrimester = !globalTrimester || (a.trimester || '') === globalTrimester;
+            const matchTrimester = globalTrimester ? (a.trimester || '') === globalTrimester : false;
             return matchClass && matchTrimester;
         });
     }
