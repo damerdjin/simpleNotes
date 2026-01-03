@@ -33,16 +33,20 @@
         }
 
         const data = getData();
+        const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
+        const globalAcademicYear = window.getGlobalAcademicYear();
         const globalTrimester = window.getGlobalTrimester();
         const filteredAssignments = data.assignments.filter(a => {
             const matchClass = a.className === selectedClass;
+            const matchUser = (a.createdBy || 'unknown') === userId;
+            const matchAcademicYear = globalAcademicYear ? (a.academicYear || '') === globalAcademicYear : false;
             const matchTrimester = globalTrimester ? (a.trimester || '') === globalTrimester : false;
-            return matchClass && matchTrimester;
+            return matchClass && matchUser && matchAcademicYear && matchTrimester;
         });
         assignmentSelect.innerHTML = `<option value="">-- ${t.selectAssignment} --</option>` +
             filteredAssignments.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
 
-        const filteredStudents = data.students.filter(s => s.className === selectedClass);
+        const filteredStudents = data.students.filter(s => s.className === selectedClass && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear);
         studentSelect.innerHTML = `<option value="">-- ${t.selectStudent} --</option>` +
             filteredStudents.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
 
