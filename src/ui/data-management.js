@@ -145,7 +145,15 @@
             try {
                 const importedRaw = JSON.parse(e.target.result);
                 const importedData = importedRaw.data || importedRaw;
+                const metadata = importedRaw.metadata || {};
                 const data = window.data;
+
+                // --- VALIDATION STRICTE ---
+                // Si le fichier contient des métadonnées, on vérifie si elles correspondent au prof et à l'année
+                if (metadata.exportedBy && metadata.exportedBy !== userId) {
+                    const confirmMsg = t.importWrongUserWarning || `Attention: Ce fichier a été exporté par ${metadata.exportedBy}. Voulez-vous vraiment importer ces données pour votre compte (${userId}) ?`;
+                    if (!confirm(confirmMsg)) return;
+                }
 
                 // Fonction pour nettoyer
                 const clean = (val) => String(val || '').trim();
@@ -153,13 +161,22 @@
                 let addedStudents = 0;
                 let updatedStudents = 0;
                 let addedAssignments = 0;
+                let ignoredStudents = 0;
+                let ignoredAssignments = 0;
 
-                // ========== FUSION DES ÉLÈVES ==========
+                // ========== FUSION DES ÉLÈVES AVEC FILTRAGE STRICT ==========
                 if (importedData.students && Array.isArray(importedData.students)) {
                     importedData.students.forEach(importedStudent => {
-                        // S'assurer que l'élève importé est assigné au prof et à l'année actuelle
-                        importedStudent.importedBy = userId;
-                        importedStudent.academicYear = globalAcademicYear;
+                        // On n'importe que si l'élève appartient au prof et à l'année scolaire du JSON
+                        // OU si le JSON n'a pas ces infos, on vérifie si on veut les "forcer"
+                        const studentUser = importedStudent.importedBy || metadata.exportedBy || userId;
+                        const studentYear = importedStudent.academicYear || metadata.academicYear || globalAcademicYear;
+
+                        // FILTRE STRICT : On ignore si ça ne correspond pas au prof et à l'année ACTUELS
+                        if (studentUser !== userId || studentYear !== globalAcademicYear) {
+                            ignoredStudents++;
+                            return;
+                        }
 
                         const nin = clean(importedStudent.nin);
                         let existing = null;
@@ -192,29 +209,33 @@
                     });
                 }
 
-                // ========== FUSION DES DEVOIRS ==========
+                // ========== FUSION DES DEVOIRS AVEC FILTRAGE STRICT ==========
                 if (importedData.assignments && Array.isArray(importedData.assignments)) {
                     importedData.assignments.forEach(importedAssignment => {
-                        // S'assurer que le devoir importé est assigné au prof et à l'année actuelle
-                        importedAssignment.createdBy = userId;
-                        importedAssignment.academicYear = globalAcademicYear;
+                        const assignmentUser = importedAssignment.createdBy || metadata.exportedBy || userId;
+                        const assignmentYear = importedAssignment.academicYear || metadata.academicYear || globalAcademicYear;
+
+                        // FILTRE STRICT
+                        if (assignmentUser !== userId || assignmentYear !== globalAcademicYear) {
+                            ignoredAssignments++;
+                            return;
+                        }
 
                         const existingAssignment = data.assignments.find(a => 
-                            a.id === importedAssignment.id || 
-                            (a.name === importedAssignment.name && a.className === importedAssignment.className && a.academicYear === globalAcademicYear)
+                            (a.id === importedAssignment.id) || 
+                            (a.name === importedAssignment.name && a.className === importedAssignment.className && a.academicYear === globalAcademicYear && a.createdBy === userId)
                         );
                         
                         if (!existingAssignment) {
                             data.assignments.push(importedAssignment);
                             addedAssignments++;
                         } else {
-                            // Optionnel: Mettre à jour le devoir existant si besoin
                             Object.assign(existingAssignment, importedAssignment);
                         }
                     });
                 }
 
-                // ⭐ IMPORT MESSAGES PERSO
+                // ⭐ IMPORT MESSAGES PERSO (On les importe car ils sont liés à la bibliothèque du prof)
                 const teacherData = importedRaw.teacherMessages || importedData.teacherMessages;
                 if (teacherData) {
                     Object.entries(teacherData).forEach(([scope, msgs]) => {
@@ -236,15 +257,23 @@
                 }
 
                 window.saveData();
-                alert(`${t.importSuccess || 'Importation réussie'} :\n- ${addedStudents} élèves ajoutés\n- ${updatedStudents} élèves mis à jour\n- ${addedAssignments} devoirs ajoutés`);
                 
-                // Rafraîchir l'interface selon l'onglet actif
+                let report = `${t.importSuccess || 'Importation terminée'} :\n`;
+                report += `- ${addedStudents} ${t.studentsAdded || 'élèves ajoutés'}\n`;
+                report += `- ${updatedStudents} ${t.studentsUpdated || 'élèves mis à jour'}\n`;
+                report += `- ${addedAssignments} ${t.assignmentsAdded || 'devoirs ajoutés'}\n`;
+                if (ignoredStudents > 0 || ignoredAssignments > 0) {
+                    report += `\n⚠️ ${ignoredStudents} élèves et ${ignoredAssignments} devoirs ont été ignorés car ils ne correspondent pas à votre compte (${userId}) ou à l'année (${globalAcademicYear}).`;
+                }
+                
+                alert(report);
                 if (window.softResetUI) window.softResetUI();
                 
             } catch (err) {
                 console.error("Erreur d'importation JSON:", err);
                 alert(t.importError || "Erreur lors de l'importation du fichier.");
             }
+            event.target.value = ''; // Reset input
         };
         reader.readAsText(file);
     };
