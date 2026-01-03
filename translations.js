@@ -196,6 +196,9 @@ window.translations = {
         noClassesAutoCreated: "Aucune classe. Les classes sont créées automatiquement lors de l'ajout d'élèves.",
         exerciseAbbr: "ex.",
         selectClassToStart: "Sélectionnez une classe pour commencer",
+        showing: "Affichage de",
+        to: "à",
+        of: "sur",
 
         // Import
         importCompleted: "Importation terminée. Nouveaux élèves ajoutés :",
@@ -546,7 +549,10 @@ window.translations = {
         configSubtitle: "Manage your data and application settings",
         importData: "Import",
         exportData: "Export",
-        configNote: "More configuration options will be added soon to customize your experience."
+        configNote: "More configuration options will be added soon to customize your experience.",
+        showing: "Showing",
+        to: "to",
+        of: "of",
     },
 
     // Arabe
@@ -830,6 +836,9 @@ window.translations = {
         configSubtitle: "إدارة بياناتك وإعدادات التطبيق",
         importData: "استيراد",
         exportData: "تصدير",
-        configNote: "سيتم إضافة المزيد من خيارات التكوين قريباً لتخصيص تجربتك."
+        configNote: "سيتم إضافة المزيد من خيارات التكوين قريباً لتخصيص تجربتك.",
+        showing: "عرض",
+        to: "إلى",
+        of: "من",
     }
 };

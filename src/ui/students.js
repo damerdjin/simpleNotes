@@ -100,7 +100,7 @@
 
         const search = (document.getElementById('students-class-search')?.value || '').toLowerCase();
         const classes = window.getClasses().filter(c => c.toLowerCase().includes(search));
-        const selected = document.getElementById('filter-class-students')?.value || studentsUiState.selectedClass || '';
+        const selected = studentsUiState.selectedClass || '';
 
         if (classes.length === 0) {
             container.innerHTML = `<p class="text-gray-500 text-sm">${t.noClassesAutoCreated}</p>`;
@@ -123,13 +123,20 @@
             const active = c === selected;
             const color = typeof window.getClassColor === 'function' ? window.getClassColor(c) : '#3b82f6';
             return `
-                <button onclick="setStudentsSelectedClass('${c}')" class="class-list-item ${active ? 'active' : ''}" title="${c}">
-                    <div class="flex items-center gap-2 min-w-0 flex-1">
-                        <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:${color}"></span>
-                        <div class="class-list-item-name">${c}</div>
-                    </div>
-                    <span class="class-list-item-count">${count}</span>
-                </button>
+                <div class="class-list-item-wrapper group relative">
+                    <button onclick="setStudentsSelectedClass('${c}')" class="class-list-item ${active ? 'active' : ''}" title="${c}">
+                        <div class="flex items-center gap-2 min-w-0 flex-1">
+                            <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:${color}"></span>
+                            <div class="class-list-item-name">${c}</div>
+                        </div>
+                        <span class="class-list-item-count">${count}</span>
+                    </button>
+                    <button onclick="event.stopPropagation(); deleteClassSafely('${c}')" 
+                        class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100 z-10"
+                        title="${t.delete}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                </div>
             `;
         }).join('');
 
@@ -139,8 +146,6 @@
     window.setStudentsSelectedClass = function(className = '') {
         studentsUiState.selectedClass = className || '';
         studentsUiState.page = 1;
-        const filter = document.getElementById('filter-class-students');
-        if (filter) filter.value = studentsUiState.selectedClass;
         window.renderStudents();
         window.renderClassList();
     };
@@ -148,8 +153,6 @@
     window.clearStudentsFilters = function() {
         studentsUiState.selectedClass = '';
         studentsUiState.page = 1;
-        const filter = document.getElementById('filter-class-students');
-        if (filter) filter.value = '';
         const search = document.getElementById('student-search');
         if (search) search.value = '';
         window.renderStudents();
@@ -169,94 +172,11 @@
         window.renderStudents();
     };
 
-    window.openClassesManager = function() {
-        const t = getTranslations()[getLang()];
-        const existing = document.getElementById('classes-manager-modal');
-        if (existing) existing.remove();
-
-        const wrapper = document.createElement('div');
-        wrapper.id = 'classes-manager-modal';
-        wrapper.className = 'fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-sm bg-slate-900/40 transition-all duration-300';
-        wrapper.innerHTML = `
-            <div class="absolute inset-0" onclick="closeClassesManager()"></div>
-            <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden transform transition-all duration-300 scale-100">
-                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                    <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
-                        <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                        ${t.classManagement}
-                    </h3>
-                    <button onclick="closeClassesManager()" class="p-2 rounded-lg hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </button>
-                </div>
-                <div class="p-6">
-                    <div id="classes-manager-list" class="space-y-3 max-h-[50vh] overflow-auto pr-2 custom-scrollbar"></div>
-                </div>
-                <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
-                    <button onclick="closeClassesManager()" class="modern-btn-secondary">
-                        ${t.cancel}
-                    </button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(wrapper);
-        document.body.style.overflow = 'hidden';
-        window.renderClassesManagerList();
-    };
-
-    window.closeClassesManager = function() {
-        const modal = document.getElementById('classes-manager-modal');
-        if (modal) modal.remove();
-        document.body.style.overflow = '';
-    };
-
-    window.renderClassesManagerList = function() {
-        const t = getTranslations()[getLang()];
-        const list = document.getElementById('classes-manager-list');
-        if (!list) return;
-        const classes = window.getClasses();
-
-        if (classes.length === 0) {
-            list.innerHTML = `
-                <div class="text-center py-8">
-                    <div class="bg-slate-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                    </div>
-                    <p class="text-slate-500 font-medium">${t.noClassesAutoCreated}</p>
-                </div>
-            `;
-            return;
-        }
-
-        const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
-        list.innerHTML = classes.map(c => {
-            const count = getData().students.filter(s => s.className === c && (s.importedBy || 'unknown') === userId).length;
-            const color = typeof window.getClassColor === 'function' ? window.getClassColor(c) : '#3b82f6';
-            return `
-                <div class="group flex items-center justify-between gap-4 p-4 rounded-xl border-2 border-slate-100 bg-white hover:border-slate-200 hover:shadow-sm transition-all">
-                    <div class="flex items-center gap-3 min-w-0">
-                        <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold shadow-sm" style="background: ${color}">
-                            ${c.substring(0, 1).toUpperCase()}
-                        </div>
-                        <div class="min-w-0 flex-1">
-                            <div class="font-bold text-slate-800 leading-tight" title="${c}">${c}</div>
-                            <div class="text-xs font-semibold text-slate-500">${count} ${t.students}</div>
-                        </div>
-                    </div>
-                    <button onclick="deleteClassSafely('${c}')" class="p-2.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                    </button>
-                </div>
-            `;
-        }).join('');
-    };
-
     window.deleteClassSafely = function(className) {
         const t = getTranslations()[getLang()];
         const typed = prompt(`${t.deleteClassConfirm} "${className}"\n\n${getLang() === 'ar' ? 'للتأكيد أكتب : نعم' : getLang() === 'en' ? 'To confirm, type: Yes' : 'Pour confirmer, tapez : OUI'}`);
         if (typed !== (getLang() === 'ar' ? 'نعم' : getLang() === 'en' ? 'Yes' : 'OUI')) return;
         window.deleteClass(className);
-        window.renderClassesManagerList();
         window.loadClassSelectors();
         window.renderClassList();
     };
@@ -702,9 +622,9 @@
                 let html = `
                     <div class="pagination-container">
                         <div class="pagination-info">
-                            ${t.showing || 'Affichage de'} <strong>${(currentPage - 1) * pageSize + 1}</strong> 
-                            ${t.to || 'à'} <strong>${Math.min(currentPage * pageSize, filteredStudents.length)}</strong> 
-                            ${t.of || 'sur'} <strong>${filteredStudents.length}</strong>
+                            ${t.showing} <strong>${(currentPage - 1) * pageSize + 1}</strong> 
+                            ${t.to} <strong>${Math.min(currentPage * pageSize, filteredStudents.length)}</strong> 
+                            ${t.of} <strong>${filteredStudents.length}</strong>
                         </div>
                         <div class="flex items-center gap-1">
                             <button onclick="goStudentsPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="pagination-btn">
