@@ -202,10 +202,12 @@
 
     function getAssignmentsForClass(className) {
         const globalTrimester = window.getGlobalTrimester();
+        const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
         return getData().assignments.filter(a => {
+            const matchUser = (a.createdBy || 'unknown') === userId;
             const matchClass = (a.className || '').trim() === (className || '').trim();
             const matchTrimester = globalTrimester ? (a.trimester || '') === globalTrimester : false;
-            return matchClass && matchTrimester;
+            return matchUser && matchClass && matchTrimester;
         });
     }
 

@@ -48,7 +48,7 @@
         overlay.innerHTML = `
       <div class="bg-white rounded-xl p-6 w-full max-w-5xl mx-4 my-auto">
         <h3 id="assignment-modal-title" class="text-xl font-bold mb-4">${t.createAssignmentTitle || 'Créer un Devoir'}</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <input type="text" id="assignment-name" placeholder="Nom du devoir ex: Devoir 1" class="w-full p-3 border rounded-lg">
           <select id="assignment-class" class="w-full p-3 border rounded-lg">
             <option value="" data-translate="selectClass">${t.selectClass || '-- Sélectionner une classe --'}</option>
@@ -97,7 +97,6 @@
                 document.getElementById('assignment-modal-title').textContent = t.editAssignment || 'Modifier le devoir';
                 document.getElementById('assignment-name').value = assignment.name;
                 document.getElementById('assignment-class').value = assignment.className;
-                document.getElementById('assignment-trimester').value = assignment.trimester || '';
                 const exs = assignment.exercises || [];
                 if (exs.length === 1 && (!exs[0].questions || exs[0].questions.length === 0) && (!exs[0].parts || exs[0].parts.length === 0)) {
                     isGlobalAssignment = true;
@@ -133,6 +132,7 @@
                 isGlobalAssignment = false;
                 if (globalCheckbox) globalCheckbox.checked = false;
                 if (globalMaxInput) globalMaxInput.value = 20;
+
             }
 
 
@@ -467,6 +467,7 @@
                 data.assignments[index].name = name;
                 data.assignments[index].className = className;
                 data.assignments[index].trimester = trimester;
+                if (!data.assignments[index].createdBy) data.assignments[index].createdBy = window.currentUser?.email || window.currentUser?.id || 'unknown';
                 data.assignments[index].exercises = finalExercises;
 
                 // Copie des notes si demandé
@@ -496,7 +497,8 @@
                 name,
                 className,
                 trimester,
-                exercises: finalExercises
+                exercises: finalExercises,
+                createdBy: window.currentUser?.email || window.currentUser?.id || 'unknown'
             });
 
             // Pré-remplissage si demandé (Global Default Grade)
@@ -596,6 +598,12 @@
         const filterName = document.getElementById('filter-name-assignments')?.value.toLowerCase() || '';
         const data = getData();
 
+        const globalAcademicYear = window.getGlobalAcademicYear();
+        if (!globalAcademicYear) {
+            container.innerHTML = `<p class="text-gray-500 text-center py-8">${t.selectAcademicYear || 'Veuillez sélectionner une année scolaire.'}</p>`;
+            return;
+        }
+
         const globalTrimester = window.getGlobalTrimester();
         const createBtn = document.querySelector('#content-assignments button[onclick="openAssignmentModal()"]');
         if (createBtn) {
@@ -615,12 +623,14 @@
             chipsContainer.innerHTML = allChip + classChips;
         }
 
+        const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
         let filteredAssignments = data.assignments.filter(a => {
+            const matchUser = (a.createdBy || 'unknown') === userId;
             const matchClass = activeClassFilters.length === 0 || activeClassFilters.includes(a.className);
             const matchName = !filterName || a.name.toLowerCase().includes(filterName);
             const globalTrimester = window.getGlobalTrimester();
             const matchTrimester = globalTrimester ? (a.trimester || '') === globalTrimester : false;
-            return matchClass && matchName && matchTrimester;
+            return matchUser && matchClass && matchName && matchTrimester;
         });
 
         if (data.assignments.length === 0) {

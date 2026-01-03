@@ -670,6 +670,7 @@
                 
                 const user = await checkAuth();
                 if (user) {
+                    window.currentUser = user;
                     document.body.style.display = 'block';
                 }
             } catch (err) {

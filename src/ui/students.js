@@ -19,8 +19,9 @@
     window.getClasses = function() {
         const classes = new Set();
         const globalAcademicYear = window.getGlobalAcademicYear();
+        const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
         (getData().students || []).forEach(s => {
-            if (s.className && globalAcademicYear && s.academicYear === globalAcademicYear) {
+            if ((s.importedBy || 'unknown') === userId && s.className && globalAcademicYear && s.academicYear === globalAcademicYear) {
                 classes.add(s.className);
             }
         });
@@ -446,7 +447,10 @@
         }
 
         let filteredStudents = data.students.slice();
-                // Filter by global academic year
+                // Filter by user
+        const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
+        filteredStudents = filteredStudents.filter(s => (s.importedBy || 'unknown') === userId);
+        // Filter by global academic year
         filteredStudents = filteredStudents.filter(s => (s.academicYear || '') === globalAcademicYear);
         if (selectedClass) {
             filteredStudents = filteredStudents.filter(s => (s.className || '') === selectedClass);
@@ -723,6 +727,7 @@
                     data.students.push({
                         id: genId(),
                         academicYear: window.getGlobalAcademicYear(),
+                     importedBy: window.currentUser?.email || window.currentUser?.id || 'unknown',
                         ...studentData
                     });
                     added++;

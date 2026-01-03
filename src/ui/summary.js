@@ -329,6 +329,9 @@
             if (searchTerm && !(n.includes(searchTerm) || cn.includes(searchTerm))) return false;
             if (selectedClass && s.className !== selectedClass) return false;
             if (!selectedClass && searchTerm && !matchingClasses.has(s.className)) return false;
+            // Filter by global academic year
+            const globalAcademicYear = window.getGlobalAcademicYear();
+            if (globalAcademicYear && (s.academicYear || '') !== globalAcademicYear) return false;
             return true;
         });
 
@@ -346,6 +349,9 @@
         });
 
         let filteredAssignments = data.assignments.slice();
+        // Filter by user
+        const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
+        filteredAssignments = filteredAssignments.filter(a => (a.createdBy || 'unknown') === userId);
         if (selectedClass) {
             filteredAssignments = filteredAssignments.filter(a => a.className === selectedClass);
         } else {

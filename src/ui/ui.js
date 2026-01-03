@@ -431,6 +431,7 @@
         });
         // Update classes and re-render all tabs
         if (window.loadClassSelectors) window.loadClassSelectors();
+        if (window.loadClassSelectorsForAssignments) window.loadClassSelectorsForAssignments();
         if (window.renderClassList) window.renderClassList();
         if (window.renderStudents) window.renderStudents();
         if (window.renderAssignments) window.renderAssignments();
