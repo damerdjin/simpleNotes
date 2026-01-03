@@ -112,11 +112,9 @@
         const allLabel = t.allClassesFilter;
         const allActive = !selected;
         const allBtn = `
-            <button onclick="setStudentsSelectedClass('')" class="w-full flex items-center justify-between gap-3 p-3 rounded-lg border ${allActive ? 'bg-blue-50 border-blue-200' : 'bg-white hover:bg-gray-50 border-gray-200'} transition">
-                <div class="min-w-0 text-left">
-                    <div class="font-semibold text-gray-800 truncate">${allLabel}</div>
-                </div>
-                <span class="text-xs bg-gray-100 px-2 py-1 rounded font-medium text-gray-700 whitespace-nowrap">${allCount} ${t.students}</span>
+            <button onclick="setStudentsSelectedClass('')" class="class-list-item ${allActive ? 'active' : ''}">
+                <div class="class-list-item-name">${allLabel}</div>
+                <span class="class-list-item-count">${allCount}</span>
             </button>
         `;
 
@@ -125,14 +123,12 @@
             const active = c === selected;
             const color = typeof window.getClassColor === 'function' ? window.getClassColor(c) : '#3b82f6';
             return `
-                <button onclick="setStudentsSelectedClass('${c}')" class="w-full flex items-center justify-between gap-3 p-3 rounded-lg border ${active ? 'bg-blue-50 border-blue-200' : 'bg-white hover:bg-gray-50 border-gray-200'} transition">
+                <button onclick="setStudentsSelectedClass('${c}')" class="class-list-item ${active ? 'active' : ''}">
                     <div class="flex items-center gap-2 min-w-0">
                         <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:${color}"></span>
-                        <div class="min-w-0 text-left">
-                            <div class="font-semibold text-gray-800 truncate">${c}</div>
-                        </div>
+                        <div class="class-list-item-name truncate">${c}</div>
                     </div>
-                    <span class="text-xs bg-gray-100 px-2 py-1 rounded font-medium text-gray-700 whitespace-nowrap">${count} ${t.students}</span>
+                    <span class="class-list-item-count">${count}</span>
                 </button>
             `;
         }).join('');
@@ -180,18 +176,26 @@
 
         const wrapper = document.createElement('div');
         wrapper.id = 'classes-manager-modal';
-        wrapper.className = 'fixed inset-0 z-50 flex items-center justify-center p-4';
+        wrapper.className = 'fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-sm bg-slate-900/40 transition-all duration-300';
         wrapper.innerHTML = `
-            <div class="absolute inset-0 bg-black/40" onclick="closeClassesManager()"></div>
-            <div class="relative w-full max-w-lg bg-white rounded-xl shadow-xl border p-5">
-                <div class="flex items-center justify-between gap-3 mb-4">
-                    <h3 class="text-lg font-bold text-gray-800">${t.classManagement}</h3>
-                    <button onclick="closeClassesManager()" class="text-gray-500 hover:text-gray-700 text-xl leading-none">✕</button>
+            <div class="absolute inset-0" onclick="closeClassesManager()"></div>
+            <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden transform transition-all duration-300 scale-100">
+                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                    <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                        ${t.classManagement}
+                    </h3>
+                    <button onclick="closeClassesManager()" class="p-2 rounded-lg hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
                 </div>
-                <div class="text-sm text-gray-600 mb-3">${t.noClassesAutoCreated ? '' : ''}</div>
-                <div id="classes-manager-list" class="space-y-2 max-h-[60vh] overflow-auto"></div>
-                <div class="flex justify-end gap-2 mt-4">
-                    <button onclick="closeClassesManager()" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">${t.cancel}</button>
+                <div class="p-6">
+                    <div id="classes-manager-list" class="space-y-3 max-h-[50vh] overflow-auto pr-2 custom-scrollbar"></div>
+                </div>
+                <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+                    <button onclick="closeClassesManager()" class="modern-btn-secondary">
+                        ${t.cancel}
+                    </button>
                 </div>
             </div>
         `;
@@ -213,20 +217,35 @@
         const classes = window.getClasses();
 
         if (classes.length === 0) {
-            list.innerHTML = `<p class="text-gray-500 text-sm">${t.noClassesAutoCreated}</p>`;
+            list.innerHTML = `
+                <div class="text-center py-8">
+                    <div class="bg-slate-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    </div>
+                    <p class="text-slate-500 font-medium">${t.noClassesAutoCreated}</p>
+                </div>
+            `;
             return;
         }
 
         const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
         list.innerHTML = classes.map(c => {
             const count = getData().students.filter(s => s.className === c && (s.importedBy || 'unknown') === userId).length;
+            const color = typeof window.getClassColor === 'function' ? window.getClassColor(c) : '#3b82f6';
             return `
-                <div class="flex items-center justify-between gap-3 p-3 rounded-lg border bg-gray-50">
-                    <div class="min-w-0">
-                        <div class="font-semibold text-gray-800 truncate">${c}</div>
-                        <div class="text-xs text-gray-600">${count} ${t.students}</div>
+                <div class="group flex items-center justify-between gap-4 p-4 rounded-xl border-2 border-slate-100 bg-white hover:border-slate-200 hover:shadow-sm transition-all">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold shadow-sm" style="background: ${color}">
+                            ${c.substring(0, 1).toUpperCase()}
+                        </div>
+                        <div class="min-w-0">
+                            <div class="font-bold text-slate-800 truncate">${c}</div>
+                            <div class="text-xs font-semibold text-slate-500">${count} ${t.students}</div>
+                        </div>
                     </div>
-                    <button onclick="deleteClassSafely('${c}')" class="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold">${t.delete}</button>
+                    <button onclick="deleteClassSafely('${c}')" class="p-2.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
                 </div>
             `;
         }).join('');
@@ -632,6 +651,7 @@
             container.innerHTML = `<p class="text-gray-500 text-center py-8">${t.noResults}</p>`;
         } else {
             const items = pageStudents.map((s, i) => {
+            const studentIndex = start + i + 1;
             const first = (s.firstName || '').trim();
             const last = (s.lastName || '').trim();
             const displayName = (s.name || `${last} ${first}`).trim();
@@ -646,6 +666,7 @@
 
             return `
     <div class="student-item">
+        <div class="student-index-badge">${studentIndex}</div>
         <div class="student-level ${levelClass}" title="Niveau">${level}</div>
         <div class="student-info">
             <div class="student-name">${displayName}</div>
@@ -659,8 +680,12 @@
             </button>
         </div>
         <div class="student-actions">
-            <button onclick="openStudentModal('${s.id}')" class="btn-edit" title="${t.edit}">✏️</button>
-            <button onclick="deleteStudent('${s.id}')" class="btn-delete" title="${t.delete}">🗑️</button>
+            <button onclick="openStudentModal('${s.id}')" class="btn-edit" title="${t.edit}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 00-2 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+            </button>
+            <button onclick="deleteStudent('${s.id}')" class="btn-delete" title="${t.delete}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </button>
         </div>
     </div>`;
             }).join('');
@@ -671,22 +696,45 @@
 
         const pagination = document.getElementById('students-pagination');
         if (pagination) {
-            const total = filteredStudents.length;
-            const from = total === 0 ? 0 : (start + 1);
-            const to = Math.min(start + pageSize, total);
-            const prevDisabled = studentsUiState.page <= 1 ? 'opacity-50 pointer-events-none' : '';
-            const nextDisabled = studentsUiState.page >= totalPages ? 'opacity-50 pointer-events-none' : '';
+            const currentPage = studentsUiState.page;
+            
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+            } else {
+                let html = `
+                    <div class="pagination-container">
+                        <div class="pagination-info">
+                            ${t.showing || 'Affichage de'} <strong>${(currentPage - 1) * pageSize + 1}</strong> 
+                            ${t.to || 'à'} <strong>${Math.min(currentPage * pageSize, filteredStudents.length)}</strong> 
+                            ${t.of || 'sur'} <strong>${filteredStudents.length}</strong>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button onclick="goStudentsPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="pagination-btn">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                            </button>
+                `;
 
-            pagination.innerHTML = `
-                <div class="text-sm text-gray-600">
-                    ${from}-${to} / ${total}
-                </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="goStudentsPage(${studentsUiState.page - 1})" class="px-3 py-2 rounded-lg border bg-white hover:bg-gray-50 ${prevDisabled}">←</button>
-                    <div class="text-sm font-semibold text-gray-700">${studentsUiState.page} / ${totalPages}</div>
-                    <button onclick="goStudentsPage(${studentsUiState.page + 1})" class="px-3 py-2 rounded-lg border bg-white hover:bg-gray-50 ${nextDisabled}">→</button>
-                </div>
-            `;
+                // Logic for page numbers
+                const startPage = Math.max(1, currentPage - 2);
+                const endPage = Math.min(totalPages, startPage + 4);
+                
+                for (let i = startPage; i <= endPage; i++) {
+                    html += `
+                        <button onclick="goStudentsPage(${i})" class="pagination-btn ${i === currentPage ? 'active' : ''}">
+                            ${i}
+                        </button>
+                    `;
+                }
+
+                html += `
+                            <button onclick="goStudentsPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="pagination-btn">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                pagination.innerHTML = html;
+            }
         }
     };
 
