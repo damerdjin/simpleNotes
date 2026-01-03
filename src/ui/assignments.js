@@ -350,10 +350,13 @@
     };
 
     window.addPart = function (exIndex) {
-        window.tempExercises[exIndex].parts = window.tempExercises[exIndex].parts || [];
+        const t = getTranslations()[getLang()];
+        const parts = window.tempExercises[exIndex].parts || [];
+        const partNumber = parts.length + 1;
+        window.tempExercises[exIndex].parts = parts;
         window.tempExercises[exIndex].parts.push({
             id: genId(),
-            name: '',
+            name: (t.part || 'Partie') + ' ' + partNumber,
             maxPoints: 5,
             questions: []
         });
@@ -361,9 +364,17 @@
     };
 
     window.addQuestion = function (exIndex, partIndex = null) {
+        const t = getTranslations()[getLang()];
+        let questions;
+        if (partIndex !== null && partIndex !== undefined) {
+            questions = window.tempExercises[exIndex].parts[partIndex].questions || [];
+        } else {
+            questions = window.tempExercises[exIndex].questions || [];
+        }
+        const questionNumber = questions.length + 1;
         const question = {
             id: genId(),
-            name: '',
+            name: (t.questionPrefix || 'Q') + questionNumber,
             maxPoints: 1,
             subQuestions: []
         };
