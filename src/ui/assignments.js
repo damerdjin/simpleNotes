@@ -74,17 +74,42 @@
         <!-- Scrollable Content -->
         <div class="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
           <!-- Basic Info Section -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="space-y-1">
-              <label class="text-sm font-semibold text-gray-700 ml-1">${t.assignmentName || 'Nom du devoir'}</label>
-              <input type="text" id="assignment-name" placeholder="${t.assignmentName}" 
-                class="w-full p-3 border-2 border-gray-100 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all">
+          <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+            <div class="flex items-center gap-2 mb-2">
+                <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <h4 class="font-bold text-gray-800 text-sm uppercase tracking-wider">${t.generalInfo || 'Informations Générales'}</h4>
             </div>
-            <div class="space-y-1">
-              <label class="text-sm font-semibold text-gray-700 ml-1">${t.selectClass || 'Classe'}</label>
-              <select id="assignment-class" class="w-full p-3 border-2 border-gray-100 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all">
-                <option value="" data-translate="selectClass">${t.selectClass || '-- Sélectionner une classe --'}</option>
-              </select>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <!-- Assignment Name -->
+                <div class="relative group">
+                    <label class="absolute -top-2 left-3 px-1.5 bg-white text-[11px] font-bold text-blue-600 z-10 transition-all group-focus-within:text-blue-700">${t.assignmentName || 'Nom du devoir'}</label>
+                    <div class="relative flex items-center">
+                        <div class="absolute left-3 text-gray-400 group-focus-within:text-blue-500 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        </div>
+                        <input type="text" id="assignment-name" placeholder="${t.assignmentNamePlaceholder || 'Ex: Devoir 1'}" 
+                            class="w-full pl-10 pr-4 py-3 bg-gray-50/50 border-2 border-gray-100 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all font-medium text-gray-700">
+                    </div>
+                </div>
+
+                <!-- Class Selection -->
+                <div class="relative group">
+                    <label class="absolute -top-2 left-3 px-1.5 bg-white text-[11px] font-bold text-emerald-600 z-10 transition-all group-focus-within:text-emerald-700">${t.selectClass || 'Classe'}</label>
+                    <div class="relative flex items-center">
+                        <div class="absolute left-3 text-gray-400 group-focus-within:text-emerald-500 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        </div>
+                        <select id="assignment-class" class="w-full pl-10 pr-10 py-3 bg-gray-50/50 border-2 border-gray-100 rounded-xl focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all font-medium text-gray-700 appearance-none cursor-pointer">
+                            <option value="" data-translate="selectClass">${t.selectClass || '-- Sélectionner une classe --'}</option>
+                        </select>
+                        <div class="absolute right-3 pointer-events-none text-gray-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                </div>
             </div>
           </div>
 
