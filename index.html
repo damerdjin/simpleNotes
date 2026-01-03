@@ -673,6 +673,7 @@
                     window.currentUser = user;
                     document.getElementById('current-user-info').textContent = user.email || user.id;
                     document.body.style.display = 'block';
+                    if (window.translatePage) window.translatePage();
                 }
             } catch (err) {
                 console.error('Auth error:', err);
@@ -694,7 +695,7 @@
                 </div>
                 <div class="flex items-center gap-4">
                     <div class="text-white text-sm bg-black/20 px-3 py-2 rounded-lg">
-                        <span class="font-semibold">Connecté en tant que :</span> <span id="current-user-info" class="ml-2"></span>
+                        <span class="font-semibold" data-translate="loggedInAs">Connecté en tant que :</span> <span id="current-user-info" class="ml-2"></span>
                     </div>
                     <button onclick="handleLogout()"
                         class="px-3 py-1 rounded-lg font-semibold transition-all bg-red-500 text-white hover:bg-red-600" title="Déconnexion">

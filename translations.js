@@ -35,6 +35,7 @@ window.translations = {
         // Interface générale
         appTitle: "📝 Gestion des Corrections",
         appSubtitle: "Gérez vos élèves, devoirs et notes en toute simplicité",
+        loggedInAs: "Connecté en tant que :",
 
         // Navigation
         studentsTab: "👥 Élèves",
@@ -268,6 +269,7 @@ window.translations = {
         // Interface générale
         appTitle: "📝 Grading Management",
         appSubtitle: "Manage your students, assignments and grades easily",
+        loggedInAs: "Logged in as:",
 
         // Navigation
         studentsTab: "👥 Students",
@@ -500,6 +502,7 @@ window.translations = {
         // Interface générale
         appTitle: "📝 إدارة التصحيح",
         appSubtitle: "إدارة طلابك، واجباتك و نقاطك بكل سهولة",
+        loggedInAs: "مسجل دخول باسم:",
 
         // Navigation
         studentsTab: "👥 الطلاب",
