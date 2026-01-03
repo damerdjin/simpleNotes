@@ -660,6 +660,8 @@
                     const name = (lastName + ' ' + firstName).trim();
 
                     // --- CORRECTION 1 : LOGIQUE DE RECHERCHE AMÉLIORÉE ---
+                    const currentUserId = window.currentUser?.email || window.currentUser?.id || 'unknown';
+                    const userStudents = data.students.filter(s => (s.importedBy || 'unknown') === currentUserId);
                     let existing = null;
 
                     // 0. Priorité absolue : Mapping manuel du Wizard
@@ -669,18 +671,18 @@
 
                     // A. Essayer par Numéro d'Inscription ET Classe (le plus fiable)
                     if (!existing && regNumber && className) {
-                        existing = data.students.find(s => 
-                            s.regNumber == regNumber && 
+                        existing = userStudents.find(s =>
+                            s.regNumber == regNumber &&
                             s.className.trim() === className.trim()
                         );
                     }
                     // B. Si pas trouvé, essayer par NIN
                     if (!existing && nin) {
-                        existing = data.students.find(s => s.nin == nin);
+                        existing = userStudents.find(s => s.nin == nin);
                     }
                     // C. Si pas trouvé, essayer Nom + Prénom + Classe (Comparaison stricte sans espaces)
                     if (!existing) {
-                        existing = data.students.find(s =>
+                        existing = userStudents.find(s =>
                             s.name.trim() === name &&
                             s.className.trim() === className
                         );

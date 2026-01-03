@@ -45,9 +45,10 @@
         let searchMatches = data.students.slice();
 
         // Apply global academic year filter to students
+        const globalUserId = window.currentUser?.email || window.currentUser?.id || 'unknown';
         const globalAcademicYear = window.getGlobalAcademicYear();
         if (globalAcademicYear) {
-            searchMatches = searchMatches.filter(s => (s.academicYear || '') === globalAcademicYear);
+            searchMatches = searchMatches.filter(s => (s.importedBy || 'unknown') === globalUserId && (s.academicYear || '') === globalAcademicYear);
         }
 
         if (searchTerm) {
@@ -329,9 +330,10 @@
             if (searchTerm && !(n.includes(searchTerm) || cn.includes(searchTerm))) return false;
             if (selectedClass && s.className !== selectedClass) return false;
             if (!selectedClass && searchTerm && !matchingClasses.has(s.className)) return false;
-            // Filter by global academic year
+            // Filter by user and global academic year
+            const globalUserId = window.currentUser?.email || window.currentUser?.id || 'unknown';
             const globalAcademicYear = window.getGlobalAcademicYear();
-            if (globalAcademicYear && (s.academicYear || '') !== globalAcademicYear) return false;
+            if ((s.importedBy || 'unknown') !== globalUserId || (globalAcademicYear && (s.academicYear || '') !== globalAcademicYear)) return false;
             return true;
         });
 
