@@ -911,49 +911,64 @@
                 const nbGrades = classStudents.filter(s => window.hasAnyGradeForAssignment(s.id, a.id)).length;
                 const completionRate = nbStudents > 0 ? Math.round((nbGrades / nbStudents) * 100) : 0;
 
+                const classColor = getClassColor(a.className);
+
                 return `
-                <div class="bg-white border rounded-xl overflow-hidden hover:shadow-md transition-all group flex flex-col h-full">
+                <div class="bg-white border-2 border-gray-200/60 rounded-2xl overflow-hidden shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.15)] hover:-translate-y-2 transition-all duration-500 group flex flex-col h-full relative">
+                    <!-- Barre de couleur supérieure décorative -->
+                    <div class="h-2 w-full" style="background-color: ${classColor}"></div>
+
                     <!-- En-tête de la carte (cliquable pour accordéon) -->
-                    <div class="p-5 flex-1 cursor-pointer select-none" onclick="toggleAccordion('${a.id}')">
-                        <div class="flex items-start justify-between gap-4 mb-3">
+                    <div class="p-6 flex-1 cursor-pointer select-none bg-gradient-to-br from-white via-white to-gray-50/50" onclick="toggleAccordion('${a.id}')">
+                        <div class="flex items-start justify-between gap-4 mb-6">
                             <div class="min-w-0 flex-1">
-                                <span class="inline-block px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-bold rounded uppercase tracking-wider mb-1">
-                                    ${a.trimester ? t.trimesterShort + a.trimester : ''}
-                                </span>
-                                <h4 class="text-lg font-bold text-blue-600 leading-tight transition-colors truncate" title="${a.name}">
+                                <h4 class="text-xl font-black text-gray-900 leading-tight transition-colors group-hover:text-blue-600 truncate" title="${a.name}">
                                     ${a.name}
                                 </h4>
+                                <div class="flex items-center gap-2 mt-2.5">
+                                    <div class="px-2.5 py-1 rounded-lg bg-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-widest border border-gray-200/50 shadow-sm">${t.totalPointsLabel || 'Total Points'}</div>
+                                    <span class="text-sm font-black text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100 shadow-sm">${totalPoints} ${t.points}</span>
+                                </div>
                             </div>
-                            <span id="icon-${a.id}" class="rotate-icon text-gray-400 mt-1 shrink-0 transition-transform duration-200">▼</span>
+                            <div id="icon-${a.id}" class="w-11 h-11 rounded-2xl bg-white shadow-md border border-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 group-hover:rotate-180 transition-all duration-500">
+                                <svg class="w-5 h-5 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
                         </div>
                         
-                        <div class="flex flex-wrap items-center gap-y-2 gap-x-4 text-sm text-gray-500">
-                            <div class="flex items-center gap-1.5" title="${t.totalPointsLabel}">
-                                <span class="text-pink-500">🎯</span> 
-                                <span class="font-semibold text-gray-700">${totalPoints}</span>
-                                <span class="text-gray-400 text-xs">${t.points}</span>
+                        <!-- Barre de progression ultra-visible -->
+                        <div class="mt-8 space-y-3">
+                            <div class="flex items-center justify-between text-[11px] font-black uppercase tracking-wider">
+                                <span class="text-gray-500 flex items-center gap-2">
+                                    <div class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></div>
+                                    ${t.progression || 'Progression'}
+                                </span>
+                                <span class="px-2.5 py-1 rounded-full ${completionRate === 100 ? 'bg-green-100 text-green-700 border-green-200' : 'bg-blue-100 text-blue-700 border-blue-200'} border font-black text-[10px] shadow-sm">
+                                    ${nbGrades} / ${nbStudents} (${completionRate}%)
+                                </span>
                             </div>
-                            <div class="flex items-center gap-1.5" title="${t.progression}">
-                                <span class="text-indigo-500">📊</span>
-                                <span class="font-semibold text-gray-700">${nbGrades}/${nbStudents}</span>
-                                <span class="bg-gray-100 px-1.5 py-0.5 rounded text-[10px] font-bold text-gray-500">(${completionRate}%)</span>
+                            <div class="h-4 w-full bg-gray-200/40 rounded-full overflow-hidden p-1 shadow-inner border border-gray-100">
+                                <div class="h-full rounded-full transition-all duration-1000 ease-out ${completionRate === 100 ? 'bg-gradient-to-r from-green-400 via-green-500 to-green-600' : 'bg-gradient-to-r from-blue-400 via-blue-500 to-blue-700'}" 
+                                     style="width: ${completionRate}%">
+                                </div>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Barre d'actions -->
-                    <div class="px-4 py-3 bg-gray-50 border-t border-b flex items-center justify-end gap-3" onclick="event.stopPropagation()">
-                        <button onclick="openAssignmentModal('${a.id}')" class="p-1.5 text-orange-400 hover:bg-orange-50 rounded transition-colors" title="${t.edit}">
-                            <span class="text-lg">✏️</span>
-                        </button>
-                        <button onclick="duplicateAssignment('${a.id}')" class="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded transition-colors" title="${t.duplicate}">
-                            <span class="text-lg">⎘</span>
-                        </button>
-                        <button onclick="duplicateAssignment('${a.id}', true)" class="p-1.5 text-amber-600 hover:bg-amber-50 rounded transition-colors" title="${t.duplicateNotes}">
-                            <span class="text-lg">📋</span>
-                        </button>
-                        <button onclick="deleteAssignment('${a.id}')" class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors" title="${t.delete}">
-                            <span class="text-lg">🗑️</span>
+                    <!-- Barre d'actions moderne à haut contraste -->
+                    <div class="px-6 py-4 bg-gray-50/80 border-t border-gray-200 flex items-center justify-between gap-3" onclick="event.stopPropagation()">
+                        <div class="flex items-center gap-2">
+                            <button onclick="openAssignmentModal('${a.id}')" class="p-2.5 text-gray-600 hover:text-orange-600 hover:bg-white hover:shadow-md rounded-xl transition-all active:scale-90 border border-transparent hover:border-orange-100" title="${t.edit}">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            </button>
+                            <button onclick="duplicateAssignment('${a.id}')" class="p-2.5 text-gray-600 hover:text-emerald-600 hover:bg-white hover:shadow-md rounded-xl transition-all active:scale-90 border border-transparent hover:border-emerald-100" title="${t.duplicate}">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path></svg>
+                            </button>
+                            <button onclick="duplicateAssignment('${a.id}', true)" class="p-2.5 text-gray-600 hover:text-amber-600 hover:bg-white hover:shadow-md rounded-xl transition-all active:scale-90 border border-transparent hover:border-amber-100" title="${t.duplicateNotes}">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                            </button>
+                        </div>
+                        <button onclick="deleteAssignment('${a.id}')" class="p-2.5 text-gray-400 hover:text-red-600 hover:bg-white hover:shadow-md rounded-xl transition-all active:scale-90 border border-transparent hover:border-red-100" title="${t.delete}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         </button>
                     </div>
 
