@@ -619,7 +619,7 @@
         const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
 
         // Gérer les Chips de classe
-        const assignmentsForYearAndUser = data.assignments.filter(a => (a.academicYear || '') === globalAcademicYear && (a.createdBy || 'unknown') === userId);
+        const assignmentsForYearAndUser = data.assignments.filter(a => (a.academicYear || '') === globalAcademicYear && (a.createdBy || 'unknown') === userId && (a.trimester || '') === globalTrimester);
         const allClasses = [...new Set(assignmentsForYearAndUser.map(a => a.className))].filter(Boolean).sort();
         if (chipsContainer) {
             const allChip = `<button onclick="toggleAssignmentClassFilter('')" class="px-4 py-1.5 rounded-full text-sm font-medium transition-all ${activeClassFilters.length === 0 ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-100'}">${t.allClassesFilter || 'Toutes'}</button>`;
