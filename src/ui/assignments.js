@@ -73,6 +73,19 @@
 
         <!-- Scrollable Content -->
         <div class="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+          <!-- UI Error Zone -->
+          <div id="assignment-modal-error" class="hidden animate-in slide-in-from-top-4 duration-300">
+            <div class="flex items-start gap-3 p-4 bg-red-50 border-2 border-red-100 rounded-2xl text-red-700 shadow-sm">
+                <div class="p-2 bg-red-100 rounded-lg text-red-600 shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                </div>
+                <div class="flex-1 pt-1 font-bold text-sm leading-relaxed" id="assignment-modal-error-text"></div>
+                <button onclick="document.getElementById('assignment-modal-error').classList.add('hidden')" class="p-1 hover:bg-red-200/50 rounded-lg transition-colors text-red-400">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+          </div>
+
           <!-- Basic Info Section -->
           <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-4">
             <div class="flex items-center gap-2 mb-2">
@@ -614,8 +627,23 @@
         window.renderExercisesBuilder();
     };
 
+    window.showAssignmentError = function(message) {
+        const errorZone = document.getElementById('assignment-modal-error');
+        const errorText = document.getElementById('assignment-modal-error-text');
+        if (errorZone && errorText) {
+            errorText.textContent = message;
+            errorZone.classList.remove('hidden');
+            // Scroll to top of modal to see error
+            errorZone.closest('.overflow-y-auto').scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
+
     window.saveAssignment = function () {
         const t = getTranslations()[getLang()];
+        // Hide error zone first
+        const errorZone = document.getElementById('assignment-modal-error');
+        if (errorZone) errorZone.classList.add('hidden');
+
         const name = document.getElementById('assignment-name').value.trim();
         const className = document.getElementById('assignment-class').value;
         const trimester = document.getElementById('assignment-trimester')?.value || window.getGlobalTrimester();
@@ -623,18 +651,22 @@
         const copyFromId = document.getElementById('copy-grades-source')?.value || '';
         const globalDefaultGrade = document.getElementById('assignment-global-defaultgrade')?.value; // peut être vide
 
-        if (!trimester) return alert(t.needTrimester);
-        if (!name) return alert(t.enterAssignmentName);
-        if (!className) return alert(t.selectAssignmentClass);
+        if (!trimester) return window.showAssignmentError(t.needTrimester);
+        if (!name) return window.showAssignmentError(t.enterAssignmentName);
+        if (!className) return window.showAssignmentError(t.selectAssignmentClass);
 
         const data = getData();
-        // Check duplicates
+        const currentYear = window.getGlobalAcademicYear();
+        
+        // Check duplicates: Name + Class + Trimester + Academic Year
         const existing = data.assignments.find(a =>
             a.name.toLowerCase() === name.toLowerCase() &&
             a.className === className &&
+            a.trimester === trimester &&
+            (a.academicYear || window.getGlobalAcademicYear()) === currentYear &&
             a.id !== editingAssignmentId
         );
-        if (existing) return alert(t.duplicateAssignmentName);
+        if (existing) return window.showAssignmentError(t.duplicateAssignmentDetailed || t.duplicateAssignmentName);
 
         let finalExercises = [];
         if (isGlobalAssignment) {
@@ -646,7 +678,7 @@
                 parts: []
             }];
         } else {
-            if (window.tempExercises.length === 0) return alert(t.addExerciseFirst);
+            if (window.tempExercises.length === 0) return window.showAssignmentError(t.addExerciseFirst);
             finalExercises = window.tempExercises;
         }
 
