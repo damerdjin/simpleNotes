@@ -140,12 +140,43 @@
     window.showTab = function(tabId) {
         if (window.tabs) {
             window.tabs.activateTab(tabId);
+            
+            // On mobile, close sidebar after selection
+            const sidebar = document.getElementById('app-sidebar');
+            if (sidebar && window.innerWidth <= 768) {
+                sidebar.classList.remove('mobile-visible');
+            }
         } else {
             console.error("Tabs system not ready");
             // Fallback legacy
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-content, .view-section').forEach(el => el.classList.add('hidden'));
             const content = document.getElementById('content-' + tabId);
             if (content) content.classList.remove('hidden');
+        }
+    };
+
+    window.switchTab = window.showTab;
+
+    // --- Layout & Mobile ---
+
+    window.initMobileMenu = function() {
+        const hamburger = document.getElementById('hamburger-menu');
+        const sidebar = document.getElementById('app-sidebar');
+        
+        if (hamburger && sidebar) {
+            hamburger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                sidebar.classList.toggle('mobile-visible');
+            });
+
+            // Close sidebar when clicking outside
+            document.addEventListener('click', (e) => {
+                if (sidebar.classList.contains('mobile-visible') && 
+                    !sidebar.contains(e.target) && 
+                    !hamburger.contains(e.target)) {
+                    sidebar.classList.remove('mobile-visible');
+                }
+            });
         }
     };
 

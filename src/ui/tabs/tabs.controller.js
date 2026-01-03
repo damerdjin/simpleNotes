@@ -15,14 +15,17 @@ export class TabsController {
   }
 
   findContainers() {
-    this.container = document.querySelector('.tab-system');
-    if (!this.container) {
-      console.warn('Tabs: .tab-system container not found');
-      return;
-    }
+    // New layout support
+    this.container = document.querySelector('.tab-system') || document.body;
+    this.buttonsContainer = document.querySelector('#app-sidebar nav') || this.container.querySelector('.tab-buttons-container');
+    this.contentContainer = document.querySelector('#main-container') || this.container.querySelector('.tab-content-container');
     
-    this.buttonsContainer = this.container.querySelector('.tab-buttons-container');
-    this.contentContainer = this.container.querySelector('.tab-content-container');
+    if (!this.buttonsContainer || !this.contentContainer) {
+      console.warn('Tabs: Some containers not found', { 
+        buttons: !!this.buttonsContainer, 
+        content: !!this.contentContainer 
+      });
+    }
   }
 
   registerTab(id, config = {}) {
@@ -79,14 +82,20 @@ export class TabsController {
   }
 
   updateActiveState(tabId) {
-    // Update buttons
+    // Update sidebar items (new layout)
+    document.querySelectorAll('#app-sidebar .nav-item').forEach(item => {
+      item.classList.toggle('active', item.dataset.tab === tabId);
+    });
+
+    // Update buttons (legacy/top tabs)
     this.buttonsContainer?.querySelectorAll('.tab-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.tab === tabId);
       btn.setAttribute('aria-selected', btn.dataset.tab === tabId);
     });
 
-    // Update content
-    this.contentContainer?.querySelectorAll('.tab-content').forEach(content => {
+    // Update content (supports both .tab-content and .view-section)
+    const contents = this.contentContainer?.querySelectorAll('.tab-content, .view-section') || [];
+    contents.forEach(content => {
       content.classList.toggle('active', content.id === `content-${tabId}`);
       content.classList.remove('tab-loading');
     });
@@ -105,6 +114,20 @@ export class TabsController {
   }
 
   createButtonHTML(tab) {
+    const isSidebar = this.buttonsContainer?.id === 'app-sidebar-nav' || this.buttonsContainer?.closest('#app-sidebar');
+    
+    if (isSidebar) {
+      return `
+        <div class="nav-item ${tab.id === this.activeTab ? 'active' : ''}" 
+             data-tab="${tab.id}" 
+             onclick="switchTab('${tab.id}')">
+            <span class="nav-icon">${tab.icon || '📄'}</span>
+            <span data-translate="${tab.id}">${tab.label}</span>
+            ${tab.badge > 0 ? `<span class="nav-badge">${tab.badge}</span>` : ''}
+        </div>
+      `;
+    }
+
     const badgeHTML = tab.badge > 0 
       ? `<span class="tab-badge ${tab.badgeType}">${tab.badge > 99 ? '99+' : tab.badge}</span>`
       : '';
@@ -203,7 +226,7 @@ export class TabsController {
 
   // ===== ANIMATIONS =====
   animateTabTransition(tabId) {
-    const oldContent = this.contentContainer?.querySelector('.tab-content.active');
+    const oldContent = this.contentContainer?.querySelector('.tab-content.active, .view-section.active');
     const newContent = document.getElementById(`content-${tabId}`);
     
     if (oldContent && oldContent !== newContent) {

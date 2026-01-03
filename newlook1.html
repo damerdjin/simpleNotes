@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Corrections - Dashboard</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --accent: #10b981;
+            --sidebar-width: 260px;
+            --header-height: 70px;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar Navigation */
+        aside {
+            width: var(--sidebar-width);
+            background-color: #ffffff;
+            border-right: 1px solid var(--border);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        .brand {
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .brand-logo {
+            width: 35px;
+            height: 35px;
+            background: var(--primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .brand-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--primary);
+        }
+
+        nav {
+            padding: 20px 12px;
+            flex-grow: 1;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            text-decoration: none;
+            color: var(--text-muted);
+            border-radius: 8px;
+            margin-bottom: 4px;
+            transition: all 0.2s;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background-color: #f1f5f9;
+            color: var(--primary);
+        }
+
+        .nav-item.active {
+            background-color: #e0e7ff;
+            color: var(--primary);
+        }
+
+        .nav-icon {
+            font-size: 1.2rem;
+        }
+
+        /* Main Content */
+        main {
+            flex-grow: 1;
+            margin-left: var(--sidebar-width);
+            padding: 0;
+            width: calc(100% - var(--sidebar-width));
+        }
+
+        header {
+            height: var(--header-height);
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            position: sticky;
+            top: 0;
+            z-index: 90;
+        }
+
+        .header-context {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .select-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .select-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        header select {
+            border: none;
+            background: transparent;
+            font-weight: 600;
+            color: var(--text-main);
+            cursor: pointer;
+            outline: none;
+            padding-right: 20px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-email {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Page Layout Area */
+        .content-area {
+            padding: 32px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .title-section h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .title-section p {
+            color: var(--text-muted);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background-color: white;
+            border-color: var(--border);
+            color: var(--text-main);
+        }
+
+        .btn-outline:hover {
+            background-color: #f8fafc;
+        }
+
+        /* Dashboard Body Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 24px;
+        }
+
+        /* Sidebar within dashboard */
+        .classes-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            padding: 20px;
+            box-shadow: var(--shadow-sm);
+            height: fit-content;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-mini {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .search-mini input {
+            width: 100%;
+            padding: 8px 12px 8px 36px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            outline: none;
+        }
+
+        .search-mini input:focus {
+            border-color: var(--primary);
+        }
+
+        .search-mini i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .class-list {
+            list-style: none;
+        }
+
+        .class-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 4px;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .class-item:hover {
+            background: #f1f5f9;
+        }
+
+        .class-item.active {
+            background: #f1f5f9;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .class-badge {
+            font-size: 0.75rem;
+            background: #e2e8f0;
+            padding: 2px 8px;
+            border-radius: 10px;
+            color: var(--text-muted);
+        }
+
+        /* Students Grid */
+        .students-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .filters-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-card);
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .search-main {
+            flex-grow: 1;
+            max-width: 400px;
+        }
+
+        .search-main input {
+            width: 100%;
+            padding: 10px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            outline: none;
+        }
+
+        .display-options {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .student-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            padding: 20px;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .student-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .student-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .student-id {
+            width: 32px;
+            height: 32px;
+            background: #eff6ff;
+            color: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.8rem;
+        }
+
+        .student-info {
+            text-align: right; /* RTL context for names */
+        }
+
+        .student-name-ar {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: var(--text-main);
+        }
+
+        .student-name-fr {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .student-meta {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #f1f5f9;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .meta-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+        }
+
+        .meta-label {
+            color: var(--text-muted);
+        }
+
+        .meta-value {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .card-tag {
+            position: absolute;
+            top: 0;
+            right: 0;
+            padding: 4px 12px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            border-bottom-left-radius: 8px;
+            background: #f1f5f9;
+            color: var(--text-muted);
+        }
+
+        .tag-blue { background: #dbeafe; color: #1e40af; }
+        .tag-orange { background: #ffedd5; color: #9a3412; }
+        .tag-green { background: #dcfce7; color: #166534; }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal {
+            background: white;
+            width: 100%;
+            max-width: 500px;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            outline: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            .classes-card {
+                display: none; /* Hide mini sidebar on small screens or move to top */
+            }
+        }
+
+        @media (max-width: 768px) {
+            aside {
+                transform: translateX(-100%);
+            }
+            main {
+                margin-left: 0;
+                width: 100%;
+            }
+            header {
+                padding: 0 16px;
+            }
+            .header-context {
+                gap: 12px;
+            }
+            .content-area {
+                padding: 16px;
+            }
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .student-card {
+            animation: fadeIn 0.3s ease forwards;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <aside>
+        <div class="brand">
+            <div class="brand-logo">G</div>
+            <div class="brand-name">Correction Pro</div>
+        </div>
+        <nav>
+            <div class="nav-item active" data-tab="eleves">
+                <span class="nav-icon">👥</span>
+                <span>Élèves</span>
+            </div>
+            <div class="nav-item" data-tab="devoirs">
+                <span class="nav-icon">📝</span>
+                <span>Devoirs</span>
+            </div>
+            <div class="nav-item" data-tab="notes">
+                <span class="nav-icon">📊</span>
+                <span>Notes</span>
+            </div>
+            <div class="nav-item" data-tab="recap">
+                <span class="nav-icon">📋</span>
+                <span>Récapitulatif</span>
+            </div>
+            <div class="nav-item" data-tab="prepa">
+                <span class="nav-icon">⚙️</span>
+                <span>Préparation</span>
+            </div>
+        </nav>
+        <div style="padding: 20px; border-top: 1px solid var(--border);">
+            <div class="nav-item">
+                <span class="nav-icon">🚪</span>
+                <span>Déconnexion</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main>
+        <header>
+            <div class="header-context">
+                <div class="select-group">
+                    <span class="select-label">Année Scolaire</span>
+                    <select id="year-select">
+                        <option>2023 / 2024</option>
+                        <option selected>2024 / 2025</option>
+                        <option>2025 / 2026</option>
+                    </select>
+                </div>
+                <div style="width: 1px; height: 30px; background: var(--border);"></div>
+                <div class="select-group">
+                    <span class="select-label">Trimestre</span>
+                    <select id="term-select">
+                        <option selected>Trimestre 1</option>
+                        <option>Trimestre 2</option>
+                        <option>Trimestre 3</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="user-profile">
+                <span class="user-email">prof.world101@outlook.com</span>
+                <div class="avatar">
+                    <span style="font-weight: bold; color: var(--primary);">P</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="content-area">
+            <div class="page-header">
+                <div class="title-section">
+                    <h1>Liste des Élèves</h1>
+                    <p>Gérez vos classes et suivez les dossiers de vos élèves.</p>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-outline">Exporter JSON</button>
+                    <button class="btn btn-primary" id="openModal">＋ Ajouter un élève</button>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <!-- Inner Sidebar for Classes -->
+                <div class="classes-card">
+                    <div class="card-title">
+                        <span>Classes</span>
+                        <button class="btn-outline" style="padding: 2px 8px; font-size: 0.7rem; border-radius: 4px;">Gérer</button>
+                    </div>
+                    <div class="search-mini">
+                        <i>🔍</i>
+                        <input type="text" placeholder="Filtrer une classe...">
+                    </div>
+                    <ul class="class-list">
+                        <li class="class-item active">
+                            <span>Toutes</span>
+                            <span class="class-badge">42</span>
+                        </li>
+                        <li class="class-item">
+                            <span>2ème Technique Math</span>
+                            <span class="class-badge">12</span>
+                        </li>
+                        <li class="class-item">
+                            <span>1ère AS Génie Elec</span>
+                            <span class="class-badge">10</span>
+                        </li>
+                        <li class="class-item">
+                            <span>3ème AS Mathématiques</span>
+                            <span class="class-badge">20</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Main Grid Section -->
+                <div class="students-section">
+                    <div class="filters-toolbar">
+                        <div class="search-main">
+                            <input type="text" id="studentSearch" placeholder="Rechercher par nom, prénom ou classe...">
+                        </div>
+                        <div class="display-options">
+                            <select style="padding: 8px; border: 1px solid var(--border); border-radius: 8px;">
+                                <option>Toutes les classes</option>
+                            </select>
+                            <button class="btn btn-outline" style="padding: 8px 12px;">Réinitialiser</button>
+                        </div>
+                    </div>
+
+                    <div class="grid-container" id="studentGrid">
+                        <!-- Student Cards will be injected here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL FOR ADDING STUDENT -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Nouvel Élève</h2>
+                <button id="closeModal" style="background:none; border:none; cursor:pointer; font-size: 1.5rem;">&times;</button>
+            </div>
+            <form id="addStudentForm">
+                <div class="form-group">
+                    <label>Nom Complet (Arabe)</label>
+                    <input type="text" placeholder="مثال: محمد بن علي" dir="rtl" required>
+                </div>
+                <div class="form-group">
+                    <label>Nom Complet (Français)</label>
+                    <input type="text" placeholder="Ex: Mohamed Ben Ali" required>
+                </div>
+                <div class="form-group">
+                    <label>Classe</label>
+                    <select required>
+                        <option value="">Sélectionner une classe</option>
+                        <option>2ème Technique Math</option>
+                        <option>1ère AS Génie Elec</option>
+                        <option>3ème AS Mathématiques</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Date de Naissance</label>
+                    <input type="date" required>
+                </div>
+                <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" id="cancelBtn">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Sample Data
+        const students = [
+            { id: 3, nameAr: 'بلخي يونس', nameFr: 'BELAKHLI YOUNES', class: '2ème Technique Math', year: '2024/2025', dob: '02/06/2008', tag: 'blue' },
+            { id: 4, nameAr: 'بنو ريس عبد الإله', nameFr: 'BENHAMMOUDA ABDELILAH', class: '2ème Technique Math', year: '2024/2025', dob: '20/07/2008', tag: 'blue' },
+            { id: 5, nameAr: 'بن حلوان زكرياء', nameFr: 'BENHALOUANE ZAKARIA', class: '2ème Technique Math', year: '2024/2025', dob: '30/01/2008', tag: 'blue' },
+            { id: 6, nameAr: 'مغراوي قويدر', nameFr: 'MEGHRAOUI KOUIDER', class: '2ème Technique Math', year: '2024/2025', dob: '06/09/2008', tag: 'blue' },
+            { id: 7, nameAr: 'رتاديني محمد الأمين', nameFr: 'RETADINI MOHAMED LAMINE', class: '1ère AS Génie Elec', year: '2024/2025', dob: '11/03/2008', tag: 'orange' },
+            { id: 8, nameAr: 'نيار حسام عبد الرحيم', nameFr: 'NIAR HOSSAM ABDERRAHIM', class: '1ère AS Génie Elec', year: '2024/2025', dob: '18/05/2009', tag: 'orange' },
+            { id: 9, nameAr: 'سليماني مريم', nameFr: 'SLIMANI MERIEM', class: '3ème AS Mathématiques', year: '2024/2025', dob: '12/11/2007', tag: 'green' },
+            { id: 10, nameAr: 'بوخاري أحمد', nameFr: 'BOUKHARI AHMED', class: '3ème AS Mathématiques', year: '2024/2025', dob: '05/02/2007', tag: 'green' }
+        ];
+
+        // DOM Elements
+        const studentGrid = document.getElementById('studentGrid');
+        const searchInput = document.getElementById('studentSearch');
+        const openModalBtn = document.getElementById('openModal');
+        const closeModalBtn = document.getElementById('closeModal');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const modalOverlay = document.getElementById('modalOverlay');
+        const navItems = document.querySelectorAll('.nav-item');
+
+        // Render Students
+        function renderStudents(data) {
+            studentGrid.innerHTML = '';
+            data.forEach(s => {
+                const card = document.createElement('div');
+                card.className = 'student-card';
+                card.innerHTML = `
+                    <div class="card-tag tag-${s.tag}">${s.class}</div>
+                    <div class="student-header">
+                        <div class="student-id">${s.id}</div>
+                        <div class="student-info">
+                            <div class="student-name-ar">${s.nameAr}</div>
+                            <div class="student-name-fr">${s.nameFr}</div>
+                        </div>
+                    </div>
+                    <div class="student-meta">
+                        <div class="meta-row">
+                            <span class="meta-label">Année Scolaire:</span>
+                            <span class="meta-value">${s.year}</span>
+                        </div>
+                        <div class="meta-row">
+                            <span class="meta-label">Date Naissance:</span>
+                            <span class="meta-value">${s.dob}</span>
+                        </div>
+                    </div>
+                    <div style="margin-top: 16px; display: flex; gap: 8px;">
+                        <button class="btn-outline" style="flex: 1; padding: 6px; font-size: 0.75rem;">Voir Profil</button>
+                        <button class="btn-outline" style="flex: 1; padding: 6px; font-size: 0.75rem;">Notes</button>
+                    </div>
+                `;
+                studentGrid.appendChild(card);
+            });
+        }
+
+        // Search Logic
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = students.filter(s => 
+                s.nameFr.toLowerCase().includes(term) || 
+                s.nameAr.includes(term) ||
+                s.class.toLowerCase().includes(term)
+            );
+            renderStudents(filtered);
+        });
+
+        // Navigation Tabs Simulation
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                navItems.forEach(n => n.classList.remove('active'));
+                item.classList.add('active');
+                
+                // Simplified view change logic
+                const tab = item.getAttribute('data-tab');
+                if (tab !== 'eleves') {
+                    studentGrid.innerHTML = `<div style="padding: 40px; text-align: center; grid-column: 1/-1; color: var(--text-muted);">Contenu pour "${tab}" en cours de développement...</div>`;
+                } else {
+                    renderStudents(students);
+                }
+            });
+        });
+
+        // Modal Logic
+        openModalBtn.onclick = () => modalOverlay.style.display = 'flex';
+        closeModalBtn.onclick = () => modalOverlay.style.display = 'none';
+        cancelBtn.onclick = () => modalOverlay.style.display = 'none';
+        window.onclick = (e) => {
+            if (e.target == modalOverlay) modalOverlay.style.display = 'none';
+        }
+
+        document.getElementById('addStudentForm').onsubmit = (e) => {
+            e.preventDefault();
+            alert('Simulation: Élève ajouté avec succès !');
+            modalOverlay.style.display = 'none';
+        }
+
+        // Class Filter Simulation
+        document.querySelectorAll('.class-item').forEach(ci => {
+            ci.addEventListener('click', function() {
+                document.querySelectorAll('.class-item').forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+                const className = this.querySelector('span').innerText;
+                if (className === 'Toutes') {
+                    renderStudents(students);
+                } else {
+                    const filtered = students.filter(s => s.class === className);
+                    renderStudents(filtered);
+                }
+            });
+        });
+
+        // Initial Render
+        renderStudents(students);
+    </script>
+</body>
+</html>

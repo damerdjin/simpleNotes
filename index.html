@@ -709,6 +709,261 @@
         }
     </style>
     <link rel="stylesheet" href="./src/ui/tabs/tabs.styles.css">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --accent: #10b981;
+            --sidebar-width: 260px;
+            --header-height: 70px;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --radius: 12px;
+        }
+
+        /* Base Layout Structure */
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        #main-layout {
+            display: flex;
+            width: 100%;
+        }
+
+        /* Sidebar Styling */
+        aside#app-sidebar {
+            width: var(--sidebar-width);
+            background-color: white;
+            border-right: 1px solid var(--border);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 100;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        /* RTL Support for Sidebar */
+        .rtl-layout aside#app-sidebar {
+            left: auto;
+            right: 0;
+            border-right: none;
+            border-left: 1px solid var(--border);
+        }
+
+        aside#app-sidebar.mobile-hidden {
+            transform: translateX(-100%);
+        }
+
+        .rtl-layout aside#app-sidebar.mobile-hidden {
+            transform: translateX(100%);
+        }
+
+        .brand {
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .rtl-layout .brand {
+            flex-direction: row-reverse;
+        }
+
+        .brand-logo {
+            width: 35px;
+            height: 35px;
+            background: var(--primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .brand-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--primary);
+        }
+
+        /* Main Content Area */
+        main#main-content {
+            flex-grow: 1;
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: margin-left 0.3s ease-in-out, width 0.3s ease-in-out;
+        }
+
+        .content-area {
+            flex-grow: 1;
+            position: relative;
+        }
+
+        #main-container {
+            height: 100%;
+        }
+
+        .rtl-layout main#main-content {
+            margin-left: 0;
+            margin-right: var(--sidebar-width);
+        }
+
+        header#app-header {
+            height: var(--header-height);
+            background: white;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            position: sticky;
+            top: 0;
+            z-index: 90;
+        }
+
+        .rtl-layout header#app-header {
+            flex-direction: row-reverse;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            aside#app-sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .rtl-layout aside#app-sidebar {
+                transform: translateX(100%);
+            }
+            
+            aside#app-sidebar.mobile-visible {
+                transform: translateX(0);
+            }
+            
+            main#main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .rtl-layout main#main-content {
+                margin-right: 0;
+            }
+            
+            header#app-header {
+                padding: 0 16px;
+            }
+        }
+
+        /* Sidebar Nav Items */
+        nav {
+            padding: 16px 12px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background-color: #f1f5f9;
+            color: var(--primary);
+        }
+
+        .nav-item.active {
+            background-color: #eef2ff;
+            color: var(--primary);
+        }
+
+        .nav-icon {
+            font-size: 1.2rem;
+        }
+
+        .rtl-layout .nav-item {
+            flex-direction: row-reverse;
+        }
+
+        /* Header Context (Selects) */
+        .header-context {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .select-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .select-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .select-group select {
+            background: transparent;
+            border: none;
+            font-weight: 600;
+            color: var(--text-main);
+            padding: 2px 0;
+            cursor: pointer;
+            outline: none;
+            font-size: 0.95rem;
+        }
+
+        .user-profile .avatar {
+            width: 38px;
+            height: 38px;
+            background: #e2e8f0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #475569;
+        }
+
+        /* Utility for section visibility (replacing old tabs) */
+        .view-section {
+            display: none;
+            padding: 24px;
+        }
+
+        .view-section.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
     <script type="module">
         import { checkAuth, logout } from './src/ui/auth.js';
         import { initLanguage } from './src/ui/i18n.js';
@@ -718,7 +973,7 @@
         // Function to hide splash screen when everything is ready
         window.hideSplashScreen = () => {
             const splash = document.getElementById('splash-screen');
-            const main = document.getElementById('main-content');
+            const main = document.getElementById('main-container');
             if (splash && main) {
                 splash.classList.add('fade-out');
                 main.classList.remove('invisible');
@@ -766,82 +1021,106 @@
 </head>
 
 <body class="bg-gray-100 min-h-screen">
-    <!-- Splash Screen -->
-    <div id="splash-screen">
-        <div class="text-4xl mb-4">📝</div>
-        <div class="text-xl font-bold text-blue-600 mb-8" data-translate="appTitle">Gestion des Corrections</div>
-        <div class="relative w-20 h-20">
-            <div class="loader-dots inline-block relative w-20 h-20">
-                <div class="absolute top-8 w-3 h-3 rounded-full bg-blue-600"></div>
-                <div class="absolute top-8 w-3 h-3 rounded-full bg-blue-600"></div>
-                <div class="absolute top-8 w-3 h-3 rounded-full bg-blue-600"></div>
-                <div class="absolute top-8 w-3 h-3 rounded-full bg-blue-600"></div>
-            </div>
+    <!-- Sidebar -->
+    <aside id="app-sidebar">
+        <div class="brand">
+            <div class="brand-logo">G</div>
+            <div class="brand-name">Correction Pro</div>
         </div>
-    </div>
+        <nav>
+            <div class="nav-item active" data-tab="students" onclick="switchTab('students')">
+                <span class="nav-icon">👥</span>
+                <span data-translate="students">Élèves</span>
+            </div>
+            <div class="nav-item" data-tab="assignments" onclick="switchTab('assignments')">
+                <span class="nav-icon">📝</span>
+                <span data-translate="assignments">Devoirs</span>
+            </div>
+            <div class="nav-item" data-tab="grades" onclick="switchTab('grades')">
+                <span class="nav-icon">📊</span>
+                <span data-translate="grades">Notes</span>
+            </div>
+            <div class="nav-item" data-tab="summary" onclick="switchTab('summary')">
+                <span class="nav-icon">📋</span>
+                <span data-translate="summary">Récapitulatif</span>
+            </div>
+            <div class="nav-item" data-tab="export" onclick="switchTab('export')">
+                <span class="nav-icon">📤</span>
+                <span data-translate="exportPrepTitle">Export</span>
+            </div>
+        </nav>
+    </aside>
 
-    <div id="main-content" class="invisible container mx-auto p-4 max-w-7xl">
-        <!-- Header -->
-        <!-- Header -->
-        <header class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 rounded-xl shadow-lg mb-6">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h1 class="text-3xl font-bold">📝 Gestion des Corrections</h1>
-                    <p class="text-blue-100 mt-2">Gérez vos élèves, devoirs et notes en toute simplicité</p>
-                </div>
-                <div class="relative">
-                    <button id="user-menu-button" class="text-white bg-black/20 px-3 py-2 rounded-lg flex items-center gap-2 hover:bg-black/30 transition">
-                        <span id="current-user-info"></span>
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                        </svg>
-                    </button>
-                    <div id="user-menu" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-50 hidden">
-                        <button onclick="handleLogout()" class="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                            </svg>
-                            <span data-translate="logout">Logout</span>
-                        </button>
+    <main id="main-content">
+        <!-- Top Header -->
+        <header id="app-header">
+            <div class="flex items-center gap-4">
+                <button id="hamburger-menu" class="md:hidden text-gray-600 p-2 hover:bg-gray-100 rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <div class="header-context hidden sm:flex items-center gap-6">
+                    <div class="select-group">
+                        <span class="select-label" data-translate="academicYearLabel">Année Scolaire</span>
+                        <select id="global-academic-year" onchange="setGlobalAcademicYear(this.value)">
+                            <option value="2025/2026" selected>2025 / 2026</option>
+                            <option value="2024/2025">2024 / 2025</option>
+                        </select>
                     </div>
+                    <div style="width: 1px; height: 30px; background: var(--border);"></div>
+                    <div class="select-group">
+                        <span class="select-label" data-translate="trimesterLabel">Trimestre</span>
+                        <select id="global-trimester" onchange="setGlobalTrimester(this.value)">
+                            <option value="1">Trimestre 1</option>
+                            <option value="2">Trimestre 2</option>
+                            <option value="3">Trimestre 3</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="user-profile relative">
+                <button id="user-menu-button" class="flex items-center gap-3 p-1 pr-3 hover:bg-gray-100 rounded-full transition">
+                    <div class="avatar">
+                        <span id="user-avatar-initial">U</span>
+                    </div>
+                    <span id="current-user-info" class="user-email hidden lg:block"></span>
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <div id="user-menu" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-50 hidden border border-gray-100">
+                    <button onclick="handleLogout()" class="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg flex items-center gap-3 transition">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                        </svg>
+                        <span data-translate="logout">Logout</span>
+                    </button>
                 </div>
             </div>
         </header>
 
-        <!-- Global Filters -->
-        <div class="bg-white rounded-xl shadow-lg p-4 mb-6">
-            <div class="flex items-center gap-6 flex-wrap">
-                <div class="flex items-center gap-2">
-                    <label class="text-sm font-medium text-gray-700" data-translate="academicYearLabel">Année scolaire :</label>
-                    <select id="global-academic-year" onchange="setGlobalAcademicYear(this.value)"
-                        class="p-2 border rounded-lg bg-white min-w-32">
-                        <option value="" data-translate="academicYearOption">-- Année scolaire --</option>
-                        <option value="2025/2026">2025/2026</option>
-                        <option value="2024/2025">2024/2025</option>
-                    </select>
-                </div>
-                <div class="flex items-center gap-2">
-                    <label class="text-sm font-medium text-gray-700" data-translate="trimesterLabel">Trimestre :</label>
-                    <select id="global-trimester" onchange="setGlobalTrimester(this.value)"
-                        class="p-2 border rounded-lg bg-white min-w-32">
-                        <option value="" data-translate="trimesterOption">-- Trimestre --</option>
-                        <option value="1" data-translate="trimester1">Trimestre 1</option>
-                        <option value="2" data-translate="trimester2">Trimestre 2</option>
-                        <option value="3" data-translate="trimester3">Trimestre 3</option>
-                    </select>
+        <!-- Page Layout Area -->
+        <div class="content-area">
+            <!-- Splash Screen -->
+            <div id="splash-screen">
+                <div class="text-4xl mb-4">📝</div>
+                <div class="text-xl font-bold text-blue-600 mb-8" data-translate="appTitle">Gestion des Corrections</div>
+                <div class="relative w-20 h-20">
+                    <div class="loader-dots inline-block relative w-20 h-20">
+                        <div class="absolute top-8 w-3 h-3 rounded-full bg-blue-600"></div>
+                        <div class="absolute top-8 w-3 h-3 rounded-full bg-blue-600"></div>
+                        <div class="absolute top-8 w-3 h-3 rounded-full bg-blue-600"></div>
+                        <div class="absolute top-8 w-3 h-3 rounded-full bg-blue-600"></div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- ===== NOUVEAU SYSTÈME D'ONGLETS ===== -->
-        <div class="tab-system">
-            <!-- Boutons dynamiques -->
-            <div class="tab-buttons-container" id="tab-buttons"></div>
-
-            <!-- Contenu des onglets -->
-            <div class="tab-content-container">
+            <div id="main-container" class="invisible">
                 <!-- Students Tab -->
-                <div id="content-students" class="tab-content">
+                <div id="content-students" class="view-section">
+                    <!-- ... contenu existant ... -->
                     <div class="bg-white rounded-xl shadow-lg p-6">
                         <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
                             <h2 class="text-2xl font-bold text-gray-800" data-translate="studentsList">Liste des Élèves</h2>
@@ -917,7 +1196,7 @@
                 </div>
 
                 <!-- Assignments Tab -->
-                <div id="content-assignments" class="tab-content">
+                <div id="content-assignments" class="view-section">
                     <div class="bg-white rounded-xl shadow-lg p-6">
                         <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
                             <h2 class="text-2xl font-bold text-gray-800" data-translate="assignmentsManagement">Gestion des Devoirs</h2>
@@ -946,7 +1225,7 @@
                 </div>
 
                 <!-- Grades Tab -->
-                <div id="content-grades" class="tab-content">
+                <div id="content-grades" class="view-section">
                     <div class="bg-white rounded-xl shadow-lg p-6">
                         <h2 class="text-2xl font-bold text-gray-800 mb-6" data-translate="gradesEntry">Saisie des Notes</h2>
                         <div class="flex gap-4 mb-6 flex-wrap">
@@ -968,7 +1247,7 @@
                 </div>
 
                 <!-- Summary Tab -->
-                <div id="content-summary" class="tab-content">
+                <div id="content-summary" class="view-section">
                     <div class="bg-white rounded-xl shadow-lg p-6 overflow-x-auto">
                         <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
                             <h2 class="text-2xl font-bold text-gray-800" data-translate="summaryTitle">Récapitulatif des Notes</h2>
@@ -1009,7 +1288,7 @@
                 </div>
 
                 <!-- Export Tab -->
-                <div id="content-export" class="tab-content">
+                <div id="content-export" class="view-section">
                     <div class="container mx-auto px-4 max-w-6xl">
                         <div class="bg-white rounded-xl shadow-lg p-6">
                             <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
@@ -1150,32 +1429,40 @@
     <script type="module" src="./src/ui/data-management.js"></script>
     <script type="module" src="./src/ui/ui.js"></script>
 
-    <script>
+    <script type="module">
         // Language Management
-        document.addEventListener('DOMContentLoaded', async () => {
+        window.addEventListener('load', async () => {
             try {
-                loadData();
-                initLanguage();
+                // Ensure data is loaded
+                if (window.loadData) window.loadData();
+                if (window.initLanguage) window.initLanguage();
+                
                 // Initialize new tab system
                 if (window.initTabs) window.initTabs();
+
+                // Initialize mobile menu
+                if (window.initMobileMenu) window.initMobileMenu();
 
                 // Load global filters
                 if (window.loadGlobalFilters) window.loadGlobalFilters();
 
                 // Wait for any async rendering if necessary
-                // In this app, these are mostly synchronous DOM manipulations
-                renderStudents();
-                renderAssignments();
-                loadExportPrepConfig();
-                loadClassSelectorsForExport();
+                if (window.renderStudents) renderStudents();
+                if (window.renderAssignments) renderAssignments();
+                if (window.loadExportPrepConfig) loadExportPrepConfig();
+                if (window.loadClassSelectorsForExport) loadClassSelectorsForExport();
 
                 // Give a tiny bit of time for the browser to paint the rendered content
                 setTimeout(() => {
                     if (window.hideSplashScreen) window.hideSplashScreen();
+                    
+                    // Force activation of first tab if none active
+                    if (window.tabs && !window.tabs.activeTab) {
+                        window.tabs.activateTab('students');
+                    }
                 }, 100);
             } catch (err) {
                 console.error("Initialization error:", err);
-                // Still hide splash screen so user isn't stuck
                 if (window.hideSplashScreen) window.hideSplashScreen();
             }
         });
