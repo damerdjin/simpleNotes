@@ -465,9 +465,28 @@
         }
 
         saveData();
+        
+        // After adding/updating, help user find the student
+        const searchInput = document.getElementById('student-search');
+        if (searchInput) {
+            searchInput.value = name;
+        }
+
+        // Also reset class filter to "All" to make sure the student is visible
+        const filterSelect = document.getElementById('filter-class-students');
+        if (filterSelect) {
+            filterSelect.value = "";
+            studentsUiState.selectedClass = "";
+        }
+
         window.renderStudents();
         window.closeStudentModal();
         
+        // Show success confirmation
+        if (!editingStudentId && window.showToast) {
+            window.showToast(t.studentAddedSuccess || "L'élève a été ajouté avec succès !");
+        }
+
         // Refresh class lists if a new class was created or changed
         window.renderClassList();
         window.loadClassSelectors();
