@@ -265,8 +265,8 @@
 
         return `
         <div class="border border-emerald-100 rounded-xl p-3 bg-emerald-50/30 hover:bg-emerald-50/50 transition-colors">
-            <div class="flex items-center gap-3 flex-wrap">
-                <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-nowrap overflow-hidden">
+                <div class="flex items-center gap-1.5 shrink-0">
                     <span class="text-xs font-bold text-emerald-600 uppercase tracking-wider">${t.questionPrefix || 'Q'}</span>
                     <input type="text" placeholder="1, 2..." value="${q.name || ''}"
                         onchange="${basePath}.name = this.value"
@@ -274,26 +274,26 @@
                 </div>
                 
                 ${!hasSubQuestions ? `
-                    <div class="flex items-center gap-1 bg-white px-1.5 py-1 rounded-lg border border-emerald-200 shadow-sm">
-                        <span class="text-[10px] font-bold text-gray-400 uppercase">${t.pointsAbbr || 'Pts'}</span>
+                    <div class="flex items-center gap-1 bg-white px-1.5 py-1 rounded-lg border border-emerald-200 shadow-sm shrink-0">
+                        <span class="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">${t.pointsAbbr || 'Pts'}</span>
                         <input type="number" placeholder="0" value="${q.maxPoints || ''}" min="0" step="0.25"
                             onchange="${basePath}.maxPoints = parseFloat(this.value); window.renderExercisesBuilder()"
-                            class="w-10 p-1 text-sm font-semibold text-gray-700 outline-none text-center" title="${t.questionPoints}">
+                            class="w-14 p-0.5 text-sm font-semibold text-gray-700 outline-none text-center" title="${t.questionPoints}">
                     </div>
                 ` : `
-                    <div class="flex items-center gap-2 px-3 py-1.5 bg-emerald-100/50 rounded-lg border border-emerald-200">
-                        <span class="text-xs font-bold text-emerald-700">${getQuestionMaxPoints(q)} ${t.pointsSingle || t.points}</span>
+                    <div class="flex items-center gap-1 px-2 py-1 bg-emerald-100/50 rounded-lg border border-emerald-200 shrink-0">
+                        <span class="text-[11px] font-black text-emerald-700 whitespace-nowrap">${getQuestionMaxPoints(q)} ${t.pointsSingle || t.points}</span>
                     </div>
                 `}
                 
-                <div class="flex items-center gap-1 ml-auto rtl:mr-auto rtl:ml-0">
+                <div class="flex items-center gap-1 ml-auto rtl:mr-auto rtl:ml-0 shrink-0">
                     <button onclick="${addSubCall}" 
-                        class="flex items-center gap-1 text-blue-600 hover:text-white hover:bg-blue-600 text-xs font-bold px-2 py-1.5 rounded-lg transition-all border border-blue-200">
+                        class="flex items-center gap-1 text-blue-600 hover:text-white hover:bg-blue-600 text-[10px] font-bold px-1.5 py-1 rounded-lg transition-all border border-blue-200 whitespace-nowrap">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                         a,b,c
                     </button>
                     <button onclick="${removeCall}" 
-                        class="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="${t.delete}">
+                        class="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="${t.delete}">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                     </button>
                 </div>
@@ -307,10 +307,10 @@
                                 onchange="${basePath}.subQuestions[${sqIdx}].name = this.value"
                                 class="w-8 p-1 border-0 text-orange-600 font-bold text-center text-sm focus:ring-0">
                             <span class="text-orange-400 font-bold">)</span>
-                            <div class="flex items-center gap-1 flex-1">
-                                <input type="number" placeholder="Pts" value="${sq.maxPoints || ''}" min="0" step="0.25"
+                            <div class="flex items-center gap-1 flex-1 min-w-[50px]">
+                                <input type="number" placeholder="${t.pointsAbbr || 'Pts'}" value="${sq.maxPoints || ''}" min="0" step="0.25"
                                     onchange="${basePath}.subQuestions[${sqIdx}].maxPoints = parseFloat(this.value); window.renderExercisesBuilder()"
-                                    class="w-full p-1 text-xs font-semibold text-gray-700 border-b border-transparent focus:border-emerald-400 outline-none">
+                                    class="w-full p-1 text-xs font-semibold text-gray-700 border-b border-transparent focus:border-emerald-400 outline-none" title="${t.questionPoints}">
                             </div>
                             <button onclick="${basePath}.subQuestions.splice(${sqIdx}, 1); window.renderExercisesBuilder()" 
                                 class="p-1 text-red-300 hover:text-red-500 transition-colors">
@@ -401,11 +401,11 @@
                     </div>
                     
                     ${!editingAssignmentId ? `
-                        <div class="flex items-center gap-2 px-3 py-1.5 bg-amber-50 rounded-lg border border-amber-100 shadow-sm" onclick="event.stopPropagation()">
+                        <div class="flex items-center gap-2 px-2 py-1.5 bg-amber-50 rounded-lg border border-amber-100 shadow-sm shrink-0" onclick="event.stopPropagation()">
                             <span class="text-[10px] font-bold text-amber-600 uppercase tracking-tighter">${t.defaultGrade || 'Def'}</span>
                             <input type="number" placeholder="-" value="${ex.defaultGrade || ''}" min="0" step="0.25"
                                 onchange="window.tempExercises[${i}].defaultGrade = this.value === '' ? '' : parseFloat(this.value)"
-                                class="w-10 text-sm font-bold text-amber-700 bg-transparent outline-none">
+                                class="w-14 text-sm font-bold text-amber-700 bg-transparent outline-none text-center">
                         </div>
                     ` : ''}
 
