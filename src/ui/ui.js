@@ -460,6 +460,10 @@
             trimesterSelect.disabled = !value;
             if (!value) trimesterSelect.value = '';
         }
+
+        // Sync visual UI if function exists
+        if (window.syncGlobalUI) window.syncGlobalUI();
+
         // Update import buttons and labels
         const importButtons = [
             'student-import',
@@ -497,6 +501,10 @@
 
     window.setGlobalTrimester = function(value) {
         localStorage.setItem('corrections-global-trimester', value);
+        
+        // Sync visual UI if function exists
+        if (window.syncGlobalUI) window.syncGlobalUI();
+
         // Update import buttons and labels
         const importButtons = [
             'student-import',
