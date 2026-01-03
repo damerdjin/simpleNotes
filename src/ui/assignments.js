@@ -553,7 +553,8 @@
             className: original.className,
             trimester: original.trimester,
             academicYear: original.academicYear || window.getGlobalAcademicYear(),
-            exercises: JSON.parse(JSON.stringify(original.exercises))
+            exercises: JSON.parse(JSON.stringify(original.exercises)),
+            createdBy: original.createdBy || window.currentUser?.email || window.currentUser?.id || 'unknown'
         };
 
         data.assignments.push(newAssignment);
