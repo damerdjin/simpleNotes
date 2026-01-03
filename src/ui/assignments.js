@@ -129,8 +129,8 @@
 
             } else {
                 window.tempExercises = [];
-                isGlobalAssignment = false;
-                if (globalCheckbox) globalCheckbox.checked = false;
+                isGlobalAssignment = true;
+                if (globalCheckbox) globalCheckbox.checked = true;
                 if (globalMaxInput) globalMaxInput.value = 20;
 
             }
