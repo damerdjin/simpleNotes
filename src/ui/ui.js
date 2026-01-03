@@ -443,8 +443,18 @@
     // --- Global Filters (Academic Year & Trimester) ---
 
     window.loadGlobalFilters = function() {
-        const academicYear = localStorage.getItem('corrections-global-academic-year') || '';
-        const trimester = localStorage.getItem('corrections-global-trimester') || '';
+        let academicYear = localStorage.getItem('corrections-global-academic-year');
+        let trimester = localStorage.getItem('corrections-global-trimester');
+
+        // Defaults if missing to ensure data is visible by default
+        if (!academicYear) {
+            academicYear = "2025/2026";
+            localStorage.setItem('corrections-global-academic-year', academicYear);
+        }
+        if (!trimester) {
+            trimester = "1";
+            localStorage.setItem('corrections-global-trimester', trimester);
+        }
 
         const academicSelect = document.getElementById('global-academic-year');
         const trimesterSelect = document.getElementById('global-trimester');

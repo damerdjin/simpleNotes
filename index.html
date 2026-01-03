@@ -1614,6 +1614,13 @@
                 const user = await checkAuth();
                 if (user) {
                     window.currentUser = user;
+                    
+                    // Trigger UI refresh now that user is known
+                    if (window.renderStudents) window.renderStudents();
+                    if (window.renderClassList) window.renderClassList();
+                    if (window.loadClassSelectors) window.loadClassSelectors();
+                    if (window.loadGlobalFilters) window.loadGlobalFilters();
+                    
                     const userInfo = document.getElementById('current-user-info');
                     if (userInfo) userInfo.textContent = user.email || user.id;
 
