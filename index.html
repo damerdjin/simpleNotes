@@ -887,6 +887,26 @@
         }
 
         /* RTL support */
+        .rtl-layout .modern-input-icon {
+            left: auto;
+            right: 1rem;
+        }
+
+        .rtl-layout .modern-input {
+            padding-left: 1rem;
+            padding-right: 2.5rem;
+        }
+
+        .rtl-layout .modern-input-group .modern-input-icon.\!left-5 {
+            left: auto !important;
+            right: 1.25rem !important;
+        }
+
+        .rtl-layout .modern-input.\!px-14 {
+            padding-left: 1rem !important;
+            padding-right: 3.5rem !important;
+        }
+
         .rtl-layout .student-item {
             flex-direction: row-reverse;
             text-align: right;
@@ -1694,11 +1714,12 @@
                                             <span data-translate="classManagement">Gestion des Classes</span>
                                         </h3>
                                     </div>
-                                    <div class="modern-input-group mb-4">
+                                    <div class="modern-input-group mb-6 group">
                                         <input type="text" id="students-class-search" placeholder="Rechercher une classe..."
                                             data-translate-placeholder="searchClassPlaceholder"
-                                            oninput="renderClassList()" class="modern-input">
-                                        <svg class="modern-input-icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                            oninput="renderClassList()" 
+                                            class="modern-input !bg-white !border-slate-200 focus:!border-blue-500 focus:!ring-4 focus:!ring-blue-50/10 transition-all">
+                                        <svg class="modern-input-icon w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                                     </div>
                                     <div id="students-class-list" class="space-y-1 max-h-[60vh] overflow-auto pr-2 custom-scrollbar"></div>
                                 </div>
@@ -1706,27 +1727,14 @@
 
                             <!-- Main: Students List -->
                             <div class="lg:col-span-9 order-1 lg:order-2">
-                                <div class="mb-8 flex flex-wrap gap-4 items-center bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
-                                    <div class="modern-input-group flex-1 min-w-[280px]">
+                                <div class="mb-8 bg-slate-50/50 p-6 rounded-2xl border border-slate-100 shadow-sm">
+                                    <div class="modern-input-group w-full group">
                                         <input type="text" id="student-search" placeholder="Rechercher (nom, prénom, classe)"
                                             data-translate-placeholder="search"
-                                            oninput="renderStudents()" class="modern-input">
-                                        <svg class="modern-input-icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                            oninput="renderStudents()" 
+                                            class="modern-input !py-4 !px-14 !text-lg !rounded-xl !bg-white !border-slate-200 focus:!border-blue-500 focus:!ring-4 focus:!ring-blue-50/50 transition-all duration-300">
+                                        <svg class="modern-input-icon !left-5 w-6 h-6 text-slate-400 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                                     </div>
-
-                                    <select id="students-page-size" onchange="setStudentsPageSize(this.value)"
-                                        class="modern-select w-24">
-                                        <option value="12" selected>12</option>
-                                        <option value="18" >18</option>
-                                        <option value="50">50</option>
-                                    </select>
-
-                                    <button onclick="clearStudentsFilters()"
-                                        class="modern-btn-secondary"
-                                        data-translate="reset">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                                        <span data-translate="reset">Réinitialiser</span>
-                                    </button>
                                 </div>
 
                                 <div id="students-list" class="student-grid"></div>

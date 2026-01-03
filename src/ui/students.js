@@ -12,7 +12,7 @@
     const translatePage = () => { if (typeof window.translatePage === 'function') window.translatePage(); };
     const genId = () => window.genId();
 
-    const studentsUiState = window.studentsUiState || { selectedClass: '', page: 1, pageSize: 48 };
+    const studentsUiState = window.studentsUiState || { selectedClass: '', page: 1, pageSize: 12 };
     window.studentsUiState = studentsUiState;
 
     // ===== CLASSES =====
@@ -515,8 +515,7 @@
 
         container.className = 'student-grid';
 
-        const pageSizeSelect = document.getElementById('students-page-size');
-        const pageSize = Number(pageSizeSelect?.value) || studentsUiState.pageSize || 48;
+        const pageSize = studentsUiState.pageSize || 12;
         studentsUiState.pageSize = pageSize;
         studentsUiState.selectedClass = selectedClass;
 
@@ -616,20 +615,34 @@
         if (pagination) {
             const currentPage = studentsUiState.page;
             
-            if (totalPages <= 1) {
-                pagination.innerHTML = '';
-            } else {
-                let html = `
-                    <div class="pagination-container">
-                        <div class="pagination-info">
-                            ${t.showing} <strong>${(currentPage - 1) * pageSize + 1}</strong> 
-                            ${t.to} <strong>${Math.min(currentPage * pageSize, filteredStudents.length)}</strong> 
-                            ${t.of} <strong>${filteredStudents.length}</strong>
+            let html = `
+                <div class="pagination-container mt-8 flex flex-wrap items-center justify-between gap-6 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                    <div class="flex items-center gap-4">
+                        <div class="pagination-info text-sm text-slate-500">
+                            ${t.showing} <span class="font-bold text-slate-900">${filteredStudents.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}</span> 
+                            ${t.to} <span class="font-bold text-slate-900">${Math.min(currentPage * pageSize, filteredStudents.length)}</span> 
+                            ${t.of} <span class="font-bold text-slate-900">${filteredStudents.length}</span>
                         </div>
-                        <div class="flex items-center gap-1">
-                            <button onclick="goStudentsPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="pagination-btn">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                            </button>
+                        <div class="h-4 w-px bg-slate-200"></div>
+                        <div class="flex items-center gap-2">
+                            <select id="students-page-size" onchange="setStudentsPageSize(this.value)"
+                                class="modern-select !py-1.5 !px-3 !text-sm !w-20 !bg-slate-50 border-transparent hover:border-slate-200 transition-all">
+                                <option value="12" ${pageSize === 12 ? 'selected' : ''}>12</option>
+                                <option value="18" ${pageSize === 18 ? 'selected' : ''}>18</option>
+                                <option value="50" ${pageSize === 50 ? 'selected' : ''}>50</option>
+                                <option value="100" ${pageSize === 100 ? 'selected' : ''}>100</option>
+                            </select>
+                            <span class="text-xs text-slate-400 font-medium">/ page</span>
+                        </div>
+                    </div>
+            `;
+
+            if (totalPages > 1) {
+                html += `
+                    <div class="flex items-center gap-1">
+                        <button onclick="goStudentsPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="pagination-btn">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
                 `;
 
                 // Logic for page numbers
@@ -645,14 +658,15 @@
                 }
 
                 html += `
-                            <button onclick="goStudentsPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="pagination-btn">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                            </button>
-                        </div>
+                        <button onclick="goStudentsPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="pagination-btn">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </button>
                     </div>
                 `;
-                pagination.innerHTML = html;
             }
+
+            html += `</div>`;
+            pagination.innerHTML = html;
         }
     };
 
