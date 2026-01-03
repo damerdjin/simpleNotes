@@ -238,7 +238,21 @@ window.translations = {
         exportDevoirOk: "Échelle OK (/20)",
         print: "Imprimer",
         exportXlsx: "Exporter XLSX",
-        rakamna: "Rakmana"
+        rakamna: "Rakmana",
+
+        // Bibliothèque
+        libraryTitle: "Bibliothèque Obs/Cons",
+        typeLabel: "Type",
+        observation: "Observation",
+        advice: "Conseil",
+        levelLabel: "Palier",
+        languageLabel: "Langue",
+        allBands: "Tous",
+        bandPrefix: "Palier",
+        messagesCount: "message(s)",
+        searchSimple: "Rechercher...",
+        noMessages: "Aucun message.",
+        deleteMessage: "Supprimer"
     },
 
     // Anglais
@@ -480,7 +494,21 @@ window.translations = {
         exportDevoirOk: "Scale OK (/20)",
         print: "Print",
         exportXlsx: "Export XLSX",
-        rakamna: "Rakmana"
+        rakamna: "Rakmana",
+
+        // Library
+        libraryTitle: "Remarks Library",
+        typeLabel: "Type",
+        observation: "Observation",
+        advice: "Advice",
+        levelLabel: "Level",
+        languageLabel: "Language",
+        allBands: "All",
+        bandPrefix: "Level",
+        messagesCount: "message(s)",
+        searchSimple: "Search...",
+        noMessages: "No messages.",
+        deleteMessage: "Delete"
     },
 
     // Arabe
@@ -722,6 +750,20 @@ window.translations = {
         exportDevoirOk: "السلم جيد (/20)",
         print: "طباعة",
         exportXlsx: "تصدير XLSX",
-        rakamna: "رقمنة"
+        rakamna: "رقمنة",
+
+        // Library
+        libraryTitle: "مكتبة الملاحظات/النصائح",
+        typeLabel: "النوع",
+        observation: "ملاحظة",
+        advice: "نصيحة",
+        levelLabel: "المستوى",
+        languageLabel: "اللغة",
+        allBands: "الكل",
+        bandPrefix: "مستوى",
+        messagesCount: "رسالة(رسائل)",
+        searchSimple: "بحث...",
+        noMessages: "لا توجد رسائل.",
+        deleteMessage: "حذف"
     }
 };

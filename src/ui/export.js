@@ -608,25 +608,25 @@
         overlay.innerHTML = `
             <div class="bg-white rounded-xl shadow-xl w-[92%] max-w-4xl" style="max-height:85vh; overflow-y:auto;">
                 <div class="p-4 border-b flex items-center justify-between gap-3">
-                    <div class="font-bold">${escapeHtml(t?.libraryTitle || "Bibliothèque Obs/Cons")}</div>
-                    <button class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300" onclick="closeRemarksModal()">${escapeHtml(t?.close || "Fermer")}</button>
+                    <div class="font-bold">${escapeHtml(t.libraryTitle)}</div>
+                    <button class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300" onclick="closeRemarksModal()">${escapeHtml(t.close)}</button>
                 </div>
                 <div class="p-4 space-y-3">
                     <div class="flex flex-wrap items-center gap-2">
-                        <label class="text-sm font-semibold text-gray-700">Type</label>
+                        <label class="text-sm font-semibold text-gray-700">${escapeHtml(t.typeLabel)}</label>
                         <select id="lib-kind" class="p-2 border rounded bg-white text-sm" onchange="renderTeacherLibraryModal()">
-                            <option value="obs">Observation</option>
-                            <option value="cons">Conseil</option>
+                            <option value="obs">${escapeHtml(t.observation)}</option>
+                            <option value="cons">${escapeHtml(t.advice)}</option>
                         </select>
-                        <label class="text-sm font-semibold text-gray-700 ml-3">Palier</label>
+                        <label class="text-sm font-semibold text-gray-700 ml-3">${escapeHtml(t.levelLabel)}</label>
                         <select id="lib-band" class="p-2 border rounded bg-white text-sm" onchange="renderTeacherLibraryModal()"></select>
-                        <label class="text-sm font-semibold text-gray-700 ml-3">Langue</label>
+                        <label class="text-sm font-semibold text-gray-700 ml-3">${escapeHtml(t.languageLabel)}</label>
                         <select id="lib-lang" class="p-2 border rounded bg-white text-sm" onchange="renderTeacherLibraryModal()">
                             <option value="FR">FR</option>
                             <option value="EN">EN</option>
                             <option value="AR">AR</option>
                         </select>
-                        <input id="lib-search" class="flex-1 min-w-56 p-2 border rounded" placeholder="Rechercher..." oninput="renderTeacherLibraryModal()" />
+                        <input id="lib-search" class="flex-1 min-w-56 p-2 border rounded" placeholder="${escapeHtml(t.searchSimple)}" oninput="renderTeacherLibraryModal()" />
                     </div>
                     <div id="lib-meta" class="text-sm text-gray-500"></div>
                     <div id="lib-list" class="space-y-2"></div>
@@ -656,7 +656,7 @@
         const bandSel = document.getElementById("lib-band");
         if (bandSel && (!bandSel.options.length || bandSel.dataset.kind !== baseKind)) {
             bandSel.dataset.kind = baseKind;
-            bandSel.innerHTML = `<option value="ALL">${escapeHtml(t?.allBands || "Tous")}</option>` + Array.from({ length: maxBands }, (_, i) => `<option value="${i}">${escapeHtml(t?.bandPrefix || "Palier")} ${i}</option>`).join("");
+            bandSel.innerHTML = `<option value="ALL">${escapeHtml(t.allBands)}</option>` + Array.from({ length: maxBands }, (_, i) => `<option value="${i}">${escapeHtml(t.bandPrefix)} ${i}</option>`).join("");
             bandSel.value = "ALL";
         }
         const bandValue = bandSel?.value ?? "ALL";
@@ -675,18 +675,18 @@
         }
         if (q) items = items.filter(x => x.msg.toLowerCase().includes(q));
         const meta = document.getElementById("lib-meta");
-        if (meta) meta.textContent = `${items.length} ${t?.messagesCount || "message(s)"}`;
+        if (meta) meta.textContent = `${items.length} ${t.messagesCount}`;
         const box = document.getElementById("lib-list");
         if (!box) return;
         if (!items.length) {
-            box.innerHTML = `<div class="p-3 bg-gray-50 border rounded text-sm text-gray-600">${escapeHtml(t?.noMessages || "Aucun message.")}</div>`;
+            box.innerHTML = `<div class="p-3 bg-gray-50 border rounded text-sm text-gray-600">${escapeHtml(t.noMessages)}</div>`;
             return;
         }
         box.innerHTML = items.map(x => `
             <div class="p-3 border rounded flex items-start justify-between gap-3 bg-white">
                 <div class="text-xs text-gray-400 w-20 flex-shrink-0">${escapeHtml(x.k)}</div>
                 <div class="text-sm leading-snug whitespace-pre-wrap flex-1">${escapeHtml(x.msg)}</div>
-                <button class="lib-del px-2 py-1 text-xs rounded bg-red-100 text-red-700 hover:bg-red-200" data-lang="${escapeHtml(lang)}" data-key="${escapeHtml(x.k)}" data-index="${x.i}">${escapeHtml(t?.deleteMessage || "Supprimer")}</button>
+                <button class="lib-del px-2 py-1 text-xs rounded bg-red-100 text-red-700 hover:bg-red-200" data-lang="${escapeHtml(lang)}" data-key="${escapeHtml(x.k)}" data-index="${x.i}">${escapeHtml(t.deleteMessage)}</button>
             </div>`).join("");
         box.querySelectorAll("button.lib-del").forEach(btn => {
             btn.addEventListener("click", () => {
