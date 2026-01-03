@@ -460,7 +460,12 @@
         const student = data.students.find(s => s.id === studentId);
         if (!student) return;
 
-        // 1. Set filters in summary tab
+        // 1. Switch to summary tab FIRST with keepFilters
+        if (window.tabs && typeof window.tabs.activateTab === 'function') {
+            window.tabs.activateTab('summary', { keepFilters: true });
+        }
+
+        // 2. Set filters AFTER tab switch (to ensure elements are in the right state)
         const summarySearchInput = document.getElementById('summary-search');
         const summaryClassSelect = document.getElementById('select-class-summary');
 
@@ -468,15 +473,8 @@
             summarySearchInput.value = student.name || `${student.lastName} ${student.firstName}`;
         }
         
-        // We'll let the summary tab auto-select the class based on the name search if it's unique,
-        // but we can also set it explicitly if the element exists.
         if (summaryClassSelect) {
             summaryClassSelect.value = student.className;
-        }
-
-        // 2. Switch to summary tab
-        if (window.tabs && typeof window.tabs.showTab === 'function') {
-            window.tabs.showTab('summary');
         }
         
         // 3. Trigger render

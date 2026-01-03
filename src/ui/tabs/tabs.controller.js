@@ -181,8 +181,8 @@ export class TabsController {
   }
 
   // Alias pour compatibilité
-  activateTab(tabId) {
-    return this.showTab(tabId);
+  activateTab(tabId, options = {}) {
+    return this.showTab(tabId, options);
   }
 
   // ===== ÉVÉNEMENTS =====

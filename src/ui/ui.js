@@ -117,7 +117,12 @@
         window.tabs.registerTab('summary', {
             label: t.summaryTab || 'Récapitulatif',
             icon: '📋',
-            onShow: () => {
+            onShow: (options = {}) => {
+                // Si on n'est pas en train de forcer une vue spécifique (ex: via Visualiser les notes)
+                if (!options.keepFilters && window.resetSummaryFilters) {
+                    window.resetSummaryFilters();
+                }
+                
                 if (window.loadClassSelectors) window.loadClassSelectors();
                 if (window.renderSummary) window.renderSummary();
             }

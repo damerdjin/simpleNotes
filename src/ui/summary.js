@@ -16,6 +16,17 @@
         window.renderSummary();
     };
 
+    window.resetSummaryFilters = function() {
+        const searchInput = document.getElementById('summary-search');
+        const classSelect = document.getElementById('select-class-summary');
+        
+        if (searchInput) searchInput.value = '';
+        if (classSelect) classSelect.value = '';
+        
+        // On peut aussi réinitialiser d'autres filtres si nécessaire
+        summaryAssignmentFilter.clear();
+    };
+
     window.renderSummary = function() {
         switch (currentSummaryMode) {
             case 'grouped':
