@@ -13,6 +13,57 @@
     <script src="/translations.js"></script>
 
     <style>
+        /* ===== SPLASH SCREEN ===== */
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out, visibility 0.5s;
+        }
+        #splash-screen.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+        .loader-dots div {
+            animation-timing-function: cubic-bezier(0, 1, 1, 0);
+        }
+        .loader-dots div:nth-child(1) {
+            left: 8px;
+            animation: loader-dots1 0.6s infinite;
+        }
+        .loader-dots div:nth-child(2) {
+            left: 8px;
+            animation: loader-dots2 0.6s infinite;
+        }
+        .loader-dots div:nth-child(3) {
+            left: 32px;
+            animation: loader-dots2 0.6s infinite;
+        }
+        .loader-dots div:nth-child(4) {
+            left: 56px;
+            animation: loader-dots3 0.6s infinite;
+        }
+        @keyframes loader-dots1 {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+        @keyframes loader-dots3 {
+            0% { transform: scale(1); }
+            100% { transform: scale(0); }
+        }
+        @keyframes loader-dots2 {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(24px, 0); }
+        }
+
         /* ===== RTL SUPPORT COMPLET ET OPTIMISÉ ===== */
         .rtl-layout {
             direction: rtl;
@@ -664,6 +715,18 @@
         
         window.handleLogout = logout;
         
+        // Function to hide splash screen when everything is ready
+        window.hideSplashScreen = () => {
+            const splash = document.getElementById('splash-screen');
+            const main = document.getElementById('main-content');
+            if (splash && main) {
+                splash.classList.add('fade-out');
+                main.classList.remove('invisible');
+                // Remove from DOM after transition
+                setTimeout(() => splash.remove(), 500);
+            }
+        };
+
         async function initAuth() {
             try {
                 // Initialize language from storage
@@ -672,34 +735,52 @@
                 const user = await checkAuth();
                 if (user) {
                     window.currentUser = user;
-                    document.getElementById('current-user-info').textContent = user.email || user.id;
-                    document.body.style.display = 'block';
+                    const userInfo = document.getElementById('current-user-info');
+                    if (userInfo) userInfo.textContent = user.email || user.id;
 
                     // User menu toggle
-                    document.getElementById('user-menu-button').addEventListener('click', () => {
-                        const menu = document.getElementById('user-menu');
-                        menu.classList.toggle('hidden');
-                    });
+                    const userMenuBtn = document.getElementById('user-menu-button');
+                    if (userMenuBtn) {
+                        userMenuBtn.addEventListener('click', () => {
+                            const menu = document.getElementById('user-menu');
+                            menu.classList.toggle('hidden');
+                        });
+                    }
 
                     // Close menu on outside click
                     document.addEventListener('click', (e) => {
                         const button = document.getElementById('user-menu-button');
                         const menu = document.getElementById('user-menu');
-                        if (!button.contains(e.target) && !menu.contains(e.target)) {
+                        if (button && menu && !button.contains(e.target) && !menu.contains(e.target)) {
                             menu.classList.add('hidden');
                         }
                     });
                 }
             } catch (err) {
                 console.error('Auth error:', err);
+                // Redirect to login is handled by checkAuth
             }
         }
         initAuth();
     </script>
 </head>
 
-<body class="bg-gray-100 min-h-screen" style="display: none;">
-    <div class="container mx-auto p-4 max-w-7xl">
+<body class="bg-gray-100 min-h-screen">
+    <!-- Splash Screen -->
+    <div id="splash-screen">
+        <div class="text-4xl mb-4">📝</div>
+        <div class="text-xl font-bold text-blue-600 mb-8" data-translate="appTitle">Gestion des Corrections</div>
+        <div class="relative w-20 h-20">
+            <div class="loader-dots inline-block relative w-20 h-20">
+                <div class="absolute top-8 w-3 h-3 rounded-full bg-blue-600"></div>
+                <div class="absolute top-8 w-3 h-3 rounded-full bg-blue-600"></div>
+                <div class="absolute top-8 w-3 h-3 rounded-full bg-blue-600"></div>
+                <div class="absolute top-8 w-3 h-3 rounded-full bg-blue-600"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-content" class="invisible container mx-auto p-4 max-w-7xl">
         <!-- Header -->
         <!-- Header -->
         <header class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 rounded-xl shadow-lg mb-6">
@@ -1026,8 +1107,7 @@
     </div>
 
     <!-- Assignment Modal will be injected dynamically -->
-
-
+    </div>
 
     <script src="./translations.js"></script>
     <script type="module">
@@ -1072,19 +1152,32 @@
 
     <script>
         // Language Management
-        document.addEventListener('DOMContentLoaded', () => {
-            loadData();
-            initLanguage();
-            // Initialize new tab system
-            if (window.initTabs) window.initTabs();
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                loadData();
+                initLanguage();
+                // Initialize new tab system
+                if (window.initTabs) window.initTabs();
 
-            // Load global filters
-            if (window.loadGlobalFilters) window.loadGlobalFilters();
+                // Load global filters
+                if (window.loadGlobalFilters) window.loadGlobalFilters();
 
-            renderStudents();
-            renderAssignments();
-            loadExportPrepConfig();
-            loadClassSelectorsForExport();
+                // Wait for any async rendering if necessary
+                // In this app, these are mostly synchronous DOM manipulations
+                renderStudents();
+                renderAssignments();
+                loadExportPrepConfig();
+                loadClassSelectorsForExport();
+
+                // Give a tiny bit of time for the browser to paint the rendered content
+                setTimeout(() => {
+                    if (window.hideSplashScreen) window.hideSplashScreen();
+                }, 100);
+            } catch (err) {
+                console.error("Initialization error:", err);
+                // Still hide splash screen so user isn't stuck
+                if (window.hideSplashScreen) window.hideSplashScreen();
+            }
         });
     </script>
     <!-- Input caché pour charger le fichier Rakmana -->
