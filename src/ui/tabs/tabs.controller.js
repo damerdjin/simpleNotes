@@ -87,12 +87,6 @@ export class TabsController {
       item.classList.toggle('active', item.dataset.tab === tabId);
     });
 
-    // Update buttons (legacy/top tabs)
-    this.buttonsContainer?.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.tab === tabId);
-      btn.setAttribute('aria-selected', btn.dataset.tab === tabId);
-    });
-
     // Update content (supports both .tab-content and .view-section)
     const contents = this.contentContainer?.querySelectorAll('.tab-content, .view-section') || [];
     contents.forEach(content => {
@@ -120,8 +114,7 @@ export class TabsController {
       return `
         <div class="nav-item ${tab.id === this.activeTab ? 'active' : ''}" 
              data-tab="${tab.id}" 
-             onclick="switchTab('${tab.id}')">
-            <span class="nav-icon">${tab.icon || '📄'}</span>
+             onclick="switchTab('${tab.id}')">            
             <span data-translate="${tab.id}">${tab.label}</span>
             ${tab.badge > 0 ? `<span class="nav-badge">${tab.badge}</span>` : ''}
         </div>

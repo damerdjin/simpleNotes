@@ -758,6 +758,34 @@
             right: 0;
             border-right: none;
             border-left: 1px solid var(--border);
+            direction: rtl;
+        }
+
+        .rtl-layout .nav-item {
+            text-align: right;
+            justify-content: flex-start;
+            flex-direction: row !important; /* Force standard row, let direction: rtl handle it */
+        }
+
+        /* RTL Header alignment: Profile Left, Selects Right */
+        .rtl-layout header#app-header {
+            flex-direction: row !important; /* Keep standard row, let direction: rtl handle it */
+        }
+
+        .rtl-layout .header-context {
+            flex-direction: row !important;
+            margin-right: 0 !important;
+            margin-left: 0 !important;
+        }
+
+        .rtl-layout .user-profile {
+            margin-right: auto !important;
+            margin-left: 0 !important;
+        }
+
+        .rtl-layout #user-menu {
+            right: auto;
+            left: 0;
         }
 
         aside#app-sidebar.mobile-hidden {
@@ -837,10 +865,6 @@
             z-index: 90;
         }
 
-        .rtl-layout header#app-header {
-            flex-direction: row-reverse;
-        }
-
         /* Responsive adjustments */
         @media (max-width: 768px) {
             aside#app-sidebar {
@@ -887,6 +911,15 @@
             font-weight: 500;
         }
 
+        .nav-item::before,
+        .nav-item::after {
+            display: none !important;
+            content: none !important;
+            width: 0 !important;
+            height: 0 !important;
+            position: absolute !important;
+        }
+
         .nav-item:hover {
             background-color: #f1f5f9;
             color: var(--primary);
@@ -899,10 +932,6 @@
 
         .nav-icon {
             font-size: 1.2rem;
-        }
-
-        .rtl-layout .nav-item {
-            flex-direction: row-reverse;
         }
 
         /* Header Context (Selects) */
@@ -1029,23 +1058,23 @@
         </div>
         <nav>
             <div class="nav-item active" data-tab="students" onclick="switchTab('students')">
-                <span class="nav-icon">👥</span>
+                <span>👥</span>
                 <span data-translate="students">Élèves</span>
             </div>
             <div class="nav-item" data-tab="assignments" onclick="switchTab('assignments')">
-                <span class="nav-icon">📝</span>
+                <span>📝</span>
                 <span data-translate="assignments">Devoirs</span>
             </div>
             <div class="nav-item" data-tab="grades" onclick="switchTab('grades')">
-                <span class="nav-icon">📊</span>
+                <span>📊</span>
                 <span data-translate="grades">Notes</span>
             </div>
             <div class="nav-item" data-tab="summary" onclick="switchTab('summary')">
-                <span class="nav-icon">📋</span>
+                <span>📋</span>
                 <span data-translate="summary">Récapitulatif</span>
             </div>
             <div class="nav-item" data-tab="export" onclick="switchTab('export')">
-                <span class="nav-icon">📤</span>
+                <span>📤</span>
                 <span data-translate="exportPrepTitle">Export</span>
             </div>
         </nav>
