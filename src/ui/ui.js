@@ -349,7 +349,16 @@
         try { if(window.closeAssignmentModal) window.closeAssignmentModal(); } catch (e) { }
         const rm = document.getElementById('remarks-modal'); if (rm) rm.remove();
         const am = document.getElementById('assignment-modal'); if (am) am.remove();
-        const sm = document.getElementById('student-modal'); if (sm) { sm.classList.remove('active'); sm.classList.add('hidden'); }
+        const sm = document.getElementById('student-modal'); 
+        if (sm) { 
+            sm.classList.remove('active'); 
+            sm.classList.add('hidden'); 
+        }
+        const header = document.getElementById('app-header');
+        if (header) {
+            header.style.removeProperty('display');
+        }
+        
         document.body.style.pointerEvents = '';
         document.body.style.overflow = '';
         

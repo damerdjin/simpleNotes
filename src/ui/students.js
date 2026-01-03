@@ -241,7 +241,13 @@
 
     window.openStudentModal = function(studentId = null) {
         const modal = document.getElementById('student-modal');
+        const header = document.getElementById('app-header');
         const t = getTranslations()[getLang()];
+        
+        // Hide header
+        if (header) {
+            header.style.setProperty('display', 'none', 'important');
+        }
         
         // Reset error zone
         const errorZone = document.getElementById('student-modal-error');
@@ -338,6 +344,12 @@
 
     window.closeStudentModal = function() {
         const modal = document.getElementById('student-modal');
+        const header = document.getElementById('app-header');
+        
+        if (header) {
+            header.style.removeProperty('display');
+        }
+
         if (modal) {
             modal.classList.remove('active');
             modal.classList.add('pointer-events-none', 'opacity-0');
