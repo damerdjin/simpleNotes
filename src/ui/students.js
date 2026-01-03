@@ -107,7 +107,8 @@
             return;
         }
 
-        const allCount = (getData().students || []).length;
+        const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
+        const allCount = (getData().students || []).filter(s => (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear).length;
         const allLabel = t.allClassesFilter || 'Toutes';
         const allActive = !selected;
         const allBtn = `
@@ -120,7 +121,7 @@
         `;
 
         const rows = classes.map(c => {
-            const count = getData().students.filter(s => s.className === c).length;
+            const count = getData().students.filter(s => s.className === c && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear).length;
             const active = c === selected;
             const color = typeof window.getClassColor === 'function' ? window.getClassColor(c) : '#3b82f6';
             return `
@@ -216,8 +217,9 @@
             return;
         }
 
+        const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
         list.innerHTML = classes.map(c => {
-            const count = getData().students.filter(s => s.className === c).length;
+            const count = getData().students.filter(s => s.className === c && (s.importedBy || 'unknown') === userId).length;
             return `
                 <div class="flex items-center justify-between gap-3 p-3 rounded-lg border bg-gray-50">
                     <div class="min-w-0">
@@ -243,7 +245,8 @@
     window.deleteClass = function(className) {
         const t = getTranslations()[getLang()];
         const data = getData();
-        const count = data.students.filter(s => s.className === className).length;
+        const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
+        const count = data.students.filter(s => s.className === className && (s.importedBy || 'unknown') === userId).length;
         
         // Confirmation plus détaillée
         let detailMsg = t.deleteClassConfirmDetails || "Cela supprimera :\n- ${count} élèves\n- Tous les devoirs associés\n- Toutes les notes associées";
@@ -252,8 +255,8 @@
         if (!confirm(`${t.deleteClassConfirm || 'Supprimer la classe'} "${className}" ?\n\n${detailMsg}`)) return;
 
         // Remove students from this class
-        const studentIds = data.students.filter(s => s.className === className).map(s => s.id);
-        data.students = data.students.filter(s => s.className !== className);
+        const studentIds = data.students.filter(s => s.className === className && (s.importedBy || 'unknown') === userId).map(s => s.id);
+        data.students = data.students.filter(s => !(s.className === className && (s.importedBy || 'unknown') === userId));
 
         // Remove their grades
         studentIds.forEach(id => {
