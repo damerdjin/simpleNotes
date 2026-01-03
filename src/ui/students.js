@@ -353,6 +353,11 @@
             if (newClassInput) newClassInput.classList.add('hidden');
             if (classSelect) classSelect.value = '';
 
+            // Pre-fill academic year with global value
+            const globalAcademicYear = window.getGlobalAcademicYear();
+            const academicYearSelect = document.getElementById('student-academic-year');
+            if (academicYearSelect) academicYearSelect.value = globalAcademicYear;
+
 
         }
 
@@ -378,7 +383,7 @@
             className = document.getElementById('student-class-new').value.trim();
         }
 
-        const academicYear = window.getGlobalAcademicYear();
+        const academicYear = document.getElementById('student-academic-year').value.trim() || window.getGlobalAcademicYear();
 
         const nin = document.getElementById('student-nin').value.trim();
 
