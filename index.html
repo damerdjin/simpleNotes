@@ -739,6 +739,17 @@
             width: 100%;
         }
 
+        /* Global RTL Support */
+        .rtl-layout {
+            direction: rtl;
+        }
+
+        .rtl-layout aside#app-sidebar,
+        .rtl-layout header#app-header,
+        .rtl-layout main#main-content {
+            direction: rtl;
+        }
+
         /* Sidebar Styling */
         aside#app-sidebar {
             width: var(--sidebar-width);
@@ -758,29 +769,21 @@
             right: 0;
             border-right: none;
             border-left: 1px solid var(--border);
-            direction: rtl;
         }
 
         .rtl-layout .nav-item {
             text-align: right;
             justify-content: flex-start;
-            flex-direction: row !important; /* Force standard row, let direction: rtl handle it */
         }
 
         /* RTL Header alignment: Profile Left, Selects Right */
-        .rtl-layout header#app-header {
-            flex-direction: row !important; /* Keep standard row, let direction: rtl handle it */
-        }
-
-        .rtl-layout .header-context {
-            flex-direction: row !important;
-            margin-right: 0 !important;
-            margin-left: 0 !important;
-        }
-
         .rtl-layout .user-profile {
             margin-right: auto !important;
             margin-left: 0 !important;
+        }
+
+        .rtl-layout .user-profile button {
+            flex-direction: row-reverse !important;
         }
 
         .rtl-layout #user-menu {
@@ -797,15 +800,13 @@
         }
 
         .brand {
-            padding: 24px;
+            height: var(--header-height);
+            padding: 0 24px;
             display: flex;
             align-items: center;
             gap: 12px;
             border-bottom: 1px solid var(--border);
-        }
-
-        .rtl-layout .brand {
-            flex-direction: row-reverse;
+            box-sizing: border-box;
         }
 
         .brand-logo {
@@ -835,7 +836,7 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            transition: margin-left 0.3s ease-in-out, width 0.3s ease-in-out;
+            transition: margin-left 0.3s ease-in-out, margin-right 0.3s ease-in-out, width 0.3s ease-in-out;
         }
 
         .content-area {
@@ -859,10 +860,11 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 32px;
+            padding: 0 24px; /* Synchronized with sidebar padding */
             position: sticky;
             top: 0;
             z-index: 90;
+            box-sizing: border-box;
         }
 
         /* Responsive adjustments */
@@ -1091,19 +1093,19 @@
                 </button>
                 <div class="header-context hidden sm:flex items-center gap-6">
                     <div class="select-group">
-                        <span class="select-label" data-translate="academicYearLabel">Année Scolaire</span>
-                        <select id="global-academic-year" onchange="setGlobalAcademicYear(this.value)">
-                            <option value="2025/2026" selected>2025 / 2026</option>
-                            <option value="2024/2025">2024 / 2025</option>
-                        </select>
-                    </div>
-                    <div style="width: 1px; height: 30px; background: var(--border);"></div>
-                    <div class="select-group">
                         <span class="select-label" data-translate="trimesterLabel">Trimestre</span>
                         <select id="global-trimester" onchange="setGlobalTrimester(this.value)">
                             <option value="1">Trimestre 1</option>
                             <option value="2">Trimestre 2</option>
                             <option value="3">Trimestre 3</option>
+                        </select>
+                    </div>
+                    <div style="width: 1px; height: 30px; background: var(--border);"></div>
+                    <div class="select-group">
+                        <span class="select-label" data-translate="academicYearLabel">Année Scolaire</span>
+                        <select id="global-academic-year" onchange="setGlobalAcademicYear(this.value)">
+                            <option value="2025/2026" selected>2025 / 2026</option>
+                            <option value="2024/2025">2024 / 2025</option>
                         </select>
                     </div>
                 </div>
