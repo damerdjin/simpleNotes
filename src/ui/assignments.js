@@ -21,8 +21,13 @@
     let isGlobalAssignment = false;
     let globalMaxPoints = 20;
     let activeClassFilters = []; // État pour les filtres multiples
+    let collapsedExercises = {}; // State for exercise accordions
 
     // Expose functions
+    window.toggleExerciseCollapse = function(index) {
+        collapsedExercises[index] = !collapsedExercises[index];
+        window.renderExercisesBuilder();
+    };
     window.toggleAssignmentClassFilter = function(className) {
         if (className === '') {
             activeClassFilters = [];
@@ -40,6 +45,7 @@
     window.openAssignmentModal = function (assignmentId = null) {
         const t = getTranslations()[getLang()];
         editingAssignmentId = assignmentId;
+        collapsedExercises = {}; // Reset accordions when opening modal
         const overlay = document.createElement('div');
         overlay.id = 'assignment-modal';
         overlay.className = 'modal active fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6';
@@ -259,34 +265,23 @@
                     <span class="text-xs font-bold text-emerald-600 uppercase tracking-wider">${t.questionPrefix || 'Q'}</span>
                     <input type="text" placeholder="1, 2..." value="${q.name || ''}"
                         onchange="${basePath}.name = this.value"
-                        class="w-16 p-1.5 border border-emerald-200 rounded-lg text-sm font-bold text-emerald-700 bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none">
+                        class="w-12 p-1 border border-emerald-200 rounded-lg text-sm font-bold text-emerald-700 bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none">
                 </div>
                 
                 ${!hasSubQuestions ? `
-                    <div class="flex items-center gap-2 bg-white px-2 py-1 rounded-lg border border-emerald-200 shadow-sm">
-                        <div class="flex items-center gap-1">
-                            <span class="text-[10px] font-bold text-gray-400 uppercase">Pts</span>
-                            <input type="number" placeholder="0" value="${q.maxPoints || ''}" min="0" step="0.25"
-                                onchange="${basePath}.maxPoints = parseFloat(this.value); window.renderExercisesBuilder()"
-                                class="w-14 p-1 text-sm font-semibold text-gray-700 outline-none" title="${t.questionPoints}">
-                        </div>
-                        ${!editingAssignmentId ? `
-                            <div class="w-px h-4 bg-gray-200 mx-1"></div>
-                            <div class="flex items-center gap-1">
-                                <span class="text-[10px] font-bold text-amber-500 uppercase">Def</span>
-                                <input type="number" placeholder="-" value="${q.defaultGrade || ''}" min="0" step="0.25"
-                                    onchange="${basePath}.defaultGrade = this.value === '' ? '' : parseFloat(this.value)"
-                                    class="w-12 p-1 text-sm font-semibold text-amber-700 outline-none" title="${t.defaultGrade}">
-                            </div>
-                        ` : ''}
+                    <div class="flex items-center gap-1 bg-white px-1.5 py-1 rounded-lg border border-emerald-200 shadow-sm">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase">${t.pointsAbbr || 'Pts'}</span>
+                        <input type="number" placeholder="0" value="${q.maxPoints || ''}" min="0" step="0.25"
+                            onchange="${basePath}.maxPoints = parseFloat(this.value); window.renderExercisesBuilder()"
+                            class="w-10 p-1 text-sm font-semibold text-gray-700 outline-none text-center" title="${t.questionPoints}">
                     </div>
                 ` : `
                     <div class="flex items-center gap-2 px-3 py-1.5 bg-emerald-100/50 rounded-lg border border-emerald-200">
-                        <span class="text-xs font-bold text-emerald-700">${getQuestionMaxPoints(q)} ${t.points}</span>
+                        <span class="text-xs font-bold text-emerald-700">${getQuestionMaxPoints(q)} ${t.pointsSingle || t.points}</span>
                     </div>
                 `}
                 
-                <div class="flex items-center gap-1 ml-auto">
+                <div class="flex items-center gap-1 ml-auto rtl:mr-auto rtl:ml-0">
                     <button onclick="${addSubCall}" 
                         class="flex items-center gap-1 text-blue-600 hover:text-white hover:bg-blue-600 text-xs font-bold px-2 py-1.5 rounded-lg transition-all border border-blue-200">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
@@ -300,7 +295,7 @@
             </div>
             
             ${hasSubQuestions ? `
-                <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 pl-4 border-l-2 border-emerald-200">
+                <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 pl-4 border-l-2 border-emerald-200 rtl:pl-0 rtl:pr-4 rtl:border-l-0 rtl:border-r-2">
                     ${(q.subQuestions || []).map((sq, sqIdx) => `
                         <div class="flex items-center gap-2 bg-white/80 p-1.5 rounded-lg border border-emerald-100 shadow-sm hover:border-emerald-300 transition-all">
                             <input type="text" value="${sq.name || ''}" 
@@ -312,12 +307,6 @@
                                     onchange="${basePath}.subQuestions[${sqIdx}].maxPoints = parseFloat(this.value); window.renderExercisesBuilder()"
                                     class="w-full p-1 text-xs font-semibold text-gray-700 border-b border-transparent focus:border-emerald-400 outline-none">
                             </div>
-                            ${!editingAssignmentId ? `
-                                <div class="w-px h-3 bg-gray-100"></div>
-                                <input type="number" placeholder="Def" value="${sq.defaultGrade || ''}" min="0" step="0.25"
-                                    onchange="${basePath}.subQuestions[${sqIdx}].defaultGrade = this.value === '' ? '' : parseFloat(this.value)"
-                                    class="w-10 p-1 text-xs font-semibold text-amber-600 bg-amber-50/50 rounded outline-none" title="${t.defaultGrade}">
-                            ` : ''}
                             <button onclick="${basePath}.subQuestions.splice(${sqIdx}, 1); window.renderExercisesBuilder()" 
                                 class="p-1 text-red-300 hover:text-red-500 transition-colors">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -352,15 +341,26 @@
              return;
         }
 
-        container.innerHTML = window.tempExercises.map((ex, i) => {
+        container.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">` + 
+        window.tempExercises.map((ex, i) => {
             ex.parts = ex.parts || [];
             ex.questions = ex.questions || [];
             const exerciseTotal = getExerciseMaxPoints(ex);
+            const isCollapsed = collapsedExercises[i];
+
+            // Check if exercise is complex (has parts or any question has sub-questions)
+            const hasSubQs = (qs) => qs && qs.some(q => q.subQuestions && q.subQuestions.length > 0);
+            const anyQuestionHasSubQs = hasSubQs(ex.questions) || ex.parts.some(p => hasSubQs(p.questions));
+            const hasParts = ex.parts.length > 0;
+            const isComplex = anyQuestionHasSubQs || hasParts;
+
+            // Simple collapsed exercises take 1 column, others take full width
+            const colSpan = (isComplex || !isCollapsed) ? 'md:col-span-2 lg:col-span-3' : '';
 
             return `
-            <div class="border-2 border-blue-100 rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-all animate-in slide-in-from-bottom-2 duration-300">
+            <div class="${colSpan} border-2 border-blue-100 rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-all animate-in slide-in-from-bottom-2 duration-300">
               <!-- Exercise Header -->
-              <div class="px-5 py-4 bg-blue-50/50 border-b border-blue-100 flex items-center gap-4 flex-wrap">
+              <div class="px-5 py-3 bg-blue-50/50 border-b border-blue-100 flex items-center gap-4 flex-wrap cursor-pointer" onclick="window.toggleExerciseCollapse(${i})">
                 <div class="flex items-center gap-3">
                     <div class="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center font-bold text-sm shadow-sm shadow-blue-200">
                         ${i + 1}
@@ -368,7 +368,7 @@
                     <span class="font-bold text-blue-900 uppercase tracking-wide text-xs">${t.exercise}</span>
                 </div>
                 
-                <div class="flex-1 min-w-[200px]">
+                <div class="flex-1 min-w-[200px]" onclick="event.stopPropagation()">
                     <input type="text" 
                            placeholder="${t.exerciseName}" 
                            value="${ex.name || ''}" 
@@ -376,15 +376,15 @@
                            class="w-full p-2 border-2 border-white focus:border-blue-400 rounded-lg text-sm font-semibold bg-white/80 focus:bg-white outline-none transition-all">
                 </div>
                 
-                <div class="flex items-center gap-3 ml-auto">
+                <div class="flex items-center gap-3 ml-auto rtl:mr-auto rtl:ml-0">
                     <div class="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg border border-blue-100 shadow-sm">
                         <span class="text-xs font-bold text-blue-600 uppercase tracking-tighter">${t.totalPoints || 'Total'}</span>
                         <span class="text-sm font-black text-blue-900">${exerciseTotal}</span>
-                        <span class="text-[10px] font-bold text-blue-400 uppercase">Pts</span>
+                        <span class="text-[10px] font-bold text-blue-400 uppercase">${t.pointsAbbr || 'Pts'}</span>
                     </div>
                     
                     ${!editingAssignmentId ? `
-                        <div class="flex items-center gap-2 px-3 py-1.5 bg-amber-50 rounded-lg border border-amber-100 shadow-sm">
+                        <div class="flex items-center gap-2 px-3 py-1.5 bg-amber-50 rounded-lg border border-amber-100 shadow-sm" onclick="event.stopPropagation()">
                             <span class="text-[10px] font-bold text-amber-600 uppercase tracking-tighter">${t.defaultGrade || 'Def'}</span>
                             <input type="number" placeholder="-" value="${ex.defaultGrade || ''}" min="0" step="0.25"
                                 onchange="window.tempExercises[${i}].defaultGrade = this.value === '' ? '' : parseFloat(this.value)"
@@ -392,17 +392,21 @@
                         </div>
                     ` : ''}
 
-                    <button onclick="window.removeExercise(${i})" 
+                    <button onclick="event.stopPropagation(); window.removeExercise(${i})" 
                         class="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all" title="${t.delete}">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                     </button>
+
+                    <div class="text-blue-400 transition-transform duration-200 ${isCollapsed ? 'rotate-0' : 'rotate-180'}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
                 </div>
               </div>
 
               <!-- Exercise Content -->
-              <div class="p-5 space-y-4">
+              <div class="${isCollapsed ? 'hidden' : 'p-5 space-y-4'}">
                 ${ex.questions.length > 0 || ex.parts.length === 0 ? `
-                    <div class="space-y-3">
+                    <div class="${isComplex ? 'space-y-4' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'}">
                         ${ex.questions.map((q, qIdx) => renderQuestionBuilder(q, i, qIdx, null)).join('')}
                     </div>
                     <div class="flex justify-start pt-2">
@@ -432,7 +436,9 @@
                                 </div>
                                 
                                 <div class="p-4 space-y-3">
-                                    ${(part.questions || []).map((q, qIdx) => renderQuestionBuilder(q, i, qIdx, pIdx)).join('')}
+                                    <div class="${isComplex ? 'space-y-4' : 'grid grid-cols-1 md:grid-cols-2 gap-4'}">
+                                        ${(part.questions || []).map((q, qIdx) => renderQuestionBuilder(q, i, qIdx, pIdx)).join('')}
+                                    </div>
                                     
                                     <div class="flex justify-start pt-2">
                                         <button onclick="window.addQuestion(${i}, ${pIdx})" 
@@ -458,10 +464,15 @@
               </div>
             </div>
             `;
-        }).join('');
+        }).join('') + `</div>`;
     };
 
     window.addExercise = function () {
+        // Collapse all previous exercises
+        window.tempExercises.forEach((_, idx) => {
+            collapsedExercises[idx] = true;
+        });
+
         window.tempExercises.push({
             id: genId(),
             name: '',
