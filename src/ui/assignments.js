@@ -858,10 +858,18 @@
         const assignmentsForYearAndUser = data.assignments.filter(a => (a.academicYear || '') === globalAcademicYear && (a.createdBy || 'unknown') === userId && (a.trimester || '') === globalTrimester);
         const allClasses = [...new Set(assignmentsForYearAndUser.map(a => a.className))].filter(Boolean).sort();
         if (chipsContainer) {
-            const allChip = `<button onclick="toggleAssignmentClassFilter('')" class="px-4 py-1.5 rounded-full text-sm font-medium transition-all ${activeClassFilters.length === 0 ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-100'}">${t.allClassesFilter || 'Toutes'}</button>`;
+            const allChip = `<button onclick="toggleAssignmentClassFilter('')" class="px-4 py-1.5 rounded-full text-sm font-bold transition-all ${activeClassFilters.length === 0 ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-100'}">${t.allClassesFilter || 'Toutes'}</button>`;
             const classChips = allClasses.map(c => {
                 const isActive = activeClassFilters.includes(c);
-                return `<button onclick="toggleAssignmentClassFilter('${c}')" class="px-4 py-1.5 rounded-full text-sm font-medium transition-all ${isActive ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-100'}">${c}</button>`;
+                const classColor = getClassColor(c);
+                const borderStyle = `border-color: ${classColor}; border-width: 2px;`;
+                const activeStyle = isActive ? `background-color: ${classColor}; color: white; border-color: ${classColor};` : `background-color: white; color: ${classColor};`;
+                
+                return `<button onclick="toggleAssignmentClassFilter('${c}')" 
+                    style="${activeStyle} ${!isActive ? borderStyle : ''}"
+                    class="px-4 py-1.5 rounded-full text-sm font-bold transition-all shadow-sm hover:scale-105 active:scale-95">
+                    ${c}
+                </button>`;
             }).join('');
             chipsContainer.innerHTML = allChip + classChips;
         }
