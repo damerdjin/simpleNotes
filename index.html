@@ -673,7 +673,6 @@
                     window.currentUser = user;
                     document.getElementById('current-user-info').textContent = user.email || user.id;
                     document.body.style.display = 'block';
-                    if (window.translatePage) window.translatePage();
 
                     // User menu toggle
                     document.getElementById('user-menu-button').addEventListener('click', () => {
@@ -731,22 +730,22 @@
         <div class="bg-white rounded-xl shadow-lg p-4 mb-6">
             <div class="flex items-center gap-6 flex-wrap">
                 <div class="flex items-center gap-2">
-                    <label class="text-sm font-medium text-gray-700">Année scolaire :</label>
+                    <label class="text-sm font-medium text-gray-700" data-translate="academicYearLabel">Année scolaire :</label>
                     <select id="global-academic-year" onchange="setGlobalAcademicYear(this.value)"
                         class="p-2 border rounded-lg bg-white min-w-32">
-                        <option value="">-- Choisir --</option>
+                        <option value="" data-translate="academicYearOption">-- Année scolaire --</option>
                         <option value="2025/2026">2025/2026</option>
                         <option value="2024/2025">2024/2025</option>
                     </select>
                 </div>
                 <div class="flex items-center gap-2">
-                    <label class="text-sm font-medium text-gray-700">Trimestre :</label>
+                    <label class="text-sm font-medium text-gray-700" data-translate="trimesterLabel">Trimestre :</label>
                     <select id="global-trimester" onchange="setGlobalTrimester(this.value)"
                         class="p-2 border rounded-lg bg-white min-w-32">
-                        <option value="">-- Choisir --</option>
-                        <option value="1">Trimestre 1</option>
-                        <option value="2">Trimestre 2</option>
-                        <option value="3">Trimestre 3</option>
+                        <option value="" data-translate="trimesterOption">-- Trimestre --</option>
+                        <option value="1" data-translate="trimester1">Trimestre 1</option>
+                        <option value="2" data-translate="trimester2">Trimestre 2</option>
+                        <option value="3" data-translate="trimester3">Trimestre 3</option>
                     </select>
                 </div>
             </div>
@@ -763,7 +762,7 @@
                 <div id="content-students" class="tab-content">
                     <div class="bg-white rounded-xl shadow-lg p-6">
                         <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
-                            <h2 class="text-2xl font-bold text-gray-800">Liste des Élèves</h2>
+                            <h2 class="text-2xl font-bold text-gray-800" data-translate="studentsList">Liste des Élèves</h2>
                             <div class="flex items-center gap-2 flex-wrap">
                                 <label
                                     class="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-lg border cursor-pointer text-sm">
@@ -781,8 +780,8 @@
                                     class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold transition"
                                     data-translate="exportJson">Exporter JSON</button>
                                 <button onclick="openStudentModal()"
-                                    class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition">+
-                                    Ajouter un élève</button>
+                                    class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition"
+                                    data-translate="addStudent">+ Ajouter un élève</button>
                             </div>
                         </div>
 
@@ -808,10 +807,11 @@
                                 <div class="p-4 bg-white rounded-lg border">
                                     <div class="flex flex-wrap gap-2 items-center mb-3">
                                         <input type="text" id="student-search" placeholder="Rechercher (nom, prénom, classe)"
+                                            data-translate-placeholder="search"
                                             oninput="renderStudents()" class="flex-1 min-w-48 p-3 border rounded-lg">
                                         <select id="filter-class-students" onchange="renderStudents()"
                                             class="p-3 border rounded-lg bg-white min-w-48">
-                                            <option value="">-- Toutes les classes --</option>
+                                            <option value="" data-translate="allClasses">-- Toutes les classes --</option>
                                         </select>
                                         <select id="students-page-size" onchange="setStudentsPageSize(this.value)"
                                             class="p-3 border rounded-lg bg-white w-28">
@@ -997,28 +997,28 @@
     <!-- Student Modal -->
     <div id="student-modal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-50">
         <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
-            <h3 class="text-xl font-bold mb-4">Ajouter un élève</h3>
+            <h3 class="text-xl font-bold mb-4" data-translate="addStudentTitle">Ajouter un élève</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                <input type="text" id="student-lastname" placeholder="Nom" class="w-full p-3 border rounded-lg">
-                <input type="text" id="student-firstname" placeholder="Prénom" class="w-full p-3 border rounded-lg">
+                <input type="text" id="student-lastname" placeholder="Nom" data-translate-placeholder="lastName" class="w-full p-3 border rounded-lg">
+                <input type="text" id="student-firstname" placeholder="Prénom" data-translate-placeholder="firstName" class="w-full p-3 border rounded-lg">
                 <div>
                     <select id="student-class-select" class="w-full p-3 border rounded-lg bg-white" onchange="if(this.value==='__new__'){document.getElementById('student-class-new').classList.remove('hidden');document.getElementById('student-class-new').focus();}else{document.getElementById('student-class-new').classList.add('hidden');}">
-                        <option value="">-- Classe --</option>
+                        <option value="" data-translate="className">-- Classe --</option>
                     </select>
-                    <input type="text" id="student-class-new" placeholder="Nouvelle classe" class="w-full p-3 border rounded-lg mt-2 hidden">
+                    <input type="text" id="student-class-new" placeholder="Nouvelle classe" data-translate-placeholder="className" class="w-full p-3 border rounded-lg mt-2 hidden">
                 </div>
 
                 <select id="student-academic-year" class="w-full p-3 border rounded-lg bg-white">
-        <option value="">-- Année scolaire --</option>
+        <option value="" data-translate="academicYearOption">-- Année scolaire --</option>
         <option value="2025/2026">2025/2026</option>
         <option value="2024/2025">2024/2025</option>
     </select>
-    <input type="text" id="student-nin" placeholder="NIN (auto-généré)" class="w-full p-3 border rounded-lg">
+    <input type="text" id="student-nin" placeholder="NIN (auto-généré)" data-translate-placeholder="nin" class="w-full p-3 border rounded-lg">
             </div>
             <div class="flex gap-3 justify-end">
-                <button onclick="closeStudentModal()"
+                <button onclick="closeStudentModal()" data-translate="cancel"
                     class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">Annuler</button>
-                <button onclick="addStudent()"
+                <button onclick="addStudent()" data-translate="add"
                     class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Ajouter</button>
             </div>
         </div>

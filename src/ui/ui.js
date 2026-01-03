@@ -177,7 +177,8 @@
                 window.currentLanguage = 'fr';
             }
         }
-        window.applyLanguage();
+        // Delay to ensure modules are loaded
+        setTimeout(() => window.applyLanguage(), 0);
     };
 
     window.changeLanguage = function(lang) {
@@ -207,14 +208,19 @@
     };
 
     window.translatePage = function() {
-        const t = getTranslations()[getLang()];
+        const lang = getLang();
+        const t = getTranslations()[lang];
         if (!t) return;
 
         // Traduire les éléments avec data-translate
         document.querySelectorAll('[data-translate]').forEach(element => {
             const key = element.getAttribute('data-translate');
             if (t[key]) {
-                element.textContent = t[key];
+                if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
+                    element.value = t[key];
+                } else {
+                    element.textContent = t[key];
+                }
             }
         });
 
@@ -268,6 +274,10 @@
         
         // Update dynamic texts
         window.updateDynamicTexts();
+
+        // Rafraîchir les sélecteurs de classe
+        if (typeof window.loadClassSelectors === 'function') window.loadClassSelectors();
+        if (typeof window.loadGradeSelectors === 'function') window.loadGradeSelectors();
     };
 
     window.updateDynamicTexts = function() {
