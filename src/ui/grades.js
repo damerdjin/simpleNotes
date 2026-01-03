@@ -24,6 +24,10 @@
 
         if (!assignmentSelect || !studentSelect) return;
 
+        // Sauvegarder les valeurs actuelles pour essayer de les restaurer
+        const currentAssignmentId = assignmentSelect.value;
+        const currentStudentId = studentSelect.value;
+
         if (!selectedClass) {
             assignmentSelect.innerHTML = `<option value="">-- ${t.selectClassFirst} --</option>`;
             studentSelect.innerHTML = `<option value="">-- ${t.selectClassFirst} --</option>`;
@@ -36,6 +40,8 @@
         const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
         const globalAcademicYear = window.getGlobalAcademicYear();
         const globalTrimester = window.getGlobalTrimester();
+        
+        // Mise à jour de la liste des devoirs
         const filteredAssignments = data.assignments.filter(a => {
             const matchClass = a.className === selectedClass;
             const matchUser = (a.createdBy || 'unknown') === userId;
@@ -46,12 +52,26 @@
         assignmentSelect.innerHTML = `<option value="">-- ${t.selectAssignment} --</option>` +
             filteredAssignments.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
 
+        // Mise à jour de la liste des élèves
         const filteredStudents = data.students.filter(s => s.className === selectedClass && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear);
         studentSelect.innerHTML = `<option value="">-- ${t.selectStudent} --</option>` +
             filteredStudents.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
 
-        const entry = document.getElementById('grade-entry');
-        if (entry) entry.innerHTML = `<p class="text-gray-500 text-center py-8">${t.selectAssignmentAndStudentToGrade}</p>`;
+        // Tenter de restaurer les sélections si elles sont toujours valides
+        if (currentAssignmentId && filteredAssignments.some(a => a.id === currentAssignmentId)) {
+            assignmentSelect.value = currentAssignmentId;
+        }
+        if (currentStudentId && filteredStudents.some(s => s.id === currentStudentId)) {
+            studentSelect.value = currentStudentId;
+        }
+
+        // Si on a déjà les deux sélections, on recharge l'interface de saisie
+        if (assignmentSelect.value && studentSelect.value) {
+            window.loadGradeEntry();
+        } else {
+            const entry = document.getElementById('grade-entry');
+            if (entry) entry.innerHTML = `<p class="text-gray-500 text-center py-8">${t.selectAssignmentAndStudentToGrade}</p>`;
+        }
     };
 
     window.getQuestionDisplayName = function(assignmentId, exId, qId, partId) {
@@ -240,7 +260,6 @@
         container.innerHTML = html;
         saveData();
         window.recalculateTotals(assignmentId, studentId);
-        if (window.translatePage) window.translatePage();
     };
 
     window.updateGrade = function(studentId, assignmentId, exId, partKey, qId, sqId, value) {
