@@ -1097,58 +1097,63 @@
             if (dropdown) dropdown.classList.toggle('hidden');
         };
 
-        window.updateYear = (year) => {
+        // Visual update only - NO state changes, NO recursion
+        window.updateYearVisual = (year) => {
+            if (!year) return;
             const display = document.getElementById('current-year-display');
-            const hiddenSelect = document.getElementById('global-academic-year');
             const dropdown = document.getElementById('year-dropdown');
             
-            if (display) display.textContent = year.includes('/') ? year : year.substring(0,4) + ' / ' + year.substring(4);
-            if (hiddenSelect) {
-                hiddenSelect.value = year;
-                // Trigger original logic
-                if (window.setGlobalAcademicYear) window.setGlobalAcademicYear(year);
+            if (display) {
+                display.textContent = year.includes('/') ? year : year.substring(0,4) + ' / ' + year.substring(4);
             }
+            
             if (dropdown) dropdown.classList.add('hidden');
             
-            // Update visual checks
+            // Update visual checks (blue dots)
             document.querySelectorAll('[id^="check-"]').forEach(el => el.classList.add('hidden'));
             const yearShort = year.substring(0,4);
             const check = document.getElementById(`check-${yearShort}`);
-            if (check) check.classList.remove('hidden');
+            if (check) {
+                check.classList.remove('hidden');
+            }
         };
 
-        // Close dropdown on click outside
-        document.addEventListener('click', (e) => {
-            const yearPicker = document.querySelector('.relative.group');
-            const dropdown = document.getElementById('year-dropdown');
-            if (yearPicker && dropdown && !yearPicker.contains(e.target)) {
-                dropdown.classList.add('hidden');
-            }
-        });
-
-        // Sync visual UI with state
-        window.syncGlobalUI = () => {
-            const currentTri = window.getGlobalTrimester ? window.getGlobalTrimester() : "1";
-            const currentYear = window.getGlobalAcademicYear ? window.getGlobalAcademicYear() : "2025/2026";
+        // Called by UI interaction
+        window.updateYear = (year) => {
+            window.updateYearVisual(year);
+            const hiddenSelect = document.getElementById('global-academic-year');
+            if (hiddenSelect) hiddenSelect.value = year;
             
-            // Sync Trimester
+            // Trigger state change
+            if (window.setGlobalAcademicYear) {
+                window.setGlobalAcademicYear(year);
+            }
+        };
+
+        // Sync visual UI with state (called on load or after state changes)
+        window.syncGlobalUI = () => {
+            const currentTri = window.getGlobalTrimester ? window.getGlobalTrimester() : (localStorage.getItem('corrections-global-trimester') || "1");
+            const currentYear = window.getGlobalAcademicYear ? window.getGlobalAcademicYear() : (localStorage.getItem('corrections-global-academic-year') || "2025/2026");
+            
+            // Sync Trimester Radios & Labels
             const radio = document.getElementById(`tri${currentTri}`);
             if (radio) {
                 radio.checked = true;
-                // Update labels
                 document.querySelectorAll('[id^="label-tri"]').forEach(l => {
                     l.classList.remove('bg-white', 'shadow-sm', 'text-blue-600');
-                    l.querySelector('span').classList.add('opacity-0');
+                    const dot = l.querySelector('span');
+                    if (dot) dot.classList.add('opacity-0');
                 });
                 const activeLabel = document.getElementById(`label-tri${currentTri}`);
                 if (activeLabel) {
                     activeLabel.classList.add('bg-white', 'shadow-sm', 'text-blue-600');
-                    activeLabel.querySelector('span').classList.remove('opacity-0');
+                    const dot = activeLabel.querySelector('span');
+                    if (dot) dot.classList.remove('opacity-0');
                 }
             }
 
-            // Sync Year
-            window.updateYear(currentYear);
+            // Sync Year Visuals
+            window.updateYearVisual(currentYear);
         };
 
         async function initAuth() {

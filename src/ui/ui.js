@@ -422,6 +422,9 @@
             trimesterSelect.disabled = !academicYear;
         }
 
+        // Sync new visual UI
+        if (window.syncGlobalUI) window.syncGlobalUI();
+
         // Disable import buttons and labels if no trimester selected
         const importButtons = [
             'student-import',
@@ -454,88 +457,82 @@
         if (!value) {
             localStorage.removeItem('corrections-global-trimester');
         }
-        // Update UI states
-        const trimesterSelect = document.getElementById('global-trimester');
-        if (trimesterSelect) {
-            trimesterSelect.disabled = !value;
-            if (!value) trimesterSelect.value = '';
-        }
+        
+        // Update hidden select if it exists (for compatibility)
+        const hiddenSelect = document.getElementById('global-academic-year');
+        if (hiddenSelect) hiddenSelect.value = value;
 
-        // Sync visual UI if function exists
+        // Sync visual UI (only text and checks, no recursion)
         if (window.syncGlobalUI) window.syncGlobalUI();
 
-        // Update import buttons and labels
-        const importButtons = [
-            'student-import',
-            'json-import'
-        ];
-        const importLabels = [
-            'student-import-label',
-            'json-import-label'
-        ];
-        const disabled = !value || !localStorage.getItem('corrections-global-trimester');
-        importButtons.forEach(id => {
-            const btn = document.getElementById(id);
-            if (btn) btn.disabled = disabled;
-        });
-        importLabels.forEach(id => {
-            const label = document.getElementById(id);
-            if (label) {
-                if (disabled) {
-                    label.classList.add('opacity-50', 'cursor-not-allowed');
-                } else {
-                    label.classList.remove('opacity-50', 'cursor-not-allowed');
+        // Re-render all data-dependent views
+        console.log("Global State Change: Refreshing all views for year", value);
+        
+        // Use a small delay to ensure localStorage is settled and avoid race conditions
+        setTimeout(() => {
+            if (window.loadClassSelectors) window.loadClassSelectors();
+            if (window.loadClassSelectorsForAssignments) window.loadClassSelectorsForAssignments();
+            if (window.loadClassSelectorsForExport) window.loadClassSelectorsForExport();
+            if (window.renderClassList) window.renderClassList();
+            if (window.renderStudents) window.renderStudents();
+            if (window.renderAssignments) window.renderAssignments();
+            if (window.renderSummary) window.renderSummary();
+            if (window.loadGradeSelectors) window.loadGradeSelectors();
+            if (window.renderExportPrep) window.renderExportPrep();
+            
+            // Also update any other global state indicators
+            const disabled = !value || !localStorage.getItem('corrections-global-trimester');
+            const importButtons = ['student-import', 'json-import'];
+            const importLabels = ['student-import-label', 'json-import-label'];
+            
+            importButtons.forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) btn.disabled = disabled;
+            });
+            importLabels.forEach(id => {
+                const label = document.getElementById(id);
+                if (label) {
+                    if (disabled) label.classList.add('opacity-50', 'cursor-not-allowed');
+                    else label.classList.remove('opacity-50', 'cursor-not-allowed');
                 }
-            }
-        });
-        // Update classes and re-render all tabs
-        if (window.loadClassSelectors) window.loadClassSelectors();
-        if (window.loadClassSelectorsForAssignments) window.loadClassSelectorsForAssignments();
-        if (window.renderClassList) window.renderClassList();
-        if (window.renderStudents) window.renderStudents();
-        if (window.renderAssignments) window.renderAssignments();
-        if (window.renderSummary) window.renderSummary();
-        if (window.loadGradeSelectors) window.loadGradeSelectors();
-        if (window.renderExportPrep) window.renderExportPrep();
+            });
+        }, 0);
     };
 
     window.setGlobalTrimester = function(value) {
         localStorage.setItem('corrections-global-trimester', value);
         
-        // Sync visual UI if function exists
+        // Sync visual UI (radios and labels)
         if (window.syncGlobalUI) window.syncGlobalUI();
 
-        // Update import buttons and labels
-        const importButtons = [
-            'student-import',
-            'json-import'
-        ];
-        const importLabels = [
-            'student-import-label',
-            'json-import-label'
-        ];
-        const academicYear = localStorage.getItem('corrections-global-academic-year');
-        const disabled = !academicYear || !value;
-        importButtons.forEach(id => {
-            const btn = document.getElementById(id);
-            if (btn) btn.disabled = disabled;
-        });
-        importLabels.forEach(id => {
-            const label = document.getElementById(id);
-            if (label) {
-                if (disabled) {
-                    label.classList.add('opacity-50', 'cursor-not-allowed');
-                } else {
-                    label.classList.remove('opacity-50', 'cursor-not-allowed');
+        console.log("Global State Change: Refreshing all views for trimester", value);
+
+        // Re-render all data-dependent views
+        setTimeout(() => {
+            if (window.renderStudents) window.renderStudents();
+            if (window.renderAssignments) window.renderAssignments();
+            if (window.renderSummary) window.renderSummary();
+            if (window.loadGradeSelectors) window.loadGradeSelectors();
+            if (window.renderExportPrep) window.renderExportPrep();
+            
+            // Update import buttons status
+            const academicYear = localStorage.getItem('corrections-global-academic-year');
+            const disabled = !academicYear || !value;
+            const importButtons = ['student-import', 'json-import'];
+            const importLabels = ['student-import-label', 'json-import-label'];
+            
+            importButtons.forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) btn.disabled = disabled;
+            });
+            importLabels.forEach(id => {
+                const label = document.getElementById(id);
+                if (label) {
+                    if (disabled) label.classList.add('opacity-50', 'cursor-not-allowed');
+                    else label.classList.remove('opacity-50', 'cursor-not-allowed');
                 }
-            }
-        });
-        // Re-render all tabs to apply the filter
-        if (window.renderStudents) window.renderStudents();
-        if (window.renderAssignments) window.renderAssignments();
-        if (window.renderSummary) window.renderSummary();
-        if (window.loadGradeSelectors) window.loadGradeSelectors();
-        if (window.renderExportPrep) window.renderExportPrep();
+            });
+        }, 0);
     };
 
     window.getGlobalAcademicYear = function() {
