@@ -319,8 +319,7 @@
             if (firstNameInput) firstNameInput.value = student.firstName || '';
             if (ninInput) ninInput.value = student.nin || '';
 
-            const academicYearSelect = document.getElementById('student-academic-year');
-            if (academicYearSelect) academicYearSelect.value = student.academicYear || '';
+
 
             if (classSelect) {
                 if (student.className && Array.from(classSelect.options).some(o => o.value === student.className)) {
@@ -354,9 +353,7 @@
             if (newClassInput) newClassInput.classList.add('hidden');
             if (classSelect) classSelect.value = '';
 
-            // Pre-fill academic year with global value
-            const globalAcademicYear = window.getGlobalAcademicYear();
-            if (academicYearSelect) academicYearSelect.value = globalAcademicYear;
+
         }
 
         if (lastNameInput) lastNameInput.focus();
@@ -381,7 +378,7 @@
             className = document.getElementById('student-class-new').value.trim();
         }
 
-        const academicYear = document.getElementById('student-academic-year').value.trim();
+        const academicYear = window.getGlobalAcademicYear();
 
         const nin = document.getElementById('student-nin').value.trim();
 
