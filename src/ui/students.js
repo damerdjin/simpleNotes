@@ -438,6 +438,7 @@
         const selectedClass = filterSelect ? filterSelect.value : (studentsUiState.selectedClass || '');
         const data = getData();
 
+        const globalUserId = window.currentUser?.email || window.currentUser?.id || 'unknown';
         const globalAcademicYear = window.getGlobalAcademicYear();
         if (!globalAcademicYear) {
             container.innerHTML = `<p class="text-gray-500 text-center py-8">${t.selectAcademicYear || 'Veuillez sélectionner une année scolaire.'}</p>`;
@@ -447,11 +448,8 @@
         }
 
         let filteredStudents = data.students.slice();
-                // Filter by user
-        const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
-        filteredStudents = filteredStudents.filter(s => (s.importedBy || 'unknown') === userId);
-        // Filter by global academic year
-        filteredStudents = filteredStudents.filter(s => (s.academicYear || '') === globalAcademicYear);
+        // Filter by user and global academic year
+        filteredStudents = filteredStudents.filter(s => (s.importedBy || 'unknown') === globalUserId && (s.academicYear || '') === globalAcademicYear);
         if (selectedClass) {
             filteredStudents = filteredStudents.filter(s => (s.className || '') === selectedClass);
         }
