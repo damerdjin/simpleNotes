@@ -661,7 +661,8 @@
 
                     // --- CORRECTION 1 : LOGIQUE DE RECHERCHE AMÉLIORÉE ---
                     const currentUserId = window.currentUser?.email || window.currentUser?.id || 'unknown';
-                    const userStudents = data.students.filter(s => (s.importedBy || 'unknown') === currentUserId);
+                    const currentAcademicYear = window.getGlobalAcademicYear();
+                    const userStudents = data.students.filter(s => (s.importedBy || 'unknown') === currentUserId && (s.academicYear || '') === currentAcademicYear);
                     let existing = null;
 
                     // 0. Priorité absolue : Mapping manuel du Wizard
