@@ -674,6 +674,21 @@
                     document.getElementById('current-user-info').textContent = user.email || user.id;
                     document.body.style.display = 'block';
                     if (window.translatePage) window.translatePage();
+
+                    // User menu toggle
+                    document.getElementById('user-menu-button').addEventListener('click', () => {
+                        const menu = document.getElementById('user-menu');
+                        menu.classList.toggle('hidden');
+                    });
+
+                    // Close menu on outside click
+                    document.addEventListener('click', (e) => {
+                        const button = document.getElementById('user-menu-button');
+                        const menu = document.getElementById('user-menu');
+                        if (!button.contains(e.target) && !menu.contains(e.target)) {
+                            menu.classList.add('hidden');
+                        }
+                    });
                 }
             } catch (err) {
                 console.error('Auth error:', err);
@@ -693,14 +708,21 @@
                     <h1 class="text-3xl font-bold">📝 Gestion des Corrections</h1>
                     <p class="text-blue-100 mt-2">Gérez vos élèves, devoirs et notes en toute simplicité</p>
                 </div>
-                <div class="flex items-center gap-4">
-                    <div class="text-white text-sm bg-black/20 px-3 py-2 rounded-lg">
-                        <span class="font-semibold" data-translate="loggedInAs">Connecté en tant que :</span> <span id="current-user-info" class="ml-2"></span>
-                    </div>
-                    <button onclick="handleLogout()"
-                        class="px-3 py-1 rounded-lg font-semibold transition-all bg-red-500 text-white hover:bg-red-600" title="Déconnexion">
-                        Logout
+                <div class="relative">
+                    <button id="user-menu-button" class="text-white bg-black/20 px-3 py-2 rounded-lg flex items-center gap-2 hover:bg-black/30 transition">
+                        <span id="current-user-info"></span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
                     </button>
+                    <div id="user-menu" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-50 hidden">
+                        <button onclick="handleLogout()" class="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                            </svg>
+                            Logout
+                        </button>
+                    </div>
                 </div>
             </div>
         </header>
