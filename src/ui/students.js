@@ -123,10 +123,10 @@
             const active = c === selected;
             const color = typeof window.getClassColor === 'function' ? window.getClassColor(c) : '#3b82f6';
             return `
-                <button onclick="setStudentsSelectedClass('${c}')" class="class-list-item ${active ? 'active' : ''}">
-                    <div class="flex items-center gap-2 min-w-0">
+                <button onclick="setStudentsSelectedClass('${c}')" class="class-list-item ${active ? 'active' : ''}" title="${c}">
+                    <div class="flex items-center gap-2 min-w-0 flex-1">
                         <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:${color}"></span>
-                        <div class="class-list-item-name truncate">${c}</div>
+                        <div class="class-list-item-name">${c}</div>
                     </div>
                     <span class="class-list-item-count">${count}</span>
                 </button>
@@ -238,8 +238,8 @@
                         <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold shadow-sm" style="background: ${color}">
                             ${c.substring(0, 1).toUpperCase()}
                         </div>
-                        <div class="min-w-0">
-                            <div class="font-bold text-slate-800 truncate">${c}</div>
+                        <div class="min-w-0 flex-1">
+                            <div class="font-bold text-slate-800 leading-tight" title="${c}">${c}</div>
                             <div class="text-xs font-semibold text-slate-500">${count} ${t.students}</div>
                         </div>
                     </div>
@@ -651,7 +651,6 @@
             container.innerHTML = `<p class="text-gray-500 text-center py-8">${t.noResults}</p>`;
         } else {
             const items = pageStudents.map((s, i) => {
-            const studentIndex = start + i + 1;
             const first = (s.firstName || '').trim();
             const last = (s.lastName || '').trim();
             const displayName = (s.name || `${last} ${first}`).trim();
@@ -666,12 +665,11 @@
 
             return `
     <div class="student-item">
-        <div class="student-index-badge">${studentIndex}</div>
         <div class="student-level ${levelClass}" title="Niveau">${level}</div>
         <div class="student-info">
             <div class="student-name">${displayName}</div>
             <div class="student-meta">
-                ${s.className ? `<span class="student-chip class">🏷️ ${cleanClassName(s.className)}</span>` : ''}
+                ${s.className ? `<span class="student-chip class" title="${s.className}">🏷️ ${cleanClassName(s.className)}</span>` : ''}
                 ${birth ? `<span class="student-chip birth">🎂 ${birth}</span>` : ''}
             </div>
             <button onclick="viewStudentGrades('${s.id}')" class="view-grades-btn">
