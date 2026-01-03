@@ -20,7 +20,7 @@
         const classes = new Set();
         const globalAcademicYear = window.getGlobalAcademicYear();
         (getData().students || []).forEach(s => {
-            if (s.className && (!globalAcademicYear || s.academicYear === globalAcademicYear)) {
+            if (s.className && globalAcademicYear && s.academicYear === globalAcademicYear) {
                 classes.add(s.className);
             }
         });
@@ -90,6 +90,12 @@
         const t = getTranslations()[getLang()];
         const container = document.getElementById('students-class-list') || document.getElementById('class-list');
         if (!container) return;
+
+        const globalAcademicYear = window.getGlobalAcademicYear();
+        if (!globalAcademicYear) {
+            container.innerHTML = `<p class="text-gray-500 text-sm">${t.selectAcademicYear || 'Veuillez sélectionner une année scolaire.'}</p>`;
+            return;
+        }
 
         const search = (document.getElementById('students-class-search')?.value || '').toLowerCase();
         const classes = window.getClasses().filter(c => c.toLowerCase().includes(search));
@@ -431,6 +437,14 @@
         const selectedClass = filterSelect ? filterSelect.value : (studentsUiState.selectedClass || '');
         const data = getData();
 
+        const globalAcademicYear = window.getGlobalAcademicYear();
+        if (!globalAcademicYear) {
+            container.innerHTML = `<p class="text-gray-500 text-center py-8">${t.selectAcademicYear || 'Veuillez sélectionner une année scolaire.'}</p>`;
+            const pagination = document.getElementById('students-pagination');
+            if (pagination) pagination.innerHTML = '';
+            return;
+        }
+
         let filteredStudents = data.students.slice();
         if (selectedClass) {
             filteredStudents = filteredStudents.filter(s => (s.className || '') === selectedClass);
@@ -442,11 +456,7 @@
             });
         }
 
-        // Apply global academic year filter
-        const globalAcademicYear = window.getGlobalAcademicYear();
-        if (globalAcademicYear) {
-            filteredStudents = filteredStudents.filter(s => (s.academicYear || '') === globalAcademicYear);
-        }
+
 
         if (data.students.length === 0) {
             container.className = '';
