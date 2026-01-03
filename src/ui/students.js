@@ -392,8 +392,9 @@
 
         const name = (lastName + ' ' + firstName).trim();
 
-        // Check for duplicate student in the same class
-        if (!editingStudentId && data.students.some(s => s.name === name && s.className === className)) {
+        // Check for duplicate student in the same class, for the current user and academic year
+        const currentUserId = window.currentUser?.email || window.currentUser?.id || 'unknown';
+        if (!editingStudentId && data.students.some(s => s.name === name && s.className === className && (s.importedBy || 'unknown') === currentUserId && (s.academicYear || '') === academicYear)) {
             return alert(t.studentAlreadyExists);
         }
 
@@ -406,12 +407,13 @@
                 student.name = name;
                 student.className = className;
                 student.academicYear = academicYear;
+                // Preserve importedBy
                 if (nin) student.nin = nin; // Only update if provided
                 // Preserve other fields like grades (linked by ID), sex, birthDate, etc.
             }
         } else {
             // CREATE
-            data.students.push({ id: genId(), name, className, academicYear, nin: nin || genId(), firstName, lastName });
+            data.students.push({ id: genId(), name, className, academicYear, nin: nin || genId(), firstName, lastName, importedBy: window.currentUser?.email || window.currentUser?.id || 'unknown' });
         }
 
         saveData();
