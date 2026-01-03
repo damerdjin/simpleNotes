@@ -366,8 +366,9 @@
         const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
         filteredAssignments = filteredAssignments.filter(a => (a.createdBy || 'unknown') === userId);
         // Filter by global academic year
-        if (globalAcademicYear) {
-            filteredAssignments = filteredAssignments.filter(a => (a.academicYear || '') === globalAcademicYear);
+        const currentGlobalAcademicYear = window.getGlobalAcademicYear();
+        if (currentGlobalAcademicYear) {
+            filteredAssignments = filteredAssignments.filter(a => (a.academicYear || '') === currentGlobalAcademicYear);
         }
         if (selectedClass) {
             filteredAssignments = filteredAssignments.filter(a => a.className === selectedClass);
