@@ -25,7 +25,12 @@
 
     // Expose functions
     window.toggleExerciseCollapse = function(index) {
-        collapsedExercises[index] = !collapsedExercises[index];
+        // If undefined, it means it's currently collapsed (default state)
+        if (collapsedExercises[index] === undefined) {
+            collapsedExercises[index] = false; // Set to NOT collapsed (open)
+        } else {
+            collapsedExercises[index] = !collapsedExercises[index];
+        }
         window.renderExercisesBuilder();
     };
     window.toggleAssignmentClassFilter = function(className) {
@@ -341,12 +346,23 @@
              return;
         }
 
+        // Sort: Open exercises first, then closed. Keep original numerical order within each group.
+        const exercisesWithIndex = window.tempExercises.map((ex, idx) => ({ 
+            ex, 
+            i: idx, 
+            isCollapsed: collapsedExercises[idx] !== false // Default is collapsed
+        }));
+
+        const openExs = exercisesWithIndex.filter(item => !item.isCollapsed);
+        const closedExs = exercisesWithIndex.filter(item => item.isCollapsed);
+        const sortedItems = [...openExs, ...closedExs];
+
         container.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">` + 
-        window.tempExercises.map((ex, i) => {
+        sortedItems.map((item) => {
+            const { ex, i, isCollapsed } = item;
             ex.parts = ex.parts || [];
             ex.questions = ex.questions || [];
             const exerciseTotal = getExerciseMaxPoints(ex);
-            const isCollapsed = collapsedExercises[i];
 
             // Check if exercise is complex (has parts or any question has sub-questions)
             const hasSubQs = (qs) => qs && qs.some(q => q.subQuestions && q.subQuestions.length > 0);
@@ -368,12 +384,13 @@
                     <span class="font-bold text-blue-900 uppercase tracking-wide text-xs">${t.exercise}</span>
                 </div>
                 
-                <div class="flex-1 min-w-[200px]" onclick="event.stopPropagation()">
+                <div class="w-24 sm:w-32" onclick="event.stopPropagation()">
                     <input type="text" 
-                           placeholder="${t.exerciseName}" 
+                           placeholder="${t.exerciseNameAbbr || 'Nom'}" 
                            value="${ex.name || ''}" 
                            onchange="window.tempExercises[${i}].name = this.value"
-                           class="w-full p-2 border-2 border-white focus:border-blue-400 rounded-lg text-sm font-semibold bg-white/80 focus:bg-white outline-none transition-all">
+                           class="w-full p-1.5 border border-blue-200 focus:border-blue-400 rounded-lg text-[11px] font-medium bg-white/50 focus:bg-white outline-none transition-all"
+                           title="${t.exerciseName}">
                 </div>
                 
                 <div class="flex items-center gap-3 ml-auto rtl:mr-auto rtl:ml-0">
@@ -472,6 +489,9 @@
         window.tempExercises.forEach((_, idx) => {
             collapsedExercises[idx] = true;
         });
+
+        const newIndex = window.tempExercises.length;
+        collapsedExercises[newIndex] = false; // The new exercise should be open
 
         window.tempExercises.push({
             id: genId(),
