@@ -370,6 +370,12 @@
         if (currentGlobalAcademicYear) {
             filteredAssignments = filteredAssignments.filter(a => (a.academicYear || '') === currentGlobalAcademicYear);
         }
+
+        // Filter by global trimester
+        const currentGlobalTrimester = window.getGlobalTrimester();
+        if (currentGlobalTrimester) {
+            filteredAssignments = filteredAssignments.filter(a => (a.trimester || '') === currentGlobalTrimester);
+        }
         if (selectedClass) {
             filteredAssignments = filteredAssignments.filter(a => a.className === selectedClass);
         } else {
