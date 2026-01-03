@@ -1479,31 +1479,152 @@
     </div>
 
     <!-- Student Modal -->
-    <div id="student-modal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-50">
-        <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
-            <h3 class="text-xl font-bold mb-4" data-translate="addStudentTitle">Ajouter un élève</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                <input type="text" id="student-lastname" placeholder="Nom" data-translate-placeholder="lastName" class="w-full p-3 border rounded-lg">
-                <input type="text" id="student-firstname" placeholder="Prénom" data-translate-placeholder="firstName" class="w-full p-3 border rounded-lg">
-                <div>
-                    <select id="student-class-select" class="w-full p-3 border rounded-lg bg-white" onchange="if(this.value==='__new__'){document.getElementById('student-class-new').classList.remove('hidden');document.getElementById('student-class-new').focus();}else{document.getElementById('student-class-new').classList.add('hidden');}">
-                        <option value="" data-translate="classNameOption">-- Classe --</option>
-                    </select>
-                    <input type="text" id="student-class-new" placeholder="Nouvelle classe" data-translate-placeholder="newClassPlaceholder" class="w-full p-3 border rounded-lg mt-2 hidden">
+    <div id="student-modal" class="modal fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 opacity-0 pointer-events-none transition-all duration-300">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden transform scale-95 transition-all duration-300 flex flex-col max-h-[90vh]">
+            <!-- Header -->
+            <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-white to-gray-50 shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-green-50 text-green-600 rounded-xl flex items-center justify-center shadow-sm">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800 leading-tight" data-translate="addStudentTitle">Ajouter un élève</h3>
+                        <p class="text-xs text-gray-500 font-medium uppercase tracking-wider mt-0.5" data-translate="studentInfo">Détails de l'élève</p>
+                    </div>
+                </div>
+                <button onclick="closeStudentModal()" class="p-2 hover:bg-gray-100 rounded-xl transition-colors text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <!-- Scrollable Content -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                <!-- UI Error Zone -->
+                <div id="student-modal-error" class="hidden animate-in slide-in-from-top-4 duration-300">
+                    <div class="flex items-start gap-3 p-4 bg-red-50 border-2 border-red-100 rounded-2xl text-red-700 shadow-sm">
+                        <div class="p-2 bg-red-100 rounded-lg text-red-600 shrink-0">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        </div>
+                        <div class="flex-1 pt-1 font-bold text-sm leading-relaxed" id="student-modal-error-text"></div>
+                        <button onclick="document.getElementById('student-modal-error').classList.add('hidden')" class="p-1 hover:bg-red-200/50 rounded-lg transition-colors text-red-400">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
                 </div>
 
-                <select id="student-academic-year" class="w-full p-3 border rounded-lg bg-white">
-        <option value="" data-translate="academicYearOption">-- Année scolaire --</option>
-        <option value="2025/2026">2025/2026</option>
-        <option value="2024/2025">2024/2025</option>
-    </select>
-    <input type="text" id="student-nin" placeholder="NIN (auto-généré)" data-translate-placeholder="nin" class="w-full p-3 border rounded-lg">
+                <!-- Personal Info Card -->
+                <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-5">
+                    <div class="flex items-center gap-2 mb-1">
+                        <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                        </div>
+                        <h4 class="font-bold text-gray-800 text-sm uppercase tracking-wider" data-translate="personalInfo">Identité</h4>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <!-- Last Name -->
+                        <div class="relative group">
+                            <label class="absolute -top-2.5 left-3 px-1.5 bg-white text-xs font-bold text-gray-400 group-focus-within:text-blue-600 transition-colors z-10" data-translate="lastName">Nom</label>
+                            <div class="flex items-center border-2 border-gray-100 rounded-xl group-focus-within:border-blue-500/30 group-focus-within:ring-4 group-focus-within:ring-blue-500/10 transition-all bg-gray-50/30 group-focus-within:bg-white overflow-hidden">
+                                <div class="pl-4 text-gray-400 group-focus-within:text-blue-500 transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                </div>
+                                <input type="text" id="student-lastname" placeholder="Ex: Benali" data-translate-placeholder="lastNamePlaceholder" class="w-full p-3 bg-transparent font-bold text-gray-700 outline-none">
+                            </div>
+                        </div>
+
+                        <!-- First Name -->
+                        <div class="relative group">
+                            <label class="absolute -top-2.5 left-3 px-1.5 bg-white text-xs font-bold text-gray-400 group-focus-within:text-blue-600 transition-colors z-10" data-translate="firstName">Prénom</label>
+                            <div class="flex items-center border-2 border-gray-100 rounded-xl group-focus-within:border-blue-500/30 group-focus-within:ring-4 group-focus-within:ring-blue-500/10 transition-all bg-gray-50/30 group-focus-within:bg-white overflow-hidden">
+                                <div class="pl-4 text-gray-400 group-focus-within:text-blue-500 transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                </div>
+                                <input type="text" id="student-firstname" placeholder="Ex: Ahmed" data-translate-placeholder="firstNamePlaceholder" class="w-full p-3 bg-transparent font-bold text-gray-700 outline-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NIN -->
+                    <div class="relative group">
+                        <label class="absolute -top-2.5 left-3 px-1.5 bg-white text-xs font-bold text-gray-400 group-focus-within:text-blue-600 transition-colors z-10" data-translate="nin">NIN</label>
+                        <div class="flex items-center border-2 border-gray-100 rounded-xl group-focus-within:border-blue-500/30 group-focus-within:ring-4 group-focus-within:ring-blue-500/10 transition-all bg-gray-50/30 group-focus-within:bg-white overflow-hidden">
+                            <div class="pl-4 text-gray-400 group-focus-within:text-blue-500 transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path></svg>
+                            </div>
+                            <input type="text" id="student-nin" placeholder="NIN (auto-généré)" data-translate-placeholder="ninPlaceholder" class="w-full p-3 bg-transparent font-bold text-gray-700 outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Academic Info Card -->
+                <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-5">
+                    <div class="flex items-center gap-2 mb-1">
+                        <div class="w-8 h-8 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                        </div>
+                        <h4 class="font-bold text-gray-800 text-sm uppercase tracking-wider" data-translate="academicInfo">Scolarité</h4>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <!-- Class Select -->
+                        <div class="relative group">
+                            <label class="absolute -top-2.5 left-3 px-1.5 bg-white text-xs font-bold text-gray-400 group-focus-within:text-emerald-600 transition-colors z-10" data-translate="class">Classe</label>
+                            <div class="flex items-center border-2 border-gray-100 rounded-xl group-focus-within:border-emerald-500/30 group-focus-within:ring-4 group-focus-within:ring-emerald-500/10 transition-all bg-gray-50/30 group-focus-within:bg-white overflow-hidden">
+                                <div class="pl-4 text-gray-400 group-focus-within:text-emerald-500 transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                </div>
+                                <select id="student-class-select" onchange="if(this.value==='__new__'){document.getElementById('student-class-new-container').classList.remove('hidden');document.getElementById('student-class-new').focus();}else{document.getElementById('student-class-new-container').classList.add('hidden');}" class="w-full p-3 bg-transparent font-bold text-gray-700 outline-none appearance-none cursor-pointer">
+                                    <option value="" data-translate="classNameOption">-- Sélectionner --</option>
+                                </select>
+                                <div class="pr-4 pointer-events-none text-gray-400">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Academic Year -->
+                        <div class="relative group">
+                            <label class="absolute -top-2.5 left-3 px-1.5 bg-white text-xs font-bold text-gray-400 group-focus-within:text-emerald-600 transition-colors z-10" data-translate="academicYear">Année Scolaire</label>
+                            <div class="flex items-center border-2 border-gray-100 rounded-xl group-focus-within:border-emerald-500/30 group-focus-within:ring-4 group-focus-within:ring-emerald-500/10 transition-all bg-gray-50/30 group-focus-within:bg-white overflow-hidden">
+                                <div class="pl-4 text-gray-400 group-focus-within:text-emerald-500 transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                </div>
+                                <select id="student-academic-year" class="w-full p-3 bg-transparent font-bold text-gray-700 outline-none appearance-none cursor-pointer">
+                                    <option value="" data-translate="academicYearOption">-- Sélectionner --</option>
+                                    <option value="2025/2026">2025/2026</option>
+                                    <option value="2024/2025">2024/2025</option>
+                                </select>
+                                <div class="pr-4 pointer-events-none text-gray-400">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- New Class Input (Hidden by default) -->
+                    <div id="student-class-new-container" class="relative group hidden animate-in zoom-in-95 duration-200">
+                        <label class="absolute -top-2.5 left-3 px-1.5 bg-white text-xs font-bold text-gray-400 group-focus-within:text-emerald-600 transition-colors z-10" data-translate="newClass">Nouvelle Classe</label>
+                        <div class="flex items-center border-2 border-emerald-100 rounded-xl group-focus-within:border-emerald-500/30 group-focus-within:ring-4 group-focus-within:ring-emerald-500/10 transition-all bg-emerald-50/10 group-focus-within:bg-white overflow-hidden">
+                            <div class="pl-4 text-emerald-400">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                            </div>
+                            <input type="text" id="student-class-new" placeholder="Nom de la nouvelle classe" data-translate-placeholder="newClassPlaceholder" class="w-full p-3 bg-transparent font-bold text-gray-700 outline-none">
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="flex gap-3 justify-end">
+
+            <!-- Footer -->
+            <div class="px-6 py-5 border-t border-gray-100 bg-gray-50/50 flex gap-3 justify-end shrink-0">
                 <button onclick="closeStudentModal()" data-translate="cancel"
-                    class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">Annuler</button>
+                    class="px-6 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-all">
+                    Annuler
+                </button>
                 <button onclick="addStudent()" data-translate="add"
-                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Ajouter</button>
+                    class="px-8 py-2.5 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-lg shadow-blue-500/20 transition-all active:scale-95">
+                    Ajouter
+                </button>
             </div>
         </div>
     </div>

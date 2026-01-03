@@ -279,12 +279,43 @@
 
     // ===== STUDENTS =====
     let editingStudentId = null;
+    let studentErrorTimeout = null;
+
+    window.showStudentError = function(message) {
+        const errorZone = document.getElementById('student-modal-error');
+        const errorText = document.getElementById('student-modal-error-text');
+        if (errorZone && errorText) {
+            if (studentErrorTimeout) clearTimeout(studentErrorTimeout);
+            
+            errorText.textContent = message;
+            errorZone.classList.remove('hidden');
+            
+            // Scroll to top of modal
+            errorZone.closest('.overflow-y-auto').scrollTo({ top: 0, behavior: 'smooth' });
+
+            studentErrorTimeout = setTimeout(() => {
+                errorZone.classList.add('hidden');
+                studentErrorTimeout = null;
+            }, 5000);
+        }
+    };
 
     window.openStudentModal = function(studentId = null) {
         const modal = document.getElementById('student-modal');
         const t = getTranslations()[getLang()];
         
-        if (modal) modal.classList.add('active');
+        // Reset error zone
+        const errorZone = document.getElementById('student-modal-error');
+        if (errorZone) errorZone.classList.add('hidden');
+        if (studentErrorTimeout) clearTimeout(studentErrorTimeout);
+
+        if (modal) {
+            modal.classList.add('active');
+            modal.classList.remove('pointer-events-none', 'opacity-0');
+            modal.classList.add('opacity-100');
+            modal.querySelector('div').classList.remove('scale-95');
+            modal.querySelector('div').classList.add('scale-100');
+        }
         
         // Find elements
         const titleEl = modal.querySelector('h3');
@@ -294,11 +325,12 @@
         const ninInput = document.getElementById('student-nin');
         const classSelect = document.getElementById('student-class-select');
         const newClassInput = document.getElementById('student-class-new');
-
-        // Reset class selector first to ensure options are loaded
+        const newClassContainer = document.getElementById('student-class-new-container');
+        
+        // Load classes into select
         if (classSelect) {
-            const classes = window.getClasses();
-            let html = `<option value="">-- ${t.selectClass} --</option>`;
+            const classes = window.getClasses ? window.getClasses() : [];
+            let html = `<option value="">-- ${t.classNameOption || '--'} --</option>`;
             classes.forEach(c => {
                 html += `<option value="${c}">${c}</option>`;
             });
@@ -309,28 +341,31 @@
         if (studentId) {
             // EDIT MODE
             editingStudentId = studentId;
-            const student = getData().students.find(s => s.id === studentId);
-            if (!student) return window.closeStudentModal();
+            const data = getData();
+            const student = data.students.find(s => s.id === studentId);
+            
+            if (student) {
+                if (titleEl) titleEl.textContent = t.editStudentTitle || 'Modifier l\'élève';
+                if (btnAdd) btnAdd.textContent = t.save || 'Enregistrer';
 
-            if (titleEl) titleEl.textContent = t.editStudentTitle;
-            if (btnAdd) btnAdd.textContent = t.save;
+                // Fill inputs
+                const nameParts = student.name.split(' ');
+                if (lastNameInput) lastNameInput.value = nameParts[0] || '';
+                if (firstNameInput) firstNameInput.value = nameParts.slice(1).join(' ') || '';
+                if (ninInput) ninInput.value = student.nin || '';
 
-            if (lastNameInput) lastNameInput.value = student.lastName || '';
-            if (firstNameInput) firstNameInput.value = student.firstName || '';
-            if (ninInput) ninInput.value = student.nin || '';
-
-
-
-            if (classSelect) {
-                if (student.className && Array.from(classSelect.options).some(o => o.value === student.className)) {
-                    classSelect.value = student.className;
-                    if (newClassInput) newClassInput.classList.add('hidden');
-                } else {
-                    // Class not in list (should not happen usually, but handle it)
-                    classSelect.value = '__new__';
-                    if (newClassInput) {
-                        newClassInput.classList.remove('hidden');
-                        newClassInput.value = student.className || '';
+                // Handle Class Select
+                if (classSelect) {
+                    const optionExists = Array.from(classSelect.options).some(opt => opt.value === student.className);
+                    if (optionExists) {
+                        classSelect.value = student.className;
+                        if (newClassContainer) newClassContainer.classList.add('hidden');
+                    } else {
+                        classSelect.value = '__new__';
+                        if (newClassContainer) {
+                            newClassContainer.classList.remove('hidden');
+                            if (newClassInput) newClassInput.value = student.className || '';
+                        }
                     }
                 }
             }
@@ -341,7 +376,7 @@
             if (btnAdd) btnAdd.textContent = t.add;
 
             // Reset inputs
-            const inputs = ['student-lastname', 'student-firstname', 'student-class-new'];
+            const inputs = ['student-lastname', 'student-firstname', 'student-class-new', 'student-nin'];
             inputs.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.value = '';
@@ -350,15 +385,13 @@
             // Auto-generate NIN as a long number
             if (ninInput) ninInput.value = (1000 + Date.now()).toString();
 
-            if (newClassInput) newClassInput.classList.add('hidden');
+            if (newClassContainer) newClassContainer.classList.add('hidden');
             if (classSelect) classSelect.value = '';
 
             // Pre-fill academic year with global value
             const globalAcademicYear = window.getGlobalAcademicYear();
             const academicYearSelect = document.getElementById('student-academic-year');
             if (academicYearSelect) academicYearSelect.value = globalAcademicYear;
-
-
         }
 
         if (lastNameInput) lastNameInput.focus();
@@ -366,7 +399,13 @@
 
     window.closeStudentModal = function() {
         const modal = document.getElementById('student-modal');
-        if (modal) modal.classList.remove('active');
+        if (modal) {
+            modal.classList.remove('active');
+            modal.classList.add('pointer-events-none', 'opacity-0');
+            modal.classList.remove('opacity-100');
+            modal.querySelector('div').classList.add('scale-95');
+            modal.querySelector('div').classList.remove('scale-100');
+        }
         editingStudentId = null;
     };
 
@@ -376,6 +415,10 @@
         const lastName = document.getElementById('student-lastname').value.trim();
         const firstName = document.getElementById('student-firstname').value.trim();
         
+        // Hide error zone first
+        const errorZone = document.getElementById('student-modal-error');
+        if (errorZone) errorZone.classList.add('hidden');
+
         // Handle Class Selection
         const classSelect = document.getElementById('student-class-select');
         let className = classSelect.value;
@@ -384,19 +427,24 @@
         }
 
         const academicYear = document.getElementById('student-academic-year').value.trim() || window.getGlobalAcademicYear();
-
         const nin = document.getElementById('student-nin').value.trim();
 
-        if (!lastName && !firstName) return alert(t.enterName);
-        if (!className) return alert(t.enterClass);
+        if (!lastName && !firstName) return window.showStudentError(t.enterName);
+        if (!className) return window.showStudentError(t.enterClass);
 
         const name = (lastName + ' ' + firstName).trim();
 
         // Check for duplicate student in the same class, for the current user and academic year
         const currentUserId = window.currentUser?.email || window.currentUser?.id || 'unknown';
-        if (!editingStudentId && data.students.some(s => s.name === name && s.className === className && (s.importedBy || 'unknown') === currentUserId && (s.academicYear || '') === academicYear)) {
-            return alert(t.studentAlreadyExists);
-        }
+        const duplicate = data.students.find(s => 
+            s.name.toLowerCase() === name.toLowerCase() && 
+            s.className === className && 
+            s.academicYear === academicYear &&
+            (s.importedBy || 'unknown') === currentUserId &&
+            s.id !== editingStudentId
+        );
+
+        if (duplicate) return window.showStudentError(t.duplicateStudent || 'Cet élève existe déjà dans cette classe.');
 
         if (editingStudentId) {
             // UPDATE
