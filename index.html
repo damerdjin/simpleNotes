@@ -671,6 +671,7 @@
                 const user = await checkAuth();
                 if (user) {
                     window.currentUser = user;
+                    document.getElementById('current-user-info').textContent = user.email || user.id;
                     document.body.style.display = 'block';
                 }
             } catch (err) {
@@ -691,9 +692,12 @@
                     <h1 class="text-3xl font-bold">📝 Gestion des Corrections</h1>
                     <p class="text-blue-100 mt-2">Gérez vos élèves, devoirs et notes en toute simplicité</p>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex items-center gap-4">
+                    <div class="text-white text-sm bg-black/20 px-3 py-2 rounded-lg">
+                        <span class="font-semibold">Connecté en tant que :</span> <span id="current-user-info" class="ml-2"></span>
+                    </div>
                     <button onclick="handleLogout()"
-                        class="px-3 py-1 rounded-lg font-semibold transition-all bg-red-500 text-white hover:bg-red-600 ml-2" title="Déconnexion">
+                        class="px-3 py-1 rounded-lg font-semibold transition-all bg-red-500 text-white hover:bg-red-600" title="Déconnexion">
                         Logout
                     </button>
                 </div>
