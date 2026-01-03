@@ -189,6 +189,25 @@
         }
     };
 
+    window.initSidebarCollapse = function() {
+        const toggleBtn = document.getElementById('sidebar-toggle');
+        const body = document.body;
+        
+        // Restore state
+        const stored = localStorage.getItem('sidebar-collapsed');
+        if (stored === 'true') {
+            body.classList.add('sidebar-collapsed');
+        }
+
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', () => {
+                body.classList.toggle('sidebar-collapsed');
+                const isCollapsed = body.classList.contains('sidebar-collapsed');
+                localStorage.setItem('sidebar-collapsed', isCollapsed);
+            });
+        }
+    };
+
     window.translateTabs = function() {
         const t = getTranslations()[getLang()];
         if (!t || !window.tabs) return;
