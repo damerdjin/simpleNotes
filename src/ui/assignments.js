@@ -653,7 +653,7 @@
         // Rendu compact avec Cards Modernes et Accordéon pour les détails
         container.innerHTML = filteredAssignments.map(a => {
             const totalPoints = gradesSvc().getAssignmentMaxPoints(a);
-            const classStudents = data.students.filter(s => s.className === a.className);
+            const classStudents = data.students.filter(s => s.className === a.className && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear);
             const nbStudents = classStudents.length;
             const nbGrades = classStudents.filter(s => window.hasAnyGradeForAssignment(s.id, a.id)).length;
             const completionRate = nbStudents > 0 ? Math.round((nbGrades / nbStudents) * 100) : 0;
