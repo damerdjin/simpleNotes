@@ -661,93 +661,117 @@
             return;
         }
 
-        // Rendu compact avec Cards Modernes et Accordéon pour les détails
-        container.innerHTML = filteredAssignments.map(a => {
-            const totalPoints = gradesSvc().getAssignmentMaxPoints(a);
-            const classStudents = data.students.filter(s => s.className === a.className && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear);
-            const nbStudents = classStudents.length;
-            const nbGrades = classStudents.filter(s => window.hasAnyGradeForAssignment(s.id, a.id)).length;
-            const completionRate = nbStudents > 0 ? Math.round((nbGrades / nbStudents) * 100) : 0;
+        // Grouper les devoirs par classe
+        const groupedByClass = filteredAssignments.reduce((groups, a) => {
+            const className = a.className || t.noClass;
+            if (!groups[className]) groups[className] = [];
+            groups[className].push(a);
+            return groups;
+        }, {});
 
-            return `
-            <div class="bg-white border rounded-xl overflow-hidden hover:shadow-md transition-all group flex flex-col h-full" style="flex-direction: column !important;">
-                <!-- En-tête de la carte (cliquable pour accordéon) -->
-                <div class="p-5 flex-1 cursor-pointer select-none" onclick="toggleAccordion('${a.id}')">
-                    <div class="flex items-start justify-between gap-4 mb-3">
-                        <div class="min-w-0 flex-1">
-                            <span class="inline-block px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-bold rounded uppercase tracking-wider mb-1">
-                                ${a.className || t.noClass} ${a.trimester ? ' - ' + t.trimesterShort + a.trimester : ''}
-                            </span>
-                            <h4 class="text-lg font-bold text-blue-600 leading-tight transition-colors truncate" title="${a.name}">
-                                ${a.name}
-                            </h4>
+        // Rendu des groupes
+        container.innerHTML = Object.entries(groupedByClass).map(([className, classAssignments]) => {
+            const assignmentsHTML = classAssignments.map(a => {
+                const totalPoints = gradesSvc().getAssignmentMaxPoints(a);
+                const classStudents = data.students.filter(s => s.className === a.className && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear);
+                const nbStudents = classStudents.length;
+                const nbGrades = classStudents.filter(s => window.hasAnyGradeForAssignment(s.id, a.id)).length;
+                const completionRate = nbStudents > 0 ? Math.round((nbGrades / nbStudents) * 100) : 0;
+
+                return `
+                <div class="bg-white border rounded-xl overflow-hidden hover:shadow-md transition-all group flex flex-col h-full">
+                    <!-- En-tête de la carte (cliquable pour accordéon) -->
+                    <div class="p-5 flex-1 cursor-pointer select-none" onclick="toggleAccordion('${a.id}')">
+                        <div class="flex items-start justify-between gap-4 mb-3">
+                            <div class="min-w-0 flex-1">
+                                <span class="inline-block px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-bold rounded uppercase tracking-wider mb-1">
+                                    ${a.trimester ? t.trimesterShort + a.trimester : ''}
+                                </span>
+                                <h4 class="text-lg font-bold text-blue-600 leading-tight transition-colors truncate" title="${a.name}">
+                                    ${a.name}
+                                </h4>
+                            </div>
+                            <span id="icon-${a.id}" class="rotate-icon text-gray-400 mt-1 shrink-0 transition-transform duration-200">▼</span>
                         </div>
-                        <span id="icon-${a.id}" class="rotate-icon text-gray-400 mt-1 shrink-0 transition-transform duration-200">▼</span>
+                        
+                        <div class="flex flex-wrap items-center gap-y-2 gap-x-4 text-sm text-gray-500">
+                            <div class="flex items-center gap-1.5" title="${t.totalPointsLabel}">
+                                <span class="text-pink-500">🎯</span> 
+                                <span class="font-semibold text-gray-700">${totalPoints}</span>
+                                <span class="text-gray-400 text-xs">${t.points}</span>
+                            </div>
+                            <div class="flex items-center gap-1.5" title="${t.progression}">
+                                <span class="text-indigo-500">📊</span>
+                                <span class="font-semibold text-gray-700">${nbGrades}/${nbStudents}</span>
+                                <span class="bg-gray-100 px-1.5 py-0.5 rounded text-[10px] font-bold text-gray-500">(${completionRate}%)</span>
+                            </div>
+                        </div>
                     </div>
                     
-                    <div class="flex flex-wrap items-center gap-y-2 gap-x-4 text-sm text-gray-500">
-                        <div class="flex items-center gap-1.5" title="${t.totalPointsLabel}">
-                            <span class="text-pink-500">🎯</span> 
-                            <span class="font-semibold text-gray-700">${totalPoints}</span>
-                            <span class="text-gray-400 text-xs">${t.points}</span>
-                        </div>
-                        <div class="flex items-center gap-1.5" title="${t.progression}">
-                            <span class="text-indigo-500">📊</span>
-                            <span class="font-semibold text-gray-700">${nbGrades}/${nbStudents}</span>
-                            <span class="bg-gray-100 px-1.5 py-0.5 rounded text-[10px] font-bold text-gray-500">(${completionRate}%)</span>
-                        </div>
+                    <!-- Barre d'actions -->
+                    <div class="px-4 py-3 bg-gray-50 border-t border-b flex items-center justify-end gap-3" onclick="event.stopPropagation()">
+                        <button onclick="openAssignmentModal('${a.id}')" class="p-1.5 text-orange-400 hover:bg-orange-50 rounded transition-colors" title="${t.edit}">
+                            <span class="text-lg">✏️</span>
+                        </button>
+                        <button onclick="duplicateAssignment('${a.id}')" class="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded transition-colors" title="${t.duplicate}">
+                            <span class="text-lg">⎘</span>
+                        </button>
+                        <button onclick="duplicateAssignment('${a.id}', true)" class="p-1.5 text-amber-600 hover:bg-amber-50 rounded transition-colors" title="${t.duplicateNotes}">
+                            <span class="text-lg">📋</span>
+                        </button>
+                        <button onclick="deleteAssignment('${a.id}')" class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors" title="${t.delete}">
+                            <span class="text-lg">🗑️</span>
+                        </button>
                     </div>
-                </div>
-                
-                <!-- Barre d'actions (Déplacée au milieu comme sur la capture) -->
-                <div class="px-4 py-3 bg-gray-50 border-t border-b flex items-center justify-end gap-3" onclick="event.stopPropagation()">
-                    <button onclick="openAssignmentModal('${a.id}')" class="p-1.5 text-orange-400 hover:bg-orange-50 rounded transition-colors" title="${t.edit}">
-                        <span class="text-lg">✏️</span>
-                    </button>
-                    <button onclick="duplicateAssignment('${a.id}')" class="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded transition-colors" title="${t.duplicate}">
-                        <span class="text-lg">⎘</span>
-                    </button>
-                    <button onclick="duplicateAssignment('${a.id}', true)" class="p-1.5 text-amber-600 hover:bg-amber-50 rounded transition-colors" title="${t.duplicateNotes}">
-                        <span class="text-lg">📋</span>
-                    </button>
-                    <button onclick="deleteAssignment('${a.id}')" class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors" title="${t.delete}">
-                        <span class="text-lg">🗑️</span>
-                    </button>
-                </div>
 
-                <!-- Accordéon Détails Exercices -->
-                <div id="accordion-${a.id}" class="accordion-content">
-                    <div class="p-4 space-y-3 bg-white text-sm">
-                        ${a.exercises.map((ex, i) => {
-                const parts = ex.parts || [];
-                const directQuestions = ex.questions || [];
-                let exContent = '';
-                if (directQuestions.length > 0) {
-                    exContent += `<div class="ml-4 rtl:mr-4 rtl:ml-0 text-gray-600 mt-2 flex flex-wrap gap-x-4 gap-y-1">${directQuestions.map(q => `<span class="inline-flex items-center text-sm text-gray-500"><span class="font-medium text-gray-700 mr-1 rtl:ml-1">${q.name || 'Q?'}:</span> ${gradesSvc().getQuestionMaxPoints(q)} ${t.points}</span>`).join('<span class="text-gray-300">•</span>')}</div>`;
-                }
-                if (parts.length > 0) {
-                    exContent += parts.map(part => `
-                                    <div class="ml-4 rtl:mr-4 rtl:ml-0 mt-2 border-l-2 border-purple-200 rtl:border-r-2 rtl:border-l-0 pl-3 rtl:pr-3 rtl:pl-0">
-                                        <div class="text-purple-600 font-medium mb-1">${part.name}</div>
-                                        <div class="text-gray-500 text-xs italic">
-                                            (${(part.questions || []).map(q => q.name || 'Q?').join(', ')})
+                    <!-- Accordéon Détails Exercices -->
+                    <div id="accordion-${a.id}" class="accordion-content">
+                        <div class="p-4 space-y-3 bg-white text-sm">
+                            ${a.exercises.map((ex, i) => {
+                                const parts = ex.parts || [];
+                                const directQuestions = ex.questions || [];
+                                let exContent = '';
+                                if (directQuestions.length > 0) {
+                                    exContent += `<div class="ml-4 rtl:mr-4 rtl:ml-0 text-gray-600 mt-2 flex flex-wrap gap-x-4 gap-y-1">${directQuestions.map(q => `<span class="inline-flex items-center text-sm text-gray-500"><span class="font-medium text-gray-700 mr-1 rtl:ml-1">${q.name || 'Q?'}:</span> ${gradesSvc().getQuestionMaxPoints(q)} ${t.points}</span>`).join('<span class="text-gray-300">•</span>')}</div>`;
+                                }
+                                if (parts.length > 0) {
+                                    exContent += parts.map(part => `
+                                        <div class="ml-4 rtl:mr-4 rtl:ml-0 mt-2 border-l-2 border-purple-200 rtl:border-r-2 rtl:border-l-0 pl-3 rtl:pr-3 rtl:pl-0">
+                                            <div class="text-purple-600 font-medium mb-1">${part.name}</div>
+                                            <div class="text-gray-500 text-xs italic">
+                                                (${(part.questions || []).map(q => q.name || 'Q?').join(', ')})
+                                            </div>
                                         </div>
+                                    `).join('');
+                                }
+                                return `
+                                    <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                                        <div class="flex justify-between items-center mb-1">
+                                            <strong class="text-gray-800 font-bold">${t.exercise} ${i + 1}${ex.name ? ' - ' + (ex.name === 'Global' ? t.globalMode : ex.name) : ''}</strong>
+                                            <span class="text-blue-600 font-bold text-sm">${gradesSvc().getExerciseMaxPoints(ex)} ${t.points}</span>
+                                        </div>
+                                        ${exContent}
                                     </div>
-                                `).join('');
-                }
-                return `
-                                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
-                                    <div class="flex justify-between items-center mb-1">
-                                        <strong class="text-gray-800 font-bold">${t.exercise} ${i + 1}${ex.name ? ' - ' + (ex.name === 'Global' ? t.globalMode : ex.name) : ''}</strong>
-                                        <span class="text-blue-600 font-bold text-sm">${gradesSvc().getExerciseMaxPoints(ex)} ${t.points}</span>
-                                    </div>
-                                    ${exContent}
-                                </div>
-                            `;
-            }).join('')}
+                                `;
+                            }).join('')}
+                        </div>
                     </div>
                 </div>
-            </div>`;
+                `;
+            }).join('');
+
+            return `
+            <div class="assignment-class-group">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="h-8 w-1.5 rounded-full" style="background-color: ${getClassColor(className)}"></div>
+                    <h3 class="text-xl font-bold text-gray-700">${className}</h3>
+                    <span class="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs font-bold rounded-full">${classAssignments.length}</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    ${assignmentsHTML}
+                </div>
+            </div>
+            `;
         }).join('');
         
         translatePage();
