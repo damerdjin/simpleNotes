@@ -49,10 +49,10 @@ window.translations = {
         trimester3: "Trimestre 3",
 
         // Navigation
-        studentsTab: "👥 Élèves",
-        assignmentsTab: "📋 Devoirs",
-        gradesTab: "🎯 Notes",
-        summaryTab: "📊 Récapitulatif",
+        studentsTab: "Élèves",
+        assignmentsTab: "Devoirs",
+        gradesTab: "Notes",
+        summaryTab: "Récapitulatif",
 
         // Étudiants
         studentsList: "Liste des Élèves",
@@ -254,7 +254,12 @@ window.translations = {
         messagesCount: "message(s)",
         searchSimple: "Rechercher...",
         noMessages: "Aucun message.",
-        deleteMessage: "Supprimer"
+        deleteMessage: "Supprimer",
+        configTitle: "Configuration",
+        configSubtitle: "Gérez vos données et les paramètres de l'application",
+        importData: "Importation",
+        exportData: "Exportation",
+        configNote: "Plus d'options de configuration seront ajoutées prochainement pour personnaliser votre expérience.",
     },
 
     // Anglais
@@ -308,10 +313,10 @@ window.translations = {
         trimester3: "Trimester 3",
 
         // Navigation
-        studentsTab: "👥 Students",
-        assignmentsTab: "📋 Assignments",
-        gradesTab: "🎯 Grades",
-        summaryTab: "📊 Summary",
+        studentsTab: "Students",
+        assignmentsTab: "Assignments",
+        gradesTab: "Grades",
+        summaryTab: "Summary",
 
         // Étudiants
         studentsList: "Students List",
@@ -513,7 +518,12 @@ window.translations = {
         messagesCount: "message(s)",
         searchSimple: "Search...",
         noMessages: "No messages.",
-        deleteMessage: "Delete"
+        deleteMessage: "Delete",
+        configTitle: "Settings",
+        configSubtitle: "Manage your data and application settings",
+        importData: "Import",
+        exportData: "Export",
+        configNote: "More configuration options will be added soon to customize your experience."
     },
 
     // Arabe
@@ -566,10 +576,10 @@ window.translations = {
         trimester3: "الثلاثي الثالث",
 
         // Navigation
-        studentsTab: "👥 الطلاب",
-        assignmentsTab: "📋 الواجبات",
-        gradesTab: "🎯 النقاط",
-        summaryTab: "📊 الملخص",
+        studentsTab: "الطلاب",
+        assignmentsTab: "الواجبات",
+        gradesTab: "النقاط",
+        summaryTab: "الملخص",
 
         // Étudiants
         studentsList: "قائمة الطلاب",
@@ -771,6 +781,11 @@ window.translations = {
         messagesCount: "رسالة(رسائل)",
         searchSimple: "بحث...",
         noMessages: "لا توجد رسائل.",
-        deleteMessage: "حذف"
+        deleteMessage: "حذف",
+        configTitle: "الإعدادات",
+        configSubtitle: "إدارة بياناتك وإعدادات التطبيق",
+        importData: "استيراد",
+        exportData: "تصدير",
+        configNote: "سيتم إضافة المزيد من خيارات التكوين قريباً لتخصيص تجربتك."
     }
 };

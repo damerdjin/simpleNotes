@@ -115,7 +115,8 @@ export class TabsController {
         <div class="nav-item ${tab.id === this.activeTab ? 'active' : ''}" 
              data-tab="${tab.id}" 
              onclick="switchTab('${tab.id}')">            
-            <span data-translate="${tab.id}">${tab.label}</span>
+            <span class="nav-icon">${tab.icon}</span>
+            <span class="nav-label">${tab.label}</span>
             ${tab.badge > 0 ? `<span class="nav-badge">${tab.badge}</span>` : ''}
         </div>
       `;

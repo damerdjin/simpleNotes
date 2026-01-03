@@ -85,7 +85,7 @@
         // 1. Register Students Tab
         window.tabs.registerTab('students', {
             label: t.studentsTab || 'Élèves',
-            icon: '',
+            icon: '👥',
             onShow: () => {
                 if (window.loadClassSelectors) window.loadClassSelectors();
                 if (window.renderClassList) window.renderClassList();
@@ -96,7 +96,7 @@
         // 2. Register Assignments Tab
         window.tabs.registerTab('assignments', {
             label: t.assignmentsTab || 'Devoirs',
-            icon: '',
+            icon: '📝',
             onShow: () => {
                 if (window.loadClassSelectorsForAssignments) window.loadClassSelectorsForAssignments();
                 if (window.renderAssignments) window.renderAssignments();
@@ -106,7 +106,7 @@
         // 3. Register Grades Tab
         window.tabs.registerTab('grades', {
             label: t.gradesTab || 'Notes',
-            icon: '',
+            icon: '📊',
             onShow: () => {
                 if (window.loadClassSelectors) window.loadClassSelectors();
                 if (window.loadGradeSelectors) window.loadGradeSelectors();
@@ -116,7 +116,7 @@
         // 4. Register Summary Tab
         window.tabs.registerTab('summary', {
             label: t.summaryTab || 'Récapitulatif',
-            icon: '',
+            icon: '📋',
             onShow: () => {
                 if (window.loadClassSelectors) window.loadClassSelectors();
                 if (window.renderSummary) window.renderSummary();
@@ -125,11 +125,20 @@
 
         // 5. Register Export Tab
         window.tabs.registerTab('export', {
-            label: 'Export', // Simple fallback
-            icon: '',
+            label: t.exportPrepTitle || 'Export',
+            icon: '📦',
             onShow: () => {
                 if (window.loadClassSelectorsForExport) window.loadClassSelectorsForExport();
                 if (window.renderExportPrep) window.renderExportPrep();
+            }
+        });
+
+        // 6. Register Config Tab
+        window.tabs.registerTab('config', {
+            label: t.configTitle || 'Configuration',
+            icon: '⚙️',
+            onShow: () => {
+                // Future config logic
             }
         });
         
@@ -189,6 +198,7 @@
         window.tabs.updateTab('grades', { label: t.gradesTab || 'Notes' });
         window.tabs.updateTab('summary', { label: t.summaryTab || 'Récapitulatif' });
         window.tabs.updateTab('export', { label: t.exportPrepTitle || 'Préparation Export' });
+        window.tabs.updateTab('config', { label: t.configTitle || 'Configuration' });
     };
 
     // --- Language & Translation ---
