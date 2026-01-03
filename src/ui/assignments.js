@@ -615,9 +615,11 @@
             createBtn.classList.toggle('cursor-not-allowed', !globalTrimester);
         }
 
+        const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
+
         // Gérer les Chips de classe
-        const assignmentsForYear = data.assignments.filter(a => (a.academicYear || '') === globalAcademicYear);
-        const allClasses = [...new Set(assignmentsForYear.map(a => a.className))].filter(Boolean).sort();
+        const assignmentsForYearAndUser = data.assignments.filter(a => (a.academicYear || '') === globalAcademicYear && (a.createdBy || 'unknown') === userId);
+        const allClasses = [...new Set(assignmentsForYearAndUser.map(a => a.className))].filter(Boolean).sort();
         if (chipsContainer) {
             const allChip = `<button onclick="toggleAssignmentClassFilter('')" class="px-4 py-1.5 rounded-full text-sm font-medium transition-all ${activeClassFilters.length === 0 ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-100'}">${t.allClassesFilter || 'Toutes'}</button>`;
             const classChips = allClasses.map(c => {
@@ -627,7 +629,6 @@
             chipsContainer.innerHTML = allChip + classChips;
         }
 
-        const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
         let filteredAssignments = data.assignments.filter(a => {
             const matchUser = (a.createdBy || 'unknown') === userId;
             const matchClass = activeClassFilters.length === 0 || activeClassFilters.includes(a.className);
