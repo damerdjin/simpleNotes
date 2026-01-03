@@ -49,7 +49,7 @@
       <div class="bg-white rounded-xl p-6 w-full max-w-5xl mx-4 my-auto">
         <h3 id="assignment-modal-title" class="text-xl font-bold mb-4">${t.createAssignmentTitle || 'Créer un Devoir'}</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <input type="text" id="assignment-name" placeholder="Nom du devoir ex: Devoir 1" class="w-full p-3 border rounded-lg">
+          <input type="text" id="assignment-name" placeholder="${t.assignmentName}" class="w-full p-3 border rounded-lg">
           <select id="assignment-class" class="w-full p-3 border rounded-lg">
             <option value="" data-translate="selectClass">${t.selectClass || '-- Sélectionner une classe --'}</option>
           </select>
@@ -676,7 +676,7 @@
                     <div class="flex items-start justify-between gap-4 mb-3">
                         <div class="min-w-0 flex-1">
                             <span class="inline-block px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-bold rounded uppercase tracking-wider mb-1">
-                                ${a.className || 'Sans classe'} ${a.trimester ? '- T' + a.trimester : ''}
+                                ${a.className || t.noClass} ${a.trimester ? ' - ' + t.trimesterShort + a.trimester : ''}
                             </span>
                             <h4 class="text-lg font-bold text-blue-600 leading-tight transition-colors truncate" title="${a.name}">
                                 ${a.name}
@@ -686,12 +686,12 @@
                     </div>
                     
                     <div class="flex flex-wrap items-center gap-y-2 gap-x-4 text-sm text-gray-500">
-                        <div class="flex items-center gap-1.5" title="Total des points">
+                        <div class="flex items-center gap-1.5" title="${t.totalPointsLabel}">
                             <span class="text-pink-500">🎯</span> 
                             <span class="font-semibold text-gray-700">${totalPoints}</span>
-                            <span class="text-gray-400 text-xs">pts</span>
+                            <span class="text-gray-400 text-xs">${t.points}</span>
                         </div>
-                        <div class="flex items-center gap-1.5" title="Progression">
+                        <div class="flex items-center gap-1.5" title="${t.progression}">
                             <span class="text-indigo-500">📊</span>
                             <span class="font-semibold text-gray-700">${nbGrades}/${nbStudents}</span>
                             <span class="bg-gray-100 px-1.5 py-0.5 rounded text-[10px] font-bold text-gray-500">(${completionRate}%)</span>
@@ -723,7 +723,7 @@
                 const directQuestions = ex.questions || [];
                 let exContent = '';
                 if (directQuestions.length > 0) {
-                    exContent += `<div class="ml-4 rtl:mr-4 rtl:ml-0 text-gray-600 mt-2 flex flex-wrap gap-x-4 gap-y-1">${directQuestions.map(q => `<span class="inline-flex items-center text-sm text-gray-500"><span class="font-medium text-gray-700 mr-1 rtl:ml-1">${q.name || 'Q?'}:</span> ${gradesSvc().getQuestionMaxPoints(q)} pts</span>`).join('<span class="text-gray-300">•</span>')}</div>`;
+                    exContent += `<div class="ml-4 rtl:mr-4 rtl:ml-0 text-gray-600 mt-2 flex flex-wrap gap-x-4 gap-y-1">${directQuestions.map(q => `<span class="inline-flex items-center text-sm text-gray-500"><span class="font-medium text-gray-700 mr-1 rtl:ml-1">${q.name || 'Q?'}:</span> ${gradesSvc().getQuestionMaxPoints(q)} ${t.points}</span>`).join('<span class="text-gray-300">•</span>')}</div>`;
                 }
                 if (parts.length > 0) {
                     exContent += parts.map(part => `
@@ -738,8 +738,8 @@
                 return `
                                 <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
                                     <div class="flex justify-between items-center mb-1">
-                                        <strong class="text-gray-800 font-bold">${t.exercise} ${i + 1}${ex.name ? ' - ' + ex.name : ''}</strong>
-                                        <span class="text-blue-600 font-bold text-sm">${gradesSvc().getExerciseMaxPoints(ex)} pts</span>
+                                        <strong class="text-gray-800 font-bold">${t.exercise} ${i + 1}${ex.name ? ' - ' + (ex.name === 'Global' ? t.globalMode : ex.name) : ''}</strong>
+                                        <span class="text-blue-600 font-bold text-sm">${gradesSvc().getExerciseMaxPoints(ex)} ${t.points}</span>
                                     </div>
                                     ${exContent}
                                 </div>

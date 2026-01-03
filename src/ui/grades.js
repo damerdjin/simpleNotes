@@ -178,7 +178,7 @@
          onclick="toggleAccordion('${accordionId}')">
         <div class="flex items-center gap-3">
             <span id="icon-${accordionId}" class="rotate-icon text-gray-400">▼</span>
-            <span class="font-bold">${t.exercise} ${exIndex + 1}${ex.name ? ' - ' + ex.name : ''}</span>
+            <span class="font-bold">${t.exercise} ${exIndex + 1}${ex.name ? ' - ' + (ex.name === 'Global' ? t.globalMode : ex.name) : ''}</span>
         </div>
         <span class="text-blue-700 font-bold bg-white px-3 py-1 rounded-full shadow-sm text-sm" id="ex-total-${ex.id}">0 / ${svc.getExerciseMaxPoints(ex)}</span>
     </div>

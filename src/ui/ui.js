@@ -332,21 +332,25 @@
             b = document.createElement('div');
             b.id = 'ui-error-banner';
             b.className = 'fixed top-2 left-1/2 -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded shadow flex items-center gap-2 z-50';
-            b.innerHTML = '<span id="ui-error-text"></span><button onclick="softResetUI()" class="px-2 py-1 bg-white text-red-600 rounded">Réinitialiser</button>';
+            const t = getTranslations()[getLang()];
+        b.innerHTML = `<span id="ui-error-text"></span><button onclick="softResetUI()" class="px-2 py-1 bg-white text-red-600 rounded">${t.reset}</button>`;
             document.body.appendChild(b);
         }
         const s = document.getElementById('ui-error-text');
-        if (s) s.textContent = msg || 'Erreur inattendue';
+        const t = getTranslations()[getLang()];
+        if (s) s.textContent = msg || t.unexpectedError;
         b.style.display = 'flex';
     };
 
     window.setupGlobalUiGuard = function() {
         window.addEventListener('error', (e) => {
-            const m = (e.error && e.error.message) || e.message || 'Erreur';
+            const t = getTranslations()[getLang()];
+            const m = (e.error && e.error.message) || e.message || t.error;
             window.showUiErrorBanner(m);
         });
         window.addEventListener('unhandledrejection', (e) => {
-            const m = (e && e.reason && (e.reason.message || e.reason)) || 'Erreur asynchrone';
+            const t = getTranslations()[getLang()];
+            const m = (e && e.reason && (e.reason.message || e.reason)) || t.asyncError;
             window.showUiErrorBanner(m);
         });
         document.addEventListener('keydown', (e) => {

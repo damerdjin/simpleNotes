@@ -204,12 +204,12 @@
                 if (window.loadClassSelectors) window.loadClassSelectors();
                 if (window.renderClassList) window.renderClassList();
                 
-                alert(`${t.importSuccess}\nAjoutés: ${added}\nMis à jour: ${updated}`);
+                alert(`${t.importSuccess}\n${t.added}: ${added}\n${t.updated}: ${updated}`);
                 event.target.value = '';
 
             } catch (ex) {
                 console.error("Erreur import JSON:", ex);
-                alert(t.importError || "Erreur lors de l'importation");
+                alert(t.importError);
             }
         };
         reader.readAsText(file); // JSON is text

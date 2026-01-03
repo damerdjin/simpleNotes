@@ -31,6 +31,7 @@ window.translations = {
         confirmReset: "Cliquez à nouveau pour confirmer l'envoi à : ",
         sending: "Envoi en cours...",
         resetEmailSent: "Email de réinitialisation envoyé ! Vérifiez votre boîte mail.",
+        logout: "Déconnexion",
 
         // Interface générale
         appTitle: "📝 Gestion des Corrections",
@@ -71,11 +72,20 @@ window.translations = {
         className: "Classe",
         classNameOption: "-- Classe --",
         allClasses: "-- Toutes les classes --",
+        noClass: "Sans classe",
+        newClass: "Nouvelle classe...",
+        newClassPlaceholder: "Nouvelle classe",
         selectStudent: "-- Sélectionner un élève --",
         selectAssignment: "-- Sélectionner un devoir --",
         selectClass: "-- Sélectionner une classe --",
         selectClassFirst: "Sélectionnez d'abord une classe",
         selectClassToStart: "Sélectionnez une classe pour commencer",
+        enterClass: "Veuillez entrer un nom de classe",
+        added: "Ajoutés",
+        updated: "Mis à jour",
+        unexpectedError: "Erreur inattendue",
+        error: "Erreur",
+        asyncError: "Erreur asynchrone",
 
         // Modal étudiant
         addStudentTitle: "Ajouter un élève",
@@ -93,6 +103,9 @@ window.translations = {
         filterByClass: "Filtrer par classe",
         filterByName: "Filtrer par nom de devoir",
         searchAssignment: "Rechercher un devoir...",
+        progression: "Progression",
+        totalPointsLabel: "Total des points",
+        trimesterShort: "T",
         noAssignments: "Aucun devoir. Créez votre premier devoir !",
         noFilteredAssignments: "Aucun devoir ne correspond aux filtres appliqués.",
         editAssignment: "Modifier le devoir",
@@ -187,7 +200,7 @@ window.translations = {
         newStudentsAdded: "", // Vide car déjà inclus dans importSuccess
 
         // RAKMANA
-        exportPrepTitle: "Préparation Export",
+        exportPrepTitle: "Préparation des notes (CC/Devoir/Composition)",
         exportPrepHint: "Choisissez la classe, puis associez les devoirs existants aux 3 notes d'export.",
         exportPreview: "Aperçu (prêt pour export)",
         ccLabel: "Note Continue (CC)",
@@ -260,6 +273,7 @@ window.translations = {
         confirmReset: "Click again to confirm sending to: ",
         sending: "Sending...",
         resetEmailSent: "Reset email sent! Check your inbox.",
+        logout: "Logout",
 
         // Interface générale
         appTitle: "📝 Grading Management",
@@ -300,11 +314,20 @@ window.translations = {
         className: "Class",
         classNameOption: "-- Class --",
         allClasses: "-- All classes --",
+        noClass: "No class",
+        newClass: "New class...",
+        newClassPlaceholder: "New class",
         selectStudent: "-- Select a student --",
         selectAssignment: "-- Select an assignment --",
         selectClass: "-- Select a class --",
         selectClassFirst: "Select a class first",
         selectClassToStart: "Select a class to start",
+        enterClass: "Please enter a class name",
+        added: "Added",
+        updated: "Updated",
+        unexpectedError: "Unexpected error",
+        error: "Error",
+        asyncError: "Async error",
 
         // Modal étudiant
         addStudentTitle: "Add Student",
@@ -321,7 +344,10 @@ window.translations = {
         createAssignment: "+ Create Assignment",
         filterByClass: "Filter by class",
         filterByName: "Filter by assignment name",
-        searchAssignment: "Search an assignment...",
+        searchAssignment: "Search for an assignment...",
+        progression: "Progression",
+        totalPointsLabel: "Total points",
+        trimesterShort: "T",
         noAssignments: "No assignments. Create your first assignment!",
         noFilteredAssignments: "No assignments match the applied filters.",
         editAssignment: "Edit Assignment",
@@ -416,7 +442,7 @@ window.translations = {
         newStudentsAdded: "", // Vide car déjà inclus dans importSuccess
 
         // RAKMANA
-        exportPrepTitle: "Grade export prep",
+        exportPrepTitle: "Grade Preparation (CC/Homework/Test)",
         exportPrepHint: "Choose the class, then map existing assignments to the 3 exported grades.",
         exportPreview: "Preview (ready for export)",
         ccLabel: "Continuous Assessment (CA)",
@@ -489,6 +515,7 @@ window.translations = {
         confirmReset: "انقر مرة أخرى للتأكيد على الإرسال إلى: ",
         sending: "جاري الإرسال...",
         resetEmailSent: "تم إرسال بريد إعادة التعيين! تحقق من صندوق البريد الخاص بك.",
+        logout: "تسجيل الخروج",
 
         // Interface générale
         appTitle: "📝 إدارة التصحيح",
@@ -527,13 +554,22 @@ window.translations = {
         reset: "إعادة الضبط",
         searchClassPlaceholder: "بحث في الفصول...",
         className: "الفصل",
-        classNameOption: "-- الفصل --",
-        allClasses: "-- جميع الفصول --",
+        classNameOption: "-- القسم --",
+        allClasses: "-- جميع الأقسام --",
+        noClass: "بدون فصل",
+        newClass: "قسم جديد...",
+        newClassPlaceholder: "قسم جديد",
         selectStudent: "-- اختر طالبا --",
         selectAssignment: "-- اختر واجبا --",
         selectClass: "-- اختر فصلا --",
         selectClassFirst: "اختر فصلا أولا",
         selectClassToStart: "اختر فصلا للبدء",
+        enterClass: "يرجى إدخال اسم الفصل",
+        added: "تمت الإضافة",
+        updated: "تم التحديث",
+        unexpectedError: "خطأ غير متوقع",
+        error: "خطأ",
+        asyncError: "خطأ غير متزامن",
 
         // Modal étudiant
         addStudentTitle: "إضافة طالب",
@@ -550,7 +586,10 @@ window.translations = {
         createAssignment: "+ إنشاء واجب",
         filterByClass: "تصفية حسب الفصل",
         filterByName: "تصفية حسب اسم الواجب",
-        searchAssignment: "بحث عن واجب...",
+        searchAssignment: "البحث عن واجب...",
+        progression: "التقدم",
+        totalPointsLabel: "مجموع النقاط",
+        trimesterShort: "ث",
         noAssignments: "لا توجد واجبات. أنشئ واجبك الأول!",
         noFilteredAssignments: "لا توجد واجبات تطابق عوامل التصفية المطبقة.",
         editAssignment: "تعديل الواجب",
@@ -645,7 +684,7 @@ window.translations = {
         newStudentsAdded: "", // Vide car déjà inclus dans importSuccess
 
         // RAKMANA
-        exportPrepTitle: "تحضير التصدير",
+        exportPrepTitle: "تحضير النقاط (مستمر/فرض/اختبار)",
         exportPrepHint: "اختر الفصل، ثم قم بمطابقة الواجبات الموجودة مع نقاط التصدير الثلاث.",
         exportPreview: "معاينة (جاهز للتصدير)",
         ccLabel: "التقويم المستمر (CC)",

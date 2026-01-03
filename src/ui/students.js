@@ -45,7 +45,7 @@
         const gradesSelect = document.getElementById('select-class-grades');
         if (gradesSelect) {
             const currentValue = gradesSelect.value;
-            gradesSelect.innerHTML = '<option value="">-- ' + (t.selectClass || 'Sélectionner une classe') + ' --</option>' +
+            gradesSelect.innerHTML = '<option value="">-- ' + t.selectClass + ' --</option>' +
                 classes.map(c => `<option value="${c}" ${c === currentValue ? 'selected' : ''}>${c}</option>`).join('');
         }
 
@@ -53,7 +53,7 @@
         const summarySelect = document.getElementById('select-class-summary');
         if (summarySelect) {
             const currentValue = summarySelect.value;
-            summarySelect.innerHTML = '<option value="">-- ' + (t.selectClass || 'Sélectionner une classe') + ' --</option>' +
+            summarySelect.innerHTML = '<option value="">-- ' + t.selectClass + ' --</option>' +
                 classes.map(c => `<option value="${c}" ${c === currentValue ? 'selected' : ''}>${c}</option>`).join('');
         }
 
@@ -94,7 +94,7 @@
 
         const globalAcademicYear = window.getGlobalAcademicYear();
         if (!globalAcademicYear) {
-            container.innerHTML = `<p class="text-gray-500 text-sm">${t.selectAcademicYear || 'Veuillez sélectionner une année scolaire.'}</p>`;
+            container.innerHTML = `<p class="text-gray-500 text-sm">${t.selectAcademicYear}</p>`;
             return;
         }
 
@@ -103,13 +103,13 @@
         const selected = document.getElementById('filter-class-students')?.value || studentsUiState.selectedClass || '';
 
         if (classes.length === 0) {
-            container.innerHTML = `<p class="text-gray-500 text-sm">${t.noClassesAutoCreated || 'Aucune classe.'}</p>`;
+            container.innerHTML = `<p class="text-gray-500 text-sm">${t.noClassesAutoCreated}</p>`;
             return;
         }
 
         const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
         const allCount = (getData().students || []).filter(s => (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear).length;
-        const allLabel = t.allClassesFilter || 'Toutes';
+        const allLabel = t.allClassesFilter;
         const allActive = !selected;
         const allBtn = `
             <button onclick="setStudentsSelectedClass('')" class="w-full flex items-center justify-between gap-3 p-3 rounded-lg border ${allActive ? 'bg-blue-50 border-blue-200' : 'bg-white hover:bg-gray-50 border-gray-200'} transition">
@@ -185,13 +185,13 @@
             <div class="absolute inset-0 bg-black/40" onclick="closeClassesManager()"></div>
             <div class="relative w-full max-w-lg bg-white rounded-xl shadow-xl border p-5">
                 <div class="flex items-center justify-between gap-3 mb-4">
-                    <h3 class="text-lg font-bold text-gray-800">${t.classManagement || 'Gestion des Classes'}</h3>
+                    <h3 class="text-lg font-bold text-gray-800">${t.classManagement}</h3>
                     <button onclick="closeClassesManager()" class="text-gray-500 hover:text-gray-700 text-xl leading-none">✕</button>
                 </div>
                 <div class="text-sm text-gray-600 mb-3">${t.noClassesAutoCreated ? '' : ''}</div>
                 <div id="classes-manager-list" class="space-y-2 max-h-[60vh] overflow-auto"></div>
                 <div class="flex justify-end gap-2 mt-4">
-                    <button onclick="closeClassesManager()" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">${t.cancel || 'Fermer'}</button>
+                    <button onclick="closeClassesManager()" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">${t.cancel}</button>
                 </div>
             </div>
         `;
@@ -213,7 +213,7 @@
         const classes = window.getClasses();
 
         if (classes.length === 0) {
-            list.innerHTML = `<p class="text-gray-500 text-sm">${t.noClassesAutoCreated || 'Aucune classe.'}</p>`;
+            list.innerHTML = `<p class="text-gray-500 text-sm">${t.noClassesAutoCreated}</p>`;
             return;
         }
 
@@ -226,7 +226,7 @@
                         <div class="font-semibold text-gray-800 truncate">${c}</div>
                         <div class="text-xs text-gray-600">${count} ${t.students}</div>
                     </div>
-                    <button onclick="deleteClassSafely('${c}')" class="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold">${t.delete || 'Supprimer'}</button>
+                    <button onclick="deleteClassSafely('${c}')" class="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold">${t.delete}</button>
                 </div>
             `;
         }).join('');
@@ -234,7 +234,7 @@
 
     window.deleteClassSafely = function(className) {
         const t = getTranslations()[getLang()];
-        const typed = prompt(`${t.deleteClassConfirm || 'Supprimer la classe'} "${className}"\n\n${getLang() === 'ar' ? 'للتأكيد أكتب : نعم' : getLang() === 'en' ? 'To confirm, type: Yes' : 'Pour confirmer, tapez : OUI'}`);
+        const typed = prompt(`${t.deleteClassConfirm} "${className}"\n\n${getLang() === 'ar' ? 'للتأكيد أكتب : نعم' : getLang() === 'en' ? 'To confirm, type: Yes' : 'Pour confirmer, tapez : OUI'}`);
         if (typed !== (getLang() === 'ar' ? 'نعم' : getLang() === 'en' ? 'Yes' : 'OUI')) return;
         window.deleteClass(className);
         window.renderClassesManagerList();
@@ -249,10 +249,10 @@
         const count = data.students.filter(s => s.className === className && (s.importedBy || 'unknown') === userId).length;
         
         // Confirmation plus détaillée
-        let detailMsg = t.deleteClassConfirmDetails || "Cela supprimera :\n- ${count} élèves\n- Tous les devoirs associés\n- Toutes les notes associées";
+        let detailMsg = t.deleteClassConfirmDetails;
         detailMsg = detailMsg.replace('${count}', count);
         
-        if (!confirm(`${t.deleteClassConfirm || 'Supprimer la classe'} "${className}" ?\n\n${detailMsg}`)) return;
+        if (!confirm(`${t.deleteClassConfirm} "${className}" ?\n\n${detailMsg}`)) return;
 
         // Remove students from this class
         const studentIds = data.students.filter(s => s.className === className && (s.importedBy || 'unknown') === userId).map(s => s.id);
@@ -298,11 +298,11 @@
         // Reset class selector first to ensure options are loaded
         if (classSelect) {
             const classes = window.getClasses();
-            let html = `<option value="">-- ${t.selectClass || 'Classe'} --</option>`;
+            let html = `<option value="">-- ${t.selectClass} --</option>`;
             classes.forEach(c => {
                 html += `<option value="${c}">${c}</option>`;
             });
-            html += `<option value="__new__" class="font-bold text-blue-600">+ ${t.newClass || 'Nouvelle classe...'}</option>`;
+            html += `<option value="__new__" class="font-bold text-blue-600">+ ${t.newClass}</option>`;
             classSelect.innerHTML = html;
         }
 
@@ -312,8 +312,8 @@
             const student = getData().students.find(s => s.id === studentId);
             if (!student) return window.closeStudentModal();
 
-            if (titleEl) titleEl.textContent = t.editStudentTitle || "Modifier l'élève";
-            if (btnAdd) btnAdd.textContent = t.save || "Enregistrer";
+            if (titleEl) titleEl.textContent = t.editStudentTitle;
+            if (btnAdd) btnAdd.textContent = t.save;
 
             if (lastNameInput) lastNameInput.value = student.lastName || '';
             if (firstNameInput) firstNameInput.value = student.firstName || '';
@@ -338,7 +338,7 @@
             // ADD MODE
             editingStudentId = null;
             if (titleEl) titleEl.textContent = t.addStudentTitle;
-            if (btnAdd) btnAdd.textContent = t.add || "Ajouter";
+            if (btnAdd) btnAdd.textContent = t.add;
 
             // Reset inputs
             const inputs = ['student-lastname', 'student-firstname', 'student-class-new'];
@@ -388,7 +388,7 @@
         const nin = document.getElementById('student-nin').value.trim();
 
         if (!lastName && !firstName) return alert(t.enterName);
-        if (!className) return alert(t.enterClass || "Veuillez sélectionner ou saisir une classe");
+        if (!className) return alert(t.enterClass);
 
         const name = (lastName + ' ' + firstName).trim();
 
@@ -448,7 +448,7 @@
         const globalUserId = window.currentUser?.email || window.currentUser?.id || 'unknown';
         const globalAcademicYear = window.getGlobalAcademicYear();
         if (!globalAcademicYear) {
-            container.innerHTML = `<p class="text-gray-500 text-center py-8">${t.selectAcademicYear || 'Veuillez sélectionner une année scolaire.'}</p>`;
+            container.innerHTML = `<p class="text-gray-500 text-center py-8">${t.selectAcademicYear}</p>`;
             const pagination = document.getElementById('students-pagination');
             if (pagination) pagination.innerHTML = '';
             return;
@@ -532,7 +532,7 @@
 
         if (filteredStudents.length === 0) {
             container.className = '';
-            container.innerHTML = `<p class="text-gray-500 text-center py-8">${t.noResults || 'Aucun résultat.'}</p>`;
+            container.innerHTML = `<p class="text-gray-500 text-center py-8">${t.noResults}</p>`;
         } else {
             const items = pageStudents.map((s, i) => {
             const first = (s.firstName || '').trim();
