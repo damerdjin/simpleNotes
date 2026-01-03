@@ -420,67 +420,61 @@
         /* Liste d'élèves compacte en grille */
         #students-list.student-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 0.75rem;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+            padding: 0.5rem;
         }
 
-        #students-list.student-grid .student-item {
+        /* Modern Student Cards */
+        .student-item {
             position: relative;
-            display: flex !important;
+            background: white;
+            border: 2px solid #f1f5f9;
+            border-radius: 1.25rem;
+            padding: 1.25rem;
+            display: flex;
             align-items: center;
-            gap: 0.75rem;
-            padding: 0.75rem;
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-radius: 0.9rem;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-            transition: transform 0.08s ease, box-shadow 0.12s ease;
+            gap: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
-        #students-list.student-grid .student-item:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+        .student-item:hover {
+            border-color: #3b82f6;
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
 
-        .student-avatar {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #2563eb, #4f46e5);
-            color: #fff;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-        }
-
-        /* Badge niveau (remplace l’avatar) */
         .student-level {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            color: #fff;
-            font-weight: 800;
-            font-size: 1.1rem;
-            display: inline-flex;
+            width: 48px;
+            height: 48px;
+            border-radius: 1rem;
+            display: flex;
             align-items: center;
             justify-content: center;
+            font-weight: 800;
+            font-size: 1.25rem;
             flex-shrink: 0;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+            transition: all 0.3s ease;
         }
 
-        /* Variantes garçon/fille */
         .student-level.boy {
-            background: linear-gradient(135deg, #2563eb, #4f46e5);
+            background: #eff6ff;
+            color: #2563eb;
+            border: 2px solid #dbeafe;
         }
 
         .student-level.girl {
-            background: linear-gradient(135deg, #ec4899, #d946ef);
+            background: #fdf2f8;
+            color: #db2777;
+            border: 2px solid #fce7f3;
         }
 
         .student-level.neutral {
-            background: linear-gradient(135deg, #6b7280, #4b5563);
+            background: #f8fafc;
+            color: #64748b;
+            border: 2px solid #f1f5f9;
         }
 
         .student-info {
@@ -489,96 +483,134 @@
         }
 
         .student-name {
-            font-weight: 700;
-            color: #111827;
+            font-weight: 800;
+            font-size: 1.125rem;
+            color: #1e293b;
             line-height: 1.2;
+            margin-bottom: 0.25rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .student-meta {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.35rem;
-            margin-top: 0.25rem;
-            color: #6b7280;
-            font-size: 12px;
+            gap: 0.5rem;
+            align-items: center;
         }
 
         .student-chip {
             display: inline-flex;
             align-items: center;
-            gap: 0.25rem;
-            padding: 0.2rem 0.6rem;
-            border-radius: 9999px;
-            font-size: 12px;
-            font-weight: 600;
-            background: #e0f2fe;
-            color: #075985;
-            border: 1px solid #bfdbfe;
-            white-space: nowrap;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
         }
 
-        .student-chip.gray {
-            background: #f3f4f6;
-            color: #374151;
-            border-color: #e5e7eb;
+        .student-chip.class {
+            background: #f0fdf4;
+            color: #166534;
+            border-color: #dcfce7;
         }
 
         .student-chip.birth {
-            background: #fef3c7;
+            background: #fffbeb;
             color: #92400e;
-            border-color: #fde68a;
-        }
-
-        .student-index {
-            font-size: 12px;
-            color: #6b7280;
+            border-color: #fef3c7;
         }
 
         .student-actions {
-            opacity: 0;
             position: absolute;
-            top: 8px;
-            right: 8px;
+            top: 0.75rem;
+            right: 0.75rem;
             display: flex;
-            gap: 0.25rem;
+            gap: 0.4rem;
+            opacity: 0;
+            transform: translateX(10px);
+            transition: all 0.2s ease;
         }
 
         .student-item:hover .student-actions {
             opacity: 1;
-            transform: translateY(0);
-            pointer-events: auto;
-        }
-
-        .rtl-layout .student-actions {
-            right: auto;
-            left: 8px;
+            transform: translateX(0);
         }
 
         .student-actions button {
             width: 32px;
             height: 32px;
-            border-radius: 10px;
-            background: #fee2e2;
-            color: #b91c1c;
-            font-size: 15px;
-            display: inline-flex;
+            border-radius: 0.75rem;
+            display: flex;
             align-items: center;
             justify-content: center;
-            transition: background 0.12s ease, transform 0.08s ease;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            background: white;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
 
-        .student-actions button:hover {
-            background: #fecdd3;
-            transform: translateY(-1px);
+        .student-actions .btn-edit:hover {
+            background: #f0f9ff;
+            color: #0284c7;
+            border-color: #bae6fd;
+            transform: scale(1.1);
         }
 
-        /* RTL ajustements */
-        .rtl-layout #students-list.student-grid .student-item {
-            flex-direction: row-reverse !important;
+        .student-actions .btn-delete:hover {
+            background: #fef2f2;
+            color: #dc2626;
+            border-color: #fecaca;
+            transform: scale(1.1);
         }
 
-        .rtl-layout #students-list.student-grid .student-meta {
-            justify-content: flex-end;
+        .view-grades-btn {
+            margin-top: 0.75rem;
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 0.75rem;
+            background: #f8fafc;
+            color: #3b82f6;
+            font-size: 0.8125rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+        }
+
+        .view-grades-btn:hover {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        /* RTL support */
+        .rtl-layout .student-item {
+            flex-direction: row-reverse;
+            text-align: right;
+        }
+
+        .rtl-layout .student-actions {
+            right: auto;
+            left: 0.75rem;
+            transform: translateX(-10px);
+        }
+
+        .rtl-layout .student-item:hover .student-actions {
+            transform: translateX(0);
+        }
+
+        .rtl-layout .student-meta {
+            flex-direction: row-reverse;
         }
 
         /* SEULE LA VERSION QUI MARCHE */

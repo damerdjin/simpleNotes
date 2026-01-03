@@ -504,6 +504,36 @@
         window.loadClassSelectors();
     };
 
+    window.viewStudentGrades = function(studentId) {
+        const data = getData();
+        const student = data.students.find(s => s.id === studentId);
+        if (!student) return;
+
+        // 1. Set filters in summary tab
+        const summarySearchInput = document.getElementById('summary-search');
+        const summaryClassSelect = document.getElementById('select-class-summary');
+
+        if (summarySearchInput) {
+            summarySearchInput.value = student.name || `${student.lastName} ${student.firstName}`;
+        }
+        
+        // We'll let the summary tab auto-select the class based on the name search if it's unique,
+        // but we can also set it explicitly if the element exists.
+        if (summaryClassSelect) {
+            summaryClassSelect.value = student.className;
+        }
+
+        // 2. Switch to summary tab
+        if (window.tabs && typeof window.tabs.showTab === 'function') {
+            window.tabs.showTab('summary');
+        }
+        
+        // 3. Trigger render
+        if (typeof window.renderSummary === 'function') {
+            window.renderSummary();
+        }
+    };
+
     window.renderStudents = function() {
         const t = getTranslations()[getLang()];
         const container = document.getElementById('students-list');
@@ -620,14 +650,17 @@
         <div class="student-info">
             <div class="student-name">${displayName}</div>
             <div class="student-meta">
-                ${s.className ? `<span class="student-chip">${cleanClassName(s.className)}</span>` : ''}
-                ${s.academicYear ? `<span class="student-chip">${s.academicYear}</span>` : ''}
+                ${s.className ? `<span class="student-chip class">🏷️ ${cleanClassName(s.className)}</span>` : ''}
                 ${birth ? `<span class="student-chip birth">🎂 ${birth}</span>` : ''}
             </div>
+            <button onclick="viewStudentGrades('${s.id}')" class="view-grades-btn">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                <span>${t.viewGrades || 'Visualiser les notes'}</span>
+            </button>
         </div>
         <div class="student-actions">
-            <button onclick="openStudentModal('${s.id}')" title="${t.edit}">✏️</button>
-            <button onclick="deleteStudent('${s.id}')" title="${t.delete}">🗑️</button>
+            <button onclick="openStudentModal('${s.id}')" class="btn-edit" title="${t.edit}">✏️</button>
+            <button onclick="deleteStudent('${s.id}')" class="btn-delete" title="${t.delete}">🗑️</button>
         </div>
     </div>`;
             }).join('');
