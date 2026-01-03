@@ -446,6 +446,8 @@
         }
 
         let filteredStudents = data.students.slice();
+                // Filter by global academic year
+        filteredStudents = filteredStudents.filter(s => (s.academicYear || '') === globalAcademicYear);
         if (selectedClass) {
             filteredStudents = filteredStudents.filter(s => (s.className || '') === selectedClass);
         }
