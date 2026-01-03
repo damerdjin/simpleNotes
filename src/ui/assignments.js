@@ -627,14 +627,28 @@
         window.renderExercisesBuilder();
     };
 
+    let assignmentErrorTimeout = null;
     window.showAssignmentError = function(message) {
         const errorZone = document.getElementById('assignment-modal-error');
         const errorText = document.getElementById('assignment-modal-error-text');
         if (errorZone && errorText) {
+            // Clear any existing timeout
+            if (assignmentErrorTimeout) {
+                clearTimeout(assignmentErrorTimeout);
+            }
+
             errorText.textContent = message;
             errorZone.classList.remove('hidden');
+            errorZone.classList.remove('fade-out'); // Ensure it's visible
+            
             // Scroll to top of modal to see error
             errorZone.closest('.overflow-y-auto').scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Auto-hide after 5 seconds
+            assignmentErrorTimeout = setTimeout(() => {
+                errorZone.classList.add('hidden');
+                assignmentErrorTimeout = null;
+            }, 5000);
         }
     };
 
