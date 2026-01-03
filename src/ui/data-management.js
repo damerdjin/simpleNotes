@@ -51,7 +51,41 @@
         const t = getTranslations()[getLang()];
         const now = new Date();
         const pad = n => String(n).padStart(2, '0');
-        const fname = `simpleNotes-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.json`;
+        
+        // Récupérer les filtres globaux
+        const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
+        const globalAcademicYear = window.getGlobalAcademicYear();
+        
+        // Filtrer les données à exporter
+        const filteredStudents = window.data.students.filter(s => 
+            (s.importedBy || 'unknown') === userId && 
+            (s.academicYear || '') === globalAcademicYear
+        );
+        
+        const filteredAssignments = window.data.assignments.filter(a => 
+            (a.createdBy || 'unknown') === userId && 
+            (a.academicYear || '') === globalAcademicYear
+        );
+        
+        // Filtrer les notes pour n'inclure que celles des élèves exportés
+        const studentIds = new Set(filteredStudents.map(s => s.id));
+        const filteredGrades = {};
+        for (const sid of studentIds) {
+            if (window.data.grades[sid]) {
+                filteredGrades[sid] = window.data.grades[sid];
+            }
+        }
+
+        const filteredData = {
+            students: filteredStudents,
+            assignments: filteredAssignments,
+            grades: filteredGrades
+        };
+
+        // Adapter le nom du fichier avec l'année scolaire et le prof
+        const safeUser = userId.split('@')[0].replace(/[^a-z0-9]/gi, '_');
+        const safeYear = globalAcademicYear.replace(/[^a-z0-9]/gi, '_');
+        const fname = `simpleNotes-${safeUser}-${safeYear}-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.json`;
 
         // === SAUVEGARDE DES MESSAGES PERSO ===
         const teacherMessages = {};
@@ -72,15 +106,19 @@
                     teacherMessages[scope] = msgs;
                 }
             });
-            console.log("Messages Perso exportés:", teacherMessages);
         } catch (e) {
             console.warn("Erreur export messages Perso:", e);
         }
 
         const payload = {
-            data: window.data,              // tes données existantes
-            exportPrepConfig: window.exportPrepConfig,  // config export existante
-            teacherMessages    // ⭐ NOUVEAU : messages Perso !
+            data: filteredData,
+            exportPrepConfig: window.exportPrepConfig,
+            teacherMessages,
+            metadata: {
+                exportedBy: userId,
+                academicYear: globalAcademicYear,
+                exportedAt: now.toISOString()
+            }
         };
 
         const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
@@ -99,6 +137,9 @@
         const file = event.target.files[0];
         if (!file) return;
 
+        const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
+        const globalAcademicYear = window.getGlobalAcademicYear();
+
         const reader = new FileReader();
         reader.onload = function (e) {
             try {
@@ -106,47 +147,44 @@
                 const importedData = importedRaw.data || importedRaw;
                 const data = window.data;
 
-                console.log("📦 importedRaw:", importedRaw);
-                console.log("📦 importedData:", importedData);
-
                 // Fonction pour nettoyer
                 const clean = (val) => String(val || '').trim();
 
-                let added = 0;
-                let updated = 0;
+                let addedStudents = 0;
+                let updatedStudents = 0;
+                let addedAssignments = 0;
 
                 // ========== FUSION DES ÉLÈVES ==========
                 if (importedData.students && Array.isArray(importedData.students)) {
                     importedData.students.forEach(importedStudent => {
-                        const nin = clean(importedStudent.nin);
+                        // S'assurer que l'élève importé est assigné au prof et à l'année actuelle
+                        importedStudent.importedBy = userId;
+                        importedStudent.academicYear = globalAcademicYear;
 
-                        // Recherche par NIN
+                        const nin = clean(importedStudent.nin);
                         let existing = null;
                         if (nin) {
-                            existing = data.students.find(s => clean(s.nin) === nin);
+                            existing = data.students.find(s => 
+                                clean(s.nin) === nin && 
+                                (s.importedBy || 'unknown') === userId && 
+                                (s.academicYear || '') === globalAcademicYear
+                            );
                         }
 
                         if (existing) {
-                            // Garder l'ancien ID, mettre à jour le reste
                             const oldId = existing.id;
                             Object.assign(existing, importedStudent);
-                            existing.id = oldId; // Conserver l'ID original !
-                            updated++;
+                            existing.id = oldId;
+                            updatedStudents++;
 
-                            // Si l'ID importé est différent, transférer les notes
                             if (importedStudent.id !== oldId && importedData.grades && importedData.grades[importedStudent.id]) {
-                                if (!data.grades[oldId]) {
-                                    data.grades[oldId] = {};
-                                }
-                                // Fusionner les notes
+                                if (!data.grades[oldId]) data.grades[oldId] = {};
                                 Object.assign(data.grades[oldId], importedData.grades[importedStudent.id]);
                             }
                         } else {
-                            // Nouvel élève
                             data.students.push(importedStudent);
-                            added++;
+                            addedStudents++;
 
-                            // Copier ses notes aussi
                             if (importedData.grades && importedData.grades[importedStudent.id]) {
                                 data.grades[importedStudent.id] = importedData.grades[importedStudent.id];
                             }
@@ -154,33 +192,36 @@
                     });
                 }
 
-                // ⭐ IMPORT MESSAGES PERSO (vraies clés)
-                const teacherData = importedRaw.teacherMessages || importedData.teacherMessages;
-                if (teacherData) {
-                    console.log("✅ teacherMessages TROUVÉ:", teacherData);
-
-                    Object.entries(teacherData).forEach(([scope, msgs]) => {
-                        if (Array.isArray(msgs) && msgs.length > 0) {
-                            // 1) window.REMARKS_MESSAGES
-                            // On s'assure que addTeacherMessage fonctionnera
-                            if (window.addTeacherMessage) {
-                                msgs.forEach(m => window.addTeacherMessage(scope, m));
-                            }
-                            console.log(`✅ ${scope} importé dans la bibliothèque locale`);
-                        }
-                    });
-                    if (window.renderExportPrep) window.renderExportPrep();
-                }
-                else {
-                    console.warn("❌ Pas de teacherMessages");
-                }
-
                 // ========== FUSION DES DEVOIRS ==========
                 if (importedData.assignments && Array.isArray(importedData.assignments)) {
                     importedData.assignments.forEach(importedAssignment => {
-                        const existingAssignment = data.assignments.find(a => a.id === importedAssignment.id);
+                        // S'assurer que le devoir importé est assigné au prof et à l'année actuelle
+                        importedAssignment.createdBy = userId;
+                        importedAssignment.academicYear = globalAcademicYear;
+
+                        const existingAssignment = data.assignments.find(a => 
+                            a.id === importedAssignment.id || 
+                            (a.name === importedAssignment.name && a.className === importedAssignment.className && a.academicYear === globalAcademicYear)
+                        );
+                        
                         if (!existingAssignment) {
                             data.assignments.push(importedAssignment);
+                            addedAssignments++;
+                        } else {
+                            // Optionnel: Mettre à jour le devoir existant si besoin
+                            Object.assign(existingAssignment, importedAssignment);
+                        }
+                    });
+                }
+
+                // ⭐ IMPORT MESSAGES PERSO
+                const teacherData = importedRaw.teacherMessages || importedData.teacherMessages;
+                if (teacherData) {
+                    Object.entries(teacherData).forEach(([scope, msgs]) => {
+                        if (Array.isArray(msgs) && msgs.length > 0) {
+                            if (window.addTeacherMessage) {
+                                msgs.forEach(m => window.addTeacherMessage(scope, m));
+                            }
                         }
                     });
                 }
@@ -188,31 +229,24 @@
                 // ========== FUSION CONFIG EXPORT ==========
                 const importedCfg = importedRaw.exportPrepConfig;
                 if (importedCfg) {
-                    // On fusionne intelligemment ou on remplace ?
-                    // Ici on remplace si inexistant ou fusionne
                     if (!window.exportPrepConfig) window.exportPrepConfig = { byClass: {} };
-                    
                     if (importedCfg.byClass) {
                         Object.assign(window.exportPrepConfig.byClass, importedCfg.byClass);
                     }
-                    if (window.saveExportPrepConfig) window.saveExportPrepConfig();
                 }
 
                 window.saveData();
-                if (window.renderStudents) window.renderStudents();
-                if (window.renderAssignments) window.renderAssignments();
-                if (window.loadClassSelectors) window.loadClassSelectors();
-                if (window.renderClassList) window.renderClassList();
+                alert(`${t.importSuccess || 'Importation réussie'} :\n- ${addedStudents} élèves ajoutés\n- ${updatedStudents} élèves mis à jour\n- ${addedAssignments} devoirs ajoutés`);
                 
-                alert(`${t.importSuccess}\n${t.added}: ${added}\n${t.updated}: ${updated}`);
-                event.target.value = '';
-
-            } catch (ex) {
-                console.error("Erreur import JSON:", ex);
-                alert(t.importError);
+                // Rafraîchir l'interface selon l'onglet actif
+                if (window.softResetUI) window.softResetUI();
+                
+            } catch (err) {
+                console.error("Erreur d'importation JSON:", err);
+                alert(t.importError || "Erreur lors de l'importation du fichier.");
             }
         };
-        reader.readAsText(file); // JSON is text
+        reader.readAsText(file);
     };
 
 })();
