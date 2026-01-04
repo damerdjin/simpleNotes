@@ -995,7 +995,7 @@
                                 return `
                                     <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
                                         <div class="flex justify-between items-center mb-1">
-                                            <strong class="text-gray-800 font-bold">${t.exercise} ${i + 1}${ex.name ? ' - ' + (ex.name === 'Global' ? t.globalMode : ex.name) : ''}</strong>
+                                            <strong class="text-gray-800 font-bold">${ex.name && ex.name !== 'Global' ? ex.name : t.exercise + ' ' + (i + 1)}</strong>
                                             <span class="text-blue-600 font-bold text-sm">${gradesSvc().getExerciseMaxPoints(ex)} ${t.points}</span>
                                         </div>
                                         ${exContent}

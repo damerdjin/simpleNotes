@@ -247,9 +247,10 @@
 
         for (const a of filteredAssignments) {
             if (showDetails) {
-                for (const ex of a.exercises) {
-                    const exIndex = a.exercises.indexOf(ex) + 1;
-                    headers += `<th class="p-2 text-center bg-blue-50 text-sm">Ex${exIndex}<br><span class="text-xs text-gray-500">/${window.getExerciseMaxPoints(ex)}</span></th>`;
+                for (let i = 0; i < a.exercises.length; i++) {
+                    const ex = a.exercises[i];
+                    const exLabel = ex.name && ex.name !== 'Global' ? ex.name : `Ex${i + 1}`;
+                    headers += `<th class="p-2 text-center bg-blue-50 text-sm">${exLabel}<br><span class="text-xs text-gray-500">/${window.getExerciseMaxPoints(ex)}</span></th>`;
                 }
             }
             headers += `<th class="p-3 text-center bg-blue-100 font-bold cursor-pointer select-none" onclick="toggleSummarySort('assignment-${a.id}')">${a.name}<br><span class="text-xs">/${window.getAssignmentMaxPoints(a)}</span></th>`;
@@ -282,8 +283,9 @@
                             const existingFinal = studentGrades[ex.id]?.['final']?.['final']?.['final'];
                             const hasEx = window.hasAnyGradeForExercise(studentGrades, ex);
                             const val = existingFinal !== undefined && existingFinal !== '' ? existingFinal : (hasEx ? exTotal.toFixed(2) : '');
+                            const exLabel = ex.name && ex.name !== 'Global' ? ex.name : `Ex${a.exercises.indexOf(ex) + 1}`;
                             row += `<td class="px-2 py-1 text-center">
-                                <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" value="${val}" oninput="sanitizeAndClamp(this, ${max})" onblur="commitSummaryInput('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" onkeydown="handleSummaryInputKey(event, '${s.id}','${a.id}','${ex.id}', ${max})" onfocus="this.select()" id="sum-input-${s.id}-${a.id}-${ex.id}" name="sum-input-${s.id}-${a.id}-${ex.id}" aria-label="Note Ex${a.exercises.indexOf(ex) + 1} pour ${s.name} - ${a.name}" class="summary-grade-input">
+                                <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" value="${val}" oninput="sanitizeAndClamp(this, ${max})" onblur="commitSummaryInput('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" onkeydown="handleSummaryInputKey(event, '${s.id}','${a.id}','${ex.id}', ${max})" onfocus="this.select()" id="sum-input-${s.id}-${a.id}-${ex.id}" name="sum-input-${s.id}-${a.id}-${ex.id}" aria-label="Note ${exLabel} pour ${s.name} - ${a.name}" class="summary-grade-input">
                             </td>`;
                         } else {
                             row += `<td class="px-2 py-1 text-center text-gray-300 bg-gray-50">-</td>`;
