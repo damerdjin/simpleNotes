@@ -282,15 +282,18 @@
             const hasQuestions = directQuestions.length > 0 || parts.length > 0;
             const exGradesCur = data.grades[studentId][assignmentId][ex.id] || {};
             const finalGradeCur = exGradesCur['final']?.['final']?.['final'] || '';
-            // Priority: if a global grade is filled, mode is 'global'. Otherwise use stored mode or default to 'detail'.
-            const modeCur = (finalGradeCur !== '' && finalGradeCur !== undefined) ? 'global' : (exGradesCur.mode || 'detail');
+            
+            // Priority: 
+            // 1. If we have a stored mode, use it.
+            // 2. If no stored mode but we have a global grade, it's 'global'.
+            // 3. Otherwise default to 'detail'.
+            const modeCur = exGradesCur.mode || (finalGradeCur !== '' ? 'global' : 'detail');
             const accordionId = `grade-ex-${ex.id}`;
             const maxExPoints = svc.getExerciseMaxPoints(ex);
             
-            // Calculate total questions to determine if we need the mode switcher
+            // Always show switcher for exercises with questions/parts
             const totalQuestions = directQuestions.length + parts.reduce((acc, p) => acc + (p.questions ? p.questions.length : 0), 0);
-            const isGlobalFilled = finalGradeCur !== undefined && finalGradeCur !== '';
-            const showSwitcher = totalQuestions > 1 || isGlobalFilled;
+            const showSwitcher = totalQuestions > 0;
             
             let exHtml = `
             <div class="border-2 border-slate-100 rounded-xl bg-white shadow-sm overflow-hidden transition-all hover:border-slate-200">
@@ -417,17 +420,50 @@
         if (!data.grades[studentId][assignmentId][exId][partKey]) data.grades[studentId][assignmentId][exId][partKey] = {};
         if (!data.grades[studentId][assignmentId][exId][partKey][qId]) data.grades[studentId][assignmentId][exId][partKey][qId] = {};
         
-        data.grades[studentId][assignmentId][exId][partKey][qId][sqId] = parseFloat(value) || 0;
+        const val = parseFloat(value) || 0;
+        data.grades[studentId][assignmentId][exId][partKey][qId][sqId] = val;
         
         const exGrades = data.grades[studentId][assignmentId][exId];
+        const assignment = data.assignments.find(a => a.id === assignmentId);
+        const ex = assignment?.exercises.find(e => e.id === exId);
+        
+        // Detect simple exercise (1 question, 0 sub-questions)
+        const directQuestions = ex?.questions || [];
+        const parts = ex?.parts || [];
+        const totalQuestions = directQuestions.length + parts.reduce((acc, p) => acc + (p.questions ? p.questions.length : 0), 0);
+        let isSimple = totalQuestions === 1;
+        let singleQ = null;
+        let singlePartKey = 'direct';
+        
+        if (isSimple) {
+            singleQ = directQuestions[0];
+            if (!singleQ && parts[0]?.questions[0]) {
+                singleQ = parts[0].questions[0];
+                singlePartKey = parts[0].id;
+            }
+            if (singleQ?.subQuestions && singleQ.subQuestions.length > 0) isSimple = false;
+        }
+
         if (partKey === 'final' && qId === 'final' && sqId === 'final') {
-            // If we update the global grade, we force global mode
             exGrades.mode = 'global';
+            // Sync to question if simple
+            if (isSimple && singleQ) {
+                if (!exGrades[singlePartKey]) exGrades[singlePartKey] = {};
+                if (!exGrades[singlePartKey][singleQ.id]) exGrades[singlePartKey][singleQ.id] = {};
+                exGrades[singlePartKey][singleQ.id]['direct'] = val;
+            }
         } else {
-            // If we update a detail grade, we switch to detail mode and clear global grade
             exGrades.mode = 'detail';
-            if (exGrades.final && exGrades.final.final && typeof exGrades.final.final.final !== 'undefined') {
-                exGrades.final.final.final = '';
+            // Sync to global if simple
+            if (isSimple) {
+                if (!exGrades.final) exGrades.final = {};
+                if (!exGrades.final.final) exGrades.final.final = {};
+                exGrades.final.final.final = val;
+            } else {
+                // Clear global if NOT simple
+                if (exGrades.final && exGrades.final.final && typeof exGrades.final.final.final !== 'undefined') {
+                    exGrades.final.final.final = '';
+                }
             }
         }
         saveData();
@@ -442,11 +478,24 @@
         
         const exGrades = data.grades[studentId][assignmentId][exId];
         exGrades.mode = mode;
+        
+        // Only clear global grade if NOT a simple exercise
         if (mode === 'detail') {
-            if (!exGrades.final) exGrades.final = {};
-            if (!exGrades.final.final) exGrades.final.final = {};
-            exGrades.final.final.final = '';
+            const assignment = data.assignments.find(a => a.id === assignmentId);
+            const ex = assignment?.exercises.find(e => e.id === exId);
+            const totalQuestions = (ex?.questions?.length || 0) + (ex?.parts?.reduce((acc, p) => acc + (p.questions?.length || 0), 0) || 0);
+            
+            const isSimple = totalQuestions === 1 && 
+                             !(ex?.questions?.[0]?.subQuestions?.length > 0) && 
+                             !(ex?.parts?.[0]?.questions?.[0]?.subQuestions?.length > 0);
+
+            if (!isSimple) {
+                if (!exGrades.final) exGrades.final = {};
+                if (!exGrades.final.final) exGrades.final.final = {};
+                exGrades.final.final.final = '';
+            }
         }
+        
         saveData();
         window.recalculateTotals(assignmentId, studentId);
         window.loadGradeEntry();
