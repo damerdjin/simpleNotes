@@ -188,20 +188,19 @@
         const content = document.getElementById('accordion-' + id);
         const icon = document.getElementById('icon-' + id);
         if (!content) return;
-        const willOpen = !content.classList.contains('open');
-        
-        if (willOpen) {
-            content.classList.add('open');
-            content.style.maxHeight = content.scrollHeight + 'px';
-            content.style.opacity = '1';
-            content.style.visibility = 'visible';
-            if (icon) icon.classList.add('open');
-        } else {
-            content.classList.remove('open');
-            content.style.maxHeight = '0';
+
+        const isOpen = content.style.maxHeight !== '0px' && content.style.maxHeight !== '';
+
+        if (isOpen) {
+            content.style.maxHeight = '0px';
             content.style.opacity = '0';
             content.style.visibility = 'hidden';
-            if (icon) icon.classList.remove('open');
+            if (icon) icon.classList.remove('rotate-180');
+        } else {
+            content.style.maxHeight = '2000px';
+            content.style.opacity = '1';
+            content.style.visibility = 'visible';
+            if (icon) icon.classList.add('rotate-180');
         }
     };
 
@@ -295,33 +294,43 @@
             const totalQuestions = directQuestions.length + parts.reduce((acc, p) => acc + (p.questions ? p.questions.length : 0), 0);
             const showSwitcher = totalQuestions > 0;
             
+            // Exercise Card
             let exHtml = `
-            <div class="border-2 border-slate-100 rounded-xl bg-white shadow-sm overflow-hidden transition-all hover:border-slate-200">
-                <div class="p-3.5 flex justify-between items-center cursor-pointer hover:bg-slate-50 transition-colors" 
-                     onclick="toggleAccordion('${accordionId}')">
-                    <div class="flex items-center gap-3">
-                        <div id="icon-${accordionId}" class="rotate-icon w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 transition-transform">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            <div class="group border border-slate-200 rounded-2xl overflow-hidden bg-white hover:shadow-xl hover:border-blue-200 transition-all duration-300 mb-4">
+                <!-- Header Section -->
+                <div class="p-5 flex items-center justify-between cursor-pointer select-none bg-gradient-to-r from-white to-slate-50/50" onclick="window.toggleAccordion('${accordionId}')">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-black shadow-lg shadow-blue-200 group-hover:scale-110 transition-transform duration-300">
+                            ${exIndex + 1}
                         </div>
                         <div>
-                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">${t.exercise || 'Exercice'} ${exIndex + 1}</span>
-                            <h4 class="font-bold text-slate-800 text-sm">${ex.name ? (ex.name === 'Global' ? t.globalMode : ex.name) : ''}</h4>
+                            <div class="flex items-center gap-2">
+                                <h3 class="font-black text-slate-800 tracking-tight">${ex.name ? (ex.name === 'Global' ? t.globalMode : ex.name) : (t.exercise || 'Exercice') + ' ' + (exIndex + 1)}</h3>
+                                <span class="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-black rounded-full border border-blue-100 uppercase tracking-wider">${maxExPoints} ${t.pointsAbbr || 'pts'}</span>
+                            </div>
                         </div>
                     </div>
+                    
                     <div class="flex items-center gap-3">
                         <span id="ex-total-${ex.id}" class="px-4 py-1.5 bg-blue-50 text-blue-700 font-black rounded-xl text-sm border border-blue-100 shadow-sm">
                             0 / ${maxExPoints}
                         </span>
+                        <div id="icon-${accordionId}" class="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all duration-500 shadow-sm">
+                            <svg class="w-5 h-5 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
                     </div>
                 </div>
-                
-                <div id="accordion-${accordionId}" class="accordion-content border-t border-slate-50" style="max-height: 0; opacity: 0; visibility: hidden;">
-                    <div class="p-4 space-y-4 bg-white">`;
+
+                <!-- Content Section -->
+                <div id="accordion-${accordionId}" class="accordion-content border-t border-slate-100 bg-white" style="max-height: 0; opacity: 0; visibility: hidden;">
+                    <div class="p-6 space-y-6">`;
 
             if (showSwitcher) {
                 exHtml += `
                         <!-- Mode Switcher & Global Grade (Same line) -->
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                             <div class="flex items-center gap-3">
                                 <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center shrink-0">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
