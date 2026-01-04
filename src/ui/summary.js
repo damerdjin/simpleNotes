@@ -1290,6 +1290,10 @@
         if (!data.grades[studentId]) data.grades[studentId] = {};
         if (!data.grades[studentId][assignmentId]) data.grades[studentId][assignmentId] = {};
         if (!data.grades[studentId][assignmentId][exId]) data.grades[studentId][assignmentId][exId] = {};
+        
+        // Force 'global' mode when modified from summary
+        data.grades[studentId][assignmentId][exId].mode = 'global';
+        
         if (!data.grades[studentId][assignmentId][exId]['final']) data.grades[studentId][assignmentId][exId]['final'] = {};
         if (!data.grades[studentId][assignmentId][exId]['final']['final']) data.grades[studentId][assignmentId][exId]['final']['final'] = {};
         let v = value === '' ? '' : (parseFloat(value) || 0);
