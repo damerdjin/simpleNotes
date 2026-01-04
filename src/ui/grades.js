@@ -15,6 +15,20 @@
         return q.maxPoints || 0;
     }
 
+    window.navigateStudent = function(direction) {
+        const studentSelect = document.getElementById('select-student');
+        if (!studentSelect || studentSelect.options.length <= 1) return;
+        
+        let newIndex = studentSelect.selectedIndex + direction;
+        
+        // Loop back if at ends
+        if (newIndex < 1) newIndex = studentSelect.options.length - 1;
+        if (newIndex >= studentSelect.options.length) newIndex = 1;
+        
+        studentSelect.selectedIndex = newIndex;
+        window.loadGradeEntry();
+    };
+
     window.loadGradeSelectors = function() {
         const t = getTranslations()[getLang()];
         const assignmentSelect = document.getElementById('select-assignment');
@@ -29,10 +43,18 @@
         const currentStudentId = studentSelect.value;
 
         if (!selectedClass) {
-            assignmentSelect.innerHTML = `<option value="">-- ${t.selectClassFirst} --</option>`;
-            studentSelect.innerHTML = `<option value="">-- ${t.selectClassFirst} --</option>`;
+            assignmentSelect.innerHTML = `<option value="">-- ${t.selectClassFirst || 'Sélectionnez une classe'} --</option>`;
+            studentSelect.innerHTML = `<option value="">-- ${t.selectClassFirst || 'Sélectionnez une classe'} --</option>`;
             const entry = document.getElementById('grade-entry');
-            if (entry) entry.innerHTML = `<p class="text-gray-500 text-center py-8">${t.selectClassToStart}</p>`;
+            if (entry) {
+                entry.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-12 text-slate-400">
+                    <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 border border-slate-100">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                    </div>
+                    <p class="font-medium text-slate-500">${t.selectClassToStart || 'Sélectionnez une classe pour commencer'}</p>
+                </div>`;
+            }
             return;
         }
 
@@ -49,12 +71,12 @@
             const matchTrimester = globalTrimester ? (a.trimester || '') === globalTrimester : false;
             return matchClass && matchUser && matchAcademicYear && matchTrimester;
         });
-        assignmentSelect.innerHTML = `<option value="">-- ${t.selectAssignment} --</option>` +
+        assignmentSelect.innerHTML = `<option value="">-- ${t.selectAssignment || 'Sélectionner un devoir'} --</option>` +
             filteredAssignments.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
 
         // Mise à jour de la liste des élèves
         const filteredStudents = data.students.filter(s => s.className === selectedClass && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear);
-        studentSelect.innerHTML = `<option value="">-- ${t.selectStudent} --</option>` +
+        studentSelect.innerHTML = `<option value="">-- ${t.selectStudent || 'Sélectionner un élève'} --</option>` +
             filteredStudents.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
 
         // Tenter de restaurer les sélections si elles sont toujours valides
@@ -70,7 +92,15 @@
             window.loadGradeEntry();
         } else {
             const entry = document.getElementById('grade-entry');
-            if (entry) entry.innerHTML = `<p class="text-gray-500 text-center py-8">${t.selectAssignmentAndStudentToGrade}</p>`;
+            if (entry) {
+                entry.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-12 text-slate-400">
+                    <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 border border-slate-100">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                    </div>
+                    <p class="font-medium text-slate-500">${t.selectAssignmentAndStudentToGrade || 'Sélectionnez un devoir et un élève'}</p>
+                </div>`;
+            }
         }
     };
 
@@ -87,6 +117,12 @@
         } else {
             list = ex.questions || [];
         }
+        
+        const q = list.find(x => x.id === qId);
+        if (q && q.name && q.name.trim() !== '') {
+            return q.name;
+        }
+        
         const idx = Math.max(0, list.findIndex(x => x.id === qId));
         return `${t.questionPrefix}${idx + 1}`;
     };
@@ -105,36 +141,42 @@
         if (!studentGrades[partKey]) studentGrades[partKey] = {};
         const qGrades = studentGrades[partKey][q.id] || {};
         const mode = studentGrades.mode || ((studentGrades['final']?.['final']?.['final'] || '') !== '' ? 'global' : 'detail');
+        const maxPts = getQuestionMaxPoints(q);
         
-        let qHtml = `<div class="grade-question-card">
-        <div class="question-header">
-            <span class="question-title">${window.getQuestionDisplayName(assignmentId, exId, q.id, partId)}</span>
-            <span class="question-score" id="q-total-${q.id}">0 / ${getQuestionMaxPoints(q)}</span>
-        </div>`;
+        let qHtml = `
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col gap-3 transition-all hover:border-blue-300 hover:bg-blue-50/30 group">
+            <div class="flex items-center justify-between">
+                <span class="text-sm font-bold text-slate-700">${window.getQuestionDisplayName(assignmentId, exId, q.id, partId)}</span>
+                <span class="text-[10px] font-bold px-2 py-0.5 bg-white border border-slate-200 rounded-full text-slate-500 group-hover:border-blue-200 group-hover:text-blue-600 transition-colors" id="q-total-${q.id}">0 / ${maxPts}</span>
+            </div>`;
         
         if (!q.subQuestions || q.subQuestions.length === 0) {
             const val = qGrades['direct'] || '';
-            qHtml += `<div class="question-direct-entry ${mode === 'global' ? 'opacity-50 pointer-events-none' : ''}">
-            <input type="number" min="0" max="${q.maxPoints}" step="0.25" value="${val}"
-                ${mode === 'global' ? 'disabled' : ''}
-                onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','direct',this.value)"
-                class="grade-input p-2 border rounded text-center font-semibold" title="La note globale désactive la saisie détaillée">
-            <span class="question-max">/ ${q.maxPoints}</span>
-        </div>`;
+            qHtml += `
+            <div class="relative ${mode === 'global' ? 'opacity-40 grayscale pointer-events-none' : ''}">
+                <input type="number" min="0" max="${q.maxPoints}" step="0.25" value="${val}"
+                    ${mode === 'global' ? 'disabled' : ''}
+                    onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','direct',this.value)"
+                    class="w-full p-2.5 bg-white border-2 border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all" 
+                    placeholder="0">
+                <div class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">/ ${q.maxPoints}</div>
+            </div>`;
         } else {
-            qHtml += `<div class="subquestion-grid">`;
+            qHtml += `<div class="grid grid-cols-2 gap-2">`;
             qHtml += q.subQuestions.map(sq => {
                 const val = qGrades[sq.id] || '';
-                return `<div class="subquestion-chip ${mode === 'global' ? 'opacity-50 pointer-events-none' : ''}">
-                <div class="subquestion-chip-header">
-                    <span>${window.getSubQuestionLetter(q, sq.id)})</span>
-                    <span class="text-xs text-gray-500">/${sq.maxPoints}</span>
-                </div>
-                <input type="number" min="0" max="${sq.maxPoints}" step="0.25" value="${val}"
-                    ${mode === 'global' ? 'disabled' : ''}
-                    onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','${sq.id}',this.value)"
-                    class="grade-input p-2 border rounded text-center font-semibold" title="La note globale désactive la saisie détaillée">
-            </div>`;
+                return `
+                <div class="space-y-1 ${mode === 'global' ? 'opacity-40 grayscale pointer-events-none' : ''}">
+                    <div class="flex justify-between px-1">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase">${window.getSubQuestionLetter(q, sq.id)})</span>
+                        <span class="text-[10px] font-bold text-slate-400">/${sq.maxPoints}</span>
+                    </div>
+                    <input type="number" min="0" max="${sq.maxPoints}" step="0.25" value="${val}"
+                        ${mode === 'global' ? 'disabled' : ''}
+                        onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','${sq.id}',this.value)"
+                        class="w-full p-2 bg-white border-2 border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all text-xs"
+                        placeholder="0">
+                </div>`;
             }).join('');
             qHtml += `</div>`;
         }
@@ -147,11 +189,19 @@
         const icon = document.getElementById('icon-' + id);
         if (!content) return;
         const willOpen = !content.classList.contains('open');
-        content.classList.toggle('open');
-        content.style.display = willOpen ? 'block' : 'none';
-        if (icon) {
-            icon.classList.toggle('open');
-            icon.style.transform = icon.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
+        
+        if (willOpen) {
+            content.classList.add('open');
+            content.style.maxHeight = content.scrollHeight + 'px';
+            content.style.opacity = '1';
+            content.style.visibility = 'visible';
+            if (icon) icon.classList.add('open');
+        } else {
+            content.classList.remove('open');
+            content.style.maxHeight = '0';
+            content.style.opacity = '0';
+            content.style.visibility = 'hidden';
+            if (icon) icon.classList.remove('open');
         }
     };
 
@@ -162,7 +212,24 @@
         const container = document.getElementById('grade-entry');
         
         if (!assignmentId || !studentId) {
-            container.innerHTML = `<p class="text-gray-500 text-center py-8">${t.selectAssignmentAndStudentToGrade}</p>`;
+            const selectClass = document.getElementById('select-class-grades').value;
+            if (!selectClass) {
+                container.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-12 text-slate-400">
+                    <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 border border-slate-100">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                    </div>
+                    <p class="font-medium text-slate-500">${t.selectClassToStart || 'Sélectionnez une classe pour commencer'}</p>
+                </div>`;
+            } else {
+                container.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-12 text-slate-400">
+                    <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 border border-slate-100">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                    </div>
+                    <p class="font-medium text-slate-500">${t.selectAssignmentAndStudentToGrade || 'Sélectionnez un devoir et un élève'}</p>
+                </div>`;
+            }
             return;
         }
 
@@ -174,12 +241,38 @@
         if (!data.grades[studentId][assignmentId]) data.grades[studentId][assignmentId] = {};
 
         const svc = gradesSvc();
+        const maxAssignmentPoints = svc.getAssignmentMaxPoints(assignment);
 
-        let html = `<div class="bg-blue-50 p-4 rounded-lg mb-4">
-        <h3 class="font-bold text-xl">${student.name} - ${assignment.name}</h3>
-        <p class="text-2xl font-bold text-blue-600 mt-2">${t.total}: <span id="grade-total">0</span> / ${svc.getAssignmentMaxPoints(assignment)}</p>
-    </div>`;
+        // Student Header Card (Reduced size)
+        let html = `
+        <div class="bg-blue-600 rounded-xl p-4 mb-6 text-white shadow-md relative overflow-hidden">
+            <div class="absolute top-0 right-0 p-4 opacity-5">
+                <svg class="w-20 h-20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+            </div>
+            <div class="relative z-10 flex flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-xl font-black border border-white/30">
+                        ${student.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-black tracking-tight leading-tight">${student.name}</h3>
+                        <div class="flex items-center gap-2 mt-0.5 opacity-90">
+                            <span class="px-1.5 py-0.5 bg-white/20 rounded text-[10px] font-bold uppercase tracking-wider border border-white/10">${student.className || ''}</span>
+                            <span class="text-xs font-medium opacity-80">| ${assignment.name}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white/10 backdrop-blur-md rounded-xl px-4 py-2 border border-white/20 flex flex-col items-center min-w-[100px]">
+                    <span class="text-[9px] font-bold uppercase tracking-wider opacity-70 mb-0.5">${t.total || 'Total'}</span>
+                    <div class="flex items-baseline gap-1">
+                        <span id="grade-total" class="text-2xl font-black">0</span>
+                        <span class="text-sm font-bold opacity-60">/ ${maxAssignmentPoints}</span>
+                    </div>
+                </div>
+            </div>
+        </div>`;
 
+        html += `<div class="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">`;
         html += assignment.exercises.map((ex, exIndex) => {
             if (!data.grades[studentId][assignmentId][ex.id]) {
                 data.grades[studentId][assignmentId][ex.id] = {};
@@ -189,73 +282,127 @@
             const hasQuestions = directQuestions.length > 0 || parts.length > 0;
             const exGradesCur = data.grades[studentId][assignmentId][ex.id] || {};
             const finalGradeCur = exGradesCur['final']?.['final']?.['final'] || '';
-            const modeCur = exGradesCur.mode || (finalGradeCur !== '' ? 'global' : 'detail');
+            // Priority: if a global grade is filled, mode is 'global'. Otherwise use stored mode or default to 'detail'.
+            const modeCur = (finalGradeCur !== '' && finalGradeCur !== undefined) ? 'global' : (exGradesCur.mode || 'detail');
             const accordionId = `grade-ex-${ex.id}`;
+            const maxExPoints = svc.getExerciseMaxPoints(ex);
+            
+            // Calculate total questions to determine if we need the mode switcher
+            const totalQuestions = directQuestions.length + parts.reduce((acc, p) => acc + (p.questions ? p.questions.length : 0), 0);
+            const isGlobalFilled = finalGradeCur !== undefined && finalGradeCur !== '';
+            const showSwitcher = totalQuestions > 1 || isGlobalFilled;
             
             let exHtml = `
-<div class="border rounded-lg overflow-hidden bg-white mb-3">
-    <div class="bg-gray-100 p-4 flex justify-between items-center cursor-pointer hover:bg-gray-200 transition-colors" 
-         onclick="toggleAccordion('${accordionId}')">
-        <div class="flex items-center gap-3">
-            <span id="icon-${accordionId}" class="rotate-icon text-gray-400">▼</span>
-            <span class="font-bold">${t.exercise} ${exIndex + 1}${ex.name ? ' - ' + (ex.name === 'Global' ? t.globalMode : ex.name) : ''}</span>
-        </div>
-        <span class="text-blue-700 font-bold bg-white px-3 py-1 rounded-full shadow-sm text-sm" id="ex-total-${ex.id}">0 / ${svc.getExerciseMaxPoints(ex)}</span>
-    </div>
-    <div id="accordion-${accordionId}" class="accordion-content">
-        <div class="p-4 space-y-4 border-t">
-            <div class="flex items-center gap-3">
-                <div class="inline-flex border rounded overflow-hidden text-sm">
-                    <button type="button" class="px-3 py-1 ${modeCur === 'detail' ? 'bg-blue-600 text-white' : 'bg-white'}" onclick="setExerciseMode('${studentId}','${assignmentId}','${ex.id}','detail')">Σ ${t.detailMode}</button>
-                    <button type="button" class="px-3 py-1 ${modeCur === 'global' ? 'bg-yellow-500 text-white' : 'bg-white'}" onclick="setExerciseMode('${studentId}','${assignmentId}','${ex.id}','global')">★ ${t.globalMode}</button>
+            <div class="border-2 border-slate-100 rounded-xl bg-white shadow-sm overflow-hidden transition-all hover:border-slate-200">
+                <div class="p-3.5 flex justify-between items-center cursor-pointer hover:bg-slate-50 transition-colors" 
+                     onclick="toggleAccordion('${accordionId}')">
+                    <div class="flex items-center gap-3">
+                        <div id="icon-${accordionId}" class="rotate-icon w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 transition-transform">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">${t.exercise || 'Exercice'} ${exIndex + 1}</span>
+                            <h4 class="font-bold text-slate-800 text-sm">${ex.name ? (ex.name === 'Global' ? t.globalMode : ex.name) : ''}</h4>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span id="ex-total-${ex.id}" class="px-4 py-1.5 bg-blue-50 text-blue-700 font-black rounded-xl text-sm border border-blue-100 shadow-sm">
+                            0 / ${maxExPoints}
+                        </span>
+                    </div>
                 </div>
-            </div>`;
-            
-            if (hasQuestions) {
-                const finalGrade = data.grades[studentId][assignmentId][ex.id]?.['final']?.['final']?.['final'] || '';
+                
+                <div id="accordion-${accordionId}" class="accordion-content border-t border-slate-50" style="max-height: 0; opacity: 0; visibility: hidden;">
+                    <div class="p-4 space-y-4 bg-white">`;
+
+            if (showSwitcher) {
                 exHtml += `
-        <div class="flex items-center gap-3 mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-100">
-            <span class="text-sm font-semibold text-yellow-800">${t.globalGrade}</span>
-            <input type="number" min="0" max="${svc.getExerciseMaxPoints(ex)}" step="0.25" value="${finalGrade}"
-                ${modeCur === 'detail' ? 'disabled' : ''}
-                title="La note globale désactive la saisie détaillée"
-                onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
-                class="grade-input w-20 p-2 border rounded text-center font-bold bg-white ${modeCur === 'detail' ? 'opacity-50' : ''}" onclick="event.stopPropagation()">
-            <span class="text-xs text-yellow-600 italic">${t.ignoresDetails}</span>
-        </div>`;
+                        <!-- Mode Switcher & Global Grade (Same line) -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center shrink-0">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                                </div>
+                                <div class="inline-flex bg-slate-200 p-0.5 rounded-lg shadow-inner">
+                                    <button type="button" 
+                                        class="px-3 py-1 rounded-md text-[10px] font-bold transition-all ${modeCur === 'detail' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}" 
+                                        onclick="event.stopPropagation(); setExerciseMode('${studentId}','${assignmentId}','${ex.id}','detail')">
+                                        ${t.detailMode || 'Détaillé'}
+                                    </button>
+                                    <button type="button" 
+                                        class="px-3 py-1 rounded-md text-[10px] font-bold transition-all ${modeCur === 'global' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}" 
+                                        onclick="event.stopPropagation(); setExerciseMode('${studentId}','${assignmentId}','${ex.id}','global')">
+                                        ${t.globalMode || 'Global'}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Global Grade Input -->
+                            <div class="flex items-center gap-3 ${modeCur === 'detail' ? 'opacity-40 grayscale pointer-events-none' : ''}">
+                                <span class="text-xs font-bold text-slate-500 uppercase tracking-tight">${t.globalGrade || 'Note globale'} :</span>
+                                <div class="relative">
+                                    <input type="number" min="0" max="${maxExPoints}" step="0.25" value="${finalGradeCur}"
+                                        ${modeCur === 'detail' ? 'disabled' : ''}
+                                        onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
+                                        class="w-20 p-1.5 bg-white border-2 border-amber-200 rounded-lg text-center font-black text-slate-700 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all text-sm" 
+                                        placeholder="0" onclick="event.stopPropagation()">
+                                    <div class="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-400">/ ${maxExPoints}</div>
+                                </div>
+                            </div>
+                        </div>`;
             }
             
             if (directQuestions.length === 0 && parts.length === 0) {
                 const val = data.grades[studentId][assignmentId][ex.id]?.['direct']?.['direct']?.['direct'] || '';
                 exHtml += `
-        <div class="flex items-center gap-4 bg-blue-50 p-4 rounded-lg">
-            <span class="font-semibold">${t.grade}</span>
-            <input type="number" min="0" max="${ex.maxPoints}" step="0.25" value="${val}"
-                onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','direct','direct','direct',this.value)"
-                class="grade-input w-24 p-2 border rounded text-center font-bold text-lg" onclick="event.stopPropagation()">
-            <span class="text-gray-500 text-lg">/ ${ex.maxPoints}</span>
-        </div>`;
+                        <div class="flex items-center gap-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
+                            <div class="flex items-center gap-3 shrink-0">
+                                <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </div>
+                                <span class="text-xs font-bold text-blue-900">${t.grade || 'Note'}</span>
+                            </div>
+                            <div class="flex items-center gap-3 ml-auto">
+                                <div class="relative w-28">
+                                    <input type="number" min="0" max="${ex.maxPoints}" step="0.25" value="${val}"
+                                        onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','direct','direct','direct',this.value)"
+                                        class="w-full p-2 bg-white border-2 border-blue-200 rounded-lg text-center font-black text-blue-900 focus:border-blue-500 outline-none transition-all shadow-sm text-sm" 
+                                        placeholder="0">
+                                    <div class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-400">/ ${ex.maxPoints}</div>
+                                </div>
+                            </div>
+                        </div>`;
             } else {
+                // Wrap detailed questions in a container that can be hidden
+                exHtml += `<div class="${modeCur === 'global' ? 'hidden' : ''}">`;
+                
                 if (directQuestions.length > 0) {
-                    exHtml += `<div class="grade-question-grid">` + directQuestions.map(q => window.renderGradeQuestion(q, studentId, assignmentId, ex.id, null)).join('') + `</div>`;
+                    exHtml += `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">` + directQuestions.map(q => window.renderGradeQuestion(q, studentId, assignmentId, ex.id, null)).join('') + `</div>`;
                 }
                 if (parts.length > 0) {
-                    exHtml += parts.map(part => {
+                    exHtml += parts.map((part, pIdx) => {
+                        const showBorder = showSwitcher || pIdx > 0 || directQuestions.length > 0;
                         return `
-            <div class="mt-4 pt-4 border-t">
-                <h4 class="font-bold text-purple-700 mb-3 flex itemscenter gap-2">
-                    <span class="w-2 h-2 bg-purple-400 rounded-full"></span> ${part.name}
-                </h4>
-                <div class="grade-question-grid">
-                    ${(part.questions || []).map(q => window.renderGradeQuestion(q, studentId, assignmentId, ex.id, part.id)).join('')}
-                </div>
-            </div>`;
+                        <div class="${showBorder ? 'mt-6 pt-6 border-t border-slate-100' : ''}">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-7 h-7 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center shrink-0">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                                </div>
+                                <h4 class="font-black text-slate-700 text-[11px] uppercase tracking-wider">${part.name}</h4>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                ${(part.questions || []).map(q => window.renderGradeQuestion(q, studentId, assignmentId, ex.id, part.id)).join('')}
+                            </div>
+                        </div>`;
                     }).join('');
                 }
+                
+                exHtml += `</div>`;
             }
             exHtml += `</div></div></div>`;
             return exHtml;
         }).join('');
+        html += `</div>`;
         
         container.innerHTML = html;
         saveData();
@@ -272,10 +419,14 @@
         
         data.grades[studentId][assignmentId][exId][partKey][qId][sqId] = parseFloat(value) || 0;
         
-        if (!(partKey === 'final' && qId === 'final' && sqId === 'final')) {
-            const exGrades = data.grades[studentId][assignmentId][exId];
+        const exGrades = data.grades[studentId][assignmentId][exId];
+        if (partKey === 'final' && qId === 'final' && sqId === 'final') {
+            // If we update the global grade, we force global mode
+            exGrades.mode = 'global';
+        } else {
+            // If we update a detail grade, we switch to detail mode and clear global grade
             exGrades.mode = 'detail';
-            if (exGrades && exGrades.final && exGrades.final.final && typeof exGrades.final.final.final !== 'undefined') {
+            if (exGrades.final && exGrades.final.final && typeof exGrades.final.final.final !== 'undefined') {
                 exGrades.final.final.final = '';
             }
         }
