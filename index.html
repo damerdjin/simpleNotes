@@ -1461,15 +1461,22 @@
         }
 
         .user-profile .avatar {
-            width: 38px;
-            height: 38px;
-            background: #e2e8f0;
-            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
-            color: #475569;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        .user-profile button:hover .avatar {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px -2px rgba(59, 130, 246, 0.3);
         }
 
         /* Utility for section visibility (replacing old tabs) */
@@ -1624,6 +1631,12 @@
                     const userInfo = document.getElementById('current-user-info');
                     if (userInfo) userInfo.textContent = user.email || user.id;
 
+                    // Set avatar initial
+                    const avatarInitial = document.getElementById('user-avatar-initial');
+                    if (avatarInitial && user.email) {
+                        avatarInitial.textContent = user.email.charAt(0).toUpperCase();
+                    }
+
                     // User menu toggle
                     const userMenuBtn = document.getElementById('user-menu-button');
                     if (userMenuBtn) {
@@ -1768,22 +1781,29 @@
             </div>
 
             <div class="user-profile relative">
-                <button id="user-menu-button" class="flex items-center gap-3 p-1 pr-3 hover:bg-gray-100 rounded-full transition">
+                <button id="user-menu-button" class="flex items-center gap-2 p-1.5 hover:bg-gray-100 rounded-xl transition-all duration-200">
                     <div class="avatar">
                         <span id="user-avatar-initial">U</span>
                     </div>
-                    <span id="current-user-info" class="user-email hidden lg:block"></span>
-                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
                 </button>
-                <div id="user-menu" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-50 hidden border border-gray-100">
-                    <button onclick="handleLogout()" class="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg flex items-center gap-3 transition">
-                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                        </svg>
-                        <span data-translate="logout">Logout</span>
-                    </button>
+                <div id="user-menu" class="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl z-50 hidden border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                    <div class="px-4 py-4 border-b border-gray-50 bg-gray-50/50">
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1" data-translate="connectedAs">Connecté en tant que</p>
+                        <p id="current-user-info" class="text-sm font-bold text-gray-700 truncate"></p>
+                    </div>
+                    <div class="p-2">
+                        <button onclick="handleLogout()" class="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl flex items-center gap-3 transition-colors group">
+                            <div class="w-8 h-8 bg-red-100 text-red-600 rounded-lg flex items-center justify-center group-hover:bg-red-600 group-hover:text-white transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                </svg>
+                            </div>
+                            <span class="font-bold text-sm" data-translate="logout">Déconnexion</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </header>
