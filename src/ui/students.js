@@ -156,12 +156,7 @@
                         </p>
                     </div>
 
-                    <div class="mt-auto pt-4 border-t border-slate-50 flex items-center justify-between">
-                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">${t.quickAccess || 'Accès rapide'}</span>
-                        <div class="text-blue-600 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1">
-                            <svg class="w-5 h-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                        </div>
-                    </div>
+
                     
                     <div class="absolute bottom-0 start-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
                 </div>
