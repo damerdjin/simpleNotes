@@ -329,6 +329,13 @@
             modal.querySelector('div').classList.remove('scale-95');
             modal.querySelector('div').classList.add('scale-100');
         }
+
+        // Update academic year display in bulk import section
+        const currentYearDisplay = document.getElementById('current-academic-year-display');
+        if (currentYearDisplay) {
+            const globalYear = window.getGlobalAcademicYear();
+            currentYearDisplay.textContent = globalYear || 'Non définie';
+        }
         
         // Find elements
         const titleEl = modal.querySelector('h3');
