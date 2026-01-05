@@ -110,9 +110,24 @@
             console.warn("Erreur export messages Perso:", e);
         }
 
+        // Filtrer l'exportPrepConfig pour n'inclure que les classes exportées
+        const exportedClasses = new Set(filteredStudents.map(s => s.className));
+        const filteredExportPrepConfig = { 
+            globalRemarks: window.exportPrepConfig?.globalRemarks || {},
+            byClass: {} 
+        };
+        
+        if (window.exportPrepConfig?.byClass) {
+            for (const cls of exportedClasses) {
+                if (window.exportPrepConfig.byClass[cls]) {
+                    filteredExportPrepConfig.byClass[cls] = window.exportPrepConfig.byClass[cls];
+                }
+            }
+        }
+
         const payload = {
             data: filteredData,
-            exportPrepConfig: window.exportPrepConfig,
+            exportPrepConfig: filteredExportPrepConfig,
             teacherMessages,
             metadata: {
                 exportedBy: userId,

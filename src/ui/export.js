@@ -200,6 +200,22 @@
     }
     window.getExportClassConfig = getExportClassConfig; // Needed globally for some calls
 
+    window.deleteClassDataFromExport = function(className) {
+        if (!className) return;
+        
+        // 1. Clean exportPrepConfig
+        if (exportPrepConfig && exportPrepConfig.byClass && exportPrepConfig.byClass[className]) {
+            delete exportPrepConfig.byClass[className];
+            window.saveExportPrepConfig();
+        }
+
+        // 2. Clean remarksOverrides
+        if (remarksOverrides && remarksOverrides[className]) {
+            delete remarksOverrides[className];
+            saveRemarksOverrides(remarksOverrides);
+        }
+    };
+
     function getAssignmentsForClass(className) {
         const globalTrimester = window.getGlobalTrimester();
         const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';

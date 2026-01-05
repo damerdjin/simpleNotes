@@ -207,6 +207,11 @@
             data.assignments = data.assignments.filter(a => a.className !== className);
         }
 
+        // Clean up export config and overrides for this class
+        if (typeof window.deleteClassDataFromExport === 'function') {
+            window.deleteClassDataFromExport(className);
+        }
+
         saveData();
         window.renderStudents();
         window.renderClassList();
