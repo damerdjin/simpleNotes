@@ -357,9 +357,8 @@
                 if (btnAdd) btnAdd.textContent = t.save || 'Enregistrer';
 
                 // Fill inputs
-                const nameParts = student.name.split(' ');
-                if (lastNameInput) lastNameInput.value = nameParts[0] || '';
-                if (firstNameInput) firstNameInput.value = nameParts.slice(1).join(' ') || '';
+                if (lastNameInput) lastNameInput.value = student.lastName || '';
+                if (firstNameInput) firstNameInput.value = student.firstName || '';
                 if (ninInput) ninInput.value = student.nin || '';
 
                 // Handle Class Select
