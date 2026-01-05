@@ -290,7 +290,7 @@ window.translations = {
         howToDo: "Comment faire ?",
         stepConnect: "Connectez-vous sur",
         stepGoToSection: "Allez dans la section",
-        stepExportExcel: "Exportez le fichier Excel",
+        stepExportExcel: "Exportez le fichier Excel en cliquant sur",
         stepImportHere: "Importez-le ici même !",
     },
 
@@ -604,7 +604,7 @@ window.translations = {
         howToDo: "How to do it?",
         stepConnect: "Log in to",
         stepGoToSection: "Go to the section",
-        stepExportExcel: "Export the Excel file",
+        stepExportExcel: "Export the Excel file by clicking on",
         stepImportHere: "Import it right here!",
     },
 
@@ -917,7 +917,7 @@ window.translations = {
         howToDo: "كيفية القيام بذلك؟",
         stepConnect: "سجل الدخول إلى",
         stepGoToSection: "اذهب إلى قسم",
-        stepExportExcel: "قم بتصدير ملف إكسل",
+        stepExportExcel: "قم بتصدير ملف إكسل بالضغط على",
         stepImportHere: "قم باستيراده هنا!",
     }
 };
