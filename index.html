@@ -654,9 +654,17 @@
         /* ===== STUDENT GRID & CARDS ===== */
         #students-list.student-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
             padding: 0.5rem;
+        }
+
+        @media (max-width: 640px) {
+            #students-list.student-grid {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+                padding: 0.25rem;
+            }
         }
 
         .student-item {
@@ -665,12 +673,20 @@
             background: white;
             border: 2px solid #f1f5f9;
             border-radius: 1.25rem;
-            padding: 1.25rem;
+            padding: 1rem;
             display: flex;
             align-items: center;
-            gap: 1.25rem;
+            gap: 1rem;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        @media (max-width: 640px) {
+            .student-item {
+                padding: 0.875rem;
+                gap: 0.875rem;
+                border-radius: 1rem;
+            }
         }
 
         @keyframes cardAppear {
@@ -701,6 +717,15 @@
             font-weight: 800;
             flex-shrink: 0;
             transition: all 0.3s ease;
+        }
+
+        @media (max-width: 640px) {
+            .student-level {
+                width: 40px;
+                height: 40px;
+                font-size: 1.1rem;
+                border-radius: 0.75rem;
+            }
         }
 
         .student-level.boy {
@@ -735,6 +760,13 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+
+        @media (max-width: 640px) {
+            .student-name {
+                font-size: 1rem;
+                margin-bottom: 0.25rem;
+            }
         }
 
         .student-meta {
@@ -787,6 +819,15 @@
         .student-item:hover .student-actions {
             opacity: 1;
             transform: translateX(0);
+        }
+
+        @media (max-width: 1024px) {
+            .student-actions {
+                opacity: 1;
+                transform: translateX(0);
+                top: 0.5rem;
+                right: 0.5rem;
+            }
         }
 
         .student-actions button {
@@ -976,6 +1017,16 @@
 
         .rtl-layout .student-item:hover .student-actions {
             transform: translateX(0) !important;
+        }
+
+        @media (max-width: 1024px) {
+            .rtl-layout .student-actions {
+                opacity: 1 !important;
+                transform: translateX(0) !important;
+                right: auto !important;
+                left: 0.5rem !important;
+                top: 0.5rem !important;
+            }
         }
 
         .rtl-layout .student-meta {
