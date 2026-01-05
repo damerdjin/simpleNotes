@@ -837,8 +837,13 @@
         const preview = document.getElementById('export-preview-table');
         if (!preview) return;
 
+        const globalUserId = window.currentUser?.email || window.currentUser?.id || 'unknown';
+        const globalAcademicYear = window.getGlobalAcademicYear();
+
         const students = getData().students
-            .filter(s => (s.className || '').trim() === (className || '').trim())
+            .filter(s => (s.className || '').trim() === (className || '').trim() &&
+                         (s.importedBy || 'unknown') === globalUserId &&
+                         (s.academicYear || '') === globalAcademicYear)
             .slice()
             .sort((a, b) => (a.name || '').localeCompare((b.name || ''), 'fr', { sensitivity: 'base' }));
 
