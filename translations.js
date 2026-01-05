@@ -59,6 +59,8 @@ window.translations = {
         assignmentsTab: "Devoirs",
         gradesTab: "Notes",
         summaryTab: "Récapitulatif",
+        prev: "Précédent",
+        next: "Suivant",
 
         // Étudiants
         myClasses: "Mes Classes",
@@ -176,6 +178,7 @@ window.translations = {
         // Notes
         gradesEntry: "Saisie des Notes",
         selectAssignmentAndStudentToGrade: "Sélectionnez un devoir et un élève pour saisir les notes.",
+        selectContextToStart: "Sélectionnez le contexte pour commencer",
         globalGrade: "Note globale (écrase le total) :",
         ignoresDetails: "Si rempli, ignore le détail ci-dessous.",
         grade: "Note :",
@@ -355,6 +358,8 @@ window.translations = {
         assignmentsTab: "Assignments",
         gradesTab: "Grades",
         summaryTab: "Summary",
+        prev: "Previous",
+        next: "Next",
 
         // Étudiants
         myClasses: "My Classes",
@@ -488,9 +493,10 @@ window.translations = {
         globalMode: 'Global',
 
         // Notes
-        gradesEntry: "Grade Entry",
+        gradesEntry: "Grades Entry",
         selectAssignmentAndStudentToGrade: "Select an assignment and a student to enter grades.",
-        globalGrade: "Global grade (overrides total):",
+        selectContextToStart: "Select context to start",
+        globalGrade: "Global grade (overwrites total):",
         ignoresDetails: "If filled, ignores the details below.",
         grade: "Grade:",
         total: "Total",
@@ -668,6 +674,8 @@ window.translations = {
         assignmentsTab: "الواجبات",
         gradesTab: "النقاط",
         summaryTab: "الملخص",
+        prev: "السابق",
+        next: "التالي",
 
         // Étudiants
         myClasses: "فصولي",
@@ -803,6 +811,7 @@ window.translations = {
         // Notes
         gradesEntry: "إدخال النقط",
         selectAssignmentAndStudentToGrade: "اختر واجبا وطالبا لإدخال النقاط.",
+        selectContextToStart: "اختر السياق للبدء",
         globalGrade: "النقطة العامة (تتجاوز المجموع):",
         ignoresDetails: "إذا تم ملؤه، يتجاهل التفاصيل أدناه.",
         grade: "النقطة:",

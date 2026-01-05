@@ -1837,19 +1837,19 @@
         <nav>
             <div class="nav-item active" data-tab="students" onclick="switchTab('students')">
                 <span>👥</span>
-                <span data-translate="students">Élèves</span>
+                <span data-translate="studentsTab">Élèves</span>
             </div>
             <div class="nav-item" data-tab="assignments" onclick="switchTab('assignments')">
                 <span>📝</span>
-                <span data-translate="assignments">Devoirs</span>
+                <span data-translate="assignmentsTab">Devoirs</span>
             </div>
             <div class="nav-item" data-tab="grades" onclick="switchTab('grades')">
                 <span>📊</span>
-                <span data-translate="grades">Notes</span>
+                <span data-translate="gradesTab">Notes</span>
             </div>
             <div class="nav-item" data-tab="summary" onclick="switchTab('summary')">
                 <span>📋</span>
-                <span data-translate="summary">Récapitulatif</span>
+                <span data-translate="summaryTab">Récapitulatif</span>
             </div>
             <div class="nav-item" data-tab="export" onclick="switchTab('export')">
                 <span>📦</span>
@@ -2119,11 +2119,11 @@
                                                 <option value="">-- Sélectionner un élève --</option>
                                             </select>
                                             <div class="flex gap-2 w-full">
-                                                <button onclick="navigateStudent(-1)" class="modern-btn-secondary flex-1 !py-2 shadow-sm justify-center" title="Précédent">
+                                                <button onclick="navigateStudent(-1)" class="modern-btn-secondary flex-1 !py-2 shadow-sm justify-center" data-translate-title="prev" title="Précédent">
                                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                                                     <span class="text-xs ml-1" data-translate="prev">Précédent</span>
                                                 </button>
-                                                <button onclick="navigateStudent(1)" class="modern-btn-secondary flex-1 !py-2 shadow-sm justify-center" title="Suivant">
+                                                <button onclick="navigateStudent(1)" class="modern-btn-secondary flex-1 !py-2 shadow-sm justify-center" data-translate-title="next" title="Suivant">
                                                     <span class="text-xs mr-1" data-translate="next">Suivant</span>
                                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                                                 </button>

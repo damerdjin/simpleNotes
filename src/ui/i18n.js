@@ -76,5 +76,13 @@ export const applyLanguage = (lang) => {
                 el.placeholder = t[key];
             }
         });
+
+        // Translate titles
+        document.querySelectorAll('[data-translate-title]').forEach(el => {
+            const key = el.getAttribute('data-translate-title');
+            if (t[key]) {
+                el.title = t[key];
+            }
+        });
     }
 };
