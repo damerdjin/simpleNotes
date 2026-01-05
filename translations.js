@@ -287,6 +287,11 @@ window.translations = {
         importOstadButton: "Sélectionner le fichier",
         addSingleStudent: "Un seul élève",
         importBulk: "Importation groupée",
+        howToDo: "Comment faire ?",
+        stepConnect: "Connectez-vous sur",
+        stepGoToSection: "Allez dans la section",
+        stepExportExcel: "Exportez le fichier Excel",
+        stepImportHere: "Importez-le ici même !",
     },
 
     // Anglais
@@ -596,6 +601,11 @@ window.translations = {
         importOstadButton: "Select File",
         addSingleStudent: "Single Student",
         importBulk: "Bulk Import",
+        howToDo: "How to do it?",
+        stepConnect: "Log in to",
+        stepGoToSection: "Go to the section",
+        stepExportExcel: "Export the Excel file",
+        stepImportHere: "Import it right here!",
     },
 
     // Arabe
@@ -904,5 +914,10 @@ window.translations = {
         importOstadButton: "اختر الملف",
         addSingleStudent: "طالب واحد",
         importBulk: "استيراد جماعي",
+        howToDo: "كيفية القيام بذلك؟",
+        stepConnect: "سجل الدخول إلى",
+        stepGoToSection: "اذهب إلى قسم",
+        stepExportExcel: "قم بتصدير ملف إكسل",
+        stepImportHere: "قم باستيراده هنا!",
     }
 };
