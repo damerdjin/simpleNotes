@@ -1579,15 +1579,50 @@
             if (dropdown) dropdown.classList.toggle('hidden');
         };
 
+        window.getCurrentAcademicYear = () => {
+            const now = new Date();
+            const month = now.getMonth() + 1; // 1-12
+            const year = now.getFullYear();
+            if (month >= 9) return `${year}/${year + 1}`;
+            return `${year - 1}/${year}`;
+        };
+
         // Visual update only - NO state changes, NO recursion
         window.updateSessionVisual = (year, trimester) => {
             const display = document.getElementById('current-session-display');
-            const dropdown = document.getElementById('session-dropdown');
+            const container = document.getElementById('session-picker-container');
+            const icon = document.getElementById('session-icon-container');
+            const label = document.getElementById('session-label');
+            const currentYearStr = window.getCurrentAcademicYear();
             
             if (display && year && trimester) {
-                const yearFormatted = year.includes('/') ? year : year.substring(0,4) + ' / ' + year.substring(4);
+                const isCurrentYear = (year === currentYearStr);
                 const triText = window.t ? window.t(`t${trimester}`) : `T${trimester}`;
-                display.textContent = `${yearFormatted} • ${triText}`;
+                
+                if (isCurrentYear) {
+                    // Only trimester, hide icon and label
+                    display.textContent = triText;
+                    display.classList.remove('text-sm');
+                    display.classList.add('text-base');
+                    if (icon) icon.classList.add('hidden');
+                    if (label) label.classList.add('hidden');
+                    if (container) {
+                        container.classList.remove('bg-amber-50', 'border-amber-200', 'ring-2', 'ring-amber-100');
+                        container.classList.add('bg-white', 'border-gray-200');
+                    }
+                } else {
+                    // Year + Trimester with alert style
+                    const yearFormatted = year.includes('/') ? year : year.substring(0,4) + ' / ' + year.substring(4);
+                    display.textContent = `${yearFormatted} • ${triText}`;
+                    display.classList.remove('text-base');
+                    display.classList.add('text-sm');
+                    if (icon) icon.classList.remove('hidden');
+                    if (label) label.classList.remove('hidden');
+                    if (container) {
+                        container.classList.add('bg-amber-50', 'border-amber-200', 'ring-2', 'ring-amber-100');
+                        container.classList.remove('bg-white', 'border-gray-200');
+                    }
+                }
             }
             
             // Update Year Visual Checks
@@ -1761,12 +1796,12 @@
                 <div class="header-context hidden sm:flex items-center gap-4">
                     <!-- Unified Session Picker (Year & Trimester) -->
                     <div class="relative group">
-                        <div class="flex items-center gap-3 px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-blue-400 transition-all cursor-pointer select-none" onclick="toggleSessionDropdown()">
-                            <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
+                        <div id="session-picker-container" class="flex items-center gap-3 px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-blue-400 transition-all cursor-pointer select-none" onclick="toggleSessionDropdown()">
+                            <div id="session-icon-container" class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                             </div>
                             <div class="flex flex-col">
-                                <span class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter leading-none" data-translate="academicSession">Session</span>
+                                <span id="session-label" class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter leading-none" data-translate="academicSession">Session</span>
                                 <span id="current-session-display" class="text-sm font-bold text-gray-700 leading-tight">2025/2026 • T1</span>
                             </div>
                             <svg class="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
