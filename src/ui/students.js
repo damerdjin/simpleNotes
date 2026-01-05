@@ -786,6 +786,11 @@
         const file = event.target.files[0];
         if (!file) return;
 
+        // Close the student modal immediately to avoid overlapping with wizard/other modals
+        if (typeof window.closeStudentModal === 'function') {
+            window.closeStudentModal();
+        }
+
         const reader = new FileReader();
         reader.onload = function (e) {
             const dataBinary = new Uint8Array(e.target.result);
@@ -957,11 +962,6 @@
             
             alert(`${t.importSuccess}\nAjoutés: ${added}\nMis à jour: ${updated}`);
             event.target.value = '';
-            
-            // Si on est dans la modale, on la ferme après un import réussi
-            if (typeof window.closeStudentModal === 'function') {
-                window.closeStudentModal();
-            }
         };
 
         if (window.startImportWizard) {
