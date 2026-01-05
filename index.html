@@ -1920,67 +1920,71 @@
                 <div id="content-students" class="view-section">
                     
                     <!-- VIEW 1: Class Dashboard -->
-                    <div id="students-view-classes" class="container mx-auto max-w-7xl p-4 sm:p-6 lg:p-8 animate-in fade-in duration-300">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-                            <div>
-                                <h2 class="text-3xl font-bold text-slate-800 tracking-tight" data-translate="myClasses">Mes Classes</h2>
-                                <p class="text-slate-500 mt-1" data-translate="classManagementSubtitle">Sélectionnez une classe pour gérer les élèves</p>
+                    <div id="students-view-classes" class="container mx-auto max-w-7xl animate-in fade-in duration-300">
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                                <div>
+                                    <h2 class="text-3xl font-bold text-slate-800 tracking-tight" data-translate="myClasses">Mes Classes</h2>
+                                    <p class="text-slate-500 mt-1" data-translate="classManagementSubtitle">Sélectionnez une classe pour gérer les élèves</p>
+                                </div>
+                                <button onclick="openStudentModal()" 
+                                    class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl font-semibold shadow-lg shadow-blue-500/20 transition-all hover:scale-105 active:scale-95">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                    <span data-translate="addStudent">Ajouter un élève</span>
+                                </button>
                             </div>
-                            <button onclick="openStudentModal()" 
-                                class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl font-semibold shadow-lg shadow-blue-500/20 transition-all hover:scale-105 active:scale-95">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                                <span data-translate="addStudent">Ajouter un élève</span>
-                            </button>
-                        </div>
 
-                        <!-- Search Classes -->
-                        <div class="relative max-w-md mb-8 group">
-                            <input type="text" id="students-class-search" data-translate-placeholder="searchClassPlaceholder" placeholder="Rechercher une classe..." 
-                                oninput="renderClassList()"
-                                class="w-full ps-12 pe-4 py-3.5 bg-white border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-medium text-slate-600 placeholder:text-slate-400">
-                            <svg class="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                        </div>
+                            <!-- Search Classes -->
+                            <div class="relative max-w-md mb-8 group">
+                                <input type="text" id="students-class-search" data-translate-placeholder="searchClassPlaceholder" placeholder="Rechercher une classe..." 
+                                    oninput="renderClassList()"
+                                    class="w-full ps-12 pe-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-medium text-slate-600 placeholder:text-slate-400">
+                                <svg class="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            </div>
 
-                        <!-- Classes Grid -->
-                        <div id="students-class-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            <!-- Injected by JS -->
+                            <!-- Classes Grid -->
+                            <div id="students-class-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                <!-- Injected by JS -->
+                            </div>
                         </div>
                     </div>
 
                     <!-- VIEW 2: Student List (Specific Class) -->
-                    <div id="students-view-list" class="hidden container mx-auto max-w-7xl p-4 sm:p-6 lg:p-8 animate-in slide-in-from-right duration-300">
-                        <!-- Header -->
-                        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 mb-6 sticky top-4 z-20">
-                            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                <div class="flex items-center gap-4">
-                                    <button onclick="clearStudentsFilters()" class="p-2.5 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-all border border-slate-200">
-                                        <svg class="w-5 h-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                                    </button>
-                                    <div>
-                                        <h2 id="selected-class-title" class="text-2xl font-bold text-slate-800">--</h2>
-                                        <p class="text-xs font-bold text-blue-600 uppercase tracking-wider" id="selected-class-stats">--</p>
+                    <div id="students-view-list" class="hidden container mx-auto max-w-7xl animate-in slide-in-from-right duration-300">
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+                            <!-- Header -->
+                            <div class="bg-slate-50/50 rounded-2xl border border-slate-100 p-4 mb-8 sticky top-4 z-20 backdrop-blur-md">
+                                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                    <div class="flex items-center gap-4">
+                                        <button onclick="clearStudentsFilters()" class="p-2.5 rounded-xl bg-white text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-all border border-slate-200 shadow-sm">
+                                            <svg class="w-5 h-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                                        </button>
+                                        <div>
+                                            <h2 id="selected-class-title" class="text-2xl font-bold text-slate-800">--</h2>
+                                            <p class="text-xs font-bold text-blue-600 uppercase tracking-wider" id="selected-class-stats">--</p>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div class="flex items-center gap-3 flex-wrap">
-                                    <div class="relative group flex-1 md:flex-none md:w-64">
-                                        <input type="text" id="student-search" data-translate-placeholder="searchStudentPlaceholder" placeholder="Rechercher un élève..."
-                                            oninput="renderStudents()" 
-                                            class="w-full ps-10 pe-4 py-2.5 bg-slate-50 border-transparent hover:bg-white hover:border-slate-200 focus:bg-white focus:border-blue-500 rounded-xl outline-none transition-all text-sm">
-                                        <svg class="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                    <div class="flex items-center gap-3 flex-wrap">
+                                        <div class="relative group flex-1 md:flex-none md:w-64">
+                                            <input type="text" id="student-search" data-translate-placeholder="searchStudentPlaceholder" placeholder="Rechercher un élève..."
+                                                oninput="renderStudents()" 
+                                                class="w-full ps-10 pe-4 py-2.5 bg-white border-slate-200 hover:border-blue-300 focus:border-blue-500 rounded-xl outline-none transition-all text-sm border shadow-sm">
+                                            <svg class="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                        </div>
+                                        <div class="h-8 w-px bg-slate-200 hidden md:block"></div>
+                                        <button onclick="openStudentModal()" 
+                                            class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold shadow-sm transition-all text-sm">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                            <span class="hidden sm:inline" data-translate="add">Ajouter</span>
+                                        </button>
                                     </div>
-                                    <div class="h-8 w-px bg-slate-200 hidden md:block"></div>
-                                    <button onclick="openStudentModal()" 
-                                        class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold shadow-sm transition-all text-sm">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                                        <span class="hidden sm:inline" data-translate="add">Ajouter</span>
-                                    </button>
                                 </div>
                             </div>
-                        </div>
 
-                        <div id="students-list" class="student-grid"></div>
-                        <div id="students-pagination"></div>
+                            <div id="students-list" class="student-grid"></div>
+                            <div id="students-pagination"></div>
+                        </div>
                     </div>
                 </div>
 
