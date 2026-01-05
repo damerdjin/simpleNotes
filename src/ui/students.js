@@ -89,65 +89,112 @@
 
     window.renderClassList = function() {
         const t = getTranslations()[getLang()];
-        const container = document.getElementById('students-class-list') || document.getElementById('class-list');
+        const container = document.getElementById('students-class-list');
         if (!container) return;
 
         const globalAcademicYear = window.getGlobalAcademicYear();
         if (!globalAcademicYear) {
-            container.innerHTML = `<p class="text-gray-500 text-sm">${t.selectAcademicYear}</p>`;
+            container.innerHTML = `<div class="col-span-full text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                <p class="text-slate-500 font-medium">${t.selectAcademicYear}</p>
+            </div>`;
             return;
         }
 
         const search = (document.getElementById('students-class-search')?.value || '').toLowerCase();
         const classes = window.getClasses().filter(c => c.toLowerCase().includes(search));
-        const selected = studentsUiState.selectedClass || '';
-
+        
         if (classes.length === 0) {
-            container.innerHTML = `<p class="text-gray-500 text-sm">${t.noClassesAutoCreated}</p>`;
+            container.innerHTML = `<div class="col-span-full text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                </div>
+                <p class="text-slate-500 font-medium">${t.noClassesAutoCreated}</p>
+                <button onclick="openStudentModal()" class="mt-4 text-blue-600 font-bold hover:underline">
+                    + ${t.addStudent}
+                </button>
+            </div>`;
             return;
         }
 
         const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
-        const allCount = (getData().students || []).filter(s => (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear).length;
-        const allLabel = t.allClassesFilter;
-        const allActive = !selected;
-        const allBtn = `
-            <button onclick="setStudentsSelectedClass('')" class="class-list-item ${allActive ? 'active' : ''}">
-                <div class="class-list-item-name">${allLabel}</div>
-                <span class="class-list-item-count">${allCount}</span>
-            </button>
-        `;
-
+        
         const rows = classes.map(c => {
             const count = getData().students.filter(s => s.className === c && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear).length;
-            const active = c === selected;
             const color = typeof window.getClassColor === 'function' ? window.getClassColor(c) : '#3b82f6';
+            
+            // Get first 2 chars for icon
+            const iconText = c.replace(/[^a-zA-Z0-9]/g, '').substring(0, 2).toUpperCase();
+            
             return `
-                <div class="class-list-item-wrapper group relative">
-                    <button onclick="setStudentsSelectedClass('${c}')" class="class-list-item ${active ? 'active' : ''}" title="${c}">
-                        <div class="flex items-center gap-2 min-w-0 flex-1">
-                            <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:${color}"></span>
-                            <div class="class-list-item-name">${c}</div>
+                <div onclick="setStudentsSelectedClass('${c}')" 
+                    class="group relative bg-white p-6 rounded-2xl border border-slate-200 hover:border-blue-400 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden">
+                    
+                    <!-- Decorative background blob -->
+                    <div class="absolute -right-4 -top-4 w-24 h-24 rounded-full opacity-10 transition-transform group-hover:scale-150" style="background: ${color}"></div>
+                    
+                    <div class="relative z-10">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold text-white shadow-md transform group-hover:rotate-6 transition-transform" style="background: ${color}">
+                                ${iconText}
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="px-3 py-1 bg-slate-50 text-slate-600 rounded-lg text-xs font-bold border border-slate-100 group-hover:bg-blue-50 group-hover:text-blue-600 group-hover:border-blue-100 transition-colors">
+                                    ${count} <span class="hidden sm:inline">élèves</span>
+                                </span>
+                                <button onclick="event.stopPropagation(); deleteClassSafely('${c}')" 
+                                    class="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                    title="${t.delete}">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                            </div>
                         </div>
-                        <span class="class-list-item-count">${count}</span>
-                    </button>
-                    <button onclick="event.stopPropagation(); deleteClassSafely('${c}')" 
-                        class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100 z-10"
-                        title="${t.delete}">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                    </button>
+                        
+                        <h3 class="text-xl font-bold text-slate-800 mb-1 group-hover:text-blue-600 transition-colors truncate" title="${c}">${c}</h3>
+                        <p class="text-sm text-slate-400 font-medium flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            ${globalAcademicYear}
+                        </p>
+                    </div>
+                    
+                    <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
                 </div>
             `;
         }).join('');
 
-        container.innerHTML = allBtn + rows;
+        container.innerHTML = rows;
     };
 
     window.setStudentsSelectedClass = function(className = '') {
         studentsUiState.selectedClass = className || '';
         studentsUiState.page = 1;
-        window.renderStudents();
-        window.renderClassList();
+        
+        const viewClasses = document.getElementById('students-view-classes');
+        const viewList = document.getElementById('students-view-list');
+        
+        if (className) {
+            // Show List View
+            if (viewClasses) viewClasses.classList.add('hidden');
+            if (viewList) viewList.classList.remove('hidden');
+            
+            // Update Header
+            const titleEl = document.getElementById('selected-class-title');
+            const statsEl = document.getElementById('selected-class-stats');
+            
+            if (titleEl) titleEl.textContent = className;
+            if (statsEl) {
+                 const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
+                 const globalAcademicYear = window.getGlobalAcademicYear();
+                 const count = getData().students.filter(s => s.className === className && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear).length;
+                 statsEl.textContent = `${count} ÉLÈVES`;
+            }
+            
+            window.renderStudents();
+        } else {
+            // Show Classes View
+            if (viewList) viewList.classList.add('hidden');
+            if (viewClasses) viewClasses.classList.remove('hidden');
+            window.renderClassList();
+        }
     };
 
     window.clearStudentsFilters = function() {
@@ -155,8 +202,9 @@
         studentsUiState.page = 1;
         const search = document.getElementById('student-search');
         if (search) search.value = '';
-        window.renderStudents();
-        window.renderClassList();
+        
+        // Return to dashboard
+        window.setStudentsSelectedClass('');
     };
 
     window.setStudentsPageSize = function(value) {
