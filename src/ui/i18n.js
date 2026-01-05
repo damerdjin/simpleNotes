@@ -38,8 +38,10 @@ export const t = (key) => {
     }
     return key; // Fallback to key if not found
 };
+window.t = t;
 
 export const applyLanguage = (lang) => {
+    window.currentLanguage = lang;
     const isRTL = lang === 'ar';
     document.body.dir = isRTL ? 'rtl' : 'ltr';
     

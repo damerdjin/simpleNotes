@@ -38,6 +38,11 @@ window.translations = {
         // Interface générale
         appTitle: "📝 Gestion des Corrections",
         appSubtitle: "Gérez vos élèves, devoirs et notes en toute simplicité",
+        academicSession: "Session",
+        trimester: "Trimestre",
+        t1: "T1",
+        t2: "T2",
+        t3: "T3",
         loggedInAs: "Connecté en tant que :",
         connectedAs: "Connecté en tant que",
         academicYearLabel: "Année scolaire :",
@@ -307,7 +312,12 @@ window.translations = {
 
         // Interface générale
         appTitle: "📝 Grading Management",
-        appSubtitle: "Manage your students, assignments and grades easily",
+        appSubtitle: "Manage your students, assignments, and grades with ease",
+        academicSession: "Session",
+        trimester: "Trimester",
+        t1: "T1",
+        t2: "T2",
+        t3: "T3",
         loggedInAs: "Logged in as:",
         connectedAs: "Connected as",
         academicYearLabel: "Academic Year:",
@@ -596,6 +606,11 @@ window.translations = {
         // Interface générale
         appTitle: "📝 إدارة التصحيح",
         appSubtitle: "إدارة طلابك، واجباتك و نقاطك بكل سهولة",
+        academicSession: "الدورة الدراسية",
+        trimester: "الثلاثي",
+        t1: "ث1",
+        t2: "ث2",
+        t3: "ث3",
         loggedInAs: "مسجل دخول باسم:",
         connectedAs: "مسجل دخول باسم",
         academicYearLabel: "السنة الدراسية:",

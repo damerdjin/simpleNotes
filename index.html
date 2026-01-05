@@ -232,6 +232,11 @@
         }
 
         /* ===== MODALES & UI ===== */
+        .rtl-layout #session-dropdown {
+            left: auto !important;
+            right: 0 !important;
+        }
+
         .modal {
             display: none;
         }
@@ -1569,42 +1574,75 @@
         };
 
         // UI Helpers for Global State
-        window.toggleYearDropdown = () => {
-            const dropdown = document.getElementById('year-dropdown');
+        window.toggleSessionDropdown = () => {
+            const dropdown = document.getElementById('session-dropdown');
             if (dropdown) dropdown.classList.toggle('hidden');
         };
 
         // Visual update only - NO state changes, NO recursion
-        window.updateYearVisual = (year) => {
-            if (!year) return;
-            const display = document.getElementById('current-year-display');
-            const dropdown = document.getElementById('year-dropdown');
+        window.updateSessionVisual = (year, trimester) => {
+            const display = document.getElementById('current-session-display');
+            const dropdown = document.getElementById('session-dropdown');
             
-            if (display) {
-                display.textContent = year.includes('/') ? year : year.substring(0,4) + ' / ' + year.substring(4);
+            if (display && year && trimester) {
+                const yearFormatted = year.includes('/') ? year : year.substring(0,4) + ' / ' + year.substring(4);
+                const triText = window.t ? window.t(`t${trimester}`) : `T${trimester}`;
+                display.textContent = `${yearFormatted} • ${triText}`;
             }
             
-            if (dropdown) dropdown.classList.add('hidden');
-            
-            // Update visual checks (blue dots)
-            document.querySelectorAll('[id^="check-"]').forEach(el => el.classList.add('hidden'));
-            const yearShort = year.substring(0,4);
-            const check = document.getElementById(`check-${yearShort}`);
-            if (check) {
-                check.classList.remove('hidden');
+            // Update Year Visual Checks
+            if (year) {
+                document.querySelectorAll('[id^="check-"]').forEach(el => el.classList.add('hidden'));
+                const yearShort = year.substring(0,4);
+                const check = document.getElementById(`check-${yearShort}`);
+                if (check) check.classList.remove('hidden');
+            }
+
+            // Update Trimester Button Visuals
+            if (trimester) {
+                [1, 2, 3].forEach(t => {
+                    const btn = document.getElementById(`btn-tri${t}`);
+                    if (btn) {
+                        if (t == trimester) {
+                            btn.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+                            btn.classList.remove('text-gray-600', 'border-gray-100');
+                        } else {
+                            btn.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
+                            btn.classList.add('text-gray-600', 'border-gray-100');
+                        }
+                    }
+                });
             }
         };
 
-        // Called by UI interaction
+        // Called by UI interaction for Year
         window.updateYear = (year) => {
-            window.updateYearVisual(year);
+            const currentTri = window.getGlobalTrimester ? window.getGlobalTrimester() : "1";
+            window.updateSessionVisual(year, currentTri);
+            
             const hiddenSelect = document.getElementById('global-academic-year');
             if (hiddenSelect) hiddenSelect.value = year;
             
-            // Trigger state change
             if (window.setGlobalAcademicYear) {
                 window.setGlobalAcademicYear(year);
             }
+        };
+
+        // Called by UI interaction for Trimester
+        window.updateTrimester = (tri) => {
+            const currentYear = window.getGlobalAcademicYear ? window.getGlobalAcademicYear() : "2025/2026";
+            window.updateSessionVisual(currentYear, tri);
+            
+            const hiddenSelect = document.getElementById('global-trimester');
+            if (hiddenSelect) hiddenSelect.value = tri;
+            
+            if (window.setGlobalTrimester) {
+                window.setGlobalTrimester(tri);
+            }
+            
+            // Close dropdown after trimester selection as it's often the last step
+            const dropdown = document.getElementById('session-dropdown');
+            if (dropdown) dropdown.classList.add('hidden');
         };
 
         // Sync visual UI with state (called on load or after state changes)
@@ -1612,25 +1650,7 @@
             const currentTri = window.getGlobalTrimester ? window.getGlobalTrimester() : (localStorage.getItem('corrections-global-trimester') || "1");
             const currentYear = window.getGlobalAcademicYear ? window.getGlobalAcademicYear() : (localStorage.getItem('corrections-global-academic-year') || "2025/2026");
             
-            // Sync Trimester Radios & Labels
-            const radio = document.getElementById(`tri${currentTri}`);
-            if (radio) {
-                radio.checked = true;
-                document.querySelectorAll('[id^="label-tri"]').forEach(l => {
-                    l.classList.remove('bg-white', 'shadow-sm', 'text-blue-600');
-                    const dot = l.querySelector('span');
-                    if (dot) dot.classList.add('opacity-0');
-                });
-                const activeLabel = document.getElementById(`label-tri${currentTri}`);
-                if (activeLabel) {
-                    activeLabel.classList.add('bg-white', 'shadow-sm', 'text-blue-600');
-                    const dot = activeLabel.querySelector('span');
-                    if (dot) dot.classList.remove('opacity-0');
-                }
-            }
-
-            // Sync Year Visuals
-            window.updateYearVisual(currentYear);
+            window.updateSessionVisual(currentYear, currentTri);
         };
 
         async function initAuth() {
@@ -1739,62 +1759,52 @@
                     </svg>
                 </button>
                 <div class="header-context hidden sm:flex items-center gap-4">
-                    <!-- Modern Segmented Trimester Picker -->
-                    <div class="flex bg-gray-100/80 p-1 rounded-xl border border-gray-200 shadow-sm">
-                        <input type="radio" name="trimester" id="tri1" value="1" class="hidden" onchange="setGlobalTrimester(this.value)">
-                        <label for="tri1" class="px-4 py-1.5 rounded-lg text-sm font-bold cursor-pointer transition-all hover:text-blue-600 select-none flex items-center gap-2" id="label-tri1">
-                            <span class="w-2 h-2 rounded-full bg-blue-500 opacity-0 transition-opacity"></span>
-                            <span data-translate="trimester1">T1</span>
-                        </label>
-
-                        <input type="radio" name="trimester" id="tri2" value="2" class="hidden" onchange="setGlobalTrimester(this.value)">
-                        <label for="tri2" class="px-4 py-1.5 rounded-lg text-sm font-bold cursor-pointer transition-all hover:text-blue-600 select-none flex items-center gap-2" id="label-tri2">
-                            <span class="w-2 h-2 rounded-full bg-blue-500 opacity-0 transition-opacity"></span>
-                            <span data-translate="trimester2">T2</span>
-                        </label>
-
-                        <input type="radio" name="trimester" id="tri3" value="3" class="hidden" onchange="setGlobalTrimester(this.value)">
-                        <label for="tri3" class="px-4 py-1.5 rounded-lg text-sm font-bold cursor-pointer transition-all hover:text-blue-600 select-none flex items-center gap-2" id="label-tri3">
-                            <span class="w-2 h-2 rounded-full bg-blue-500 opacity-0 transition-opacity"></span>
-                            <span data-translate="trimester3">T3</span>
-                        </label>
+                    <!-- Unified Session Picker (Year & Trimester) -->
+                    <div class="relative group">
+                        <div class="flex items-center gap-3 px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-blue-400 transition-all cursor-pointer select-none" onclick="toggleSessionDropdown()">
+                            <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter leading-none" data-translate="academicSession">Session</span>
+                                <span id="current-session-display" class="text-sm font-bold text-gray-700 leading-tight">2025/2026 • T1</span>
+                            </div>
+                            <svg class="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
                         
-                        <!-- Hidden select for compatibility with existing JS -->
+                        <div id="session-dropdown" class="absolute top-full left-0 mt-2 w-64 bg-white border border-gray-100 rounded-2xl shadow-2xl py-3 hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                            <!-- Trimester Section -->
+                            <div class="px-4 pb-3 border-b border-gray-50">
+                                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3" data-translate="trimester">Trimestre</div>
+                                <div class="flex gap-2">
+                                    <button onclick="updateTrimester(1)" id="btn-tri1" class="flex-1 py-2 rounded-lg text-xs font-bold border transition-all hover:bg-blue-50 border-gray-100 text-gray-600" data-translate="t1">T1</button>
+                                    <button onclick="updateTrimester(2)" id="btn-tri2" class="flex-1 py-2 rounded-lg text-xs font-bold border transition-all hover:bg-blue-50 border-gray-100 text-gray-600" data-translate="t2">T2</button>
+                                    <button onclick="updateTrimester(3)" id="btn-tri3" class="flex-1 py-2 rounded-lg text-xs font-bold border transition-all hover:bg-blue-50 border-gray-100 text-gray-600" data-translate="t3">T3</button>
+                                </div>
+                            </div>
+                            
+                            <!-- Year Section -->
+                            <div class="pt-3">
+                                <div class="px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2" data-translate="academicYear">Année Scolaire</div>
+                                <div class="max-h-48 overflow-y-auto">
+                                    <div class="year-option px-4 py-2.5 hover:bg-blue-50 text-sm font-bold text-gray-600 hover:text-blue-700 cursor-pointer transition-colors flex items-center justify-between" onclick="updateYear('2025/2026')">
+                                        <span>2025 / 2026</span>
+                                        <div class="w-1.5 h-1.5 rounded-full bg-blue-500 hidden" id="check-2025"></div>
+                                    </div>
+                                    <div class="year-option px-4 py-2.5 hover:bg-blue-50 text-sm font-bold text-gray-600 hover:text-blue-700 cursor-pointer transition-colors flex items-center justify-between" onclick="updateYear('2024/2025')">
+                                        <span>2024 / 2025</span>
+                                        <div class="w-1.5 h-1.5 rounded-full bg-blue-500 hidden" id="check-2024"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hidden selects for compatibility with existing JS -->
                         <select id="global-trimester" class="hidden">
                             <option value="1">1</option>
                             <option value="2">2</option>
                             <option value="3">3</option>
                         </select>
-                    </div>
-
-                    <div class="w-px h-8 bg-gray-200"></div>
-
-                    <!-- Modern Academic Year Picker -->
-                    <div class="relative group">
-                        <div class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-blue-400 transition-all cursor-pointer select-none" onclick="toggleYearDropdown()">
-                            <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                            </div>
-                            <div class="flex flex-col">
-                                <span class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter leading-none" data-translate="academicYearLabel">Année Scolaire</span>
-                                <span id="current-year-display" class="text-sm font-bold text-gray-700 leading-tight">2025 / 2026</span>
-                            </div>
-                            <svg class="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </div>
-                        
-                        <div id="year-dropdown" class="absolute top-full left-0 mt-2 w-48 bg-white border border-gray-100 rounded-2xl shadow-2xl py-2 hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                            <div class="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-50 mb-1" data-translate="selectYear">Choisir l'année</div>
-                            <div class="year-option px-4 py-2.5 hover:bg-blue-50 text-sm font-bold text-gray-600 hover:text-blue-700 cursor-pointer transition-colors flex items-center justify-between" onclick="updateYear('2025/2026')">
-                                <span>2025 / 2026</span>
-                                <div class="w-1.5 h-1.5 rounded-full bg-blue-500 hidden" id="check-2025"></div>
-                            </div>
-                            <div class="year-option px-4 py-2.5 hover:bg-blue-50 text-sm font-bold text-gray-600 hover:text-blue-700 cursor-pointer transition-colors flex items-center justify-between" onclick="updateYear('2024/2025')">
-                                <span>2024 / 2025</span>
-                                <div class="w-1.5 h-1.5 rounded-full bg-blue-500 hidden" id="check-2024"></div>
-                            </div>
-                        </div>
-
-                        <!-- Hidden select for compatibility with existing JS -->
                         <select id="global-academic-year" class="hidden">
                             <option value="2025/2026">2025/2026</option>
                             <option value="2024/2025">2024/2025</option>

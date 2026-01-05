@@ -589,4 +589,9 @@
     // Auto-setup guard
     window.setupGlobalUiGuard();
 
+    // Listen for language changes to sync UI
+    window.addEventListener('languageChanged', () => {
+        if (window.syncGlobalUI) window.syncGlobalUI();
+    });
+
 })();
