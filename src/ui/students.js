@@ -359,7 +359,10 @@
                 // Fill inputs
                 if (lastNameInput) lastNameInput.value = student.lastName || '';
                 if (firstNameInput) firstNameInput.value = student.firstName || '';
-                if (ninInput) ninInput.value = student.nin || '';
+                if (ninInput) {
+                    ninInput.value = student.nin || '';
+                    ninInput.readOnly = true; // Protect NIN in edit mode
+                }
 
                 // Handle Class Select
                 if (classSelect) {
@@ -394,7 +397,10 @@
             });
 
             // Auto-generate NIN as a long number
-            if (ninInput) ninInput.value = (1000 + Date.now()).toString();
+            if (ninInput) {
+                ninInput.value = (1000 + Date.now()).toString();
+                ninInput.readOnly = false; // Allow editing in add mode
+            }
 
             if (newClassContainer) newClassContainer.classList.add('hidden');
             if (classSelect) classSelect.value = '';
