@@ -376,6 +376,10 @@
                         }
                     }
                 }
+
+                // Fill Academic Year
+                const academicYearSelect = document.getElementById('student-academic-year');
+                if (academicYearSelect) academicYearSelect.value = student.academicYear || '';
             }
         } else {
             // ADD MODE
