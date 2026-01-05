@@ -312,6 +312,16 @@
         if (errorZone) errorZone.classList.add('hidden');
         if (studentErrorTimeout) clearTimeout(studentErrorTimeout);
 
+        // Reset to single mode by default, and hide selector if editing
+        const selector = document.getElementById('student-modal-mode-selector');
+        if (studentId) {
+            if (selector) selector.classList.add('hidden');
+            window.setStudentModalMode('single');
+        } else {
+            if (selector) selector.classList.remove('hidden');
+            window.setStudentModalMode('single');
+        }
+
         if (modal) {
             modal.classList.add('active');
             modal.classList.remove('pointer-events-none', 'opacity-0');
@@ -425,6 +435,30 @@
             modal.querySelector('div').classList.remove('scale-100');
         }
         editingStudentId = null;
+    };
+
+    window.setStudentModalMode = function(mode) {
+        const singleContent = document.getElementById('student-modal-content-single');
+        const bulkContent = document.getElementById('student-modal-content-bulk');
+        const footer = document.getElementById('student-modal-footer');
+        const btnSingle = document.getElementById('btn-mode-single');
+        const btnBulk = document.getElementById('btn-mode-bulk');
+
+        if (mode === 'single') {
+            if (singleContent) singleContent.classList.remove('hidden');
+            if (bulkContent) bulkContent.classList.add('hidden');
+            if (footer) footer.classList.remove('hidden');
+            
+            if (btnSingle) btnSingle.className = "flex-1 py-2 rounded-xl text-xs font-bold transition-all border bg-white border-blue-200 text-blue-600 shadow-sm";
+            if (btnBulk) btnBulk.className = "flex-1 py-2 rounded-xl text-xs font-bold transition-all border border-gray-200 text-gray-500 hover:bg-gray-100";
+        } else {
+            if (singleContent) singleContent.classList.add('hidden');
+            if (bulkContent) bulkContent.classList.remove('hidden');
+            if (footer) footer.classList.add('hidden'); // No standard footer for bulk import as it has its own button
+
+            if (btnSingle) btnSingle.className = "flex-1 py-2 rounded-xl text-xs font-bold transition-all border border-gray-200 text-gray-500 hover:bg-gray-100";
+            if (btnBulk) btnBulk.className = "flex-1 py-2 rounded-xl text-xs font-bold transition-all border bg-white border-blue-200 text-blue-600 shadow-sm";
+        }
     };
 
     window.addStudent = function() {
@@ -923,6 +957,11 @@
             
             alert(`${t.importSuccess}\nAjoutés: ${added}\nMis à jour: ${updated}`);
             event.target.value = '';
+            
+            // Si on est dans la modale, on la ferme après un import réussi
+            if (typeof window.closeStudentModal === 'function') {
+                window.closeStudentModal();
+            }
         };
 
         if (window.startImportWizard) {

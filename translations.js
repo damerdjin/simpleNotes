@@ -280,6 +280,13 @@ window.translations = {
         importData: "Importation",
         exportData: "Exportation",
         configNote: "Plus d'options de configuration seront ajoutées prochainement pour personnaliser votre expérience.",
+        importOstadTitle: "Importer de l'espace Ostad",
+        importOstadDesc: "Vous pouvez importer le fichier récupéré de la plateforme",
+        importOstadLink: "https://ostad.education.gov.dz/",
+        importOstadFileHint: "Le fichier Excel doit s'appeler \"أفواجي التربوية\"",
+        importOstadButton: "Sélectionner le fichier",
+        addSingleStudent: "Un seul élève",
+        importBulk: "Importation groupée",
     },
 
     // Anglais
@@ -582,6 +589,13 @@ window.translations = {
         to: "to",
         of: "of",
         perPage: "/ page",
+        importOstadTitle: "Import from Ostad Space",
+        importOstadDesc: "You can import the file retrieved from the platform",
+        importOstadLink: "https://ostad.education.gov.dz/",
+        importOstadFileHint: "The Excel file must be named \"أفواجي التربوية\"",
+        importOstadButton: "Select File",
+        addSingleStudent: "Single Student",
+        importBulk: "Bulk Import",
     },
 
     // Arabe
@@ -883,5 +897,12 @@ window.translations = {
         to: "إلى",
         of: "من",
         perPage: "/ الصفحة",
+        importOstadTitle: "استيراد من فضاء الأستاذ",
+        importOstadDesc: "يمكنك استيراد الملف المستخرج من المنصة",
+        importOstadLink: "https://ostad.education.gov.dz/",
+        importOstadFileHint: "يجب أن يكون اسم ملف الإكسل \"أفواجي التربوية\"",
+        importOstadButton: "اختر الملف",
+        addSingleStudent: "طالب واحد",
+        importBulk: "استيراد جماعي",
     }
 };
