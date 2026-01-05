@@ -470,11 +470,9 @@
 
         // Disable import buttons and labels if no trimester selected
         const importButtons = [
-            'student-import',
             'json-import'
         ];
         const importLabels = [
-            'student-import-label',
             'json-import-label'
         ];
         const disabled = !academicYear || !trimester;
@@ -525,8 +523,8 @@
             
             // Also update any other global state indicators
             const disabled = !value || !localStorage.getItem('corrections-global-trimester');
-            const importButtons = ['student-import', 'json-import'];
-            const importLabels = ['student-import-label', 'json-import-label'];
+            const importButtons = ['json-import'];
+            const importLabels = ['json-import-label'];
             
             importButtons.forEach(id => {
                 const btn = document.getElementById(id);
@@ -561,8 +559,8 @@
             // Update import buttons status
             const academicYear = localStorage.getItem('corrections-global-academic-year');
             const disabled = !academicYear || !value;
-            const importButtons = ['student-import', 'json-import'];
-            const importLabels = ['student-import-label', 'json-import-label'];
+            const importButtons = ['json-import'];
+            const importLabels = ['json-import-label'];
             
             importButtons.forEach(id => {
                 const btn = document.getElementById(id);
