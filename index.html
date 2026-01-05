@@ -243,17 +243,21 @@
 
         .modal.active {
             display: flex !important;
-            opacity: 1;
-            pointer-events: auto;
+            opacity: 1 !important;
+            pointer-events: auto !important;
         }
 
         .modal.active > div {
-            transform: translateY(0) scale(1);
+            transform: translateY(0) scale(1) !important;
+            translate: 0 0 !important;
+            scale: 1 !important;
         }
 
         @media (max-width: 768px) {
             .modal.active > div {
-                transform: translateY(0);
+                transform: translateY(0) !important;
+                translate: 0 0 !important;
+                scale: 1 !important;
             }
         }
 
@@ -2263,7 +2267,7 @@
     </div>
 
     <!-- Student Modal -->
-    <div id="student-modal" onclick="if(event.target===this)closeStudentModal()" class="modal fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center z-50 opacity-0 pointer-events-none transition-all duration-300">
+    <div id="student-modal" onclick="if(event.target===this)closeStudentModal()" class="modal fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center z-[1000] opacity-0 pointer-events-none transition-all duration-300">
         <div class="bg-white rounded-t-3xl md:rounded-3xl shadow-2xl w-full max-w-md mx-0 md:mx-4 overflow-hidden transform translate-y-full md:translate-y-0 md:scale-95 transition-all duration-300 flex flex-col max-h-[92vh] md:max-h-[90vh]">
             <!-- Header -->
             <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-white to-gray-50 shrink-0">
