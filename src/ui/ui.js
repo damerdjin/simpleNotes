@@ -311,29 +311,29 @@
         window.translateTabs();
 
         // Onglet Étudiants
-        window.setTextContent('#content-students h2', t.studentsList);
-        window.setTextContent('#student-import + span', t.importExcel);
-        window.setTextContent('button[onclick="openStudentModal()"]', t.addStudent);
-        window.setTextContent('#content-students h3', t.classManagement);
+        // window.setTextContent('#content-students h2', t.studentsList); // Redondant avec data-translate
+        // window.setTextContent('#student-import + span', t.importExcel); // Redondant avec data-translate
+        // window.setTextContent('button[onclick="openStudentModal()"]', t.addStudent); // Risque d'effacer l'icône SVG
+        // window.setTextContent('#content-students h3', t.classManagement); // BUG: Écrase le nom de la première classe
 
         // Modal étudiant
-        window.setTextContent('#student-modal h3', t.addStudentTitle);
+        // window.setTextContent('#student-modal h3', t.addStudentTitle); // Géré par data-translate et openStudentModal
         window.setAttribute('#student-lastname', 'placeholder', t.lastName);
         window.setAttribute('#student-firstname', 'placeholder', t.firstName);
         window.setAttribute('#student-class', 'placeholder', t.className);
         window.setAttribute('#student-nin', 'placeholder', t.nin);
-        window.setTextContent('.modal button:first-child', t.cancel);
-        window.setTextContent('.modal button:last-child', t.add);
+        // window.setTextContent('.modal button:first-child', t.cancel); // Trop générique, géré par data-translate
+        // window.setTextContent('.modal button:last-child', t.add); // Trop générique, géré par data-translate
 
         // Onglet Devoirs
-        window.setTextContent('#content-assignments h2', t.assignmentsManagement);
-        window.setTextContent('button[onclick="openAssignmentModal()"]', t.createAssignment);
+        // window.setTextContent('#content-assignments h2', t.assignmentsManagement); // Redondant
+        // window.setTextContent('button[onclick="openAssignmentModal()"]', t.createAssignment); // Redondant
 
         // Labels des filtres
         const chipsContainer = document.querySelector('#assignment-class-chips');
-        if (chipsContainer && chipsContainer.previousElementSibling) {
-            chipsContainer.previousElementSibling.textContent = t.filterByClass;
-        }
+        // if (chipsContainer && chipsContainer.previousElementSibling) {
+        //     chipsContainer.previousElementSibling.textContent = t.filterByClass; // Redondant
+        // }
 
         window.setAttribute('#filter-name-assignments', 'placeholder', t.searchAssignment);
         

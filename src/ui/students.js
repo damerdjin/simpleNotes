@@ -127,23 +127,23 @@
             
             return `
                 <div onclick="setStudentsSelectedClass('${c}')" 
-                    class="group relative bg-white p-6 rounded-2xl border border-slate-200 hover:border-blue-400 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden">
+                    class="group relative bg-white p-6 rounded-2xl border border-slate-200 hover:border-blue-400 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col h-full">
                     
                     <!-- Decorative background blob -->
-                    <div class="absolute -right-4 -top-4 w-24 h-24 rounded-full opacity-10 transition-transform group-hover:scale-150" style="background: ${color}"></div>
+                    <div class="absolute -end-4 -top-4 w-24 h-24 rounded-full opacity-10 transition-transform group-hover:scale-150" style="background: ${color}"></div>
                     
-                    <div class="relative z-10">
+                    <div class="relative z-10 mb-6">
                         <div class="flex items-start justify-between mb-4">
                             <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold text-white shadow-md transform group-hover:rotate-6 transition-transform" style="background: ${color}">
                                 ${iconText}
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="px-3 py-1 bg-slate-50 text-slate-600 rounded-lg text-xs font-bold border border-slate-100 group-hover:bg-blue-50 group-hover:text-blue-600 group-hover:border-blue-100 transition-colors">
-                                    ${count} <span class="hidden sm:inline">élèves</span>
-                                </span>
-                                <button onclick="event.stopPropagation(); deleteClassSafely('${c}')" 
-                                    class="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                    title="${t.delete}">
+                                    <span class="px-3 py-1 bg-slate-50 text-slate-600 rounded-lg text-xs font-bold border border-slate-100 group-hover:bg-blue-50 group-hover:text-blue-600 group-hover:border-blue-100 transition-colors">
+                                        ${count} <span class="hidden sm:inline">${t.studentsCountLabel || 'élèves'}</span>
+                                    </span>
+                                    <button onclick="event.stopPropagation(); deleteClassSafely('${c}')" 
+                                        class="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                        title="${t.delete}">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                 </button>
                             </div>
@@ -155,8 +155,15 @@
                             ${globalAcademicYear}
                         </p>
                     </div>
+
+                    <div class="mt-auto pt-4 border-t border-slate-50 flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">${t.quickAccess || 'Accès rapide'}</span>
+                        <div class="text-blue-600 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1">
+                            <svg class="w-5 h-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </div>
+                    </div>
                     
-                    <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
+                    <div class="absolute bottom-0 start-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
                 </div>
             `;
         }).join('');
@@ -182,11 +189,12 @@
             
             if (titleEl) titleEl.textContent = className;
             if (statsEl) {
-                 const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
-                 const globalAcademicYear = window.getGlobalAcademicYear();
-                 const count = getData().students.filter(s => s.className === className && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear).length;
-                 statsEl.textContent = `${count} ÉLÈVES`;
-            }
+                     const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
+                     const globalAcademicYear = window.getGlobalAcademicYear();
+                     const count = getData().students.filter(s => s.className === className && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear).length;
+                     const t = getTranslations()[getLang()];
+                     statsEl.textContent = `${count} ${(t.studentsCountLabel || 'Élèves').toUpperCase()}`;
+                }
             
             window.renderStudents();
         } else {
@@ -222,8 +230,10 @@
 
     window.deleteClassSafely = function(className) {
         const t = getTranslations()[getLang()];
-        const typed = prompt(`${t.deleteClassConfirm} "${className}"\n\n${getLang() === 'ar' ? 'للتأكيد أكتب : نعم' : getLang() === 'en' ? 'To confirm, type: Yes' : 'Pour confirmer, tapez : OUI'}`);
-        if (typed !== (getLang() === 'ar' ? 'نعم' : getLang() === 'en' ? 'Yes' : 'OUI')) return;
+        const promptText = `${t.deleteClassConfirm} "${className}"\n\n${t.confirmActionPrompt || 'Pour confirmer, tapez : '}${t.confirmActionWord || 'OUI'}`;
+        const typed = prompt(promptText);
+        if (typed && typed.toUpperCase() !== (t.confirmActionWord || 'OUI').toUpperCase()) return;
+        if (!typed) return;
         window.deleteClass(className);
         window.loadClassSelectors();
         window.renderClassList();
@@ -647,7 +657,7 @@
 
             return `
     <div class="student-item">
-        <div class="student-level ${levelClass}" title="Niveau">${level}</div>
+        <div class="student-level ${levelClass}" title="${t.levelLabel || 'Niveau'}">${level}</div>
         <div class="student-info">
             <div class="student-name">${displayName}</div>
             <div class="student-meta">
@@ -655,7 +665,7 @@
                 ${birth ? `<span class="student-chip birth">🎂 ${birth}</span>` : ''}
             </div>
             <button onclick="viewStudentGrades('${s.id}')" class="view-grades-btn">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                <svg class="w-4 h-4 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                 <span>${t.viewGrades || 'Visualiser les notes'}</span>
             </button>
         </div>
@@ -695,7 +705,7 @@
                                 <option value="50" ${pageSize === 50 ? 'selected' : ''}>50</option>
                                 <option value="100" ${pageSize === 100 ? 'selected' : ''}>100</option>
                             </select>
-                            <span class="text-xs text-slate-400 font-medium">/ page</span>
+                            <span class="text-xs text-slate-400 font-medium">${t.perPage || '/ page'}</span>
                         </div>
                     </div>
             `;
@@ -704,7 +714,7 @@
                 html += `
                     <div class="flex items-center gap-1">
                         <button onclick="goStudentsPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="pagination-btn">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                            <svg class="w-5 h-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                         </button>
                 `;
 
@@ -722,7 +732,7 @@
 
                 html += `
                         <button onclick="goStudentsPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="pagination-btn">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            <svg class="w-5 h-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                         </button>
                     </div>
                 `;
