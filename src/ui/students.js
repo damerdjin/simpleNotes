@@ -119,7 +119,19 @@
         const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
         
         const rows = classes.map(c => {
-            const count = getData().students.filter(s => s.className === c && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear).length;
+            const classStudents = getData().students.filter(s => s.className === c && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear);
+            const count = classStudents.length;
+            
+            const boys = classStudents.filter(s => {
+                const sex = (s.sex || '').toLowerCase();
+                return sex.startsWith('m') || sex.includes('ذكر') || sex.includes('garçon');
+            }).length;
+            
+            const girls = classStudents.filter(s => {
+                const sex = (s.sex || '').toLowerCase();
+                return sex.startsWith('f') || sex.includes('أنث') || sex.includes('fille');
+            }).length;
+
             const color = typeof window.getClassColor === 'function' ? window.getClassColor(c) : '#3b82f6';
             
             // Get first 2 chars for icon
@@ -150,10 +162,20 @@
                         </div>
                         
                         <h3 class="text-xl font-bold text-slate-800 mb-1 group-hover:text-blue-600 transition-colors truncate" title="${c}">${c}</h3>
-                        <p class="text-sm text-slate-400 font-medium flex items-center gap-1">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                            ${globalAcademicYear}
-                        </p>
+                        <div class="flex items-center gap-3">
+                            <p class="text-sm text-slate-400 font-medium flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                ${globalAcademicYear}
+                            </p>
+                            <div class="flex items-center gap-2 text-xs font-bold">
+                                <span class="flex items-center gap-1 text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded">
+                                    ♂️ ${boys}
+                                </span>
+                                <span class="flex items-center gap-1 text-pink-500 bg-pink-50 px-1.5 py-0.5 rounded">
+                                    ♀️ ${girls}
+                                </span>
+                            </div>
+                        </div>
                     </div>
 
 
