@@ -595,6 +595,37 @@
             box-shadow: 0 6px 8px -1px rgba(16, 185, 129, 0.3);
         }
 
+        /* ===== CLASS CARDS MODERN ===== */
+        .class-card-modern {
+            --card-color: #3b82f6;
+            border-color: #f1f5f9;
+        }
+
+        .class-card-modern:hover {
+            border-color: var(--card-color);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+        }
+
+        .class-card-modern .level-badge {
+            background-color: var(--card-color);
+            box-shadow: 0 10px 15px -3px var(--card-color-alpha);
+        }
+
+        .class-card-modern .card-title-hover {
+            color: var(--card-color);
+        }
+
+        .class-card-modern .bottom-bar {
+            background-color: var(--card-color);
+        }
+
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
         /* ===== PAGINATION ===== */
         .pagination-container {
             display: flex;

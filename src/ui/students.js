@@ -174,54 +174,63 @@
             }).length;
 
             const color = typeof window.getClassColor === 'function' ? window.getClassColor(c) : '#3b82f6';
+            const colorAlpha = color + '44'; // 25% opacity for shadow
             
             // Get level for icon instead of first 2 chars
             const levelIcon = levelFromClass(c);
             
             return `
                 <div onclick="setStudentsSelectedClass('${c}')" 
-                    class="group relative bg-white p-6 rounded-2xl border border-slate-200 hover:border-blue-400 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col h-full">
+                    class="class-card-modern group relative bg-white p-6 rounded-[2rem] border-2 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col h-full hover:-translate-y-2"
+                    style="--card-color: ${color}; --card-color-alpha: ${colorAlpha};">
                     
                     <!-- Decorative background blob -->
-                    <div class="absolute -end-4 -top-4 w-24 h-24 rounded-full opacity-10 transition-transform group-hover:scale-150" style="background: ${color}"></div>
+                    <div class="absolute -start-8 -top-8 w-32 h-32 rounded-full opacity-[0.03] group-hover:opacity-[0.08] transition-all duration-700 group-hover:scale-150" style="background: ${color}"></div>
                     
-                    <div class="relative z-10 mb-6">
-                        <div class="flex items-start justify-between mb-4">
-                            <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold text-white shadow-md transform group-hover:rotate-6 transition-transform" style="background: ${color}">
-                                ${levelIcon}
+                    <div class="relative z-10 flex flex-col h-full">
+                        <div class="flex items-start justify-between mb-6">
+                            <div class="flex flex-col gap-1">
+                                <span class="inline-flex items-center px-3 py-1 bg-slate-50 text-slate-500 rounded-full text-[10px] font-bold border border-slate-100 group-hover:bg-[var(--card-color)] group-hover:text-white group-hover:border-transparent transition-all duration-300">
+                                    ${count} ${t.studentsCountLabel || 'élèves'}
+                                </span>
                             </div>
+                            
                             <div class="flex items-center gap-2">
-                                    <span class="px-3 py-1 bg-slate-50 text-slate-600 rounded-lg text-xs font-bold border border-slate-100 group-hover:bg-blue-50 group-hover:text-blue-600 group-hover:border-blue-100 transition-colors">
-                                        ${count} <span class="hidden sm:inline">${t.studentsCountLabel || 'élèves'}</span>
-                                    </span>
-                                    <button onclick="event.stopPropagation(); deleteClassSafely('${c}')" 
-                                        class="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200 sm:opacity-0 sm:group-hover:opacity-100 sm:translate-x-2 sm:group-hover:translate-x-0"
-                                        title="${t.delete}">
+                                <button onclick="event.stopPropagation(); deleteClassSafely('${c}')" 
+                                    class="p-2 text-slate-200 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all duration-300 sm:opacity-0 sm:group-hover:opacity-100 transform sm:translate-x-4 sm:group-hover:translate-x-0"
+                                    title="${t.delete}">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                 </button>
+                                <div class="level-badge w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-black text-white transform group-hover:rotate-6 transition-all duration-500">
+                                    ${levelIcon}
+                                </div>
                             </div>
                         </div>
                         
-                        <h3 class="text-xl font-bold text-slate-800 mb-1 group-hover:text-blue-600 transition-colors truncate" title="${c}">${cleanClassName(c)}</h3>
-                        <div class="flex items-center gap-3">
-                            <p class="text-sm text-slate-400 font-medium flex items-center gap-1">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <div class="flex-grow flex flex-col justify-center py-4">
+                            <h3 class="card-title-hover text-2xl font-black text-slate-800 transition-colors duration-300 line-clamp-2 leading-tight tracking-tight" title="${c}">
+                                ${cleanClassName(c)}
+                            </h3>
+                        </div>
+
+                        <div class="mt-4 pt-5 border-t border-slate-50 flex items-center justify-between">
+                            <div class="flex items-center gap-1.5 text-slate-400 font-bold text-[10px] uppercase tracking-wider bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100/50">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                 ${globalAcademicYear}
-                            </p>
-                            <div class="flex items-center gap-2 text-xs font-bold">
-                                <span class="flex items-center gap-1 text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded">
-                                    ♂️ ${boys}
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="flex items-center gap-1.5 text-blue-500 bg-blue-50/50 px-2 py-1 rounded-lg text-[10px] font-black border border-blue-100/20">
+                                    <span class="text-xs">♂️</span> ${boys}
                                 </span>
-                                <span class="flex items-center gap-1 text-pink-500 bg-pink-50 px-1.5 py-0.5 rounded">
-                                    ♀️ ${girls}
+                                <span class="flex items-center gap-1.5 text-pink-500 bg-pink-50/50 px-2 py-1 rounded-lg text-[10px] font-black border border-pink-100/20">
+                                    <span class="text-xs">♀️</span> ${girls}
                                 </span>
                             </div>
                         </div>
                     </div>
-
-
                     
-                    <div class="absolute bottom-0 start-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
+                    <!-- Bottom accent bar -->
+                    <div class="bottom-bar absolute bottom-0 start-0 w-full h-1.5 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
                 </div>
             `;
         }).join('');
