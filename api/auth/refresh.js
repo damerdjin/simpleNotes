@@ -1,7 +1,8 @@
-const { supabase, allowCors } = require('../_lib/supabase');
-const { verifyTokenAndVersion, signToken, setAuthCookie } = require('../_lib/utils');
-const { verifyCsrfToken } = require('../_lib/csrf');
-const { asyncHandler } = require('../_lib/errorHandler');
+import cookie from 'cookie';
+import { supabase, allowCors } from '../_lib/supabase.js';
+import { verifyTokenAndVersion, signToken, setAuthCookie } from '../_lib/utils.js';
+import { verifyCsrfToken } from '../_lib/csrf.js';
+import { asyncHandler } from '../_lib/errorHandler.js';
 
 const handler = async (req, res) => {
   if (req.method !== 'POST') {
@@ -14,7 +15,7 @@ const handler = async (req, res) => {
   }
 
   // Get token from cookie
-  const cookies = require('cookie').parse(req.headers.cookie || '');
+  const cookies = cookie.parse(req.headers.cookie || '');
   const token = cookies.auth_token;
 
   if (!token) {
@@ -57,4 +58,4 @@ const handler = async (req, res) => {
   });
 };
 
-module.exports = allowCors(asyncHandler(handler));
+export default allowCors(asyncHandler(handler));

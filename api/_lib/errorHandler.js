@@ -1,5 +1,5 @@
 // Secure error handling to prevent information leaks
-function handleError(res, error, context = '') {
+export function handleError(res, error, context = '') {
   console.error(`Error${context ? ` in ${context}` : ''}:`, error);
   
   // Determine appropriate status code
@@ -42,7 +42,7 @@ function handleError(res, error, context = '') {
 }
 
 // Wrapper for async handlers
-function asyncHandler(handler) {
+export function asyncHandler(handler) {
   return async (req, res) => {
     try {
       await handler(req, res);
@@ -53,21 +53,21 @@ function asyncHandler(handler) {
 }
 
 // Validation utilities
-function validateRequired(body, fields) {
+export function validateRequired(body, fields) {
   const missing = fields.filter(field => !body[field]);
   if (missing.length > 0) {
     throw new Error(`Missing required fields: ${missing.join(', ')}`);
   }
 }
 
-function validateEmail(email) {
+export function validateEmail(email) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
     throw new Error('Invalid email format');
   }
 }
 
-function validatePassword(password, minLength = 6) {
+export function validatePassword(password, minLength = 6) {
   if (password.length < minLength) {
     throw new Error(`Password must be at least ${minLength} characters`);
   }
@@ -76,7 +76,7 @@ function validatePassword(password, minLength = 6) {
 // Rate limiting simulation (for API routes)
 const rateLimitStore = new Map();
 
-function rateLimit(req, limit = 5, windowMs = 15 * 60 * 1000) {
+export function rateLimit(req, limit = 5, windowMs = 15 * 60 * 1000) {
   const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
   const key = `${ip}:${req.url}`;
   const now = Date.now();
@@ -103,12 +103,3 @@ function rateLimit(req, limit = 5, windowMs = 15 * 60 * 1000) {
     }
   }
 }
-
-module.exports = {
-  handleError,
-  asyncHandler,
-  validateRequired,
-  validateEmail,
-  validatePassword,
-  rateLimit
-};

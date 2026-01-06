@@ -1,6 +1,6 @@
-const { supabase, allowCors } = require('../_lib/supabase');
-const { getUserIdFromRequest } = require('../_lib/utils');
-const { asyncHandler } = require('../_lib/errorHandler');
+import { supabase, allowCors } from '../_lib/supabase.js';
+import { getUserIdFromRequest } from '../_lib/utils.js';
+import { asyncHandler } from '../_lib/errorHandler.js';
 
 const handler = async (req, res) => {
   if (req.method !== 'GET') {
@@ -26,4 +26,5 @@ const handler = async (req, res) => {
   return res.status(200).json({ user });
 };
 
-module.exports = allowCors(asyncHandler(handler));
+export default allowCors(asyncHandler(handler));
+

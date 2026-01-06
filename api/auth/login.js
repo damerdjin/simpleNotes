@@ -1,8 +1,8 @@
-const bcrypt = require('bcryptjs');
-const { supabase, allowCors } = require('../_lib/supabase');
-const { signToken, setAuthCookie } = require('../_lib/utils');
-const { generateCsrfToken, setCsrfCookie } = require('../_lib/csrf');
-const { asyncHandler, validateRequired, validateEmail } = require('../_lib/errorHandler');
+import bcrypt from 'bcryptjs';
+import { supabase, allowCors } from '../_lib/supabase.js';
+import { signToken, setAuthCookie } from '../_lib/utils.js';
+import { generateCsrfToken, setCsrfCookie } from '../_lib/csrf.js';
+import { asyncHandler, validateRequired, validateEmail } from '../_lib/errorHandler.js';
 
 const handler = async (req, res) => {
   if (req.method !== 'POST') {
@@ -49,4 +49,4 @@ const handler = async (req, res) => {
   return res.status(200).json({ user: { id: user.id, email: user.email } });
 };
 
-module.exports = allowCors(asyncHandler(handler));
+export default allowCors(asyncHandler(handler));

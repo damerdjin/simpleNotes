@@ -1,11 +1,12 @@
 
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from '@supabase/supabase-js';
 
 // Config from src/ui/config.js (as seen in system reminder)
 const SUPABASE_URL = 'https://lgmzydadswnvfrkdnycu.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxnbXp5ZGFkc3dudmZya2RueWN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcyOTQ3MDgsImV4cCI6MjA4Mjg3MDcwOH0.KC_zTqsHqXUO9f1cuqGOZWZ6aZh4VPW51cbzLr-QlEo';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 
 async function testRegistration() {
     console.log('Testing registration...');

@@ -1,14 +1,14 @@
-const jwt = require('jsonwebtoken');
-const cookie = require('cookie');
-const { supabase } = require('./supabase');
+import jwt from 'jsonwebtoken';
+import cookie from 'cookie';
+import { supabase } from './supabase.js';
 
 const SECRET = process.env.JWT_SECRET || 'default-secret-change-me';
 
-function signToken(payload) {
+export function signToken(payload) {
   return jwt.sign(payload, SECRET, { expiresIn: '7d' });
 }
 
-function verifyToken(token) {
+export function verifyToken(token) {
   try {
     return jwt.verify(token, SECRET);
   } catch (e) {
@@ -16,7 +16,7 @@ function verifyToken(token) {
   }
 }
 
-async function verifyTokenAndVersion(token) {
+export async function verifyTokenAndVersion(token) {
   try {
     const decoded = jwt.verify(token, SECRET);
     if (!decoded || !decoded.id) {
@@ -45,7 +45,7 @@ async function verifyTokenAndVersion(token) {
   }
 }
 
-function setAuthCookie(res, token) {
+export function setAuthCookie(res, token) {
   const isProduction = process.env.NODE_ENV === 'production';
   
   console.log(`Setting auth cookie. Env: ${process.env.NODE_ENV}, Secure: ${isProduction}`);
@@ -81,7 +81,7 @@ function setAuthCookie(res, token) {
   }
 }
 
-function clearAuthCookie(res) {
+export function clearAuthCookie(res) {
     const isProduction = process.env.NODE_ENV === 'production';
     const serialized = cookie.serialize('auth_token', '', {
         httpOnly: true,
@@ -104,19 +104,10 @@ function clearAuthCookie(res) {
     }
 }
 
-async function getUserIdFromRequest(req) {
+export async function getUserIdFromRequest(req) {
     const cookies = cookie.parse(req.headers.cookie || '');
     const token = cookies.auth_token;
     if (!token) return null;
     const decoded = await verifyTokenAndVersion(token);
     return decoded ? decoded.id : null;
 }
-
-module.exports = {
-  signToken,
-  verifyToken,
-  verifyTokenAndVersion,
-  setAuthCookie,
-  clearAuthCookie,
-  getUserIdFromRequest
-};

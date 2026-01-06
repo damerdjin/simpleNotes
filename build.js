@@ -1,8 +1,13 @@
-const fs = require('fs-extra');
-const path = require('path');
-const { minify } = require('html-minifier-terser');
+import fs from 'fs-extra';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { minify } from 'html-minifier-terser';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const root = __dirname;
+
 const srcIndex = path.join(root, 'index.html');
 const srcTranslations = path.join(root, 'translations.js');
 const srcStyles = path.join(root, 'styles.css');

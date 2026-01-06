@@ -1,8 +1,8 @@
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from '@supabase/supabase-js';
 
 // Helper to handle CORS locally if needed, though Vercel handles it via vercel.json usually.
 // But for safety:
-const allowCors = (fn) => async (req, res) => {
+export const allowCors = (fn) => async (req, res) => {
   res.setHeader('Access-Control-Allow-Credentials', true);
   // Reflect origin for credentials support
   const origin = req.headers.origin || req.headers.host;
@@ -25,9 +25,8 @@ if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
   console.warn('Missing Supabase environment variables');
 }
 
-const supabase = createClient(
+export const supabase = createClient(
   process.env.SUPABASE_URL || '',
   process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 );
 
-module.exports = { supabase, allowCors };

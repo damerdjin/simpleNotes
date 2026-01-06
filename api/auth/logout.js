@@ -1,10 +1,11 @@
-const { clearAuthCookie } = require('../_lib/utils');
-const { allowCors: allowCorsSupabase } = require('../_lib/supabase');
-const { asyncHandler } = require('../_lib/errorHandler');
+import { clearAuthCookie } from '../_lib/utils.js';
+import { allowCors as allowCorsSupabase } from '../_lib/supabase.js';
+import { asyncHandler } from '../_lib/errorHandler.js';
 
 const handler = async (req, res) => {
     clearAuthCookie(res);
     return res.status(200).json({ message: 'Logged out' });
 };
 
-module.exports = allowCorsSupabase(asyncHandler(handler));
+export default allowCorsSupabase(asyncHandler(handler));
+

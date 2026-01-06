@@ -1,13 +1,13 @@
-const crypto = require('crypto');
+import crypto from 'crypto';
+import cookie from 'cookie';
 
 // Generate a random CSRF token
-function generateCsrfToken() {
+export function generateCsrfToken() {
   return crypto.randomBytes(32).toString('hex');
 }
 
 // Set CSRF token cookie (not httpOnly so client JS can read it)
-function setCsrfCookie(res, token) {
-  const cookie = require('cookie');
+export function setCsrfCookie(res, token) {
   const serialized = cookie.serialize('csrf_token', token, {
     httpOnly: false,
     secure: process.env.NODE_ENV === 'production',
@@ -30,9 +30,9 @@ function setCsrfCookie(res, token) {
 }
 
 // Verify CSRF token from request
-function verifyCsrfToken(req) {
+export function verifyCsrfToken(req) {
   // Get token from cookie
-  const cookies = require('cookie').parse(req.headers.cookie || '');
+  const cookies = cookie.parse(req.headers.cookie || '');
   const cookieToken = cookies.csrf_token;
   
   // Get token from header (X-CSRF-Token)
@@ -44,14 +44,18 @@ function verifyCsrfToken(req) {
   }
   
   // Use timing-safe comparison
-  return crypto.timingSafeEqual(
-    Buffer.from(cookieToken),
-    Buffer.from(headerToken)
-  );
+  try {
+    return crypto.timingSafeEqual(
+      Buffer.from(cookieToken),
+      Buffer.from(headerToken)
+    );
+  } catch (e) {
+    return false;
+  }
 }
 
 // Middleware to add CSRF protection to routes
-function csrfProtection(req, res, next) {
+export function csrfProtection(req, res, next) {
   // Skip CSRF check for GET, HEAD, OPTIONS
   if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
     return next();
@@ -71,9 +75,9 @@ function csrfProtection(req, res, next) {
 }
 
 // Middleware to set CSRF token on first request
-function setCsrfOnResponse(req, res, next) {
+export function setCsrfOnResponse(req, res, next) {
   // Check if CSRF cookie already exists
-  const cookies = require('cookie').parse(req.headers.cookie || '');
+  const cookies = cookie.parse(req.headers.cookie || '');
   if (!cookies.csrf_token) {
     const token = generateCsrfToken();
     setCsrfCookie(res, token);
@@ -84,11 +88,3 @@ function setCsrfOnResponse(req, res, next) {
   
   next();
 }
-
-module.exports = {
-  generateCsrfToken,
-  setCsrfCookie,
-  verifyCsrfToken,
-  csrfProtection,
-  setCsrfOnResponse
-};
