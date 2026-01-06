@@ -12,6 +12,47 @@
     const translatePage = () => { if (typeof window.translatePage === 'function') window.translatePage(); };
     const genId = () => window.genId();
 
+    // Utility helpers for class names and levels
+    const levelFromClass = (className = '') => {
+        const first = className.trim().split(/\s+/)[0] || '';
+        const map = {
+            'أولى': 1, 'اولى': 1, '1ere': 1, '1ère': 1, '1': 1,
+            'ثانية': 2, '2nde': 2, '2': 2,
+            'ثالثة': 3, '3eme': 3, '3ème': 3, '3': 3,
+            'رابعة': 4, '4eme': 4, '4ème': 4, '4': 4,
+            'خامسة': 5, '5eme': 5, '5ème': 5, '5': 5,
+            'سادسة': 6, '6eme': 6, '6ème': 6, '6': 6
+        };
+        const key = first.toLowerCase();
+        return map[key] || '?';
+    };
+
+    const cleanClassName = (className = '') => {
+        let parts = className.trim().split(/\s+/);
+        if (parts.length === 0) return '';
+        
+        const first = parts[0].toLowerCase();
+        const levels = [
+            'أولى', 'اولى', '1ere', '1ère', '1',
+            'ثانية', '2nde', '2',
+            'ثالثة', '3eme', '3ème', '3',
+            'رابعة', '4eme', '4ème', '4',
+            'خامسة', '5eme', '5ème', '5',
+            'سادسة', '6eme', '6ème', '6'
+        ];
+        
+        if (levels.includes(first)) {
+            parts.shift();
+            if (parts.length > 0) {
+                const second = parts[0].toLowerCase();
+                if (['ثانوي', 'secondary', 'année', 'annee'].includes(second)) {
+                    parts.shift();
+                }
+            }
+        }
+        return parts.join(' ');
+    };
+
     const studentsUiState = window.studentsUiState || { selectedClass: '', page: 1, pageSize: 12 };
     window.studentsUiState = studentsUiState;
 
@@ -134,8 +175,8 @@
 
             const color = typeof window.getClassColor === 'function' ? window.getClassColor(c) : '#3b82f6';
             
-            // Get first 2 chars for icon
-            const iconText = c.replace(/[^a-zA-Z0-9]/g, '').substring(0, 2).toUpperCase();
+            // Get level for icon instead of first 2 chars
+            const levelIcon = levelFromClass(c);
             
             return `
                 <div onclick="setStudentsSelectedClass('${c}')" 
@@ -147,7 +188,7 @@
                     <div class="relative z-10 mb-6">
                         <div class="flex items-start justify-between mb-4">
                             <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold text-white shadow-md transform group-hover:rotate-6 transition-transform" style="background: ${color}">
-                                ${iconText}
+                                ${levelIcon}
                             </div>
                             <div class="flex items-center gap-2">
                                     <span class="px-3 py-1 bg-slate-50 text-slate-600 rounded-lg text-xs font-bold border border-slate-100 group-hover:bg-blue-50 group-hover:text-blue-600 group-hover:border-blue-100 transition-colors">
@@ -161,7 +202,7 @@
                             </div>
                         </div>
                         
-                        <h3 class="text-xl font-bold text-slate-800 mb-1 group-hover:text-blue-600 transition-colors truncate" title="${c}">${c}</h3>
+                        <h3 class="text-xl font-bold text-slate-800 mb-1 group-hover:text-blue-600 transition-colors truncate" title="${c}">${cleanClassName(c)}</h3>
                         <div class="flex items-center gap-3">
                             <p class="text-sm text-slate-400 font-medium flex items-center gap-1">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
@@ -664,46 +705,6 @@
         if (studentsUiState.page < 1) studentsUiState.page = 1;
         const start = (studentsUiState.page - 1) * pageSize;
         const pageStudents = filteredStudents.slice(start, start + pageSize);
-
-        const levelFromClass = (className = '') => {
-            const first = className.trim().split(/\s+/)[0] || '';
-            const map = {
-                'أولى': 1, 'اولى': 1, '1ere': 1, '1ère': 1, '1': 1,
-                'ثانية': 2, '2nde': 2, '2': 2,
-                'ثالثة': 3, '3eme': 3, '3ème': 3, '3': 3,
-                'رابعة': 4, '4eme': 4, '4ème': 4, '4': 4,
-                'خامسة': 5, '5eme': 5, '5ème': 5, '5': 5,
-                'سادسة': 6, '6eme': 6, '6ème': 6, '6': 6
-            };
-            const key = first.toLowerCase();
-            return map[key] || '?';
-        };
-
-        const cleanClassName = (className = '') => {
-            let parts = className.trim().split(/\s+/);
-            if (parts.length === 0) return '';
-            
-            const first = parts[0].toLowerCase();
-            const levels = [
-                'أولى', 'اولى', '1ere', '1ère', '1',
-                'ثانية', '2nde', '2',
-                'ثالثة', '3eme', '3ème', '3',
-                'رابعة', '4eme', '4ème', '4',
-                'خامسة', '5eme', '5ème', '5',
-                'سادسة', '6eme', '6ème', '6'
-            ];
-            
-            if (levels.includes(first)) {
-                parts.shift();
-                if (parts.length > 0) {
-                    const second = parts[0].toLowerCase();
-                    if (['ثانوي', 'secondary', 'année', 'annee'].includes(second)) {
-                        parts.shift();
-                    }
-                }
-            }
-            return parts.join(' ');
-        };
 
         if (filteredStudents.length === 0) {
             container.className = '';
