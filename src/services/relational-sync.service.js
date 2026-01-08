@@ -145,12 +145,10 @@ export const relationalSyncService = {
                         academic_year: academicYear,
                         name: a.name,
                         class_name: a.className,
+                        trimester: a.trimester || null,
                         subject: a.subject || null,
                         config: {
-                            maxPoints: a.maxPoints,
-                            questions: a.questions,
-                            parts: a.parts,
-                            defaultGrade: a.defaultGrade
+                            exercises: a.exercises || []
                         },
                         updated_at: new Date().toISOString()
                     }));

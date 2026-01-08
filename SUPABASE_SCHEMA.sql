@@ -83,6 +83,7 @@ create table if not exists public.assignments (
   
   name text not null,
   class_name text not null,
+  trimester text,
   subject text,
   
   config jsonb not null default '{}'::jsonb, -- Détails (questions, barème)
