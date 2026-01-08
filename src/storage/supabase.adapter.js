@@ -1,4 +1,5 @@
 import { supabase } from '../ui/supabase-client.js';
+import { relationalSyncService } from '../services/relational-sync.service.js';
 
 function getCurrentUserId() {
   return window.currentUser?.id || null;
@@ -50,8 +51,13 @@ export function supabaseAdapter() {
               { onConflict: 'user_id,academic_year' }
             );
           if (error) throw error;
+
+          // Trigger Relational Sync (Non-blocking)
+          relationalSyncService.sync(payload, academicYear).catch(e => console.error('[SupabaseAdapter] Relational sync failed', e));
         }
-      } catch (_) {}
+      } catch (err) {
+        console.warn('[SupabaseAdapter] Save error:', err);
+      }
       try {
         localStorage.setItem('corrections-data', JSON.stringify(payload));
       } catch (_) {}

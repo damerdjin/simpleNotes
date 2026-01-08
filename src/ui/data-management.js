@@ -6,8 +6,16 @@
     const genId = () => window.genId();
     
     // Expose genId if needed elsewhere, but ideally it should be here
-    window.genId = function() {
-        return Math.random().toString(36).substr(2, 9);
+    window.genId = function(length = 16) {
+        // Utilisation de l'API Crypto pour une génération robuste et sécurisée
+        const charset = 'abcdefghijklmnopqrstuvwxyz0123456789';
+        const randomValues = new Uint32Array(length);
+        window.crypto.getRandomValues(randomValues);
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            result += charset[randomValues[i] % charset.length];
+        }
+        return result;
     };
 
     // Default data structure

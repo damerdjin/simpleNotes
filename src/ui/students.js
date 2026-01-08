@@ -849,6 +849,28 @@
             // Fonction utilitaire pour nettoyer les chaines (enlever les espaces inutiles)
             const cleanStr = (val) => (val || '').toString().trim();
 
+            const formatExcelDate = (val) => {
+                if (!val) return '';
+                const str = val.toString().trim();
+                // Si c'est déjà une date au format JJ/MM/AAAA, on la garde
+                if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(str)) return str;
+                
+                // Si c'est un nombre (format Excel)
+                const num = parseFloat(str);
+                if (!isNaN(num) && num > 20000 && num < 60000) {
+                    try {
+                        const date = new Date(Math.round((num - 25569) * 86400 * 1000));
+                        const d = String(date.getDate()).padStart(2, '0');
+                        const m = String(date.getMonth() + 1).padStart(2, '0');
+                        const y = date.getFullYear();
+                        return `${d}/${m}/${y}`;
+                    } catch (e) {
+                        return str;
+                    }
+                }
+                return str;
+            };
+
             const getIndex = (label) => headers.findIndex(h => cleanStr(h) === label);
 
             // Index des colonnes d'identification
@@ -876,7 +898,7 @@
                     firstName: idxPrenom >= 0 ? cleanStr(row[idxPrenom]) : '',
                     className: idxClasse >= 0 ? cleanStr(row[idxClasse]) : '',
                     sex: idxSexe >= 0 ? cleanStr(row[idxSexe]) : '',
-                    birthDate: idxBirth >= 0 ? cleanStr(row[idxBirth]) : '',
+                    birthDate: idxBirth >= 0 ? formatExcelDate(row[idxBirth]) : '',
                     regNumber: idxReg >= 0 ? cleanStr(row[idxReg]) : ''
                 };
             }).filter(r => r !== null);
@@ -895,7 +917,7 @@
                     const firstName = idxPrenom >= 0 ? cleanStr(row[idxPrenom]) : '';
                     const className = idxClasse >= 0 ? cleanStr(row[idxClasse]) : '';
                     const sex = idxSexe >= 0 ? cleanStr(row[idxSexe]) : '';
-                    const birthDate = idxBirth >= 0 ? cleanStr(row[idxBirth]) : '';
+                    const birthDate = idxBirth >= 0 ? formatExcelDate(row[idxBirth]) : '';
                     const regNumber = idxReg >= 0 ? cleanStr(row[idxReg]) : '';
 
                     if (!lastName && !firstName) return;
