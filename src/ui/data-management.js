@@ -180,6 +180,41 @@
 
                 // Fonction pour nettoyer
                 const clean = (val) => String(val || '').trim();
+                const normalizeBirthDate = (val) => {
+                    if (val === undefined || val === null) return '';
+                    const str = clean(val);
+                    if (!str) return '';
+
+                    const m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+                    if (m) {
+                        const dd = String(m[1]).padStart(2, '0');
+                        const mm = String(m[2]).padStart(2, '0');
+                        const yyyy = m[3];
+                        return `${dd}/${mm}/${yyyy}`;
+                    }
+
+                    try {
+                        const d = typeof window.parseDateMaybeExcel === 'function' ? window.parseDateMaybeExcel(val) : null;
+                        if (d) {
+                            const dd = String(d.getUTCDate()).padStart(2, '0');
+                            const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+                            const yyyy = d.getUTCFullYear();
+                            return `${dd}/${mm}/${yyyy}`;
+                        }
+                    } catch (_) { }
+
+                    const num = Number(str);
+                    if (!isNaN(num) && num > 10000) {
+                        const ms = Date.UTC(1899, 11, 30) + Math.round(num) * 86400 * 1000;
+                        const d = new Date(ms);
+                        const dd = String(d.getUTCDate()).padStart(2, '0');
+                        const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+                        const yyyy = d.getUTCFullYear();
+                        return `${dd}/${mm}/${yyyy}`;
+                    }
+
+                    return str;
+                };
 
                 let addedStudents = 0;
                 let updatedStudents = 0;
@@ -200,6 +235,12 @@
                             ignoredStudents++;
                             return;
                         }
+
+                        const rawBirthDate = importedStudent.birthDate ?? importedStudent.birthdate ?? importedStudent.birth_date;
+                        const normalizedBirthDate = normalizeBirthDate(rawBirthDate);
+                        if (normalizedBirthDate) importedStudent.birthDate = normalizedBirthDate;
+                        if (importedStudent.birthdate !== undefined) delete importedStudent.birthdate;
+                        if (importedStudent.birth_date !== undefined) delete importedStudent.birth_date;
 
                         const nin = clean(importedStudent.nin);
                         let existing = null;

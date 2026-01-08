@@ -24,6 +24,42 @@ export const relationalSyncService = {
         const userEmail = user.email;
 
         try {
+            const normalizeBirthDate = (val) => {
+                if (val === undefined || val === null) return null;
+                const str = String(val).trim();
+                if (!str) return null;
+
+                const m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+                if (m) {
+                    const dd = String(m[1]).padStart(2, '0');
+                    const mm = String(m[2]).padStart(2, '0');
+                    const yyyy = m[3];
+                    return `${dd}/${mm}/${yyyy}`;
+                }
+
+                try {
+                    const d = typeof window.parseDateMaybeExcel === 'function' ? window.parseDateMaybeExcel(val) : null;
+                    if (d) {
+                        const dd = String(d.getUTCDate()).padStart(2, '0');
+                        const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+                        const yyyy = d.getUTCFullYear();
+                        return `${dd}/${mm}/${yyyy}`;
+                    }
+                } catch (_) { }
+
+                const num = Number(str);
+                if (!isNaN(num) && num > 10000) {
+                    const ms = Date.UTC(1899, 11, 30) + Math.round(num) * 86400 * 1000;
+                    const d = new Date(ms);
+                    const dd = String(d.getUTCDate()).padStart(2, '0');
+                    const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+                    const yyyy = d.getUTCFullYear();
+                    return `${dd}/${mm}/${yyyy}`;
+                }
+
+                return str;
+            };
+
             // 1. Synchroniser les Élèves (Students)
             if (data.students && Array.isArray(data.students)) {
                 const studentsPayload = data.students
@@ -50,7 +86,7 @@ export const relationalSyncService = {
                             last_name: s.lastName || null,
                             nin: s.nin || null,
                             reg_number: s.regNumber || null,
-                            birthdate: s.birthDate || null,
+                            birthdate: normalizeBirthDate(s.birthDate),
                             class_name: s.className || 'Sans classe',
                             sex: sex,
                             updated_at: new Date().toISOString()

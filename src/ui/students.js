@@ -833,7 +833,7 @@
         const reader = new FileReader();
         reader.onload = function (e) {
             const dataBinary = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(dataBinary, { type: 'array' });
+            const workbook = XLSX.read(dataBinary, { type: 'array', cellDates: true });
             const firstSheetName = workbook.SheetNames[0];
             const sheet = workbook.Sheets[firstSheetName];
             const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
@@ -846,28 +846,41 @@
             const headers = json[1];
             const rows = json.slice(2); // à partir de la 3ème ligne
 
-            // Fonction utilitaire pour nettoyer les chaines (enlever les espaces inutiles)
             const cleanStr = (val) => (val || '').toString().trim();
 
-            const formatExcelDate = (val) => {
-                if (!val) return '';
-                const str = val.toString().trim();
-                // Si c'est déjà une date au format JJ/MM/AAAA, on la garde
-                if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(str)) return str;
-                
-                // Si c'est un nombre (format Excel)
-                const num = parseFloat(str);
-                if (!isNaN(num) && num > 20000 && num < 60000) {
-                    try {
-                        const date = new Date(Math.round((num - 25569) * 86400 * 1000));
-                        const d = String(date.getDate()).padStart(2, '0');
-                        const m = String(date.getMonth() + 1).padStart(2, '0');
-                        const y = date.getFullYear();
-                        return `${d}/${m}/${y}`;
-                    } catch (e) {
-                        return str;
-                    }
+            const normalizeBirthDate = (val) => {
+                if (val === undefined || val === null) return '';
+                const str = cleanStr(val);
+                if (!str) return '';
+
+                const m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+                if (m) {
+                    const dd = String(m[1]).padStart(2, '0');
+                    const mm = String(m[2]).padStart(2, '0');
+                    const yyyy = m[3];
+                    return `${dd}/${mm}/${yyyy}`;
                 }
+
+                try {
+                    const d = typeof window.parseDateMaybeExcel === 'function' ? window.parseDateMaybeExcel(val) : null;
+                    if (d) {
+                        const dd = String(d.getUTCDate()).padStart(2, '0');
+                        const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+                        const yyyy = d.getUTCFullYear();
+                        return `${dd}/${mm}/${yyyy}`;
+                    }
+                } catch (_) { }
+
+                const num = Number(str);
+                if (!isNaN(num) && num > 10000) {
+                    const ms = Date.UTC(1899, 11, 30) + Math.round(num) * 86400 * 1000;
+                    const d = new Date(ms);
+                    const dd = String(d.getUTCDate()).padStart(2, '0');
+                    const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+                    const yyyy = d.getUTCFullYear();
+                    return `${dd}/${mm}/${yyyy}`;
+                }
+
                 return str;
             };
 
@@ -898,7 +911,7 @@
                     firstName: idxPrenom >= 0 ? cleanStr(row[idxPrenom]) : '',
                     className: idxClasse >= 0 ? cleanStr(row[idxClasse]) : '',
                     sex: idxSexe >= 0 ? cleanStr(row[idxSexe]) : '',
-                    birthDate: idxBirth >= 0 ? formatExcelDate(row[idxBirth]) : '',
+                    birthDate: idxBirth >= 0 ? normalizeBirthDate(row[idxBirth]) : '',
                     regNumber: idxReg >= 0 ? cleanStr(row[idxReg]) : ''
                 };
             }).filter(r => r !== null);
@@ -917,7 +930,7 @@
                     const firstName = idxPrenom >= 0 ? cleanStr(row[idxPrenom]) : '';
                     const className = idxClasse >= 0 ? cleanStr(row[idxClasse]) : '';
                     const sex = idxSexe >= 0 ? cleanStr(row[idxSexe]) : '';
-                    const birthDate = idxBirth >= 0 ? formatExcelDate(row[idxBirth]) : '';
+                    const birthDate = idxBirth >= 0 ? normalizeBirthDate(row[idxBirth]) : '';
                     const regNumber = idxReg >= 0 ? cleanStr(row[idxReg]) : '';
 
                     if (!lastName && !firstName) return;
