@@ -1,4 +1,6 @@
 
+import { settingsAdapter } from '../storage/settings.adapter.js';
+
 (function () {
     // Helper to access globals
     const getData = () => window.data;
@@ -249,6 +251,7 @@
     window.changeLanguage = function(lang) {
         window.currentLanguage = lang;
         localStorage.setItem('corrections-language', lang);
+        settingsAdapter.saveSettings({ language: lang });
         window.applyLanguage();
     };
 
@@ -494,6 +497,7 @@
 
     window.setGlobalAcademicYear = function(value) {
         localStorage.setItem('corrections-global-academic-year', value);
+        settingsAdapter.saveSettings({ current_academic_year: value });
         // If no academic year, clear trimester
         if (!value) {
             localStorage.removeItem('corrections-global-trimester');
@@ -542,6 +546,7 @@
 
     window.setGlobalTrimester = function(value) {
         localStorage.setItem('corrections-global-trimester', value);
+        settingsAdapter.saveSettings({ current_trimester: value });
         
         // Sync visual UI (radios and labels)
         if (window.syncGlobalUI) window.syncGlobalUI();

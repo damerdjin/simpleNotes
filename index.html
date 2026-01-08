@@ -1635,6 +1635,7 @@
     <script type="module">
         import { checkAuth, logout } from './src/ui/auth.js';
         import { initLanguage } from './src/ui/i18n.js';
+        import { settingsAdapter } from './src/storage/settings.adapter.js';
         
         window.handleLogout = logout;
         
@@ -1808,6 +1809,11 @@
                 const user = await checkAuth();
                 if (user) {
                     window.currentUser = user;
+                    
+                    // Sync user preferences (year, language...) before loading data
+                    await settingsAdapter.sync();
+
+                    if (window.loadData) window.loadData();
                     
                     // Trigger UI refresh now that user is known
                     if (window.renderStudents) window.renderStudents();
