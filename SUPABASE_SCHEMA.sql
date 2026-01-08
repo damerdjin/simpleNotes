@@ -110,6 +110,7 @@ create table if not exists public.grades (
   assignment_id text not null references public.assignments(id) on delete cascade,
   
   score_final numeric,
+  score_max numeric,
   score_details jsonb,
   comments text,
   

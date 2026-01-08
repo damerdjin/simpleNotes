@@ -1,4 +1,5 @@
 import { supabase } from '../ui/supabase-client.js';
+import { getStudentAssignmentTotal, getAssignmentMaxPoints } from './grades.service.js';
 
 export const relationalSyncService = {
     /**
@@ -183,15 +184,17 @@ export const relationalSyncService = {
                         // Si le final n'est pas stocké, on devrait le recalculer ici ou le stocker null.
                         // Pour l'instant, stockons le JSON brut.
                         
-                        // Petite tentative de récupération de 'final' si présent (parfois stocké pour cache)
-                        let finalScore = null;
-                        if (typeof gradeData.final === 'number') finalScore = gradeData.final;
+                        // On calcule le score final et le score max en utilisant le service dédié
+                        const finalScore = getStudentAssignmentTotal(data, studentId, assignmentId);
+                        const assignment = (data.assignments || []).find(a => a.id === assignmentId);
+                        const scoreMax = assignment ? getAssignmentMaxPoints(assignment) : null;
                         
                         gradesPayload.push({
                             user_id: userId,
                             student_id: studentId,
                             assignment_id: assignmentId,
                             score_final: finalScore,
+                            score_max: scoreMax,
                             score_details: gradeData,
                             updated_at: new Date().toISOString()
                         });
