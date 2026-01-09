@@ -684,8 +684,17 @@
 
         let finalExercises = [];
         if (isGlobalAssignment) {
+            // Récupérer l'ancien ID si on est en train de modifier
+            let globalId = genId();
+            if (editingAssignmentId) {
+                const oldAssignment = data.assignments.find(a => a.id === editingAssignmentId);
+                if (oldAssignment && oldAssignment.exercises && oldAssignment.exercises.length > 0) {
+                    globalId = oldAssignment.exercises[0].id;
+                }
+            }
+
             finalExercises = [{
-                id: genId(),
+                id: globalId,
                 name: 'Global',
                 maxPoints: globalMax,
                 questions: [],
