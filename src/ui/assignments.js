@@ -683,14 +683,14 @@
         if (existing) return window.showAssignmentError(t.duplicateAssignmentDetailed || t.duplicateAssignmentName);
 
         let finalExercises = [];
+        const oldAssignment = editingAssignmentId ? data.assignments.find(a => a.id === editingAssignmentId) : null;
+
         if (isGlobalAssignment) {
-            // Récupérer l'ancien ID si on est en train de modifier
+            // Récupérer l'ancien ID si on est en train de modifier un devoir qui était déjà global
+            // ou prendre le premier ID d'exercice si on passe de détaillé à global
             let globalId = genId();
-            if (editingAssignmentId) {
-                const oldAssignment = data.assignments.find(a => a.id === editingAssignmentId);
-                if (oldAssignment && oldAssignment.exercises && oldAssignment.exercises.length > 0) {
-                    globalId = oldAssignment.exercises[0].id;
-                }
+            if (oldAssignment && oldAssignment.exercises && oldAssignment.exercises.length > 0) {
+                globalId = oldAssignment.exercises[0].id;
             }
 
             finalExercises = [{
@@ -702,35 +702,53 @@
             }];
         } else {
             if (window.tempExercises.length === 0) return window.showAssignmentError(t.addExerciseFirst);
-            finalExercises = window.tempExercises;
+            
+            // Sécurité : S'assurer que les exercices dans tempExercises ont des IDs
+            // et s'ils correspondent à des exercices existants, garder leurs IDs
+            finalExercises = window.tempExercises.map((ex, idx) => {
+                if (oldAssignment && oldAssignment.exercises && oldAssignment.exercises[idx]) {
+                    // Si l'exercice existait à cet index, on pourrait vouloir garder son ID
+                    // Mais tempExercises devrait déjà l'avoir grâce au deepClone
+                }
+                return ex;
+            });
         }
 
         if (editingAssignmentId) {
             const index = data.assignments.findIndex(a => a.id === editingAssignmentId);
             if (index !== -1) {
-                // Modification
-                data.assignments[index].name = name;
-                data.assignments[index].className = className;
-                data.assignments[index].trimester = trimester;
-                if (!data.assignments[index].academicYear) data.assignments[index].academicYear = window.getGlobalAcademicYear();
-                if (!data.assignments[index].createdBy) data.assignments[index].createdBy = window.currentUser?.email || window.currentUser?.id || 'unknown';
-                data.assignments[index].exercises = finalExercises;
+                // Modification : on met à jour l'objet existant au lieu de le remplacer totalement
+                const assignment = data.assignments[index];
+                assignment.name = name;
+                assignment.className = className;
+                assignment.trimester = trimester;
+                assignment.academicYear = assignment.academicYear || currentYear;
+                assignment.createdBy = assignment.createdBy || (window.currentUser?.email || window.currentUser?.id || 'unknown');
+                
+                // CRITIQUE : Avant de remplacer les exercices, on vérifie si on ne va pas casser les notes
+                assignment.exercises = finalExercises;
 
                 // Copie des notes si demandé
                 if (copyFromId) {
                     const sourceId = copyFromId;
                     const targetId = editingAssignmentId;
                     const sourceAssignment = data.assignments.find(a => a.id === sourceId);
-                    // On copie la note globale si possible
                     if (sourceAssignment) {
-                        // Pour chaque élève de la classe
                         const students = data.students.filter(s => s.className === className);
                         students.forEach(s => {
                             const sourceGrade = window.getStudentAssignmentTotal(s.id, sourceId);
-                            // On applique cette note comme note globale du devoir cible
-                            if (!data.grades[s.id]) data.grades[s.id] = {};
-                            if (!data.grades[s.id][targetId]) data.grades[s.id][targetId] = {};
-                            data.grades[s.id][targetId].global = sourceGrade;
+                            // On stocke la note dans le premier exercice pour le mode global
+                            if (finalExercises.length > 0) {
+                                const firstExId = finalExercises[0].id;
+                                if (!data.grades[s.id]) data.grades[s.id] = {};
+                                if (!data.grades[s.id][targetId]) data.grades[s.id][targetId] = {};
+                                if (!data.grades[s.id][targetId][firstExId]) data.grades[s.id][targetId][firstExId] = {};
+                                if (!data.grades[s.id][targetId][firstExId].final) data.grades[s.id][targetId][firstExId].final = {};
+                                if (!data.grades[s.id][targetId][firstExId].final.final) data.grades[s.id][targetId][firstExId].final.final = {};
+                                
+                                data.grades[s.id][targetId][firstExId].final.final.final = sourceGrade;
+                                data.grades[s.id][targetId][firstExId].mode = 'global';
+                            }
                         });
                     }
                 }

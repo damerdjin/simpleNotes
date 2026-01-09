@@ -155,11 +155,31 @@ export const relationalSyncService = {
                     }));
 
                 if (assignmentsPayload.length > 0) {
-                    const { error } = await supabase
+                    const { error: upsertError } = await supabase
                         .from('assignments')
                         .upsert(assignmentsPayload, { onConflict: 'id' });
 
-                    if (error) console.error('[RelationalSync] Assignments sync error:', error);
+                    if (upsertError) console.error('[RelationalSync] Assignments sync error:', upsertError);
+
+                    // 2b. Suppression des devoirs qui ne sont plus dans le payload local pour cette année/prof
+                    const assignmentIds = assignmentsPayload.map(a => a.id);
+                    const { error: deleteError } = await supabase
+                        .from('assignments')
+                        .delete()
+                        .eq('user_id', userId)
+                        .eq('academic_year', academicYear)
+                        .not('id', 'in', `(${assignmentIds.join(',')})`);
+
+                    if (deleteError) {
+                        console.error('[RelationalSync] Assignments deletion sync error:', deleteError);
+                    }
+                } else {
+                    // Si le payload est vide, on supprime tout pour cette année/prof
+                    await supabase
+                        .from('assignments')
+                        .delete()
+                        .eq('user_id', userId)
+                        .eq('academic_year', academicYear);
                 }
             }
 
@@ -168,21 +188,24 @@ export const relationalSyncService = {
             if (data.grades) {
                 const gradesPayload = [];
                 
+                // On récupère les IDs valides des élèves et devoirs pour cette année/prof
+                // (Ceux qu'on vient de synchroniser)
+                const validStudentIds = data.students
+                    .filter(s => (!s.importedBy || s.importedBy === userId || s.importedBy === userEmail) && (!s.academicYear || s.academicYear === academicYear))
+                    .map(s => s.id);
+                
+                const validAssignmentIds = data.assignments
+                    .filter(a => (!a.createdBy || a.createdBy === userId || a.createdBy === userEmail) && (!a.academicYear || a.academicYear === academicYear))
+                    .map(a => a.id);
+
                 // On parcourt les élèves
                 Object.entries(data.grades).forEach(([studentId, studentGrades]) => {
-                    // Vérifier si l'élève existe dans nos données filtrées (optionnel mais plus sûr)
-                    // Pour simplifier, on prend tout ce qui est lié à des élèves/devoirs qu'on vient potentiellement de sync
+                    // On ne synchronise que si l'élève appartient à l'année/prof active
+                    if (!validStudentIds.includes(studentId)) return;
                     
                     Object.entries(studentGrades).forEach(([assignmentId, gradeData]) => {
-                        // gradeData contient { final: number, ...détails } ou juste détails
-                        // La structure exacte dépend de data-management.js
-                        // D'après data-management.js L18: grades: { studentId: { assignmentId: { exerciseId: ... } } }
-                        // Et grades.service.js calcule le final.
-                        // Ici on stocke le raw JSON dans score_details, et on essaie d'extraire le final s'il est pré-calculé ou stocké.
-                        // Dans le système actuel, 'final' n'est pas toujours stocké, il est calculé à la volée.
-                        // Mais pour l'affichage élève, on veut le final.
-                        // Si le final n'est pas stocké, on devrait le recalculer ici ou le stocker null.
-                        // Pour l'instant, stockons le JSON brut.
+                        // On ne synchronise que si le devoir appartient à l'année/prof active
+                        if (!validAssignmentIds.includes(assignmentId)) return;
                         
                         // On calcule le score final et le score max en utilisant le service dédié
                         const finalScore = getStudentAssignmentTotal(data, studentId, assignmentId);
@@ -202,18 +225,48 @@ export const relationalSyncService = {
                 });
 
                 if (gradesPayload.length > 0) {
-                    // Upsert grades. Clé unique (student_id, assignment_id).
-                    // Mais on n'a pas mis d'ID explicite dans le payload car c'est auto-généré.
-                    // Upsert a besoin de la contrainte unique pour savoir quoi mettre à jour.
-                    // On doit spécifier onConflict.
-                    const { error } = await supabase
+                    // 3a. Upsert des notes
+                    const { error: upsertError } = await supabase
                         .from('grades')
                         .upsert(gradesPayload, { 
                             onConflict: 'student_id,assignment_id',
                             ignoreDuplicates: false 
                         });
 
-                    if (error) console.error('[RelationalSync] Grades sync error:', error);
+                    if (upsertError) console.error('[RelationalSync] Grades upsert error:', upsertError);
+
+                    // 3b. Nettoyage des notes orphelines dans Supabase pour cet utilisateur
+                    // On supprime les notes qui concernent des devoirs de CETTE année scolaire
+                    // mais qui ne sont plus dans le payload local.
+                    // Note: Supabase gère déjà le 'on delete cascade', mais ici on gère la désynchronisation logicielle.
+                    const { error: cleanupError } = await supabase
+                        .from('grades')
+                        .delete()
+                        .eq('user_id', userId)
+                        .in('assignment_id', validAssignmentIds) // Concerne nos devoirs valides
+                        .not('student_id', 'in', `(${validStudentIds.join(',')})`); // Mais pour des élèves qui n'existent plus
+
+                    // Et inversement pour les devoirs supprimés (déjà géré par le cascade si assignment supprimé,
+                    // mais plus sûr de nettoyer par student_id aussi si besoin)
+                    const { error: cleanupError2 } = await supabase
+                        .from('grades')
+                        .delete()
+                        .eq('user_id', userId)
+                        .in('student_id', validStudentIds)
+                        .not('assignment_id', 'in', `(${validAssignmentIds.join(',')})`);
+
+                    if (cleanupError || cleanupError2) {
+                        console.error('[RelationalSync] Grades cleanup error:', cleanupError || cleanupError2);
+                    }
+                } else {
+                    // Si aucune note locale pour ces élèves/devoirs, on nettoie tout pour l'année
+                    if (validAssignmentIds.length > 0) {
+                        await supabase
+                            .from('grades')
+                            .delete()
+                            .eq('user_id', userId)
+                            .in('assignment_id', validAssignmentIds);
+                    }
                 }
             }
 
