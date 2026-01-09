@@ -13,27 +13,21 @@ const local = localStorageAdapter();
 const remote = supabaseAdapter();
 
 export const store = {
-  load() {
+  async load() {
     const localData = local.load();
-    Promise.resolve()
-      .then(() => remote.load())
-      .then((remoteData) => {
-        if (!remoteData) return;
+    try {
+      // Priorité au chargement distant pour éviter d'écraser des données plus récentes
+      const remoteData = await remote.load();
+      if (remoteData) {
         if (!shallowEqual(remoteData, localData)) {
-          try {
-            local.save(remoteData);
-            if (typeof window !== 'undefined') {
-              window.data = remoteData;
-              if (window.renderStudents) window.renderStudents();
-              if (window.renderAssignments) window.renderAssignments();
-              if (window.loadExportPrepConfig) window.loadExportPrepConfig();
-              if (window.loadClassSelectorsForExport) window.loadClassSelectorsForExport();
-              if (window.softResetUI) window.softResetUI();
-            }
-          } catch (_) {}
+          console.log('[Store] Remote data differs from local, updating local storage');
+          local.save(remoteData);
         }
-      })
-      .catch(() => {});
+        return remoteData;
+      }
+    } catch (err) {
+      console.warn('[Store] Remote load failed or timed out, falling back to local data', err);
+    }
     return localData;
   },
   save(payload) {

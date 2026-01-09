@@ -68,7 +68,7 @@ export const settingsAdapter = {
             // On force un rechargement des données si l'année active a changé
             const currentYearInMem = window.getGlobalAcademicYear ? window.getGlobalAcademicYear() : null;
             if (remote.current_academic_year && currentYearInMem !== remote.current_academic_year) {
-                 if (window.loadData) window.loadData();
+                 if (window.loadData) await window.loadData();
             }
         }
     }

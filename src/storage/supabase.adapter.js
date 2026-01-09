@@ -15,6 +15,7 @@ function getAcademicYear() {
 export function supabaseAdapter() {
   return {
     async load() {
+      console.log('[SupabaseAdapter] Loading data for', getCurrentUserId(), getAcademicYear());
       try {
         const userId = getCurrentUserId();
         const academicYear = getAcademicYear();
@@ -25,9 +26,19 @@ export function supabaseAdapter() {
           .eq('user_id', userId)
           .eq('academic_year', academicYear)
           .single();
-        if (error) throw error;
-        if (data?.data) return data.data;
-      } catch (_) {}
+        
+        if (error) {
+          if (error.code !== 'PGRST116') console.warn('[SupabaseAdapter] Load error:', error);
+          throw error;
+        }
+        
+        if (data?.data) {
+          console.log('[SupabaseAdapter] Data loaded from Supabase');
+          return data.data;
+        }
+      } catch (err) {
+        console.log('[SupabaseAdapter] Falling back to local storage or defaults');
+      }
       try {
         const s = localStorage.getItem('corrections-data');
         if (s) return JSON.parse(s);

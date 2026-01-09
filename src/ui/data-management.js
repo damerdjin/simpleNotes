@@ -27,26 +27,43 @@
         };
     }
 
-    // Load from localStorage
-    window.loadData = function() {
-        const loaded = (window.store && typeof window.store.load === 'function') ? window.store.load() : null;
-        if (loaded) {
-            window.data = loaded;
-        } else {
-            // Try localStorage directly if store not available
-            try {
+    // Flag to prevent saving before loading is complete
+    window.isDataLoaded = false;
+
+    // Load from localStorage or Store
+    window.loadData = async function() {
+        console.log('[DataManagement] Loading data...');
+        try {
+            const loaded = (window.store && typeof window.store.load === 'function') ? await window.store.load() : null;
+            if (loaded) {
+                window.data = loaded;
+                window.isDataLoaded = true;
+                console.log('[DataManagement] Data loaded from store');
+            } else {
+                // Try localStorage directly if store not available
                 const stored = localStorage.getItem('corrections-data');
                 if (stored) {
                     window.data = JSON.parse(stored);
+                    window.isDataLoaded = true;
+                    console.log('[DataManagement] Data loaded from localStorage');
+                } else {
+                    console.log('[DataManagement] No data found, using defaults');
+                    window.isDataLoaded = true; // Still marked as loaded (empty state is valid)
                 }
-            } catch (e) {
-                console.warn('Failed to load data from localStorage', e);
             }
+        } catch (e) {
+            console.error('[DataManagement] Failed to load data', e);
+            // In case of error, we don't set isDataLoaded to true to prevent overwriting Supabase with defaults
         }
     };
 
-    // Save to localStorage
+    // Save to localStorage or Store
     window.saveData = function() {
+        if (!window.isDataLoaded) {
+            console.warn('[DataManagement] Save skipped: data not yet loaded');
+            return;
+        }
+
         const data = window.data;
         if (window.store && typeof window.store.save === 'function') {
             window.store.save(data);

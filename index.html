@@ -1813,7 +1813,7 @@
                     // Sync user preferences (year, language...) before loading data
                     await settingsAdapter.sync();
 
-                    if (window.loadData) window.loadData();
+                    await window.loadData();
                     
                     // Trigger UI refresh now that user is known
                     if (window.renderStudents) window.renderStudents();
@@ -1829,6 +1829,9 @@
                     if (avatarInitial && user.email) {
                         avatarInitial.textContent = user.email.charAt(0).toUpperCase();
                     }
+
+                    // Hide splash screen after all data is loaded and rendered
+                    if (window.hideSplashScreen) window.hideSplashScreen();
 
                     // User menu toggle
                     const userMenuBtn = document.getElementById('user-menu-button');
@@ -2602,8 +2605,7 @@
         // Language Management
         window.addEventListener('load', async () => {
             try {
-                // Ensure data is loaded
-                if (window.loadData) window.loadData();
+                // Initialize language from storage
                 if (window.initLanguage) window.initLanguage();
                 
                 // Initialize new tab system
@@ -2626,16 +2628,15 @@
 
                 // Give a tiny bit of time for the browser to paint the rendered content
                 setTimeout(() => {
-                    if (window.hideSplashScreen) window.hideSplashScreen();
-                    
                     // Force activation of first tab if none active
                     if (window.tabs && !window.tabs.activeTab) {
                         window.tabs.activateTab('students');
                     }
+                    
+                    // We don't hide splash screen here anymore, it's done after data load
                 }, 100);
             } catch (err) {
                 console.error("Initialization error:", err);
-                if (window.hideSplashScreen) window.hideSplashScreen();
             }
         });
     </script>
