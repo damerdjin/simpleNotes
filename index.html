@@ -2604,6 +2604,9 @@
             try {
                 // Initialize language from storage
                 if (window.initLanguage) window.initLanguage();
+
+                // Initialize history management
+                if (window.initHistory) window.initHistory();
                 
                 // Initialize new tab system
                 if (window.initTabs) window.initTabs();

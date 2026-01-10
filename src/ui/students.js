@@ -238,7 +238,7 @@
         container.innerHTML = rows;
     };
 
-    window.setStudentsSelectedClass = function(className = '') {
+    window.setStudentsSelectedClass = function(className = '', options = {}) {
         studentsUiState.selectedClass = className || '';
         studentsUiState.page = 1;
         
@@ -246,6 +246,11 @@
         const viewList = document.getElementById('students-view-list');
         
         if (className) {
+            // Gérer l'historique si ce n'est pas un retour en arrière
+            if (!options.skipHistory) {
+                history.pushState({ tab: 'students', subView: 'class-list', className: className }, '');
+            }
+
             // Show List View
             if (viewClasses) viewClasses.classList.add('hidden');
             if (viewList) viewList.classList.remove('hidden');
@@ -265,6 +270,9 @@
             
             window.renderStudents();
         } else {
+            // Si on demande la liste des classes (className vide)
+            // On ne pousse pas d'état ici car c'est l'état de base de l'onglet
+            
             // Show Classes View
             if (viewList) viewList.classList.add('hidden');
             if (viewClasses) viewClasses.classList.remove('hidden');
@@ -273,13 +281,18 @@
     };
 
     window.clearStudentsFilters = function() {
+        if (studentsUiState.selectedClass) {
+            history.back();
+            return;
+        }
+        
         studentsUiState.selectedClass = '';
         studentsUiState.page = 1;
         const search = document.getElementById('student-search');
         if (search) search.value = '';
         
         // Return to dashboard
-        window.setStudentsSelectedClass('');
+        window.setStudentsSelectedClass('', { skipHistory: true });
     };
 
     window.setStudentsPageSize = function(value) {

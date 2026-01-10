@@ -75,6 +75,35 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
     };
 
     // --- Tab Navigation (New System) ---
+    
+    window.initHistory = function() {
+        // État initial
+        if (!history.state) {
+            const currentTab = window.tabs ? window.tabs.activeTab : 'students';
+            history.replaceState({ tab: currentTab, subView: null }, '');
+        }
+
+        window.addEventListener('popstate', (event) => {
+            const state = event.state;
+            if (state && state.tab) {
+                // Si on change de tab
+                if (window.tabs && window.tabs.activeTab !== state.tab) {
+                    window.tabs.activateTab(state.tab, { skipHistory: true });
+                }
+
+                // Gestion spécifique pour l'onglet Élèves
+                if (state.tab === 'students') {
+                    if (window.setStudentsSelectedClass) {
+                        window.setStudentsSelectedClass(state.className || '', { skipHistory: true });
+                    }
+                }
+                
+                // On ferme la sidebar mobile au cas où
+                const sidebar = document.getElementById('app-sidebar');
+                if (sidebar) sidebar.classList.remove('mobile-visible');
+            }
+        });
+    };
 
     window.initTabs = function() {
         if (!window.tabs) {
@@ -153,10 +182,30 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
         window.translateTabs();
     };
 
-    window.showTab = function(tabId) {
+    window.showTab = async function(tabId, options = {}) {
         if (window.tabs) {
-            window.tabs.activateTab(tabId);
+            const isAlreadyActive = window.tabs.activeTab === tabId;
+            const success = await window.tabs.activateTab(tabId, options);
             
+            // Si on clique sur l'onglet déjà actif, on reset sa vue interne
+            if (isAlreadyActive && !options.skipHistory) {
+                if (tabId === 'students' && window.setStudentsSelectedClass) {
+                    window.setStudentsSelectedClass('', { skipHistory: false });
+                }
+                return true;
+            }
+
+            // Gérer l'historique si ce n'est pas un retour en arrière
+            if (success && !options.skipHistory) {
+                history.pushState({ tab: tabId, subView: null }, '');
+            }
+            
+            // Si on change d'onglet, on s'assure que la vue interne est cohérente
+            if (success && tabId === 'students' && window.setStudentsSelectedClass) {
+                // Par défaut, quand on clique sur l'onglet Élèves, on veut la liste des classes
+                window.setStudentsSelectedClass('', { skipHistory: true });
+            }
+
             // On mobile, close sidebar after selection
             const sidebar = document.getElementById('app-sidebar');
             if (sidebar && window.innerWidth <= 768) {
