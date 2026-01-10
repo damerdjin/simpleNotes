@@ -239,16 +239,24 @@
     };
 
     window.setStudentsSelectedClass = function(className = '', options = {}) {
-        studentsUiState.selectedClass = className || '';
+        const prevClass = studentsUiState.selectedClass || '';
+        const newClass = className || '';
+
+        // Éviter les appels redondants
+        if (newClass === prevClass && !options.force) {
+            return;
+        }
+
+        studentsUiState.selectedClass = newClass;
         studentsUiState.page = 1;
         
         const viewClasses = document.getElementById('students-view-classes');
         const viewList = document.getElementById('students-view-list');
         
-        if (className) {
+        if (newClass) {
             // Gérer l'historique si ce n'est pas un retour en arrière
             if (!options.skipHistory) {
-                history.pushState({ tab: 'students', subView: 'class-list', className: className }, '');
+                history.pushState({ tab: 'students', subView: 'class-list', className: newClass }, '');
             }
 
             // Show List View
@@ -259,11 +267,11 @@
             const titleEl = document.getElementById('selected-class-title');
             const statsEl = document.getElementById('selected-class-stats');
             
-            if (titleEl) titleEl.textContent = className;
+            if (titleEl) titleEl.textContent = newClass;
             if (statsEl) {
                      const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
                      const globalAcademicYear = window.getGlobalAcademicYear();
-                     const count = getData().students.filter(s => s.className === className && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear).length;
+                     const count = getData().students.filter(s => s.className === newClass && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear).length;
                      const t = getTranslations()[getLang()];
                      statsEl.textContent = `${count} ${(t.studentsCountLabel || 'Élèves').toUpperCase()}`;
                 }
@@ -271,7 +279,10 @@
             window.renderStudents();
         } else {
             // Si on demande la liste des classes (className vide)
-            // On ne pousse pas d'état ici car c'est l'état de base de l'onglet
+            // On pousse un état si on vient d'une classe et qu'on n'est pas en train de faire un retour
+            if (!options.skipHistory && prevClass !== '') {
+                history.pushState({ tab: 'students', subView: null }, '');
+            }
             
             // Show Classes View
             if (viewList) viewList.classList.add('hidden');
@@ -282,7 +293,17 @@
 
     window.clearStudentsFilters = function() {
         if (studentsUiState.selectedClass) {
+            // Sur mobile, history.back() est le comportement attendu pour rester synchrone
+            // avec le bouton retour du système.
             history.back();
+            
+            // Fallback au cas où history.back() ne déclencherait pas popstate immédiatement
+            // ou si on est à la fin de la pile d'historique de l'app
+            setTimeout(() => {
+                if (studentsUiState.selectedClass) {
+                    window.setStudentsSelectedClass('', { skipHistory: true });
+                }
+            }, 100);
             return;
         }
         

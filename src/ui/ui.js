@@ -77,15 +77,41 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
     // --- Tab Navigation (New System) ---
     
     window.initHistory = function() {
-        // État initial
-        if (!history.state) {
-            const currentTab = window.tabs ? window.tabs.activeTab : 'students';
-            history.replaceState({ tab: currentTab, subView: null }, '');
+        // État initial : on s'assure d'avoir un état même au premier chargement
+        // On utilise replaceState pour ne pas polluer l'historique mais avoir un état de base
+        const currentTab = (window.tabs && window.tabs.activeTab) ? window.tabs.activeTab : 'students';
+        const initialState = { tab: currentTab, subView: null };
+        
+        if (!history.state || !history.state.tab) {
+            history.replaceState(initialState, '');
         }
 
         window.addEventListener('popstate', (event) => {
             const state = event.state;
-            if (state && state.tab) {
+            
+            // Sur smartphone, si on revient au tout début, l'état peut être null
+            // ou ne pas contenir les informations nécessaires
+            if (!state || !state.tab) {
+                // On force le retour à l'onglet par défaut (Élèves) et vue liste des classes
+                if (window.tabs && window.tabs.activeTab !== 'students') {
+                    window.tabs.activateTab('students', { skipHistory: true });
+                }
+                if (window.setStudentsSelectedClass) {
+                    window.setStudentsSelectedClass('', { skipHistory: true, force: true });
+                }
+                
+                // Si l'état était null, on le remplace par l'état initial pour les prochains retours
+                if (!state) {
+                    history.replaceState(initialState, '');
+                }
+                
+                // Fermer la sidebar mobile
+                const sidebar = document.getElementById('app-sidebar');
+                if (sidebar) sidebar.classList.remove('mobile-visible');
+                return;
+            }
+
+            if (state.tab) {
                 // Si on change de tab
                 if (window.tabs && window.tabs.activeTab !== state.tab) {
                     window.tabs.activateTab(state.tab, { skipHistory: true });
@@ -94,7 +120,7 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
                 // Gestion spécifique pour l'onglet Élèves
                 if (state.tab === 'students') {
                     if (window.setStudentsSelectedClass) {
-                        window.setStudentsSelectedClass(state.className || '', { skipHistory: true });
+                        window.setStudentsSelectedClass(state.className || '', { skipHistory: true, force: true });
                     }
                 }
                 

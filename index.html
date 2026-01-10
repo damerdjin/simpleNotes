@@ -2626,7 +2626,7 @@
 
     <script type="module">
         // Language Management
-        window.addEventListener('load', async () => {
+        const initApp = async () => {
             try {
                 // Initialize language from storage
                 if (window.initLanguage) window.initLanguage();
@@ -2656,15 +2656,19 @@
                 setTimeout(() => {
                     // Force activation of first tab if none active
                     if (window.tabs && !window.tabs.activeTab) {
-                        window.tabs.activateTab('students');
+                        window.tabs.activateTab('students', { skipHistory: true });
                     }
-                    
-                    // We don't hide splash screen here anymore, it's done after data load
                 }, 100);
             } catch (err) {
                 console.error("Initialization error:", err);
             }
-        });
+        };
+
+        if (document.readyState === 'loading') {
+            window.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
     </script>
     <!-- Input caché pour charger le fichier Rakmana -->
     <input type="file" id="rakmana-file-input" accept=".xlsx" style="display: none;"
