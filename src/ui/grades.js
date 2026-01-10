@@ -271,150 +271,194 @@
             </div>
         </div>`;
 
-        html += `<div class="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">`;
-        html += assignment.exercises.map((ex, exIndex) => {
-            if (!data.grades[studentId][assignmentId][ex.id]) {
-                data.grades[studentId][assignmentId][ex.id] = {};
-            }
+        // Check if the assignment is "simple" (1 exercise, 1 question, 0 subquestions)
+        const isSimpleAssignment = assignment.exercises.length === 1 && (() => {
+            const ex = assignment.exercises[0];
             const directQuestions = ex.questions || [];
             const parts = ex.parts || [];
-            const hasQuestions = directQuestions.length > 0 || parts.length > 0;
-            const exGradesCur = data.grades[studentId][assignmentId][ex.id] || {};
-            const finalGradeCur = exGradesCur['final']?.['final']?.['final'] || '';
-            
-            // Priority: 
-            // 1. If we have a stored mode, use it.
-            // 2. If no stored mode but we have a global grade, it's 'global'.
-            // 3. Otherwise default to 'detail'.
-            const modeCur = exGradesCur.mode || (finalGradeCur !== '' ? 'global' : 'detail');
-            const accordionId = `grade-ex-${ex.id}`;
-            const maxExPoints = svc.getExerciseMaxPoints(ex);
-            
-            // Always show switcher for exercises with questions/parts
             const totalQuestions = directQuestions.length + parts.reduce((acc, p) => acc + (p.questions ? p.questions.length : 0), 0);
-            const showSwitcher = totalQuestions > 0;
-            
-            // Exercise Card
-            let exHtml = `
-            <div class="group border border-slate-200 rounded-2xl overflow-hidden bg-white hover:shadow-xl hover:border-blue-200 transition-all duration-300 mb-4">
-                <!-- Header Section -->
-                <div class="p-5 flex items-center justify-between cursor-pointer select-none bg-gradient-to-r from-white to-slate-50/50" onclick="window.toggleAccordion('${accordionId}')">
+            if (totalQuestions !== 1) return false;
+            const singleQ = directQuestions[0] || parts[0]?.questions[0];
+            return !(singleQ?.subQuestions && singleQ.subQuestions.length > 0);
+        })();
+
+        if (isSimpleAssignment) {
+            const ex = assignment.exercises[0];
+            const q = ex.questions?.[0] || ex.parts?.[0]?.questions?.[0];
+            const partKey = ex.questions?.[0] ? 'direct' : ex.parts[0].id;
+            const val = data.grades[studentId][assignmentId][ex.id]?.[partKey]?.[q.id]?.['direct'] || '';
+            const maxPts = q.maxPoints;
+
+            html += `
+            <div class="col-span-full">
+                <div class="bg-white border-2 border-blue-100 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6 transition-all hover:border-blue-300">
                     <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-black shadow-lg shadow-blue-200 group-hover:scale-110 transition-transform duration-300">
-                            ${exIndex + 1}
+                        <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-2xl flex items-center justify-center text-2xl font-black shadow-lg shadow-blue-200">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                         </div>
                         <div>
-                            <div class="flex items-center gap-2">
-                                <h3 class="font-black text-slate-800 tracking-tight">${ex.name ? (ex.name === 'Global' ? t.globalMode : ex.name) : (t.exercise || 'Exercice') + ' ' + (exIndex + 1)}</h3>
-                                <span class="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-black rounded-full border border-blue-100 uppercase tracking-wider">${maxExPoints} ${t.pointsAbbr || 'pts'}</span>
-                            </div>
+                            <h3 class="text-xl font-black text-slate-800 tracking-tight">${ex.name || (t.exercise + ' 1')}</h3>
+                            <p class="text-sm text-slate-500 font-bold uppercase tracking-wider">${window.getQuestionDisplayName(assignmentId, ex.id, q.id, ex.questions?.[0] ? null : ex.parts[0].id)}</p>
                         </div>
                     </div>
                     
-                    <div class="flex items-center gap-3">
-                        <span id="ex-total-${ex.id}" class="px-4 py-1.5 bg-blue-50 text-blue-700 font-black rounded-xl text-sm border border-blue-100 shadow-sm">
-                            0 / ${maxExPoints}
-                        </span>
-                        <div id="icon-${accordionId}" class="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all duration-500 shadow-sm">
-                            <svg class="w-5 h-5 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path>
-                            </svg>
+                    <div class="flex items-center gap-4 w-full sm:w-auto">
+                        <div class="relative flex-1 sm:w-56">
+                            <input type="number" min="0" max="${maxPts}" step="0.25" value="${val}"
+                                onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','${partKey}','${q.id}','direct',this.value)"
+                                class="w-full p-5 bg-blue-50/50 border-2 border-blue-200 rounded-2xl text-center font-black text-blue-900 text-3xl focus:border-blue-500 focus:bg-white focus:ring-8 focus:ring-blue-500/10 outline-none transition-all shadow-inner" 
+                                placeholder="0">
+                            <div class="absolute right-5 top-1/2 -translate-y-1/2 text-sm font-black text-blue-400">/ ${maxPts}</div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Content Section -->
-                <div id="accordion-${accordionId}" class="accordion-content border-t border-slate-100 bg-white" style="max-height: 0; opacity: 0; visibility: hidden;">
-                    <div class="p-6 space-y-6">`;
-
-            if (showSwitcher) {
-                exHtml += `
-                        <!-- Mode Switcher & Global Grade (Same line) -->
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                            <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center shrink-0">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-                                </div>
-                                <div class="inline-flex bg-slate-200 p-0.5 rounded-lg shadow-inner">
-                                    <button type="button" 
-                                        class="px-3 py-1 rounded-md text-[10px] font-bold transition-all ${modeCur === 'detail' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}" 
-                                        onclick="event.stopPropagation(); setExerciseMode('${studentId}','${assignmentId}','${ex.id}','detail')">
-                                        ${t.detailMode || 'Détaillé'}
-                                    </button>
-                                    <button type="button" 
-                                        class="px-3 py-1 rounded-md text-[10px] font-bold transition-all ${modeCur === 'global' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}" 
-                                        onclick="event.stopPropagation(); setExerciseMode('${studentId}','${assignmentId}','${ex.id}','global')">
-                                        ${t.globalMode || 'Global'}
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Global Grade Input -->
-                            <div class="flex items-center gap-3 ${modeCur === 'detail' ? 'opacity-40 grayscale pointer-events-none' : ''}">
-                                <span class="text-xs font-bold text-slate-500 uppercase tracking-tight">${t.globalGrade || 'Note globale'} :</span>
-                                <div class="relative">
-                                    <input type="number" min="0" max="${maxExPoints}" step="0.25" value="${finalGradeCur}"
-                                        ${modeCur === 'detail' ? 'disabled' : ''}
-                                        onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
-                                        class="w-20 p-1.5 bg-white border-2 border-amber-200 rounded-lg text-center font-black text-slate-700 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all text-sm" 
-                                        placeholder="0" onclick="event.stopPropagation()">
-                                    <div class="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-400">/ ${maxExPoints}</div>
-                                </div>
-                            </div>
-                        </div>`;
-            }
-            
-            if (directQuestions.length === 0 && parts.length === 0) {
-                const val = data.grades[studentId][assignmentId][ex.id]?.['direct']?.['direct']?.['direct'] || '';
-                exHtml += `
-                        <div class="flex items-center gap-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
-                            <div class="flex items-center gap-3 shrink-0">
-                                <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                </div>
-                                <span class="text-xs font-bold text-blue-900">${t.grade || 'Note'}</span>
-                            </div>
-                            <div class="flex items-center gap-3 ml-auto">
-                                <div class="relative w-28">
-                                    <input type="number" min="0" max="${ex.maxPoints}" step="0.25" value="${val}"
-                                        onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','direct','direct','direct',this.value)"
-                                        class="w-full p-2 bg-white border-2 border-blue-200 rounded-lg text-center font-black text-blue-900 focus:border-blue-500 outline-none transition-all shadow-sm text-sm" 
-                                        placeholder="0">
-                                    <div class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-400">/ ${ex.maxPoints}</div>
-                                </div>
-                            </div>
-                        </div>`;
-            } else {
-                // Wrap detailed questions in a container that can be hidden
-                exHtml += `<div class="${modeCur === 'global' ? 'hidden' : ''}">`;
-                
-                if (directQuestions.length > 0) {
-                    exHtml += `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">` + directQuestions.map(q => window.renderGradeQuestion(q, studentId, assignmentId, ex.id, null)).join('') + `</div>`;
+            </div>`;
+        } else {
+            html += `<div class="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">`;
+            html += assignment.exercises.map((ex, exIndex) => {
+                if (!data.grades[studentId][assignmentId][ex.id]) {
+                    data.grades[studentId][assignmentId][ex.id] = {};
                 }
-                if (parts.length > 0) {
-                    exHtml += parts.map((part, pIdx) => {
-                        const showBorder = showSwitcher || pIdx > 0 || directQuestions.length > 0;
-                        return `
-                        <div class="${showBorder ? 'mt-6 pt-6 border-t border-slate-100' : ''}">
-                            <div class="flex items-center gap-3 mb-3">
-                                <div class="w-7 h-7 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center shrink-0">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                const directQuestions = ex.questions || [];
+                const parts = ex.parts || [];
+                const hasQuestions = directQuestions.length > 0 || parts.length > 0;
+                const exGradesCur = data.grades[studentId][assignmentId][ex.id] || {};
+                const finalGradeCur = exGradesCur['final']?.['final']?.['final'] || '';
+                
+                // Priority: 
+                // 1. If we have a stored mode, use it.
+                // 2. If no stored mode but we have a global grade, it's 'global'.
+                // 3. Otherwise default to 'detail'.
+                const modeCur = exGradesCur.mode || (finalGradeCur !== '' ? 'global' : 'detail');
+                const accordionId = `grade-ex-${ex.id}`;
+                const maxExPoints = svc.getExerciseMaxPoints(ex);
+                
+                // Always show switcher for exercises with questions/parts
+                const totalQuestions = directQuestions.length + parts.reduce((acc, p) => acc + (p.questions ? p.questions.length : 0), 0);
+                const showSwitcher = totalQuestions > 0;
+                
+                // Exercise Card
+                let exHtml = `
+                <div class="group border border-slate-200 rounded-2xl overflow-hidden bg-white hover:shadow-xl hover:border-blue-200 transition-all duration-300 mb-4">
+                    <!-- Header Section -->
+                    <div class="p-5 flex items-center justify-between cursor-pointer select-none bg-gradient-to-r from-white to-slate-50/50" onclick="window.toggleAccordion('${accordionId}')">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-black shadow-lg shadow-blue-200 group-hover:scale-110 transition-transform duration-300">
+                                ${exIndex + 1}
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="font-black text-slate-800 tracking-tight">${ex.name ? (ex.name === 'Global' ? t.globalMode : ex.name) : (t.exercise || 'Exercice') + ' ' + (exIndex + 1)}</h3>
+                                    <span class="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-black rounded-full border border-blue-100 uppercase tracking-wider">${maxExPoints} ${t.pointsAbbr || 'pts'}</span>
                                 </div>
-                                <h4 class="font-black text-slate-700 text-[11px] uppercase tracking-wider">${part.name}</h4>
                             </div>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                ${(part.questions || []).map(q => window.renderGradeQuestion(q, studentId, assignmentId, ex.id, part.id)).join('')}
+                        </div>
+                        
+                        <div class="flex items-center gap-3">
+                            <span id="ex-total-${ex.id}" class="px-4 py-1.5 bg-blue-50 text-blue-700 font-black rounded-xl text-sm border border-blue-100 shadow-sm">
+                                0 / ${maxExPoints}
+                            </span>
+                            <div id="icon-${accordionId}" class="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all duration-500 shadow-sm">
+                                <svg class="w-5 h-5 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path>
+                                </svg>
                             </div>
-                        </div>`;
-                    }).join('');
+                        </div>
+                    </div>
+    
+                    <!-- Content Section -->
+                    <div id="accordion-${accordionId}" class="accordion-content border-t border-slate-100 bg-white" style="max-height: 0; opacity: 0; visibility: hidden;">
+                        <div class="p-6 space-y-6">`;
+    
+                if (showSwitcher) {
+                    exHtml += `
+                            <!-- Mode Switcher & Global Grade (Same line) -->
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center shrink-0">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                                    </div>
+                                    <div class="inline-flex bg-slate-200 p-0.5 rounded-lg shadow-inner">
+                                        <button type="button" 
+                                            class="px-3 py-1 rounded-md text-[10px] font-bold transition-all ${modeCur === 'detail' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}" 
+                                            onclick="event.stopPropagation(); setExerciseMode('${studentId}','${assignmentId}','${ex.id}','detail')">
+                                            ${t.detailMode || 'Détaillé'}
+                                        </button>
+                                        <button type="button" 
+                                            class="px-3 py-1 rounded-md text-[10px] font-bold transition-all ${modeCur === 'global' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}" 
+                                            onclick="event.stopPropagation(); setExerciseMode('${studentId}','${assignmentId}','${ex.id}','global')">
+                                            ${t.globalMode || 'Global'}
+                                        </button>
+                                    </div>
+                                </div>
+    
+                                <!-- Global Grade Input -->
+                                <div class="flex items-center gap-3 ${modeCur === 'detail' ? 'opacity-40 grayscale pointer-events-none' : ''}">
+                                    <span class="text-xs font-bold text-slate-500 uppercase tracking-tight">${t.globalGrade || 'Note globale'} :</span>
+                                    <div class="relative">
+                                        <input type="number" min="0" max="${maxExPoints}" step="0.25" value="${finalGradeCur}"
+                                            ${modeCur === 'detail' ? 'disabled' : ''}
+                                            onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
+                                            class="w-20 p-1.5 bg-white border-2 border-amber-200 rounded-lg text-center font-black text-slate-700 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all text-sm" 
+                                            placeholder="0" onclick="event.stopPropagation()">
+                                        <div class="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-400">/ ${maxExPoints}</div>
+                                    </div>
+                                </div>
+                            </div>`;
                 }
                 
-                exHtml += `</div>`;
-            }
-            exHtml += `</div></div></div>`;
-            return exHtml;
-        }).join('');
-        html += `</div>`;
+                if (directQuestions.length === 0 && parts.length === 0) {
+                    const val = data.grades[studentId][assignmentId][ex.id]?.['direct']?.['direct']?.['direct'] || '';
+                    exHtml += `
+                            <div class="flex items-center gap-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
+                                <div class="flex items-center gap-3 shrink-0">
+                                    <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </div>
+                                    <span class="text-xs font-bold text-blue-900">${t.grade || 'Note'}</span>
+                                </div>
+                                <div class="flex items-center gap-3 ml-auto">
+                                    <div class="relative w-28">
+                                        <input type="number" min="0" max="${ex.maxPoints}" step="0.25" value="${val}"
+                                            onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','direct','direct','direct',this.value)"
+                                            class="w-full p-2 bg-white border-2 border-blue-200 rounded-lg text-center font-black text-blue-900 focus:border-blue-500 outline-none transition-all shadow-sm text-sm" 
+                                            placeholder="0">
+                                        <div class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-400">/ ${ex.maxPoints}</div>
+                                    </div>
+                                </div>
+                            </div>`;
+                } else {
+                    // Wrap detailed questions in a container that can be hidden
+                    exHtml += `<div class="${modeCur === 'global' ? 'hidden' : ''}">`;
+                    
+                    if (directQuestions.length > 0) {
+                        exHtml += `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">` + directQuestions.map(q => window.renderGradeQuestion(q, studentId, assignmentId, ex.id, null)).join('') + `</div>`;
+                    }
+                    if (parts.length > 0) {
+                        exHtml += parts.map((part, pIdx) => {
+                            const showBorder = showSwitcher || pIdx > 0 || directQuestions.length > 0;
+                            return `
+                            <div class="${showBorder ? 'mt-6 pt-6 border-t border-slate-100' : ''}">
+                                <div class="flex items-center gap-3 mb-3">
+                                    <div class="w-7 h-7 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center shrink-0">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                                    </div>
+                                    <h4 class="font-black text-slate-700 text-[11px] uppercase tracking-wider">${part.name}</h4>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    ${(part.questions || []).map(q => window.renderGradeQuestion(q, studentId, assignmentId, ex.id, part.id)).join('')}
+                                </div>
+                            </div>`;
+                        }).join('');
+                    }
+                    
+                    exHtml += `</div>`;
+                }
+                exHtml += `</div></div></div>`;
+                return exHtml;
+            }).join('');
+            html += `</div>`;
+        }
         
         container.innerHTML = html;
         saveData();
