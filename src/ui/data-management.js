@@ -1,3 +1,5 @@
+import { settingsAdapter } from '../storage/settings.adapter.js';
+import { logout } from './auth.js';
 
 (function () {
     // Helper to access globals
@@ -171,6 +173,65 @@
         a.remove();
         URL.revokeObjectURL(url);
     };
+
+    window.handleLanguageChange = async function(newLang) {
+        if (!newLang) return;
+        console.log('[DataManagement] Changing language to:', newLang);
+        
+        try {
+            // 1. Mettre à jour dans Supabase via settingsAdapter
+            if (settingsAdapter && settingsAdapter.saveSettings) {
+                await settingsAdapter.saveSettings({ language: newLang });
+                console.log('[DataManagement] Language saved to Supabase');
+            }
+            
+            // 2. Mettre à jour en local pour la session actuelle
+            localStorage.setItem('corrections-language', newLang);
+            
+            // 3. Déconnexion (ceci redirigera vers login.html via logout())
+            if (typeof logout === 'function') {
+                await logout();
+            } else {
+                window.location.href = '/login.html';
+            }
+        } catch (error) {
+            console.error('Error changing language:', error);
+            alert('Erreur lors du changement de langue. Veuillez réessayer.');
+        }
+    };
+
+    // Attach event listeners when DOM is ready
+     const initEventListeners = () => {
+         const langSelect = document.getElementById('config-language-select');
+         if (langSelect) {
+             console.log('[DataManagement] Attaching listener to config-language-select');
+             langSelect.addEventListener('change', (e) => {
+                 window.handleLanguageChange(e.target.value);
+             });
+         }
+
+         const importInput = document.getElementById('json-import');
+         if (importInput) {
+             console.log('[DataManagement] Attaching listener to json-import');
+             importInput.addEventListener('change', (e) => {
+                 window.handleJsonImportData(e);
+             });
+         }
+
+         const exportBtn = document.getElementById('btn-export-json');
+         if (exportBtn) {
+             console.log('[DataManagement] Attaching listener to btn-export-json');
+             exportBtn.addEventListener('click', () => {
+                 window.handleJsonExportData();
+             });
+         }
+     };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initEventListeners);
+    } else {
+        initEventListeners();
+    }
 
     window.handleJsonImportData = function(event) {
         const t = getTranslations()[getLang()];

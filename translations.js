@@ -34,6 +34,8 @@ window.translations = {
         sending: "Envoi en cours...",
         resetEmailSent: "Email de réinitialisation envoyé ! Vérifiez votre boîte mail.",
         logout: "Déconnexion",
+        preferences: "Préférences",
+        langChangeNote: "Le changement de langue entraînera une déconnexion.",
 
         // Interface générale
         appTitle: "📝 Gestion des Corrections",
@@ -333,6 +335,8 @@ window.translations = {
         sending: "Sending...",
         resetEmailSent: "Reset email sent! Check your inbox.",
         logout: "Logout",
+        preferences: "Preferences",
+        langChangeNote: "Changing the language will log you out.",
 
         // Interface générale
         appTitle: "📝 Grading Management",
@@ -649,6 +653,8 @@ window.translations = {
         sending: "جاري الإرسال...",
         resetEmailSent: "تم إرسال بريد إعادة التعيين! تحقق من صندوق البريد الخاص بك.",
         logout: "تسجيل الخروج",
+        preferences: "التفضيلات",
+        langChangeNote: "تغيير اللغة سيؤدي إلى تسجيل الخروج.",
 
         // Interface générale
         appTitle: "📝 إدارة التصحيح",
