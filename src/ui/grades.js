@@ -242,30 +242,29 @@
         const svc = gradesSvc();
         const maxAssignmentPoints = svc.getAssignmentMaxPoints(assignment);
 
-        // Student Header Card (Reduced size)
+        // Student Header Card (Reduced size & Responsive)
         let html = `
-        <div class="bg-blue-600 rounded-xl p-4 mb-6 text-white shadow-md relative overflow-hidden">
+        <div class="bg-blue-600 rounded-xl p-4 mb-4 sm:mb-6 text-white shadow-md relative overflow-hidden">
             <div class="absolute top-0 right-0 p-4 opacity-5">
-                <svg class="w-20 h-20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+                <svg class="w-16 h-16 sm:w-20 sm:h-20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
             </div>
-            <div class="relative z-10 flex flex-row items-center justify-between gap-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-xl font-black border border-white/30">
+            <div class="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div class="flex items-center gap-3 w-full sm:w-auto">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-lg sm:text-xl font-black border border-white/30 shrink-0">
                         ${student.name.charAt(0).toUpperCase()}
                     </div>
-                    <div>
-                        <h3 class="text-lg font-black tracking-tight leading-tight">${student.name}</h3>
-                        <div class="flex items-center gap-2 mt-0.5 opacity-90">
-                            <span class="px-1.5 py-0.5 bg-white/20 rounded text-[10px] font-bold uppercase tracking-wider border border-white/10">${student.className || ''}</span>
-                            <span class="text-xs font-medium opacity-80">| ${assignment.name}</span>
+                    <div class="min-w-0 flex-1">
+                        <h3 class="text-base sm:text-lg font-black tracking-tight leading-tight truncate">${student.name}</h3>
+                        <div class="flex items-center gap-2 mt-0.5 opacity-90 overflow-hidden">
+                            <span class="text-xs font-medium opacity-80 truncate">${assignment.name}</span>
                         </div>
                     </div>
                 </div>
-                <div class="bg-white/10 backdrop-blur-md rounded-xl px-4 py-2 border border-white/20 flex flex-col items-center min-w-[100px]">
-                    <span class="text-[9px] font-bold uppercase tracking-wider opacity-70 mb-0.5">${t.total || 'Total'}</span>
+                <div class="bg-white/10 backdrop-blur-md rounded-xl px-3 py-1.5 sm:px-4 sm:py-2 border border-white/20 flex flex-row sm:flex-col items-center justify-between sm:justify-center w-full sm:w-auto min-w-[100px]">
+                    <span class="text-[9px] font-bold uppercase tracking-wider opacity-70 sm:mb-0.5">${t.total || 'Total'}</span>
                     <div class="flex items-baseline gap-1">
-                        <span id="grade-total" class="text-2xl font-black">0</span>
-                        <span class="text-sm font-bold opacity-60">/ ${maxAssignmentPoints}</span>
+                        <span id="grade-total" class="text-xl sm:text-2xl font-black">0</span>
+                        <span class="text-[10px] sm:text-sm font-bold opacity-60">/ ${maxAssignmentPoints}</span>
                     </div>
                 </div>
             </div>
@@ -322,24 +321,24 @@
 
             html += `
             <div class="col-span-full">
-                <div class="bg-white border-2 border-blue-100 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6 transition-all hover:border-blue-300">
-                    <div class="flex items-center gap-4">
-                        <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-2xl flex items-center justify-center text-2xl font-black shadow-lg shadow-blue-200">
-                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                <div class="bg-white border-2 border-blue-100 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 transition-all hover:border-blue-300">
+                    <div class="flex items-center gap-4 w-full sm:w-auto">
+                        <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-2xl flex items-center justify-center text-xl sm:text-2xl font-black shadow-lg shadow-blue-200 shrink-0">
+                            <svg class="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                         </div>
-                        <div>
-                            <h3 class="text-xl font-black text-slate-800 tracking-tight">${displayName}</h3>
-                            <p class="text-sm text-slate-500 font-bold uppercase tracking-wider">${displaySubName}</p>
+                        <div class="min-w-0">
+                            <h3 class="text-lg sm:text-xl font-black text-slate-800 tracking-tight truncate">${displayName}</h3>
+                            <p class="text-[10px] sm:text-sm text-slate-500 font-bold uppercase tracking-wider truncate">${displaySubName}</p>
                         </div>
                     </div>
                     
                     <div class="flex items-center gap-4 w-full sm:w-auto">
                         <div class="relative flex-1 sm:w-56">
-                            <input type="number" min="0" max="${maxPts}" step="0.25" value="${val}"
+                            <input type="number" inputmode="decimal" min="0" max="${maxPts}" step="0.25" value="${val}"
                                 onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','${partKey}','${qId}','direct',this.value)"
-                                class="w-full p-5 bg-blue-50/50 border-2 border-blue-200 rounded-2xl text-center font-black text-blue-900 text-3xl focus:border-blue-500 focus:bg-white focus:ring-8 focus:ring-blue-500/10 outline-none transition-all shadow-inner" 
+                                class="w-full p-3 sm:p-5 bg-blue-50/50 border-2 border-blue-200 rounded-2xl text-center font-black text-blue-900 text-2xl sm:text-3xl focus:border-blue-500 focus:bg-white focus:ring-8 focus:ring-blue-500/10 outline-none transition-all shadow-inner" 
                                 placeholder="0">
-                            <div class="absolute right-5 top-1/2 -translate-y-1/2 text-sm font-black text-blue-400">/ ${maxPts}</div>
+                            <div class="absolute right-4 sm:right-5 top-1/2 -translate-y-1/2 text-xs sm:text-sm font-black text-blue-400">/ ${maxPts}</div>
                         </div>
                     </div>
                 </div>
@@ -372,25 +371,25 @@
                 let exHtml = `
                 <div class="group border border-slate-200 rounded-2xl overflow-hidden bg-white hover:shadow-xl hover:border-blue-200 transition-all duration-300 mb-4">
                     <!-- Header Section -->
-                    <div class="p-5 flex items-center justify-between cursor-pointer select-none bg-gradient-to-r from-white to-slate-50/50" onclick="window.toggleAccordion('${accordionId}')">
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-black shadow-lg shadow-blue-200 group-hover:scale-110 transition-transform duration-300">
+                    <div class="p-4 sm:p-5 flex items-center justify-between cursor-pointer select-none bg-gradient-to-r from-white to-slate-50/50" onclick="window.toggleAccordion('${accordionId}')">
+                        <div class="flex items-center gap-3 sm:gap-4 min-w-0">
+                            <div class="w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-black shadow-lg shadow-blue-200 group-hover:scale-110 transition-transform duration-300 shrink-0">
                                 ${exIndex + 1}
                             </div>
-                            <div>
-                                <div class="flex items-center gap-2">
-                                    <h3 class="font-black text-slate-800 tracking-tight">${ex.name ? (ex.name === 'Global' ? t.globalMode : ex.name) : (t.exercise || 'Exercice') + ' ' + (exIndex + 1)}</h3>
-                                    <span class="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-black rounded-full border border-blue-100 uppercase tracking-wider">${maxExPoints} ${t.pointsAbbr || 'pts'}</span>
+                            <div class="min-w-0">
+                                <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                                    <h3 class="font-black text-slate-800 tracking-tight truncate text-sm sm:text-base">${ex.name ? (ex.name === 'Global' ? t.globalMode : ex.name) : (t.exercise || 'Exercice') + ' ' + (exIndex + 1)}</h3>
+                                    <span class="inline-flex w-fit px-2 py-0.5 bg-blue-50 text-blue-600 text-[9px] sm:text-[10px] font-black rounded-full border border-blue-100 uppercase tracking-wider">${maxExPoints} ${t.pointsAbbr || 'pts'}</span>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="flex items-center gap-3">
-                            <span id="ex-total-${ex.id}" class="px-4 py-1.5 bg-blue-50 text-blue-700 font-black rounded-xl text-sm border border-blue-100 shadow-sm">
+                        <div class="flex items-center gap-2 sm:gap-3">
+                            <span id="ex-total-${ex.id}" class="px-2 sm:px-4 py-1 sm:py-1.5 bg-blue-50 text-blue-700 font-black rounded-lg sm:rounded-xl text-[10px] sm:text-sm border border-blue-100 shadow-sm whitespace-nowrap">
                                 0 / ${maxExPoints}
                             </span>
-                            <div id="icon-${accordionId}" class="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all duration-500 shadow-sm">
-                                <svg class="w-5 h-5 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div id="icon-${accordionId}" class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all duration-500 shadow-sm shrink-0">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path>
                                 </svg>
                             </div>
