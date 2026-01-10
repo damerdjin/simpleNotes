@@ -271,23 +271,54 @@
             </div>
         </div>`;
 
-        // Check if the assignment is "simple" (1 exercise, 1 question, 0 subquestions)
+        // Check if the assignment is "simple" (1 exercise, and either 1 question without subquestions OR 0 questions/global note)
         const isSimpleAssignment = assignment.exercises.length === 1 && (() => {
             const ex = assignment.exercises[0];
             const directQuestions = ex.questions || [];
             const parts = ex.parts || [];
             const totalQuestions = directQuestions.length + parts.reduce((acc, p) => acc + (p.questions ? p.questions.length : 0), 0);
-            if (totalQuestions !== 1) return false;
-            const singleQ = directQuestions[0] || parts[0]?.questions[0];
-            return !(singleQ?.subQuestions && singleQ.subQuestions.length > 0);
+            
+            if (totalQuestions === 0) return true; // Global note case
+            if (totalQuestions === 1) {
+                const singleQ = directQuestions[0] || parts[0]?.questions[0];
+                return !(singleQ?.subQuestions && singleQ.subQuestions.length > 0);
+            }
+            return false;
         })();
 
         if (isSimpleAssignment) {
             const ex = assignment.exercises[0];
-            const q = ex.questions?.[0] || ex.parts?.[0]?.questions?.[0];
-            const partKey = ex.questions?.[0] ? 'direct' : ex.parts[0].id;
-            const val = data.grades[studentId][assignmentId][ex.id]?.[partKey]?.[q.id]?.['direct'] || '';
-            const maxPts = q.maxPoints;
+            const directQuestions = ex.questions || [];
+            const parts = ex.parts || [];
+            const totalQuestions = directQuestions.length + parts.reduce((acc, p) => acc + (p.questions ? p.questions.length : 0), 0);
+            
+            let val, maxPts, qId, partKey, displayName, displaySubName;
+
+            if (totalQuestions === 1) {
+                const q = directQuestions[0] || parts[0]?.questions[0];
+                partKey = directQuestions[0] ? 'direct' : ex.parts[0].id;
+                qId = q.id;
+                
+                const detailVal = data.grades[studentId][assignmentId][ex.id]?.[partKey]?.[qId]?.['direct'];
+                const globalVal = data.grades[studentId][assignmentId][ex.id]?.['final']?.['final']?.['final'];
+                val = (detailVal !== undefined && detailVal !== '') ? detailVal : (globalVal !== undefined && globalVal !== '' ? globalVal : '');
+                
+                maxPts = q.maxPoints;
+                displayName = ex.name || (t.exercise + ' 1');
+                displaySubName = window.getQuestionDisplayName(assignmentId, ex.id, qId, directQuestions[0] ? null : ex.parts[0].id);
+            } else {
+                // Global note case (0 questions)
+                partKey = 'direct';
+                qId = 'direct';
+                
+                const directVal = data.grades[studentId][assignmentId][ex.id]?.[partKey]?.[qId]?.['direct'];
+                const globalVal = data.grades[studentId][assignmentId][ex.id]?.['final']?.['final']?.['final'];
+                val = (directVal !== undefined && directVal !== '') ? directVal : (globalVal !== undefined && globalVal !== '' ? globalVal : '');
+                
+                maxPts = ex.maxPoints;
+                displayName = ex.name || (t.exercise + ' 1');
+                displaySubName = t.globalGrade || 'Note globale';
+            }
 
             html += `
             <div class="col-span-full">
@@ -297,15 +328,15 @@
                             <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                         </div>
                         <div>
-                            <h3 class="text-xl font-black text-slate-800 tracking-tight">${ex.name || (t.exercise + ' 1')}</h3>
-                            <p class="text-sm text-slate-500 font-bold uppercase tracking-wider">${window.getQuestionDisplayName(assignmentId, ex.id, q.id, ex.questions?.[0] ? null : ex.parts[0].id)}</p>
+                            <h3 class="text-xl font-black text-slate-800 tracking-tight">${displayName}</h3>
+                            <p class="text-sm text-slate-500 font-bold uppercase tracking-wider">${displaySubName}</p>
                         </div>
                     </div>
                     
                     <div class="flex items-center gap-4 w-full sm:w-auto">
                         <div class="relative flex-1 sm:w-56">
                             <input type="number" min="0" max="${maxPts}" step="0.25" value="${val}"
-                                onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','${partKey}','${q.id}','direct',this.value)"
+                                onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','${partKey}','${qId}','direct',this.value)"
                                 class="w-full p-5 bg-blue-50/50 border-2 border-blue-200 rounded-2xl text-center font-black text-blue-900 text-3xl focus:border-blue-500 focus:bg-white focus:ring-8 focus:ring-blue-500/10 outline-none transition-all shadow-inner" 
                                 placeholder="0">
                             <div class="absolute right-5 top-1/2 -translate-y-1/2 text-sm font-black text-blue-400">/ ${maxPts}</div>
@@ -480,30 +511,38 @@
         const assignment = data.assignments.find(a => a.id === assignmentId);
         const ex = assignment?.exercises.find(e => e.id === exId);
         
-        // Detect simple exercise (1 question, 0 sub-questions)
+        // Detect simple exercise (1 question OR 0 questions/global note)
         const directQuestions = ex?.questions || [];
         const parts = ex?.parts || [];
         const totalQuestions = directQuestions.length + parts.reduce((acc, p) => acc + (p.questions ? p.questions.length : 0), 0);
-        let isSimple = totalQuestions === 1;
+        
+        let isSimple = false;
         let singleQ = null;
         let singlePartKey = 'direct';
         
-        if (isSimple) {
-            singleQ = directQuestions[0];
-            if (!singleQ && parts[0]?.questions[0]) {
-                singleQ = parts[0].questions[0];
-                singlePartKey = parts[0].id;
+        if (totalQuestions === 0) {
+            isSimple = true;
+        } else if (totalQuestions === 1) {
+            singleQ = directQuestions[0] || parts[0]?.questions[0];
+            singlePartKey = directQuestions[0] ? 'direct' : parts[0].id;
+            if (!(singleQ?.subQuestions && singleQ.subQuestions.length > 0)) {
+                isSimple = true;
             }
-            if (singleQ?.subQuestions && singleQ.subQuestions.length > 0) isSimple = false;
         }
 
         if (partKey === 'final' && qId === 'final' && sqId === 'final') {
             exGrades.mode = 'global';
-            // Sync to question if simple
-            if (isSimple && singleQ) {
-                if (!exGrades[singlePartKey]) exGrades[singlePartKey] = {};
-                if (!exGrades[singlePartKey][singleQ.id]) exGrades[singlePartKey][singleQ.id] = {};
-                exGrades[singlePartKey][singleQ.id]['direct'] = val;
+            // Sync to question or direct if simple
+            if (isSimple) {
+                if (singleQ) {
+                    if (!exGrades[singlePartKey]) exGrades[singlePartKey] = {};
+                    if (!exGrades[singlePartKey][singleQ.id]) exGrades[singlePartKey][singleQ.id] = {};
+                    exGrades[singlePartKey][singleQ.id]['direct'] = val;
+                } else if (totalQuestions === 0) {
+                    if (!exGrades['direct']) exGrades['direct'] = {};
+                    if (!exGrades['direct']['direct']) exGrades['direct']['direct'] = {};
+                    exGrades['direct']['direct']['direct'] = val;
+                }
             }
         } else {
             exGrades.mode = 'detail';
@@ -512,7 +551,7 @@
                 if (!exGrades.final) exGrades.final = {};
                 if (!exGrades.final.final) exGrades.final.final = {};
                 exGrades.final.final.final = val;
-            } else {
+            } else if (!isSimple) {
                 // Clear global if NOT simple
                 if (exGrades.final && exGrades.final.final && typeof exGrades.final.final.final !== 'undefined') {
                     exGrades.final.final.final = '';
@@ -536,11 +575,19 @@
         if (mode === 'detail') {
             const assignment = data.assignments.find(a => a.id === assignmentId);
             const ex = assignment?.exercises.find(e => e.id === exId);
-            const totalQuestions = (ex?.questions?.length || 0) + (ex?.parts?.reduce((acc, p) => acc + (p.questions?.length || 0), 0) || 0);
+            const directQuestions = ex?.questions || [];
+            const parts = ex?.parts || [];
+            const totalQuestions = directQuestions.length + parts.reduce((acc, p) => acc + (p.questions ? p.questions.length : 0), 0);
             
-            const isSimple = totalQuestions === 1 && 
-                             !(ex?.questions?.[0]?.subQuestions?.length > 0) && 
-                             !(ex?.parts?.[0]?.questions?.[0]?.subQuestions?.length > 0);
+            let isSimple = false;
+            if (totalQuestions === 0) {
+                isSimple = true;
+            } else if (totalQuestions === 1) {
+                const singleQ = directQuestions[0] || parts[0]?.questions[0];
+                if (!(singleQ?.subQuestions && singleQ.subQuestions.length > 0)) {
+                    isSimple = true;
+                }
+            }
 
             if (!isSimple) {
                 if (!exGrades.final) exGrades.final = {};
