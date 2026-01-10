@@ -36,6 +36,9 @@
         const classSelect = document.getElementById('select-class-grades');
         const selectedClass = classSelect ? classSelect.value : '';
 
+        const containerAssignment = document.getElementById('container-select-assignment');
+        const containerStudent = document.getElementById('container-select-student');
+
         if (!assignmentSelect || !studentSelect) return;
 
         // Sauvegarder les valeurs actuelles pour essayer de les restaurer
@@ -43,20 +46,16 @@
         const currentStudentId = studentSelect.value;
 
         if (!selectedClass) {
+            if (containerAssignment) containerAssignment.classList.add('hidden');
+            if (containerStudent) containerStudent.classList.add('hidden');
             assignmentSelect.innerHTML = `<option value="">-- ${t.selectClassFirst || 'Sélectionnez une classe'} --</option>`;
             studentSelect.innerHTML = `<option value="">-- ${t.selectClassFirst || 'Sélectionnez une classe'} --</option>`;
-            const entry = document.getElementById('grade-entry');
-            if (entry) {
-                entry.innerHTML = `
-                <div class="flex flex-col items-center justify-center py-12 text-slate-400">
-                    <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 border border-slate-100">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                    </div>
-                    <p class="font-medium text-slate-500">${t.selectClassToStart || 'Sélectionnez une classe pour commencer'}</p>
-                </div>`;
-            }
+            window.loadGradeEntry();
             return;
         }
+
+        // Show assignment container when class is selected
+        if (containerAssignment) containerAssignment.classList.remove('hidden');
 
         const data = getData();
         const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
@@ -87,21 +86,8 @@
             studentSelect.value = currentStudentId;
         }
 
-        // Si on a déjà les deux sélections, on recharge l'interface de saisie
-        if (assignmentSelect.value && studentSelect.value) {
-            window.loadGradeEntry();
-        } else {
-            const entry = document.getElementById('grade-entry');
-            if (entry) {
-                entry.innerHTML = `
-                <div class="flex flex-col items-center justify-center py-12 text-slate-400">
-                    <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 border border-slate-100">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-                    </div>
-                    <p class="font-medium text-slate-500">${t.selectAssignmentAndStudentToGrade || 'Sélectionnez un devoir et un élève'}</p>
-                </div>`;
-            }
-        }
+        // Recharger l'interface de saisie (gère aussi la visibilité du sélecteur d'élève)
+        window.loadGradeEntry();
     };
 
     window.getQuestionDisplayName = function(assignmentId, exId, qId, partId) {
@@ -209,7 +195,15 @@
         const assignmentId = document.getElementById('select-assignment').value;
         const studentId = document.getElementById('select-student').value;
         const container = document.getElementById('grade-entry');
+        const containerStudent = document.getElementById('container-select-student');
         
+        // Gérer la visibilité du conteneur d'élève
+        if (assignmentId && containerStudent) {
+            containerStudent.classList.remove('hidden');
+        } else if (containerStudent) {
+            containerStudent.classList.add('hidden');
+        }
+
         if (!assignmentId || !studentId) {
             const selectClass = document.getElementById('select-class-grades').value;
             if (!selectClass) {
