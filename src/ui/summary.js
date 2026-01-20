@@ -1,15 +1,26 @@
 
+import * as gradesSvc from '../services/grades.service.js';
+
 (function() {
     // State variables specific to Summary
     let currentSummaryMode = 'default';
     let summarySort = { key: 'name', direction: 'asc' };
     let summaryAssignmentFilter = new Set();
     let draggedAssignmentId = null;
+    let expandedAssignments = new Set(); // Track expanded details in mobile view
 
     // Helper to access globals easily
     const getData = () => window.data;
     const getTranslations = () => window.translations;
     const getLang = () => window.currentLanguage;
+
+    // Helper to truncate student names for mobile: "LASTNAME Fir."
+    // UPDATE: User requested full name (Nom Prénom).
+    const truncateStudentName = (s) => {
+        return `${s.lastName || ''} ${s.firstName || ''}`.trim() || s.name || '';
+    };
+
+    console.log('Summary Module v1.4 Loaded');
 
     window.setSummaryMode = function(mode) {
         currentSummaryMode = mode;
@@ -28,6 +39,13 @@
     };
 
     window.renderSummary = function() {
+        const isMobile = window.innerWidth < 768;
+        
+        if (isMobile && currentSummaryMode === 'default') {
+            window.renderSummaryMobile();
+            return;
+        }
+
         switch (currentSummaryMode) {
             case 'grouped':
                 window.renderSummary2();
@@ -38,6 +56,171 @@
             default:
                 window.renderSummary0();
         }
+    };
+
+    window.toggleMobileAssignmentDetails = function(studentId, assignmentId) {
+        const key = `${studentId}-${assignmentId}`;
+        if (expandedAssignments.has(key)) {
+            expandedAssignments.delete(key);
+        } else {
+            expandedAssignments.add(key);
+        }
+        window.renderSummaryMobile();
+    };
+
+    // Listen for window resize to switch between mobile and desktop views
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            if (window.currentTab === 'summary') {
+                window.renderSummary();
+            }
+        }, 250);
+    });
+
+    window.renderSummaryMobile = function() {
+        if (!getTranslations() || !getLang() || !getTranslations()[getLang()]) return;
+        const t = getTranslations()[getLang()];
+        const container = document.getElementById('summary-table');
+        if (!container) return;
+
+        const detailsCheckbox = document.getElementById('show-details');
+        const showDetails = detailsCheckbox ? detailsCheckbox.checked : false;
+        const classSelect = document.getElementById('select-class-summary');
+        const searchInput = document.getElementById('summary-search');
+        const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
+        const data = getData();
+
+        let selectedClass = classSelect ? classSelect.value : '';
+        let searchMatches = data.students.slice();
+
+        // Apply global academic year filter
+        const globalUserId = window.currentUser?.email || window.currentUser?.id || 'unknown';
+        const globalAcademicYear = window.getGlobalAcademicYear();
+        if (globalAcademicYear) {
+            searchMatches = searchMatches.filter(s => (s.importedBy || 'unknown') === globalUserId && (s.academicYear || '') === globalAcademicYear);
+        }
+
+        if (searchTerm) {
+            searchMatches = searchMatches.filter(s => {
+                const haystack = `${s.name || ''} ${s.firstName || ''} ${s.lastName || ''} ${s.className || ''}`.toLowerCase();
+                return haystack.includes(searchTerm);
+            });
+        }
+
+        const matchingClasses = Array.from(new Set(
+            searchMatches
+                .map(s => (s.className || '').trim())
+                .filter(c => c.length > 0)
+        )).sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
+
+        if (classSelect) {
+            const previousValue = selectedClass;
+            classSelect.innerHTML = `<option value="">-- ${t.selectClass} --</option>` +
+                matchingClasses.map(c => `<option value="${c}" ${c === previousValue ? 'selected' : ''}>${c}</option>`).join('');
+            selectedClass = classSelect.value;
+        }
+
+        let filteredStudents = searchMatches;
+        if (selectedClass) {
+            filteredStudents = filteredStudents.filter(s => s.className === selectedClass);
+        }
+
+        let filteredAssignments = data.assignments.slice();
+        filteredAssignments = filteredAssignments.filter(a => (a.createdBy || 'unknown') === globalUserId);
+
+        if (globalAcademicYear) {
+            filteredAssignments = filteredAssignments.filter(a => (a.academicYear || '') === globalAcademicYear);
+        } else {
+            filteredAssignments = [];
+        }
+
+        const globalTrimester = window.getGlobalTrimester();
+        if (globalTrimester) {
+            filteredAssignments = filteredAssignments.filter(a => (a.trimester || '') === globalTrimester);
+        } else {
+            filteredAssignments = [];
+        }
+
+        if (selectedClass) {
+            filteredAssignments = filteredAssignments.filter(a => a.className === selectedClass);
+        } else {
+            const classFilterSet = new Set(matchingClasses);
+            filteredAssignments = filteredAssignments.filter(a => classFilterSet.has(a.className));
+        }
+
+        if (filteredStudents.length === 0 || filteredAssignments.length === 0) {
+            let emptyMessage = searchTerm ? t.noResultForSearch : t.addStudentsAndAssignmentsToSeeSummary;
+            container.innerHTML = `<p class="text-gray-500 text-center py-8">${emptyMessage}</p>`;
+            return;
+        }
+
+        // Sort students
+        filteredStudents.sort((a, b) => {
+            const classA = (a.className || '').toLowerCase();
+            const classB = (b.className || '').toLowerCase();
+            if (classA !== classB) return classA.localeCompare(classB, 'fr', { sensitivity: 'base' });
+            return (a.name || '').toLowerCase().localeCompare((b.name || '').toLowerCase());
+        });
+
+        // Start Building Table
+        let html = '<div class="summary-mobile-wrapper"><table class="summary-mobile-table"><thead><tr>';
+        
+        // Sticky Header for Student
+        html += `<th class="sticky-student">${t.student}</th>`;
+
+        // Assignment Headers
+        filteredAssignments.forEach(a => {
+            // Mobile view: we only show the main assignment column, NOT the exercise details
+            // even if showDetails is checked (showDetails is for desktop/large view)
+            html += `<th class="assignment-header-mobile" title="${a.name}">${a.name}</th>`;
+        });
+        html += '</tr></thead><tbody>';
+
+        console.log('Rendering Mobile Summary with ' + filteredStudents.length + ' students and ' + filteredAssignments.length + ' assignments');
+
+        filteredStudents.forEach(s => {
+            const displayName = truncateStudentName(s);
+            html += `<tr><td class="sticky-student" title="${s.name}">${displayName}</td>`;
+
+            filteredAssignments.forEach(a => {
+                // Use imported service directly for reliability
+                let total = 0;
+                let max = 0;
+                let hasGrade = false;
+                
+                try {
+                    total = gradesSvc.getStudentAssignmentTotal(data, s.id, a.id);
+                    max = gradesSvc.getAssignmentMaxPoints(a);
+                    hasGrade = gradesSvc.hasAnyGradeForAssignment(data, s.id, a.id);
+                } catch (e) {
+                    console.error('Error calculating grade', e);
+                }
+
+                const pct = max > 0 ? (total / max * 100) : 0;
+                
+                // Assignment Total Grade only on mobile
+                let gradeClass = 'grade-badge-empty';
+                if (hasGrade) {
+                    if (pct >= 70) gradeClass = 'grade-badge-excellent';
+                    else if (pct >= 50) gradeClass = 'grade-badge-good';
+                    else gradeClass = 'grade-badge-poor';
+                }
+
+                html += `
+                    <td class="summary-grade-cell">
+                        <div class="grade-badge-mobile ${gradeClass}">
+                            ${hasGrade ? (Math.round(total * 10) / 10) : '-'}
+                        </div>
+                    </td>`;
+            });
+            html += '</tr>';
+        });
+
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+        if (window.translatePage) window.translatePage();
     };
 
     window.renderSummary0 = function() {

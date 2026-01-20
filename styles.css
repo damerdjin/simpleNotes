@@ -344,6 +344,188 @@
             }
         }
 
+        /* ===== PRO SUMMARY MOBILE TABLE ===== */
+        .summary-mobile-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+            margin-top: 1rem;
+        }
+
+        .summary-mobile-table {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: max-content;
+            min-width: 100%;
+            font-size: 0.85rem;
+        }
+
+        .summary-mobile-table th,
+        .summary-mobile-table td {
+            padding: 0.75rem 0.5rem;
+            border-bottom: 1px solid #f1f5f9;
+            text-align: center;
+        }
+
+        .summary-mobile-table th {
+            background: #f8fafc;
+            font-weight: 700;
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.05em;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        /* Sticky Student Column */
+        .summary-mobile-table .sticky-student {
+            position: sticky;
+            left: 0;
+            background: white;
+            z-index: 20;
+            text-align: left;
+            min-width: 160px;
+            max-width: 160px;
+            font-weight: 700;
+            color: #1e293b;
+            box-shadow: 4px 0 8px -4px rgba(0,0,0,0.1);
+            border-right: 2px solid #f1f5f9;
+            white-space: normal; /* Allow wrapping for more characters */
+            word-break: break-word;
+            overflow: hidden;
+            line-height: 1.2;
+        }
+
+        .rtl-layout .summary-mobile-table .sticky-student {
+            left: auto !important;
+            right: 0 !important;
+            text-align: right !important;
+            box-shadow: -4px 0 8px -4px rgba(0,0,0,0.1);
+            border-right: none;
+            border-left: 2px solid #f1f5f9;
+        }
+
+        .rtl-layout .summary-mobile-table td.summary-grade-cell, 
+        .rtl-layout .summary-mobile-table th.assignment-header-mobile {
+            scroll-snap-align: start;
+            text-align: center !important;
+        }
+
+        .summary-mobile-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Grade Cells */
+        .summary-grade-cell {
+            min-width: 110px;
+            max-width: 110px;
+            padding: 0.75rem 0.25rem !important;
+            box-sizing: border-box;
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .grade-badge-mobile {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 1rem;
+            margin: 0 auto;
+        }
+
+        .grade-badge-excellent { background-color: #dcfce7; color: #166534; }
+        .grade-badge-good { background-color: #fef3c7; color: #92400e; }
+        .grade-badge-poor { background-color: #fee2e2; color: #991b1b; }
+        .grade-badge-empty { background-color: #f1f5f9; color: #94a3b8; }
+
+        /* Assignment Header */
+        .assignment-header-mobile {
+            min-width: 110px;
+            max-width: 110px;
+            white-space: normal;
+            word-wrap: break-word;
+            line-height: 1.1;
+            vertical-align: middle;
+            box-sizing: border-box;
+            padding: 0.75rem 0.25rem !important;
+            text-align: center;
+        }
+
+        /* Snap effect for better "one-by-one" scrolling */
+        .summary-mobile-wrapper {
+            scroll-snap-type: x mandatory;
+            scroll-padding-left: 160px; /* Protect sticky column in LTR */
+        }
+
+        .rtl-layout .summary-mobile-wrapper {
+            direction: rtl; /* Ensure scroll starts at correct side */
+            scroll-padding-left: 0;
+            scroll-padding-right: 160px; /* Protect sticky column in RTL */
+        }
+
+        .summary-mobile-table td.summary-grade-cell, 
+        .summary-mobile-table th.assignment-header-mobile {
+            scroll-snap-align: start;
+        }
+
+        /* Exercise Columns */
+        .ex-col-mobile {
+            background-color: #f0f9ff !important;
+            font-size: 0.7rem;
+            min-width: 40px;
+        }
+
+        .summary-mobile-table .ex-input-mobile {
+            width: 36px;
+            height: 28px;
+            border: 1px solid #bae6fd;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.75rem;
+            background: white;
+            padding: 0;
+        }
+
+        /* Toggle Detail Row */
+        .mobile-detail-row {
+            background-color: #f8fafc;
+        }
+
+        .mobile-detail-container {
+            padding: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: flex-start;
+        }
+
+        /* Responsive adjustments for summary search and filters */
+        @media (max-width: 640px) {
+            #summary-search, #select-class-summary {
+                width: 100% !important;
+                min-width: 0 !important;
+            }
+            
+            .summary-mode-selector {
+                overflow-x: auto;
+                padding-bottom: 0.5rem;
+                white-space: nowrap;
+                display: flex;
+                gap: 1rem;
+            }
+        }
+
         /* ===== RÉAJUSTEMENTS RTL SPÉCIFIQUES ===== */
         /* 1. Titre principal et header à droite en RTL */
         .rtl-layout header .flex>div:first-child {
