@@ -1806,7 +1806,7 @@
             }
         };
 
-        async function initAuth() {
+        window.initAuth = async function initAuth() {
             try {
                 // Initialize language from storage
                 initLanguage();
@@ -1821,7 +1821,12 @@
                     // Sync user preferences (year, language...) before loading data
                     await settingsAdapter.sync();
 
-                    await window.loadData();
+                    if (typeof window.loadData === 'function') {
+                        await window.loadData();
+                    } else {
+                        console.warn('[Auth] window.loadData not available yet, waiting...');
+                        // Optionnel: attendre ou réessayer
+                    }
                     
                     // Trigger UI refresh now that user is known
                     if (window.renderStudents) window.renderStudents();
@@ -1864,7 +1869,7 @@
                 // Redirect to login is handled by checkAuth
             }
         }
-        initAuth();
+        // Retiré l'appel immédiat : initAuth();
     </script>
 </head>
 
@@ -2643,6 +2648,9 @@
 
                 // Initialize sidebar collapse
                 if (window.initSidebarCollapse) window.initSidebarCollapse();
+
+                // Initialize authentication and data loading
+                if (window.initAuth) await window.initAuth();
 
                 // Load global filters
                 if (window.loadGlobalFilters) window.loadGlobalFilters();

@@ -15,29 +15,34 @@ function getAcademicYear() {
 export function supabaseAdapter() {
   return {
     async load() {
-      console.log('[SupabaseAdapter] Loading data for', getCurrentUserId(), getAcademicYear());
+      const userId = getCurrentUserId();
+      const academicYear = getAcademicYear();
+      console.log('[SupabaseAdapter] Loading data for', userId, academicYear);
+      
       try {
-        const userId = getCurrentUserId();
-        const academicYear = getAcademicYear();
         if (!userId || !academicYear) throw new Error('noctx');
-        const { data, error } = await supabase
+        
+        // Utilisation de maybeSingle() pour éviter l'erreur 406/PGRST116 si aucun enregistrement n'existe
+        const { data, error, status } = await supabase
           .from('corrections_data')
           .select('data')
           .eq('user_id', userId)
           .eq('academic_year', academicYear)
-          .single();
+          .maybeSingle();
         
         if (error) {
-          if (error.code !== 'PGRST116') console.warn('[SupabaseAdapter] Load error:', error);
+          console.error('[SupabaseAdapter] Load error:', error, 'Status:', status);
           throw error;
         }
         
         if (data?.data) {
           console.log('[SupabaseAdapter] Data loaded from Supabase');
           return data.data;
+        } else {
+          console.log('[SupabaseAdapter] No data found in Supabase for this user/year');
         }
       } catch (err) {
-        console.log('[SupabaseAdapter] Falling back to local storage or defaults');
+        console.warn('[SupabaseAdapter] Remote load failed, falling back to local storage:', err.message);
       }
       try {
         const s = localStorage.getItem('corrections-data');
