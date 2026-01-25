@@ -62,6 +62,14 @@
 
         <form id="register-form">
             <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="full-name" data-translate="fullNameLabel">
+                    Nom et Prénom
+                </label>
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                    id="full-name" type="text" placeholder="Ex: Mohamed Benali" data-translate-placeholder="fullNamePlaceholder" autocomplete="name" required>
+            </div>
+
+            <div class="mb-4">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="email" data-translate="emailLabel">
                     Email
                 </label>
@@ -275,13 +283,14 @@
             </span>`;
 
             const email = document.getElementById('email').value;
+            const fullName = document.getElementById('full-name').value;
             const password = document.getElementById('password').value;
             const wilayaOption = wilayaSelect.options[wilayaSelect.selectedIndex];
             const communeOption = communeSelect.options[communeSelect.selectedIndex];
             const city = communeOption ? communeOption.textContent.split(' (')[0] : '';
             const wilaya = wilayaOption ? wilayaOption.textContent.split(' - ')[1] : '';
 
-            const userData = { email, password, city, wilaya };
+            const userData = { email, password, city, wilaya, full_name: fullName };
 
             if (isNewSchoolMode) {
                 userData.new_school = {
