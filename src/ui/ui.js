@@ -15,6 +15,13 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
         const v = String(value).trim();
         if (!v) return null;
 
+        // Try parsing DD/MM/YYYY explicitly
+        const dmy = v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (dmy) {
+            const d = new Date(dmy[3], dmy[2] - 1, dmy[1]);
+            return isNaN(d) ? null : d;
+        }
+
         const num = Number(v);
         if (!isNaN(num) && num > 10000) {
             const excelEpoch = new Date(Date.UTC(1899, 11, 30));
