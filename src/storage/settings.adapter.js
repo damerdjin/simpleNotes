@@ -10,11 +10,10 @@ export const settingsAdapter = {
                 .from('user_settings')
                 .select('*')
                 .eq('user_id', userId)
-                .single();
+                .maybeSingle();
             
             if (error) {
-                // Si pas de settings, ce n'est pas grave, on garde le local
-                if (error.code !== 'PGRST116') console.warn('Load settings error:', error);
+                console.warn('Load settings error:', error);
                 return null;
             }
             return data;
