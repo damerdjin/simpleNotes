@@ -2621,14 +2621,14 @@
         import * as assignmentsSvc from "./src/services/assignments.service.js";
         window.assignmentsSvc = assignmentsSvc;
     </script>
-    <script type="module" src="./src/ui/summary.js?v=1.6"></script>
-    <script type="module" src="./src/ui/export.js?v=1.6"></script>
-    <script src="./src/ui/student-import-wizard.js?v=1.6"></script>
-    <script type="module" src="./src/ui/students.js?v=1.6"></script>
-    <script type="module" src="./src/ui/assignments.js?v=1.6"></script>
-    <script type="module" src="./src/ui/grades.js?v=1.6"></script>
-    <script type="module" src="./src/ui/data-management.js?v=1.6"></script>
-    <script type="module" src="./src/ui/ui.js?v=1.6"></script>
+    <script type="module" src="./src/ui/summary.js?v=1.7"></script>
+    <script type="module" src="./src/ui/export.js?v=1.7"></script>
+    <script src="./src/ui/student-import-wizard.js?v=1.7"></script>
+    <script type="module" src="./src/ui/students.js?v=1.7"></script>
+    <script type="module" src="./src/ui/assignments.js?v=1.7"></script>
+    <script type="module" src="./src/ui/grades.js?v=1.7"></script>
+    <script type="module" src="./src/ui/data-management.js?v=1.7"></script>
+    <script type="module" src="./src/ui/ui.js?v=1.7"></script>
 
     <script type="module">
         // Language Management
@@ -2677,6 +2677,14 @@
             window.addEventListener('DOMContentLoaded', initApp);
         } else {
             initApp();
+        }
+    </script>
+    <!-- Input caché pour charger le fichier Rakmana -->
+    <input type="file" id="rakmana-file-input" accept=".xlsx" style="display: none;"
+        onchange="onRakmanaFileSelected(this)">
+</body>
+
+</html>
         }
     </script>
     <!-- Input caché pour charger le fichier Rakmana -->
