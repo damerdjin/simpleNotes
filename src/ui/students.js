@@ -432,6 +432,69 @@
         const modal = document.getElementById('student-modal');
         const header = document.getElementById('app-header');
         const t = getTranslations()[getLang()];
+        const isAr = getLang() === 'ar';
+
+        // ARABIC FIX: Override global RTL flex-row-reverse rule which breaks the modal layout
+        if (modal) {
+            // Fix Flex Layouts
+            const flexElements = modal.querySelectorAll('.flex');
+            flexElements.forEach(el => {
+                if (isAr) {
+                    if (el.classList.contains('flex-col')) {
+                        el.style.setProperty('flex-direction', 'column', 'important');
+                    } else {
+                        el.style.setProperty('flex-direction', 'row', 'important');
+                    }
+                } else {
+                    el.style.removeProperty('flex-direction');
+                }
+            });
+
+            // Fix Typography (Remove letter-spacing which breaks Arabic script)
+            const trackingElements = modal.querySelectorAll('[class*="tracking-"]');
+            trackingElements.forEach(el => {
+                if (isAr) {
+                    el.style.setProperty('letter-spacing', 'normal', 'important');
+                } else {
+                    el.style.removeProperty('letter-spacing');
+                }
+            });
+
+            // Fix Absolute Positioning (Labels)
+            const left3Elements = modal.querySelectorAll('.left-3');
+            left3Elements.forEach(el => {
+                if (isAr) {
+                    el.style.setProperty('left', 'auto', 'important');
+                    el.style.setProperty('right', '0.75rem', 'important');
+                } else {
+                    el.style.removeProperty('left');
+                    el.style.removeProperty('right');
+                }
+            });
+
+            // Fix Padding (Icons)
+            const plElements = modal.querySelectorAll('.pl-3\\.5');
+            plElements.forEach(el => {
+                if (isAr) {
+                    el.style.setProperty('padding-left', '0', 'important');
+                    el.style.setProperty('padding-right', '0.875rem', 'important');
+                } else {
+                    el.style.removeProperty('padding-left');
+                    el.style.removeProperty('padding-right');
+                }
+            });
+            
+            const prElements = modal.querySelectorAll('.pr-3\\.5');
+            prElements.forEach(el => {
+                if (isAr) {
+                    el.style.setProperty('padding-right', '0', 'important');
+                    el.style.setProperty('padding-left', '0.875rem', 'important');
+                } else {
+                    el.style.removeProperty('padding-right');
+                    el.style.removeProperty('padding-left');
+                }
+            });
+        }
         
         // Hide header
         if (header) {
