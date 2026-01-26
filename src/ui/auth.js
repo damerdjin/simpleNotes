@@ -3,9 +3,11 @@ import { supabase } from './supabase-client.js';
 // Update cookie on auth state change (token refresh, etc.)
 supabase.auth.onAuthStateChange((event, session) => {
     if (session) {
-        document.cookie = `auth_token=${session.access_token}; path=/; max-age=${session.expires_in}; SameSite=Lax; Secure`;
+        const isSecure = window.location.protocol === 'https:';
+        document.cookie = `auth_token=${session.access_token}; path=/; max-age=${session.expires_in}; SameSite=Lax${isSecure ? '; Secure' : ''}`;
     } else if (event === 'SIGNED_OUT') {
-        document.cookie = "auth_token=; path=/; max-age=0; SameSite=Lax; Secure";
+        const isSecure = window.location.protocol === 'https:';
+        document.cookie = `auth_token=; path=/; max-age=0; SameSite=Lax${isSecure ? '; Secure' : ''}`;
     }
 });
 
