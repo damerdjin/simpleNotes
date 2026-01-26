@@ -130,6 +130,7 @@
 
     window.renderClassList = function() {
         const t = getTranslations()[getLang()];
+        const isAr = getLang() === 'ar';
         const container = document.getElementById('students-class-list');
         if (!container) return;
 
@@ -178,7 +179,31 @@
             
             // Get level for icon instead of first 2 chars
             const levelIcon = levelFromClass(c);
+
+            // Arabic Pluralization & Styling
+            let countLabel = `${count} ${t.studentsCountLabel || 'élèves'}`;
+            if (isAr) {
+                if (count === 0) countLabel = 'لا يوجد طلاب';
+                else if (count === 1) countLabel = 'طالب واحد';
+                else if (count === 2) countLabel = 'طالبان';
+                else if (count <= 10) countLabel = `${count} طلاب`;
+                else countLabel = `${count} طالباً`;
+            }
+
+            const originClass = isAr ? 'origin-right' : 'origin-left';
+            // In RTL, we want a taller line-height and potentially slightly larger font for readability
+            const titleClass = isAr ? 'text-2xl font-bold leading-normal' : 'text-2xl font-black leading-tight tracking-tight';
             
+            // Fix RTL Animations: Button should slide OUT from the badge (which is on the Left in RTL)
+            // LTR: Button (Left) slides out from Badge (Right) -> Start +4 (Right), End 0.
+            // RTL: Button (Right) slides out from Badge (Left) -> Start -4 (Left), End 0.
+            const translateClass = isAr ? 'sm:-translate-x-4' : 'sm:translate-x-4';
+            
+            // CRITICAL FIX: The global CSS .rtl-layout .flex { flex-direction: row-reverse } breaks everything.
+            // We must force the correct direction with !important to override it.
+            const flexColFix = 'display: flex !important; flex-direction: column !important;';
+            const flexRowFix = 'display: flex !important; flex-direction: row !important;';
+
             return `
                 <div onclick="setStudentsSelectedClass('${c}')" 
                     class="class-card-modern group relative bg-white p-6 rounded-[2rem] border-2 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col h-full hover:-translate-y-2"
@@ -187,17 +212,17 @@
                     <!-- Decorative background blob -->
                     <div class="absolute -start-8 -top-8 w-32 h-32 rounded-full opacity-[0.03] group-hover:opacity-[0.08] transition-all duration-700 group-hover:scale-150" style="background: ${color}"></div>
                     
-                    <div class="relative z-10 flex flex-col h-full">
-                        <div class="flex items-start justify-between mb-6">
+                    <div class="relative z-10 flex flex-col h-full" style="${flexColFix}">
+                        <div class="flex items-start justify-between mb-6" style="${flexRowFix}">
                             <div class="flex flex-col gap-1">
                                 <span class="inline-flex items-center px-3 py-1 bg-slate-50 text-slate-500 rounded-full text-[10px] font-bold border border-slate-100 group-hover:bg-[var(--card-color)] group-hover:text-white group-hover:border-transparent transition-all duration-300">
-                                    ${count} ${t.studentsCountLabel || 'élèves'}
+                                    ${countLabel}
                                 </span>
                             </div>
                             
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-2" style="${flexRowFix}">
                                 <button onclick="event.stopPropagation(); deleteClassSafely('${c}')" 
-                                    class="p-2 text-slate-200 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all duration-300 sm:opacity-0 sm:group-hover:opacity-100 transform sm:translate-x-4 sm:group-hover:translate-x-0"
+                                    class="p-2 text-slate-200 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all duration-300 sm:opacity-0 sm:group-hover:opacity-100 transform ${translateClass} sm:group-hover:translate-x-0"
                                     title="${t.delete}">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                 </button>
@@ -207,22 +232,22 @@
                             </div>
                         </div>
                         
-                        <div class="flex-grow flex flex-col justify-center py-4">
-                            <h3 class="card-title-hover text-2xl font-black text-slate-800 transition-colors duration-300 line-clamp-2 leading-tight tracking-tight" title="${c}">
+                        <div class="flex-grow flex flex-col justify-center py-4" style="${flexColFix}">
+                            <h3 class="card-title-hover ${titleClass} text-slate-800 transition-colors duration-300 line-clamp-2" title="${c}">
                                 ${cleanClassName(c)}
                             </h3>
                         </div>
 
-                        <div class="mt-4 pt-5 border-t border-slate-50 flex items-center justify-between">
-                            <div class="flex items-center gap-1.5 text-slate-400 font-bold text-[10px] uppercase tracking-wider bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100/50">
+                        <div class="mt-4 pt-5 border-t border-slate-50 flex items-center justify-between" style="${flexRowFix}">
+                            <div class="flex items-center gap-1.5 text-slate-400 font-bold text-[10px] uppercase tracking-wider bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100/50" style="${flexRowFix}">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                 ${globalAcademicYear}
                             </div>
-                            <div class="flex items-center gap-2">
-                                <span class="flex items-center gap-1.5 text-blue-500 bg-blue-50/50 px-2 py-1 rounded-lg text-[10px] font-black border border-blue-100/20">
+                            <div class="flex items-center gap-2" style="${flexRowFix}">
+                                <span class="flex items-center gap-1.5 text-blue-500 bg-blue-50/50 px-2 py-1 rounded-lg text-[10px] font-black border border-blue-100/20" style="${flexRowFix}">
                                     <span class="text-xs">♂️</span> ${boys}
                                 </span>
-                                <span class="flex items-center gap-1.5 text-pink-500 bg-pink-50/50 px-2 py-1 rounded-lg text-[10px] font-black border border-pink-100/20">
+                                <span class="flex items-center gap-1.5 text-pink-500 bg-pink-50/50 px-2 py-1 rounded-lg text-[10px] font-black border border-pink-100/20" style="${flexRowFix}">
                                     <span class="text-xs">♀️</span> ${girls}
                                 </span>
                             </div>
@@ -230,7 +255,7 @@
                     </div>
                     
                     <!-- Bottom accent bar -->
-                    <div class="bottom-bar absolute bottom-0 start-0 w-full h-1.5 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
+                    <div class="bottom-bar absolute bottom-0 start-0 w-full h-1.5 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ${originClass}"></div>
                 </div>
             `;
         }).join('');
