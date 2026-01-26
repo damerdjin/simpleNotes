@@ -49,6 +49,7 @@
 
     window.openAssignmentModal = function (assignmentId = null) {
         const t = getTranslations()[getLang()];
+        const isAr = getLang() === 'ar';
         editingAssignmentId = assignmentId;
         collapsedExercises = {}; // Reset accordions when opening modal
         const overlay = document.createElement('div');
@@ -58,8 +59,16 @@
         overlay.style.backdropFilter = 'blur(4px)';
         document.body.style.overflow = 'hidden';
         
+        // ARABIC FIX: Modal Layout and Typography
+        const modalFlex = isAr ? 'flex-direction: column !important;' : '';
+        const trackingClass = isAr ? '' : 'tracking-wider';
+        const labelPos = isAr ? 'right-3' : 'left-3';
+        const iconPos = isAr ? 'right-3' : 'left-3';
+        const chevronPos = isAr ? 'left-3' : 'right-3';
+        const inputPadding = isAr ? 'pr-10 pl-4' : 'pl-10 pr-4';
+
         overlay.innerHTML = `
-      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200" style="${modalFlex}">
         <!-- Header -->
         <div class="px-6 py-4 border-b flex items-center justify-between bg-gray-50/50">
           <div>
@@ -92,33 +101,33 @@
                 <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </div>
-                <h4 class="font-bold text-gray-800 text-sm uppercase tracking-wider">${t.generalInfo || 'Informations Générales'}</h4>
+                <h4 class="font-bold text-gray-800 text-sm uppercase ${trackingClass}">${t.generalInfo || 'Informations Générales'}</h4>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <!-- Assignment Name -->
                 <div class="relative group">
-                    <label class="absolute -top-2 left-3 px-1.5 bg-white text-[11px] font-bold text-blue-600 z-10 transition-all group-focus-within:text-blue-700">${t.assignmentName || 'Nom du devoir'}</label>
+                    <label class="absolute -top-2 ${labelPos} px-1.5 bg-white text-[11px] font-bold text-blue-600 z-10 transition-all group-focus-within:text-blue-700">${t.assignmentName || 'Nom du devoir'}</label>
                     <div class="relative flex items-center">
-                        <div class="absolute left-3 text-gray-400 group-focus-within:text-blue-500 transition-colors">
+                        <div class="absolute ${iconPos} text-gray-400 group-focus-within:text-blue-500 transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                         </div>
                         <input type="text" id="assignment-name" placeholder="${t.assignmentNamePlaceholder || 'Ex: Devoir 1'}" 
-                            class="w-full pl-10 pr-4 py-3 bg-gray-50/50 border-2 border-gray-100 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all font-medium text-gray-700">
+                            class="w-full ${inputPadding} py-3 bg-gray-50/50 border-2 border-gray-100 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all font-medium text-gray-700">
                     </div>
                 </div>
 
                 <!-- Class Selection -->
                 <div class="relative group">
-                    <label class="absolute -top-2 left-3 px-1.5 bg-white text-[11px] font-bold text-emerald-600 z-10 transition-all group-focus-within:text-emerald-700">${t.selectClass || 'Classe'}</label>
+                    <label class="absolute -top-2 ${labelPos} px-1.5 bg-white text-[11px] font-bold text-emerald-600 z-10 transition-all group-focus-within:text-emerald-700">${t.selectClass || 'Classe'}</label>
                     <div class="relative flex items-center">
-                        <div class="absolute left-3 text-gray-400 group-focus-within:text-emerald-500 transition-colors">
+                        <div class="absolute ${iconPos} text-gray-400 group-focus-within:text-emerald-500 transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                         </div>
-                        <select id="assignment-class" class="w-full pl-10 pr-10 py-3 bg-gray-50/50 border-2 border-gray-100 rounded-xl focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all font-medium text-gray-700 appearance-none cursor-pointer">
+                        <select id="assignment-class" class="w-full ${inputPadding} py-3 bg-gray-50/50 border-2 border-gray-100 rounded-xl focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all font-medium text-gray-700 appearance-none cursor-pointer">
                             <option value="" data-translate="selectClass">${t.selectClass || '-- Sélectionner une classe --'}</option>
                         </select>
-                        <div class="absolute right-3 pointer-events-none text-gray-400">
+                        <div class="absolute ${chevronPos} pointer-events-none text-gray-400">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </div>
                     </div>
@@ -860,6 +869,7 @@
 
     window.renderAssignments = function() {
         const t = getTranslations()[getLang()];
+        const isAr = getLang() === 'ar';
         const container = document.getElementById('assignments-list');
         const chipsContainer = document.getElementById('assignment-class-chips');
         const filterName = document.getElementById('filter-name-assignments')?.value.toLowerCase() || '';
@@ -940,8 +950,21 @@
 
                 const classColor = getClassColor(a.className);
 
+                // ARABIC FIX: Typography and Layout
+                const cardStyle = isAr ? 'flex-direction: column !important;' : '';
+                const titleClass = isAr ? 'text-xl font-bold text-gray-900 leading-normal transition-colors group-hover:text-blue-600 truncate text-right' : 'text-xl font-black text-gray-900 leading-tight transition-colors group-hover:text-blue-600 truncate tracking-tight';
+                const labelTracking = isAr ? '' : 'tracking-widest';
+                const progressTracking = isAr ? '' : 'tracking-wider';
+                const fontBlack = isAr ? 'font-bold' : 'font-black';
+                
+                // ARABIC FIX: Accordion Details
+                const accordionMargin = isAr ? 'mr-4' : 'ml-4';
+                const borderSide = isAr ? 'border-r-2 pr-3' : 'border-l-2 pl-3';
+                const questionMargin = isAr ? 'ml-1' : 'mr-1';
+                const textAlign = isAr ? 'text-right' : 'text-left';
+
                 return `
-                <div class="bg-white border-2 border-gray-200/60 rounded-2xl overflow-hidden shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.15)] hover:-translate-y-2 transition-all duration-500 group flex flex-col h-full relative">
+                <div class="bg-white border-2 border-gray-200/60 rounded-2xl overflow-hidden shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.15)] hover:-translate-y-2 transition-all duration-500 group flex flex-col h-full relative" style="${cardStyle}">
                     <!-- Barre de couleur supérieure décorative -->
                     <div class="h-2 w-full" style="background-color: ${classColor}"></div>
 
@@ -949,12 +972,12 @@
                     <div class="p-6 flex-1 cursor-pointer select-none bg-gradient-to-br from-white via-white to-gray-50/50" onclick="toggleAccordion('${a.id}')">
                         <div class="flex items-start justify-between gap-4 mb-6">
                             <div class="min-w-0 flex-1">
-                                <h4 class="text-xl font-black text-gray-900 leading-tight transition-colors group-hover:text-blue-600 truncate" title="${a.name}">
+                                <h4 class="${titleClass}" title="${a.name}">
                                     ${a.name}
                                 </h4>
                                 <div class="flex items-center gap-2 mt-2.5">
-                                    <div class="px-2.5 py-1 rounded-lg bg-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-widest border border-gray-200/50 shadow-sm">${t.totalPointsLabel || 'Total Points'}</div>
-                                    <span class="text-sm font-black text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100 shadow-sm">${totalPoints} ${t.points}</span>
+                                    <div class="px-2.5 py-1 rounded-lg bg-gray-100 text-[10px] font-bold text-gray-500 uppercase ${labelTracking} border border-gray-200/50 shadow-sm">${t.totalPointsLabel || 'Total Points'}</div>
+                                    <span class="text-sm ${fontBlack} text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100 shadow-sm">${totalPoints} ${t.points}</span>
                                 </div>
                             </div>
                             <div id="icon-${a.id}" class="w-11 h-11 rounded-2xl bg-white shadow-md border border-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 group-hover:rotate-180 transition-all duration-500">
@@ -964,12 +987,12 @@
                         
                         <!-- Barre de progression ultra-visible -->
                         <div class="mt-8 space-y-3">
-                            <div class="flex items-center justify-between text-[11px] font-black uppercase tracking-wider">
+                            <div class="flex items-center justify-between text-[11px] ${fontBlack} uppercase ${progressTracking}">
                                 <span class="text-gray-500 flex items-center gap-2">
                                     <div class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></div>
                                     ${t.progression || 'Progression'}
                                 </span>
-                                <span class="px-2.5 py-1 rounded-full ${completionRate === 100 ? 'bg-green-100 text-green-700 border-green-200' : 'bg-blue-100 text-blue-700 border-blue-200'} border font-black text-[10px] shadow-sm">
+                                <span class="px-2.5 py-1 rounded-full ${completionRate === 100 ? 'bg-green-100 text-green-700 border-green-200' : 'bg-blue-100 text-blue-700 border-blue-200'} border ${fontBlack} text-[10px] shadow-sm">
                                     ${nbGrades} / ${nbStudents} (${completionRate}%)
                                 </span>
                             </div>
@@ -1001,17 +1024,17 @@
 
                     <!-- Accordéon Détails Exercices -->
                     <div id="accordion-${a.id}" class="accordion-content">
-                        <div class="p-4 space-y-3 bg-white text-sm">
+                        <div class="p-4 space-y-3 bg-white text-sm ${textAlign}">
                             ${a.exercises.map((ex, i) => {
                                 const parts = ex.parts || [];
                                 const directQuestions = ex.questions || [];
                                 let exContent = '';
                                 if (directQuestions.length > 0) {
-                                    exContent += `<div class="ml-4 rtl:mr-4 rtl:ml-0 text-gray-600 mt-2 flex flex-wrap gap-x-4 gap-y-1">${directQuestions.map(q => `<span class="inline-flex items-center text-sm text-gray-500"><span class="font-medium text-gray-700 mr-1 rtl:ml-1">${q.name || 'Q?'}:</span> ${gradesSvc().getQuestionMaxPoints(q)} ${t.points}</span>`).join('<span class="text-gray-300">•</span>')}</div>`;
+                                    exContent += `<div class="${accordionMargin} text-gray-600 mt-2 flex flex-wrap gap-x-4 gap-y-1 ${isAr ? 'justify-start' : ''}">${directQuestions.map(q => `<span class="inline-flex items-center text-sm text-gray-500"><span class="font-medium text-gray-700 ${questionMargin}">${q.name || 'Q?'}:</span> ${gradesSvc().getQuestionMaxPoints(q)} ${t.points}</span>`).join('<span class="text-gray-300">•</span>')}</div>`;
                                 }
                                 if (parts.length > 0) {
                                     exContent += parts.map(part => `
-                                        <div class="ml-4 rtl:mr-4 rtl:ml-0 mt-2 border-l-2 border-purple-200 rtl:border-r-2 rtl:border-l-0 pl-3 rtl:pr-3 rtl:pl-0">
+                                        <div class="${accordionMargin} mt-2 ${borderSide} border-purple-200">
                                             <div class="text-purple-600 font-medium mb-1">${part.name}</div>
                                             <div class="text-gray-500 text-xs italic">
                                                 (${(part.questions || []).map(q => q.name || 'Q?').join(', ')})
