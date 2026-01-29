@@ -669,4 +669,237 @@
     window.getStudentAssignmentTotal = (studentId, assignmentId) => gradesSvc().getStudentAssignmentTotal(getData(), studentId, assignmentId);
     window.getStudentExerciseTotal = (studentId, assignmentId, exId) => gradesSvc().getStudentExerciseTotal(getData(), studentId, assignmentId, exId);
 
+    // --- New 3-Step Flow Logic ---
+
+    window.goToGradeStep = function(step) {
+        window.currentGradeStep = step;
+        
+        // Update Stepper UI
+        for (let i = 1; i <= 3; i++) {
+            const ind = document.getElementById('step-indicator-' + i);
+            const label = document.getElementById('step-label-' + i);
+            const btn = document.getElementById('step-btn-' + i); 
+            
+            if (!ind || !label) continue;
+
+            if (i < step) {
+                // Completed
+                ind.classList.remove('bg-white', 'text-slate-400', 'border-2', 'border-slate-200');
+                ind.classList.add('bg-blue-600', 'text-white');
+                ind.innerHTML = '✓';
+                label.classList.add('text-blue-600');
+                if (btn) btn.classList.remove('pointer-events-none', 'opacity-50');
+            } else if (i === step) {
+                // Current
+                ind.classList.remove('bg-white', 'text-slate-400', 'border-2', 'border-slate-200');
+                ind.classList.add('bg-blue-600', 'text-white');
+                ind.innerHTML = i;
+                label.classList.add('text-blue-600');
+                if (btn) btn.classList.remove('pointer-events-none', 'opacity-50');
+            } else {
+                // Future
+                ind.classList.add('bg-white', 'text-slate-400', 'border-2', 'border-slate-200');
+                ind.classList.remove('bg-blue-600', 'text-white');
+                ind.innerHTML = i;
+                label.classList.remove('text-blue-600');
+                if (btn) btn.classList.add('pointer-events-none', 'opacity-50');
+            }
+        }
+        
+        // Update Connectors
+        const c1 = document.getElementById('step-connector-1');
+        const c2 = document.getElementById('step-connector-2');
+        if (c1) {
+            if (step >= 2) c1.classList.remove('-translate-x-full');
+            else c1.classList.add('-translate-x-full');
+        }
+        if (c2) {
+            if (step >= 3) c2.classList.remove('-translate-x-full');
+            else c2.classList.add('-translate-x-full');
+        }
+
+        // Show/Hide Content
+        document.querySelectorAll('.step-content').forEach(el => el.classList.add('hidden'));
+        const target = document.getElementById('grade-step-' + step);
+        if (target) target.classList.remove('hidden');
+
+        // Load content if needed
+        if (step === 1) window.renderGradesClassList();
+    };
+
+    window.renderGradesClassList = function() {
+        const t = getTranslations()[getLang()];
+        const isAr = getLang() === 'ar';
+        const container = document.getElementById('grades-class-list');
+        if (!container) return;
+
+        const globalAcademicYear = window.getGlobalAcademicYear();
+        if (!globalAcademicYear) {
+            container.innerHTML = `<div class="col-span-full text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                <p class="text-slate-500 font-medium">${t.selectAcademicYear}</p>
+            </div>`;
+            return;
+        }
+
+        const classes = window.getClasses();
+        const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
+
+        if (classes.length === 0) {
+             container.innerHTML = `<div class="col-span-full text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                <p class="text-slate-500 font-medium">${t.noClassesAutoCreated}</p>
+            </div>`;
+            return;
+        }
+
+        const rows = classes.map(c => {
+            const classStudents = getData().students.filter(s => s.className === c && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear);
+            const count = classStudents.length;
+            
+            const color = typeof window.getClassColor === 'function' ? window.getClassColor(c) : '#3b82f6';
+            const colorAlpha = color + '44'; 
+            
+            // Use shared helpers for level icon (1, 2, 3) and clean name
+            const levelIcon = typeof window.levelFromClass === 'function' ? window.levelFromClass(c) : c.substring(0, 1).toUpperCase();
+            const displayName = typeof window.cleanClassName === 'function' ? window.cleanClassName(c) : c;
+
+            const originClass = isAr ? 'origin-right' : 'origin-left';
+            const titleClass = isAr ? 'text-2xl font-bold leading-normal' : 'text-2xl font-black leading-tight tracking-tight';
+            const flexColFix = 'display: flex !important; flex-direction: column !important;';
+            const flexRowFix = 'display: flex !important; flex-direction: row !important;';
+
+            return `
+                <div onclick="selectGradeClass('${c}')" 
+                    class="class-card-modern group relative bg-white p-6 rounded-[2rem] border-2 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col h-full hover:-translate-y-2 hover:shadow-xl hover:border-[color:var(--card-color)]"
+                    style="--card-color: ${color}; --card-color-alpha: ${colorAlpha};">
+                    
+                    <div class="absolute -start-8 -top-8 w-32 h-32 rounded-full opacity-[0.03] group-hover:opacity-[0.08] transition-all duration-700 group-hover:scale-150" style="background: ${color}"></div>
+                    
+                    <div class="relative z-10 flex flex-col h-full" style="${flexColFix}">
+                        <div class="flex items-start justify-between mb-6" style="${flexRowFix}">
+                            <span class="inline-flex items-center px-3 py-1 bg-slate-50 text-slate-500 rounded-full text-[10px] font-bold border border-slate-100 group-hover:bg-[var(--card-color)] group-hover:text-white group-hover:border-transparent transition-all duration-300">
+                                ${count}
+                            </span>
+                            <div class="level-badge w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-black text-white transform group-hover:rotate-6 transition-all duration-500 bg-gradient-to-br from-[var(--card-color)] to-[var(--card-color)] opacity-90 shadow-lg">
+                                ${levelIcon}
+                            </div>
+                        </div>
+                        
+                        <div class="flex-grow flex flex-col justify-center py-4" style="${flexColFix}">
+                            <h3 class="card-title-hover ${titleClass} text-slate-800 transition-colors duration-300 line-clamp-2" title="${c}">
+                                ${displayName}
+                            </h3>
+                        </div>
+
+                         <div class="mt-4 pt-5 border-t border-slate-50 flex items-center justify-between" style="${flexRowFix}">
+                            <div class="flex items-center gap-1.5 text-slate-400 font-bold text-[10px] uppercase tracking-wider bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100/50" style="${flexRowFix}">
+                                ${globalAcademicYear}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bottom-bar absolute bottom-0 start-0 w-full h-1.5 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ${originClass}" style="background: ${color}"></div>
+                </div>
+            `;
+        }).join('');
+
+        container.innerHTML = rows;
+    };
+
+    window.selectGradeClass = function(className) {
+        const classSelect = document.getElementById('select-class-grades');
+        if (classSelect) {
+            let found = false;
+            for(let i=0; i<classSelect.options.length; i++) {
+                if(classSelect.options[i].value === className) {
+                    classSelect.selectedIndex = i;
+                    found = true;
+                    break;
+                }
+            }
+            if(!found) {
+                const opt = document.createElement('option');
+                opt.value = className;
+                opt.text = className;
+                classSelect.add(opt);
+                classSelect.value = className;
+            }
+            classSelect.dispatchEvent(new Event('change'));
+            window.renderGradesAssignmentList(className);
+            window.goToGradeStep(2);
+        }
+    };
+
+    window.renderGradesAssignmentList = function(className) {
+        const t = getTranslations()[getLang()];
+        const container = document.getElementById('grades-assignment-list');
+        const data = getData();
+        const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
+        const globalAcademicYear = window.getGlobalAcademicYear();
+        const globalTrimester = window.getGlobalTrimester();
+        
+        const assignments = data.assignments.filter(a => {
+            const matchClass = a.className === className;
+            const matchUser = (a.createdBy || 'unknown') === userId;
+            const matchAcademicYear = globalAcademicYear ? (a.academicYear || '') === globalAcademicYear : false;
+            const matchTrimester = globalTrimester ? (a.trimester || '') === globalTrimester : false;
+            return matchClass && matchUser && matchAcademicYear && matchTrimester;
+        });
+
+        if (assignments.length === 0) {
+             container.innerHTML = `<div class="col-span-full text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                <p class="text-slate-500 font-medium">${t.noAssignmentsFound || 'Aucun devoir trouvé'}</p>
+            </div>`;
+            return;
+        }
+
+        container.innerHTML = assignments.map(a => {
+            const dateStr = new Date(a.date).toLocaleDateString(getLang() === 'ar' ? 'ar-SA' : 'fr-FR');
+            const exerciseCount = a.exercises.length;
+            const totalPoints = gradesSvc().getAssignmentMaxPoints(a);
+
+            return `
+            <div onclick="selectGradeAssignment('${a.id}')" 
+                class="group relative bg-white p-6 rounded-[2rem] border-2 border-slate-100 hover:border-blue-200 transition-all duration-300 cursor-pointer overflow-hidden hover:shadow-xl hover:-translate-y-1">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl font-black group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
+                        ${a.name.charAt(0).toUpperCase()}
+                    </div>
+                    <span class="px-3 py-1 bg-slate-50 text-slate-500 rounded-full text-xs font-bold border border-slate-100 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                        ${dateStr}
+                    </span>
+                </div>
+                
+                <h3 class="text-xl font-black text-slate-800 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">${a.name}</h3>
+                
+                <div class="flex items-center gap-4 text-sm text-slate-500 font-medium mb-4">
+                    <span class="flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                        ${exerciseCount} Ex
+                    </span>
+                    <span class="flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        ${totalPoints} pts
+                    </span>
+                </div>
+
+                <div class="w-full py-2.5 rounded-xl bg-slate-50 text-slate-600 font-bold text-center text-sm group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+                    ${t.grade || 'Noter'}
+                </div>
+            </div>`;
+        }).join('');
+    };
+
+    window.selectGradeAssignment = function(id) {
+        const assignmentSelect = document.getElementById('select-assignment');
+        if (assignmentSelect) {
+             assignmentSelect.value = id;
+             assignmentSelect.dispatchEvent(new Event('change'));
+             window.goToGradeStep(3);
+        }
+    };
+    
+    // Initial setup function to be called after data load
+    window.initGradesUI = function() {
+        window.goToGradeStep(1);
+    };
+
 })();

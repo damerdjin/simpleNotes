@@ -2131,75 +2131,103 @@
 
                 <!-- Grades Tab -->
                 <div id="content-grades" class="view-section">
-                    <div class="flex flex-col lg:flex-row gap-6">
-                        <!-- Sidebar Filters (Left) -->
-                        <div class="lg:w-1/3 xl:w-1/4 space-y-6">
-                            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sticky top-6">
-                                <div class="flex items-center gap-3 mb-6">
-                                    <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center text-xl shadow-sm">
-                                        🎯
-                                    </div>
-                                    <div>
-                                        <h2 class="text-xl font-bold text-slate-800 leading-tight" data-translate="gradesEntry">Saisie des Notes</h2>
-                                    </div>
+                    <div class="max-w-7xl mx-auto space-y-8">
+                        <!-- Stepper -->
+                        <div class="relative py-4">
+                            <div class="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-100 rounded-full -z-10"></div>
+                            <div class="flex justify-between items-center max-w-2xl mx-auto px-4">
+                                <!-- Step 1 -->
+                                <div class="flex flex-col items-center gap-2 cursor-pointer relative z-10" onclick="goToGradeStep(1)">
+                                    <div id="step-indicator-1" class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold bg-blue-600 ring-4 ring-white shadow-lg transition-all duration-300 transform hover:scale-110">1</div>
+                                    <span id="step-label-1" class="text-sm font-bold text-slate-800 bg-white px-2 rounded-full" data-translate="stepClass">Classe</span>
                                 </div>
-
-                                <div class="space-y-4">
-                                    <!-- Classe -->
-                                    <div class="space-y-2">
-                                        <div class="relative">
-                                            <select id="select-class-grades" onchange="loadGradeSelectors()"
-                                                class="modern-select w-full !bg-white">
-                                                <option value="">-- Sélectionner une classe --</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Devoir -->
-                                    <div id="container-select-assignment" class="space-y-2 hidden">
-                                        <div class="relative">
-                                            <select id="select-assignment" onchange="loadGradeEntry()"
-                                                class="modern-select w-full !bg-white">
-                                                <option value="">-- Sélectionner un devoir --</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <!-- Élève -->
-                                    <div id="container-select-student" class="space-y-2 hidden">
-                                        <div class="flex flex-col gap-2">
-                                            <select id="select-student" onchange="loadGradeEntry()"
-                                                class="modern-select w-full !bg-white">
-                                                <option value="">-- Sélectionner un élève --</option>
-                                            </select>
-                                            <div class="flex gap-2 w-full">
-                                                <button onclick="navigateStudent(-1)" class="modern-btn-secondary flex-1 !py-2 shadow-sm justify-center" data-translate-title="prev" title="Précédent">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                                                    <span class="text-xs ml-1" data-translate="prev">Précédent</span>
-                                                </button>
-                                                <button onclick="navigateStudent(1)" class="modern-btn-secondary flex-1 !py-2 shadow-sm justify-center" data-translate-title="next" title="Suivant">
-                                                    <span class="text-xs mr-1" data-translate="next">Suivant</span>
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <!-- Connector 1-2 -->
+                                <div class="flex-1 h-1 bg-slate-100 mx-2 relative overflow-hidden rounded-full -z-20">
+                                     <div id="step-connector-1" class="absolute inset-0 bg-blue-600 -translate-x-full transition-transform duration-500"></div>
+                                </div>
+                                <!-- Step 2 -->
+                                <div class="flex flex-col items-center gap-2 cursor-pointer pointer-events-none opacity-50 relative z-10" id="step-btn-2" onclick="goToGradeStep(2)">
+                                    <div id="step-indicator-2" class="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 font-bold bg-white border-2 border-slate-200 ring-4 ring-white transition-all duration-300 transform hover:scale-110">2</div>
+                                    <span id="step-label-2" class="text-sm font-medium text-slate-400 bg-white px-2 rounded-full" data-translate="stepAssignment">Devoir</span>
+                                </div>
+                                <!-- Connector 2-3 -->
+                                <div class="flex-1 h-1 bg-slate-100 mx-2 relative overflow-hidden rounded-full -z-20">
+                                    <div id="step-connector-2" class="absolute inset-0 bg-blue-600 -translate-x-full transition-transform duration-500"></div>
+                                </div>
+                                <!-- Step 3 -->
+                                <div class="flex flex-col items-center gap-2 cursor-pointer pointer-events-none opacity-50 relative z-10" id="step-btn-3" onclick="goToGradeStep(3)">
+                                    <div id="step-indicator-3" class="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 font-bold bg-white border-2 border-slate-200 ring-4 ring-white transition-all duration-300 transform hover:scale-110">3</div>
+                                    <span id="step-label-3" class="text-sm font-medium text-slate-400 bg-white px-2 rounded-full" data-translate="stepEntry">Saisie</span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Grade Entry Content (Right) -->
-                        <div class="lg:flex-1">
-                            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 min-h-[600px]">
-                                <div id="grade-entry" class="transition-all duration-300">
-                                    <!-- Sera rempli par JS -->
-                                    <div class="flex flex-col items-center justify-center py-24 text-slate-400">
-                                        <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6 border border-slate-100">
-                                            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-                                        </div>
-                                        <p class="text-lg font-medium text-slate-500" data-translate="selectContextToStart">Sélectionnez le contexte pour commencer</p>
+                        <!-- Step 1: Class Selection -->
+                        <div id="grade-step-1" class="step-content transition-all duration-500">
+                             <div class="text-center mb-10">
+                                <h2 class="text-3xl font-black text-slate-800 mb-3 tracking-tight" data-translate="selectClassTitle">Sélectionnez une classe</h2>                                
+                            </div>
+                            <div id="grades-class-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-4">
+                                <!-- Class cards will be injected here -->
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Assignment Selection -->
+                        <div id="grade-step-2" class="step-content hidden transition-all duration-500">
+                             <div class="text-center mb-10 relative">
+                                <button onclick="goToGradeStep(1)" class="absolute left-0 top-1/2 -translate-y-1/2 inline-flex items-center gap-2 text-slate-400 hover:text-blue-600 transition-colors group">
+                                    <div class="w-8 h-8 rounded-full bg-slate-50 group-hover:bg-blue-50 flex items-center justify-center transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                                     </div>
+                                    <span class="font-medium hidden sm:inline" data-translate="back">Retour</span>
+                                </button>
+                                <h2 class="text-3xl font-black text-slate-800 mb-3 tracking-tight" data-translate="selectAssignmentTitle">Sélectionnez un devoir</h2>
+                                <p class="text-slate-500 text-lg" data-translate="selectAssignmentSubtitle">Choisissez le devoir à noter</p>
+                            </div>
+                            <div id="grades-assignment-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4">
+                                <!-- Assignment cards will be injected here -->
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Grade Entry -->
+                        <div id="grade-step-3" class="step-content hidden transition-all duration-500">
+                            <!-- Hidden Selectors to maintain compatibility -->
+                            <div class="hidden">
+                                 <select id="select-class-grades" onchange="loadGradeSelectors()"></select>
+                            </div>
+                            <!-- Assignment Select (Hidden but functional) -->
+                             <div class="hidden">
+                                <select id="select-assignment" onchange="loadGradeEntry()"></select>
+                            </div>
+                            
+                             <div class="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4 px-4">
+                                 <button onclick="goToGradeStep(2)" class="inline-flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors px-4 py-2 rounded-xl hover:bg-blue-50 border border-transparent hover:border-blue-100 self-start sm:self-auto">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                                    <span data-translate="backToAssignments" class="font-bold">Retour aux devoirs</span>
+                                </button>
+                                
+                                <!-- Student Navigation -->
+                                 <div class="flex items-center gap-2 bg-white rounded-xl p-1.5 border border-slate-200 shadow-sm w-full sm:w-auto">
+                                    <button onclick="navigateStudent(-1)" class="p-2 hover:bg-slate-50 rounded-lg text-slate-400 hover:text-blue-600 transition-colors" title="Précédent">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                                    </button>
+                                     <div class="relative flex-1 sm:w-64">
+                                        <select id="select-student" onchange="loadGradeEntry()" class="w-full appearance-none bg-transparent font-bold text-center text-slate-700 outline-none cursor-pointer py-1 truncate px-2">
+                                            <!-- Populated by JS -->
+                                        </select>
+                                        <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-slate-400">
+                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                        </div>
+                                    </div>
+                                    <button onclick="navigateStudent(1)" class="p-2 hover:bg-slate-50 rounded-lg text-slate-400 hover:text-blue-600 transition-colors" title="Suivant">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                    </button>
                                 </div>
+                            </div>
+
+                            <!-- Grade Entry Container -->
+                            <div id="grade-entry" class="bg-white rounded-[2rem] shadow-sm border border-slate-200 p-6 min-h-[600px] transition-all duration-300 mx-4">
+                                 <!-- Will be filled by loadGradeEntry() -->
                             </div>
                         </div>
                     </div>
@@ -2664,6 +2692,7 @@
                 if (window.renderAssignments) renderAssignments();
                 if (window.loadExportPrepConfig) loadExportPrepConfig();
                 if (window.loadClassSelectorsForExport) loadClassSelectorsForExport();
+                if (window.initGradesUI) initGradesUI();
 
                 // Give a tiny bit of time for the browser to paint the rendered content
                 setTimeout(() => {
@@ -2681,14 +2710,6 @@
             window.addEventListener('DOMContentLoaded', initApp);
         } else {
             initApp();
-        }
-    </script>
-    <!-- Input caché pour charger le fichier Rakmana -->
-    <input type="file" id="rakmana-file-input" accept=".xlsx" style="display: none;"
-        onchange="onRakmanaFileSelected(this)">
-</body>
-
-</html>
         }
     </script>
     <!-- Input caché pour charger le fichier Rakmana -->

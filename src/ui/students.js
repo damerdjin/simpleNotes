@@ -13,7 +13,7 @@
     const genId = () => window.genId();
 
     // Utility helpers for class names and levels
-    const levelFromClass = (className = '') => {
+    window.levelFromClass = (className = '') => {
         const first = className.trim().split(/\s+/)[0] || '';
         const map = {
             'أولى': 1, 'اولى': 1, '1ere': 1, '1ère': 1, '1': 1,
@@ -27,7 +27,7 @@
         return map[key] || '?';
     };
 
-    const cleanClassName = (className = '') => {
+    window.cleanClassName = (className = '') => {
         let parts = className.trim().split(/\s+/);
         if (parts.length === 0) return '';
         
@@ -52,6 +52,10 @@
         }
         return parts.join(' ');
     };
+
+    // Internal references for backward compatibility within this file
+    const levelFromClass = window.levelFromClass;
+    const cleanClassName = window.cleanClassName;
 
     const studentsUiState = window.studentsUiState || { selectedClass: '', page: 1, pageSize: 12 };
     window.studentsUiState = studentsUiState;
