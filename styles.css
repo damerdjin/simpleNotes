@@ -9,6 +9,18 @@
             flex-direction: row-reverse;
         }
 
+        .rtl-layout .flex.flex-col,
+        .rtl-layout #container-select-student > .flex {
+            flex-direction: column !important;
+        }
+
+        /* En RTL, sur grand écran, on remet en ligne pour le layout principal */
+        @media (min-width: 1024px) {
+            .rtl-layout .flex.lg\:flex-row {
+                flex-direction: row !important;
+            }
+        }
+
         .rtl-layout .justify-between {
             justify-content: space-between;
         }
