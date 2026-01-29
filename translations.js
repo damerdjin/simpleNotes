@@ -186,6 +186,22 @@ window.translations = {
         grade: "Note :",
         total: "Total",
 
+        // Notes 3-Step Flow
+        stepClass: "Classe",
+        stepAssignment: "Devoir",
+        stepEntry: "Saisie",
+        selectClassTitle: "Sélectionnez une classe",
+        selectClassSubtitle: "Choisissez la classe pour laquelle vous souhaitez saisir des notes",
+        selectAssignmentTitle: "Sélectionnez un devoir",
+        selectAssignmentSubtitle: "Choisissez le devoir à noter",
+        back: "Retour",
+        backToAssignments: "Retour aux devoirs",
+        noAssignmentsFound: "Aucun devoir trouvé",
+        gradeAction: "Noter",
+        prevStudent: "Élève précédent",
+        nextStudent: "Élève suivant",
+        pointsAbbr: "pts",
+
         // Récapitulatif
         summaryTitle: "Récapitulatif des Notes",
         search: "Rechercher (nom, prénom, classe)",
@@ -505,6 +521,22 @@ window.translations = {
         grade: "Grade:",
         total: "Total",
 
+        // Notes 3-Step Flow
+        stepClass: "Class",
+        stepAssignment: "Assignment",
+        stepEntry: "Entry",
+        selectClassTitle: "Select a class",
+        selectClassSubtitle: "Choose the class you want to grade",
+        selectAssignmentTitle: "Select an assignment",
+        selectAssignmentSubtitle: "Choose the assignment to grade",
+        back: "Back",
+        backToAssignments: "Back to assignments",
+        noAssignmentsFound: "No assignments found",
+        gradeAction: "Grade",
+        prevStudent: "Previous student",
+        nextStudent: "Next student",
+        pointsAbbr: "pts",
+
         // Récapitulatif
         summaryTitle: "Grades Summary",
         search: "Search (name, first name, class)",
@@ -821,12 +853,28 @@ window.translations = {
         selectAssignmentAndStudentToGrade: "اختر واجبا وطالبا لإدخال النقاط.",
         selectContextToStart: "اختر السياق للبدء",
         globalGrade: "النقطة العامة (تتجاوز المجموع):",
-        ignoresDetails: "إذا تم ملؤه، يتجاهل التفاصيل أدناه.",
+        ignoresDetails: "إذا تم ملؤه، يتم تجاهل التفاصيل أدناه.",
         grade: "النقطة:",
         total: "المجموع",
 
+        // Notes 3-Step Flow
+        stepClass: "القسم",
+        stepAssignment: "الواجب",
+        stepEntry: "حجز النقاط",
+        selectClassTitle: "اختر قسماً",
+        selectClassSubtitle: "اختر القسم الذي تريد حجز نقاطه",
+        selectAssignmentTitle: "اختر واجباً",
+        selectAssignmentSubtitle: "اختر الواجب المراد تنقيطه",
+        back: "رجوع",
+        backToAssignments: "العودة للواجبات",
+        noAssignmentsFound: "لم يتم العثور على واجبات",
+        gradeAction: "تنقيط",
+        prevStudent: "الطالب السابق",
+        nextStudent: "الطالب التالي",
+        pointsAbbr: "ن",
+
         // Récapitulatif
-        summaryTitle: "ملخص النقط",
+        summaryTitle: "ملخص النقاط",
         search: "بحث (الاسم، الاسم الأول، الفصل)",
         showDetails: "إظهار التفاصيل (التمارين)",
         exportExcel: "تصدير إكسل",
