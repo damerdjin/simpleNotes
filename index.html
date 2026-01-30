@@ -991,6 +991,17 @@
             padding-left: 2.5rem;
         }
 
+        /* RTL Stepper Back Buttons */
+        .rtl-layout #btn-back-step-2 {
+            left: auto !important;
+            right: 0 !important;
+        }
+        
+        .rtl-layout #btn-back-step-2 svg,
+        .rtl-layout #btn-back-step-3 svg {
+             transform: rotate(180deg);
+        }
+
         /* CUSTOM SCROLLBAR */
         .custom-scrollbar::-webkit-scrollbar {
             width: 6px;
@@ -2135,15 +2146,15 @@
                         <!-- Stepper -->
                         <div class="relative py-4">
                             <div class="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-100 rounded-full -z-10"></div>
-                            <div class="flex justify-between items-center max-w-2xl mx-auto px-4">
+                            <div id="grades-stepper" class="grid grid-cols-[auto_1fr_auto_1fr_auto] items-center max-w-2xl mx-auto px-4 gap-2">
                                 <!-- Step 1 -->
                                 <div class="flex flex-col items-center gap-2 cursor-pointer relative z-10" onclick="goToGradeStep(1)">
                                     <div id="step-indicator-1" class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold bg-blue-600 ring-4 ring-white shadow-lg transition-all duration-300 transform hover:scale-110">1</div>
                                     <span id="step-label-1" class="text-sm font-bold text-slate-800 bg-white px-2 rounded-full" data-translate="stepClass">Classe</span>
                                 </div>
                                 <!-- Connector 1-2 -->
-                                <div class="flex-1 h-1 bg-slate-100 mx-2 relative overflow-hidden rounded-full -z-20">
-                                     <div id="step-connector-1" class="absolute inset-0 bg-blue-600 -translate-x-full transition-transform duration-500"></div>
+                                <div class="h-1 bg-slate-100 relative overflow-hidden rounded-full -z-20">
+                                     <div id="step-connector-1" class="h-full bg-blue-600 transition-all duration-500" style="width: 0%"></div>
                                 </div>
                                 <!-- Step 2 -->
                                 <div class="flex flex-col items-center gap-2 cursor-pointer pointer-events-none opacity-50 relative z-10" id="step-btn-2" onclick="goToGradeStep(2)">
@@ -2151,8 +2162,8 @@
                                     <span id="step-label-2" class="text-sm font-medium text-slate-400 bg-white px-2 rounded-full" data-translate="stepAssignment">Devoir</span>
                                 </div>
                                 <!-- Connector 2-3 -->
-                                <div class="flex-1 h-1 bg-slate-100 mx-2 relative overflow-hidden rounded-full -z-20">
-                                    <div id="step-connector-2" class="absolute inset-0 bg-blue-600 -translate-x-full transition-transform duration-500"></div>
+                                <div class="h-1 bg-slate-100 relative overflow-hidden rounded-full -z-20">
+                                    <div id="step-connector-2" class="h-full bg-blue-600 transition-all duration-500" style="width: 0%"></div>
                                 </div>
                                 <!-- Step 3 -->
                                 <div class="flex flex-col items-center gap-2 cursor-pointer pointer-events-none opacity-50 relative z-10" id="step-btn-3" onclick="goToGradeStep(3)">
@@ -2175,7 +2186,7 @@
                         <!-- Step 2: Assignment Selection -->
                         <div id="grade-step-2" class="step-content hidden transition-all duration-500">
                              <div class="text-center mb-10 relative">
-                                <button onclick="goToGradeStep(1)" class="absolute left-0 top-1/2 -translate-y-1/2 inline-flex items-center gap-2 text-slate-400 hover:text-blue-600 transition-colors group">
+                                <button id="btn-back-step-2" onclick="goToGradeStep(1)" class="absolute left-0 top-1/2 -translate-y-1/2 inline-flex items-center gap-2 text-slate-400 hover:text-blue-600 transition-colors group">
                                     <div class="w-8 h-8 rounded-full bg-slate-50 group-hover:bg-blue-50 flex items-center justify-center transition-colors">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                                     </div>
@@ -2201,7 +2212,7 @@
                             </div>
                             
                              <div class="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4 px-4">
-                                 <button onclick="goToGradeStep(2)" class="inline-flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors px-4 py-2 rounded-xl hover:bg-blue-50 border border-transparent hover:border-blue-100 self-start sm:self-auto">
+                                 <button id="btn-back-step-3" onclick="goToGradeStep(2)" class="inline-flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors px-4 py-2 rounded-xl hover:bg-blue-50 border border-transparent hover:border-blue-100 self-start sm:self-auto">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                                     <span data-translate="backToAssignments" class="font-bold">Retour aux devoirs</span>
                                 </button>

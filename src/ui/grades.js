@@ -365,26 +365,26 @@
                 
                 // Exercise Card
                 let exHtml = `
-                <div class="group border border-slate-200 rounded-2xl overflow-hidden bg-white hover:shadow-xl hover:border-blue-200 transition-all duration-300 mb-4">
+                <div class="group border border-slate-200 rounded-2xl overflow-hidden bg-white hover:shadow-xl hover:border-[color:var(--theme-color)] transition-all duration-300 mb-4" style="--theme-color: ${color}">
                     <!-- Header Section -->
                     <div class="p-4 sm:p-5 flex items-center justify-between cursor-pointer select-none bg-gradient-to-r from-white to-slate-50/50" onclick="window.toggleAccordion('${accordionId}')">
                         <div class="flex items-center gap-3 sm:gap-4 min-w-0">
-                            <div class="w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-black shadow-lg shadow-blue-200 group-hover:scale-110 transition-transform duration-300 shrink-0">
+                            <div class="w-8 h-8 sm:w-10 sm:h-10 bg-[color:var(--theme-color)] text-white rounded-xl flex items-center justify-center font-black shadow-lg shadow-[color:var(--theme-color)]/30 group-hover:scale-110 transition-transform duration-300 shrink-0">
                                 ${exIndex + 1}
                             </div>
                             <div class="min-w-0">
                                 <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                                     <h3 class="font-black text-slate-800 tracking-tight truncate text-sm sm:text-base">${ex.name ? (ex.name === 'Global' ? t.globalMode : ex.name) : (t.exercise || 'Exercice') + ' ' + (exIndex + 1)}</h3>
-                                    <span class="inline-flex w-fit px-2 py-0.5 bg-blue-50 text-blue-600 text-[9px] sm:text-[10px] font-black rounded-full border border-blue-100 uppercase tracking-wider">${maxExPoints} ${t.pointsAbbr || 'pts'}</span>
+                                    <span class="inline-flex w-fit px-2 py-0.5 bg-[color:var(--theme-color)]/10 text-[color:var(--theme-color)] text-[9px] sm:text-[10px] font-black rounded-full border border-[color:var(--theme-color)]/20 uppercase tracking-wider">${maxExPoints} ${t.pointsAbbr || 'pts'}</span>
                                 </div>
                             </div>
                         </div>
                         
                         <div class="flex items-center gap-2 sm:gap-3">
-                            <span id="ex-total-${ex.id}" class="px-2 sm:px-4 py-1 sm:py-1.5 bg-blue-50 text-blue-700 font-black rounded-lg sm:rounded-xl text-[10px] sm:text-sm border border-blue-100 shadow-sm whitespace-nowrap">
+                            <span id="ex-total-${ex.id}" class="px-2 sm:px-4 py-1 sm:py-1.5 bg-[color:var(--theme-color)]/10 text-[color:var(--theme-color)] font-black rounded-lg sm:rounded-xl text-[10px] sm:text-sm border border-[color:var(--theme-color)]/20 shadow-sm whitespace-nowrap">
                                 0 / ${maxExPoints}
                             </span>
-                            <div id="icon-${accordionId}" class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all duration-500 shadow-sm shrink-0">
+                            <div id="icon-${accordionId}" class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-[color:var(--theme-color)] group-hover:text-white group-hover:border-[color:var(--theme-color)] transition-all duration-500 shadow-sm shrink-0">
                                 <svg class="w-4 h-4 sm:w-5 sm:h-5 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path>
                                 </svg>
@@ -676,6 +676,12 @@
     window.goToGradeStep = function(step) {
         window.currentGradeStep = step;
         
+        // Determine theme color
+        let themeColor = '#2563eb'; // Default blue-600
+        if (step > 1 && window.currentClassColor) {
+            themeColor = window.currentClassColor;
+        }
+
         // Update Stepper UI
         for (let i = 1; i <= 3; i++) {
             const ind = document.getElementById('step-indicator-' + i);
@@ -684,26 +690,44 @@
             
             if (!ind || !label) continue;
 
+            // Reset inline styles
+            ind.style.backgroundColor = '';
+            ind.style.color = '';
+            label.style.color = '';
+
             if (i < step) {
                 // Completed
-                ind.classList.remove('bg-white', 'text-slate-400', 'border-2', 'border-slate-200');
-                ind.classList.add('bg-blue-600', 'text-white');
+                ind.classList.remove('bg-white', 'text-slate-400', 'border-2', 'border-slate-200', 'bg-blue-600');
+                ind.classList.add('text-white');
+                ind.style.backgroundColor = themeColor;
+                
                 ind.innerHTML = '✓';
-                label.classList.add('text-blue-600');
+                
+                label.classList.remove('text-blue-600');
+                label.style.color = themeColor;
+                
                 if (btn) btn.classList.remove('pointer-events-none', 'opacity-50');
             } else if (i === step) {
                 // Current
-                ind.classList.remove('bg-white', 'text-slate-400', 'border-2', 'border-slate-200');
-                ind.classList.add('bg-blue-600', 'text-white');
+                ind.classList.remove('bg-white', 'text-slate-400', 'border-2', 'border-slate-200', 'bg-blue-600');
+                ind.classList.add('text-white');
+                ind.style.backgroundColor = themeColor;
+                
                 ind.innerHTML = i;
-                label.classList.add('text-blue-600');
+                
+                label.classList.remove('text-blue-600');
+                label.style.color = themeColor;
+                
                 if (btn) btn.classList.remove('pointer-events-none', 'opacity-50');
             } else {
                 // Future
                 ind.classList.add('bg-white', 'text-slate-400', 'border-2', 'border-slate-200');
                 ind.classList.remove('bg-blue-600', 'text-white');
+                ind.style.backgroundColor = '';
+                
                 ind.innerHTML = i;
                 label.classList.remove('text-blue-600');
+                
                 if (btn) btn.classList.add('pointer-events-none', 'opacity-50');
             }
         }
@@ -712,18 +736,55 @@
         const c1 = document.getElementById('step-connector-1');
         const c2 = document.getElementById('step-connector-2');
         if (c1) {
-            if (step >= 2) c1.classList.remove('-translate-x-full');
-            else c1.classList.add('-translate-x-full');
+            c1.style.backgroundColor = themeColor;
+            // Use width for RTL compatibility
+            if (step >= 2) c1.style.width = '100%';
+            else c1.style.width = '0%';
         }
         if (c2) {
-            if (step >= 3) c2.classList.remove('-translate-x-full');
-            else c2.classList.add('-translate-x-full');
+            c2.style.backgroundColor = themeColor;
+            // Use width for RTL compatibility
+            if (step >= 3) c2.style.width = '100%';
+            else c2.style.width = '0%';
         }
 
         // Show/Hide Content
         document.querySelectorAll('.step-content').forEach(el => el.classList.add('hidden'));
         const target = document.getElementById('grade-step-' + step);
         if (target) target.classList.remove('hidden');
+
+        // Update Back Buttons Dynamic Hover
+        const btnBack2 = document.getElementById('btn-back-step-2');
+        if (btnBack2) {
+            const iconDiv = btnBack2.querySelector('div');
+            const lightColor = themeColor + '15'; 
+            
+            // Remove old event listeners by cloning (simple trick) or just reassigning on* props
+            btnBack2.onmouseover = () => {
+                btnBack2.style.color = themeColor;
+                if(iconDiv) iconDiv.style.backgroundColor = lightColor;
+            };
+            btnBack2.onmouseout = () => {
+                btnBack2.style.color = '';
+                if(iconDiv) iconDiv.style.backgroundColor = '';
+            };
+        }
+
+        const btnBack3 = document.getElementById('btn-back-step-3');
+        if (btnBack3) {
+            const lightColor = themeColor + '15';
+            const borderColor = themeColor + '30';
+             btnBack3.onmouseover = () => {
+                btnBack3.style.color = themeColor;
+                btnBack3.style.backgroundColor = lightColor;
+                btnBack3.style.borderColor = borderColor;
+            };
+            btnBack3.onmouseout = () => {
+                btnBack3.style.color = '';
+                btnBack3.style.backgroundColor = '';
+                btnBack3.style.borderColor = '';
+            };
+        }
 
         // Load content if needed
         if (step === 1) window.renderGradesClassList();
