@@ -128,12 +128,13 @@
         const qGrades = studentGrades[partKey][q.id] || {};
         const mode = studentGrades.mode || ((studentGrades['final']?.['final']?.['final'] || '') !== '' ? 'global' : 'detail');
         const maxPts = getQuestionMaxPoints(q);
+        const color = window.currentClassColor || '#3b82f6';
         
         let qHtml = `
-        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col gap-3 transition-all hover:border-blue-300 hover:bg-blue-50/30 group">
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col gap-3 transition-all hover:border-[color:var(--theme-color)] hover:bg-[color:var(--theme-color)]/5 group" style="--theme-color: ${color}">
             <div class="flex items-center justify-between">
                 <span class="text-sm font-bold text-slate-700">${window.getQuestionDisplayName(assignmentId, exId, q.id, partId)}</span>
-                <span class="text-[10px] font-bold px-2 py-0.5 bg-white border border-slate-200 rounded-full text-slate-500 group-hover:border-blue-200 group-hover:text-blue-600 transition-colors" id="q-total-${q.id}">0 / ${maxPts}</span>
+                <span class="text-[10px] font-bold px-2 py-0.5 bg-white border border-slate-200 rounded-full text-slate-500 group-hover:border-[color:var(--theme-color)] group-hover:text-[color:var(--theme-color)] transition-colors" id="q-total-${q.id}">0 / ${maxPts}</span>
             </div>`;
         
         if (!q.subQuestions || q.subQuestions.length === 0) {
@@ -143,7 +144,7 @@
                 <input type="number" min="0" max="${q.maxPoints}" step="0.25" value="${val}"
                     ${mode === 'global' ? 'disabled' : ''}
                     onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','direct',this.value)"
-                    class="w-full p-2.5 bg-white border-2 border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all" 
+                    class="w-full p-2.5 bg-white border-2 border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:border-[color:var(--theme-color)] focus:ring-4 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all" 
                     placeholder="0">
                 <div class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">/ ${q.maxPoints}</div>
             </div>`;
@@ -160,7 +161,7 @@
                     <input type="number" min="0" max="${sq.maxPoints}" step="0.25" value="${val}"
                         ${mode === 'global' ? 'disabled' : ''}
                         onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','${sq.id}',this.value)"
-                        class="w-full p-2 bg-white border-2 border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all text-xs"
+                        class="w-full p-2 bg-white border-2 border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:border-[color:var(--theme-color)] focus:ring-4 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all text-xs"
                         placeholder="0">
                 </div>`;
             }).join('');
@@ -235,10 +236,11 @@
 
         const svc = gradesSvc();
         const maxAssignmentPoints = svc.getAssignmentMaxPoints(assignment);
+        const color = window.currentClassColor || '#3b82f6';
 
         // Student Header Card (Reduced size & Responsive)
         let html = `
-        <div class="bg-blue-600 rounded-xl p-4 mb-4 sm:mb-6 text-white shadow-md relative overflow-hidden">
+        <div class="rounded-xl p-4 mb-4 sm:mb-6 text-white shadow-md relative overflow-hidden" style="background-color: ${color}">
             <div class="absolute top-0 right-0 p-4 opacity-5">
                 <svg class="w-16 h-16 sm:w-20 sm:h-20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
             </div>
@@ -315,9 +317,9 @@
 
             html += `
             <div class="col-span-full">
-                <div class="bg-white border-2 border-blue-100 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 transition-all hover:border-blue-300">
+                <div class="bg-white border-2 border-slate-100 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 transition-all hover:border-[color:var(--theme-color)] group" style="--theme-color: ${color}">
                     <div class="flex items-center gap-4 w-full sm:w-auto">
-                        <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-2xl flex items-center justify-center text-xl sm:text-2xl font-black shadow-lg shadow-blue-200 shrink-0">
+                        <div class="w-12 h-12 sm:w-14 sm:h-14 bg-[color:var(--theme-color)] text-white rounded-2xl flex items-center justify-center text-xl sm:text-2xl font-black shadow-lg shadow-[color:var(--theme-color)]/30 shrink-0">
                             <svg class="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                         </div>
                         <div class="min-w-0">
@@ -330,9 +332,9 @@
                         <div class="relative flex-1 sm:w-56">
                             <input type="number" inputmode="decimal" min="0" max="${maxPts}" step="0.25" value="${val}"
                                 onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','${partKey}','${qId}','direct',this.value)"
-                                class="w-full p-3 sm:p-5 bg-blue-50/50 border-2 border-blue-200 rounded-2xl text-center font-black text-blue-900 text-2xl sm:text-3xl focus:border-blue-500 focus:bg-white focus:ring-8 focus:ring-blue-500/10 outline-none transition-all shadow-inner" 
+                                class="w-full p-3 sm:p-5 bg-[color:var(--theme-color)]/5 border-2 border-[color:var(--theme-color)]/20 rounded-2xl text-center font-black text-[color:var(--theme-color)] text-2xl sm:text-3xl focus:border-[color:var(--theme-color)] focus:bg-white focus:ring-8 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all shadow-inner" 
                                 placeholder="0">
-                            <div class="absolute right-4 sm:right-5 top-1/2 -translate-y-1/2 text-xs sm:text-sm font-black text-blue-400">/ ${maxPts}</div>
+                            <div class="absolute right-4 sm:right-5 top-1/2 -translate-y-1/2 text-xs sm:text-sm font-black text-[color:var(--theme-color)]/50">/ ${maxPts}</div>
                         </div>
                     </div>
                 </div>
@@ -768,7 +770,7 @@
             const flexRowFix = 'display: flex !important; flex-direction: row !important;';
 
             return `
-                <div onclick="selectGradeClass('${c}')" 
+                <div onclick="selectGradeClass('${c}', '${color}')" 
                     class="class-card-modern group relative bg-white p-6 rounded-[2rem] border-2 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col h-full hover:-translate-y-2 hover:shadow-xl hover:border-[color:var(--card-color)]"
                     style="--card-color: ${color}; --card-color-alpha: ${colorAlpha};">
                     
@@ -804,7 +806,10 @@
         container.innerHTML = rows;
     };
 
-    window.selectGradeClass = function(className) {
+    window.selectGradeClass = function(className, color) {
+        // Store color for next steps
+        window.currentClassColor = color || '#3b82f6';
+
         const classSelect = document.getElementById('select-class-grades');
         if (classSelect) {
             let found = false;
@@ -836,6 +841,9 @@
         const globalAcademicYear = window.getGlobalAcademicYear();
         const globalTrimester = window.getGlobalTrimester();
         
+        const color = window.currentClassColor || '#3b82f6';
+        const colorLight = color + '15'; // Low opacity for backgrounds
+
         const assignments = data.assignments.filter(a => {
             const matchClass = a.className === className;
             const matchUser = (a.createdBy || 'unknown') === userId;
@@ -858,17 +866,19 @@
 
             return `
             <div onclick="selectGradeAssignment('${a.id}')" 
-                class="group relative bg-white p-6 rounded-[2rem] border-2 border-slate-100 hover:border-blue-200 transition-all duration-300 cursor-pointer overflow-hidden hover:shadow-xl hover:-translate-y-1">
+                class="group relative bg-white p-6 rounded-[2rem] border-2 border-slate-100 hover:border-[color:var(--theme-color)] transition-all duration-300 cursor-pointer overflow-hidden hover:shadow-xl hover:-translate-y-1"
+                style="--theme-color: ${color}">
                 <div class="flex items-start justify-between mb-4">
-                    <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl font-black group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
+                    <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black group-hover:bg-[color:var(--theme-color)] group-hover:text-white transition-colors duration-300"
+                         style="background-color: ${colorLight}; color: ${color};">
                         ${a.name.charAt(0).toUpperCase()}
                     </div>
-                    <span class="px-3 py-1 bg-slate-50 text-slate-500 rounded-full text-xs font-bold border border-slate-100 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                    <span class="px-3 py-1 bg-slate-50 text-slate-500 rounded-full text-xs font-bold border border-slate-100 group-hover:bg-[color:var(--theme-color)] group-hover:text-white transition-colors">
                         ${dateStr}
                     </span>
                 </div>
                 
-                <h3 class="text-xl font-black text-slate-800 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">${a.name}</h3>
+                <h3 class="text-xl font-black text-slate-800 mb-2 line-clamp-2 group-hover:text-[color:var(--theme-color)] transition-colors">${a.name}</h3>
                 
                 <div class="flex items-center gap-4 text-sm text-slate-500 font-medium mb-4">
                     <span class="flex items-center gap-1">
@@ -881,7 +891,7 @@
                     </span>
                 </div>
 
-                <div class="w-full py-2.5 rounded-xl bg-slate-50 text-slate-600 font-bold text-center text-sm group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+                <div class="w-full py-2.5 rounded-xl bg-slate-50 text-slate-600 font-bold text-center text-sm group-hover:bg-[color:var(--theme-color)] group-hover:text-white transition-all duration-300">
                     ${t.gradeAction || 'Noter'}
                 </div>
             </div>`;
