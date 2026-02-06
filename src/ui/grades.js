@@ -74,7 +74,22 @@
             filteredAssignments.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
 
         // Mise à jour de la liste des élèves
-        const filteredStudents = data.students.filter(s => s.className === selectedClass && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear);
+        let filteredStudents = data.students.filter(s => s.className === selectedClass && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear);
+        
+        // Sort by Last Name then First Name
+        filteredStudents.sort((a, b) => {
+            const nameA = (a.lastName || a.name || '').toLowerCase();
+            const nameB = (b.lastName || b.name || '').toLowerCase();
+            
+            if (nameA.localeCompare(nameB) !== 0) {
+                return nameA.localeCompare(nameB);
+            }
+            
+            const firstA = (a.firstName || '').toLowerCase();
+            const firstB = (b.firstName || '').toLowerCase();
+            return firstA.localeCompare(firstB);
+        });
+
         studentSelect.innerHTML = `<option value="">-- ${t.selectStudent || 'Sélectionner un élève'} --</option>` +
             filteredStudents.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
 

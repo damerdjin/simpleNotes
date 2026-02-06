@@ -161,7 +161,14 @@ import * as gradesSvc from '../services/grades.service.js';
             const classA = (a.className || '').toLowerCase();
             const classB = (b.className || '').toLowerCase();
             if (classA !== classB) return classA.localeCompare(classB, 'fr', { sensitivity: 'base' });
-            return (a.name || '').toLowerCase().localeCompare((b.name || '').toLowerCase());
+            
+            const nameA = (a.lastName || a.name || '').toLowerCase();
+            const nameB = (b.lastName || b.name || '').toLowerCase();
+            if (nameA.localeCompare(nameB) !== 0) return nameA.localeCompare(nameB);
+
+            const firstA = (a.firstName || '').toLowerCase();
+            const firstB = (b.firstName || '').toLowerCase();
+            return firstA.localeCompare(firstB);
         });
 
         // Start Building Table
@@ -384,11 +391,20 @@ import * as gradesSvc from '../services/grades.service.js';
                 return classA.localeCompare(classB, 'fr', { sensitivity: 'base' });
             }
             if (summarySort.key === 'name') {
-                const na = (a.name || '').toLowerCase();
-                const nb = (b.name || '').toLowerCase();
-                if (na < nb) return summarySort.direction === 'asc' ? -1 : 1;
-                if (na > nb) return summarySort.direction === 'asc' ? 1 : -1;
-                return 0;
+                const nameA = (a.lastName || a.name || '').toLowerCase();
+                const nameB = (b.lastName || b.name || '').toLowerCase();
+                
+                if (nameA.localeCompare(nameB) !== 0) {
+                     return summarySort.direction === 'asc' 
+                        ? nameA.localeCompare(nameB) 
+                        : nameB.localeCompare(nameA);
+                }
+                
+                const firstA = (a.firstName || '').toLowerCase();
+                const firstB = (b.firstName || '').toLowerCase();
+                return summarySort.direction === 'asc'
+                    ? firstA.localeCompare(firstB)
+                    : firstB.localeCompare(firstA);
             } else if (summarySort.key.startsWith('assignment-')) {
                 const assignmentId = summarySort.key.split('assignment-')[1];
                 const ta = window.getStudentAssignmentTotal(a.id, assignmentId);
@@ -552,9 +568,16 @@ import * as gradesSvc from '../services/grades.service.js';
                 return classA.localeCompare(classB, 'fr', { sensitivity: 'base' });
             }
 
-            const nameA = `${a.lastName || ''} ${a.firstName || ''}`.toLowerCase();
-            const nameB = `${b.lastName || ''} ${b.firstName || ''}`.toLowerCase();
-            return nameA.localeCompare(nameB);
+            const nameA = (a.lastName || a.name || '').toLowerCase();
+            const nameB = (b.lastName || b.name || '').toLowerCase();
+            
+            if (nameA.localeCompare(nameB) !== 0) {
+                 return nameA.localeCompare(nameB);
+            }
+            
+            const firstA = (a.firstName || '').toLowerCase();
+            const firstB = (b.firstName || '').toLowerCase();
+            return firstA.localeCompare(firstB);
         });
 
         let filteredAssignments = data.assignments.slice();
@@ -900,11 +923,20 @@ import * as gradesSvc from '../services/grades.service.js';
                 return classA.localeCompare(classB, 'fr', { sensitivity: 'base' });
             }
             if (summarySort.key === 'name') {
-                const na = (a.name || '').toLowerCase();
-                const nb = (b.name || '').toLowerCase();
-                if (na < nb) return summarySort.direction === 'asc' ? -1 : 1;
-                if (na > nb) return summarySort.direction === 'asc' ? 1 : -1;
-                return 0;
+                const nameA = (a.lastName || a.name || '').toLowerCase();
+                const nameB = (b.lastName || b.name || '').toLowerCase();
+                
+                if (nameA.localeCompare(nameB) !== 0) {
+                     return summarySort.direction === 'asc' 
+                        ? nameA.localeCompare(nameB) 
+                        : nameB.localeCompare(nameA);
+                }
+                
+                const firstA = (a.firstName || '').toLowerCase();
+                const firstB = (b.firstName || '').toLowerCase();
+                return summarySort.direction === 'asc'
+                    ? firstA.localeCompare(firstB)
+                    : firstB.localeCompare(firstA);
             } else if (summarySort.key.startsWith('assignment-')) {
                 const assignmentId = summarySort.key.split('assignment-')[1];
                 const ta = window.getStudentAssignmentTotal(a.id, assignmentId);
