@@ -900,7 +900,7 @@ window.translations = {
         view2: "عرض 2",
         searchPlaceholderSummary: "بحث (الاسم، الاسم الأول، الفصل)...",
         noClassesAutoCreated: "لا توجد فصول. يتم إنشاء الفصول تلقائياً عند إضافة الطلاب.",
-        exerciseAbbr: "تمر.",
+        exerciseAbbr: "ت.",
         selectClassToStart: "اختر فصلاً للبدء",
 
         // Import

@@ -129,6 +129,9 @@
         const mode = studentGrades.mode || ((studentGrades['final']?.['final']?.['final'] || '') !== '' ? 'global' : 'detail');
         const maxPts = getQuestionMaxPoints(q);
         const color = window.currentClassColor || '#3b82f6';
+        const isAr = getLang() === 'ar';
+        const suffixPos = isAr ? 'left-3' : 'right-3';
+        const inputPadding = isAr ? 'pl-8' : 'pr-8';
         
         let qHtml = `
         <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col gap-3 transition-all hover:border-[color:var(--theme-color)] hover:bg-[color:var(--theme-color)]/5 group" style="--theme-color: ${color}">
@@ -144,9 +147,9 @@
                 <input type="number" min="0" max="${q.maxPoints}" step="0.25" value="${val}"
                     ${mode === 'global' ? 'disabled' : ''}
                     onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','direct',this.value)"
-                    class="w-full p-2.5 bg-white border-2 border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:border-[color:var(--theme-color)] focus:ring-4 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all" 
+                    class="w-full p-2.5 ${inputPadding} bg-white border-2 border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:border-[color:var(--theme-color)] focus:ring-4 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all" 
                     placeholder="0">
-                <div class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">/ ${q.maxPoints}</div>
+                <div class="absolute ${suffixPos} top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">/ ${q.maxPoints}</div>
             </div>`;
         } else {
             qHtml += `<div class="grid grid-cols-2 gap-2">`;
@@ -237,11 +240,22 @@
         const svc = gradesSvc();
         const maxAssignmentPoints = svc.getAssignmentMaxPoints(assignment);
         const color = window.currentClassColor || '#3b82f6';
+        const isAr = getLang() === 'ar';
+        const suffixPos = isAr ? 'left-1.5' : 'right-1.5';
+        const suffixPos2 = isAr ? 'left-2' : 'right-2';
+        const suffixPosLarge = isAr ? 'left-4 sm:left-5' : 'right-4 sm:right-5';
+        const bgIconPos = isAr ? 'left-0' : 'right-0';
+        const iconRotate = isAr ? 'rotate-180' : '';
+        
+        // Dynamic padding for inputs based on RTL/LTR
+        const inputPaddingLarge = isAr ? 'pl-10 sm:pl-12' : 'pr-10 sm:pr-12';
+        const inputPaddingMedium = isAr ? 'pl-8' : 'pr-8';
+        const inputPaddingSmall = isAr ? 'pl-6' : 'pr-6';
 
         // Student Header Card (Reduced size & Responsive)
         let html = `
         <div class="rounded-xl p-4 mb-4 sm:mb-6 text-white shadow-md relative overflow-hidden" style="background-color: ${color}">
-            <div class="absolute top-0 right-0 p-4 opacity-5">
+            <div class="absolute top-0 ${bgIconPos} p-4 opacity-5">
                 <svg class="w-16 h-16 sm:w-20 sm:h-20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
             </div>
             <div class="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -256,9 +270,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-white/10 backdrop-blur-md rounded-xl px-3 py-1.5 sm:px-4 sm:py-2 border border-white/20 flex flex-row sm:flex-col items-center justify-between sm:justify-center w-full sm:w-auto min-w-[100px]">
-                    <span class="text-[9px] font-bold uppercase tracking-wider opacity-70 sm:mb-0.5">${t.total || 'Total'}</span>
-                    <div class="flex items-baseline gap-1">
+                <div class="bg-white/10 backdrop-blur-md rounded-xl px-3 py-1.5 sm:px-4 sm:py-2 border border-white/20 flex flex-row sm:flex-col items-center justify-between sm:justify-center w-full sm:w-auto min-w-[100px] gap-2">
+                    <span class="text-[9px] font-bold uppercase tracking-wider opacity-70 sm:mb-0.5 truncate">${t.total || 'Total'}</span>
+                    <div class="flex items-baseline gap-1 shrink-0">
                         <span id="grade-total" class="text-xl sm:text-2xl font-black">0</span>
                         <span class="text-[10px] sm:text-sm font-bold opacity-60">/ ${maxAssignmentPoints}</span>
                     </div>
@@ -332,9 +346,9 @@
                         <div class="relative flex-1 sm:w-56">
                             <input type="number" inputmode="decimal" min="0" max="${maxPts}" step="0.25" value="${val}"
                                 onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','${partKey}','${qId}','direct',this.value)"
-                                class="w-full p-3 sm:p-5 bg-[color:var(--theme-color)]/5 border-2 border-[color:var(--theme-color)]/20 rounded-2xl text-center font-black text-[color:var(--theme-color)] text-2xl sm:text-3xl focus:border-[color:var(--theme-color)] focus:bg-white focus:ring-8 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all shadow-inner" 
+                                class="w-full p-3 sm:p-5 ${inputPaddingLarge} bg-[color:var(--theme-color)]/5 border-2 border-[color:var(--theme-color)]/20 rounded-2xl text-center font-black text-[color:var(--theme-color)] text-2xl sm:text-3xl focus:border-[color:var(--theme-color)] focus:bg-white focus:ring-8 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all shadow-inner" 
                                 placeholder="0">
-                            <div class="absolute right-4 sm:right-5 top-1/2 -translate-y-1/2 text-xs sm:text-sm font-black text-[color:var(--theme-color)]/50">/ ${maxPts}</div>
+                            <div class="absolute ${suffixPosLarge} top-1/2 -translate-y-1/2 text-xs sm:text-sm font-black text-[color:var(--theme-color)]/50">/ ${maxPts}</div>
                         </div>
                     </div>
                 </div>
@@ -417,17 +431,17 @@
                                         </button>
                                     </div>
                                 </div>
-    
+
                                 <!-- Global Grade Input -->
-                                <div class="flex items-center gap-3 ${modeCur === 'detail' ? 'opacity-40 grayscale pointer-events-none' : ''}">
-                                    <span class="text-xs font-bold text-slate-500 uppercase tracking-tight">${t.globalGrade || 'Note globale'} :</span>
-                                    <div class="relative">
+                                <div class="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto ${modeCur === 'detail' ? 'opacity-40 grayscale pointer-events-none' : ''}">
+                                    <span class="text-xs font-bold text-slate-500 uppercase tracking-tight truncate mr-2 sm:mr-0">${t.globalGrade || 'Note globale'} :</span>
+                                    <div class="relative shrink-0">
                                         <input type="number" min="0" max="${maxExPoints}" step="0.25" value="${finalGradeCur}"
                                             ${modeCur === 'detail' ? 'disabled' : ''}
                                             onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
-                                            class="w-20 p-1.5 bg-white border-2 border-amber-200 rounded-lg text-center font-black text-slate-700 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all text-sm" 
+                                            class="w-20 p-1.5 ${inputPaddingSmall} bg-white border-2 border-amber-200 rounded-lg text-center font-black text-slate-700 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all text-sm" 
                                             placeholder="0" onclick="event.stopPropagation()">
-                                        <div class="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-400">/ ${maxExPoints}</div>
+                                        <div class="absolute ${suffixPos} top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-400">/ ${maxExPoints}</div>
                                     </div>
                                 </div>
                             </div>`;
@@ -436,20 +450,20 @@
                 if (directQuestions.length === 0 && parts.length === 0) {
                     const val = data.grades[studentId][assignmentId][ex.id]?.['direct']?.['direct']?.['direct'] || '';
                     exHtml += `
-                            <div class="flex items-center gap-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
-                                <div class="flex items-center gap-3 shrink-0">
+                            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
+                                <div class="flex items-center gap-3 shrink-0 w-full sm:w-auto">
                                     <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     </div>
                                     <span class="text-xs font-bold text-blue-900">${t.grade || 'Note'}</span>
                                 </div>
-                                <div class="flex items-center gap-3 ml-auto">
-                                    <div class="relative w-28">
+                                <div class="flex items-center gap-3 w-full sm:w-auto">
+                                    <div class="relative w-full sm:w-28">
                                         <input type="number" min="0" max="${ex.maxPoints}" step="0.25" value="${val}"
                                             onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','direct','direct','direct',this.value)"
-                                            class="w-full p-2 bg-white border-2 border-blue-200 rounded-lg text-center font-black text-blue-900 focus:border-blue-500 outline-none transition-all shadow-sm text-sm" 
+                                            class="w-full p-2 ${inputPaddingMedium} bg-white border-2 border-blue-200 rounded-lg text-center font-black text-blue-900 focus:border-blue-500 outline-none transition-all shadow-sm text-sm" 
                                             placeholder="0">
-                                        <div class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-400">/ ${ex.maxPoints}</div>
+                                        <div class="absolute ${suffixPos2} top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-400">/ ${ex.maxPoints}</div>
                                     </div>
                                 </div>
                             </div>`;
