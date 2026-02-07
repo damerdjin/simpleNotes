@@ -378,6 +378,7 @@
                         <div class="relative flex-1 sm:w-56">
                             <input type="number" inputmode="decimal" min="0" max="${maxPts}" step="0.25" value="${val}"
                                 onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','${partKey}','${qId}','direct',this.value)"
+                                onkeydown="if(event.key==='Enter'){ this.blur(); const sel = document.getElementById('select-student'); if(sel) sel.focus(); }"
                                 class="w-full p-3 sm:p-5 ${inputPaddingLarge} bg-[color:var(--theme-color)]/5 border-2 border-[color:var(--theme-color)]/20 rounded-2xl text-center font-black text-[color:var(--theme-color)] text-2xl sm:text-3xl focus:border-[color:var(--theme-color)] focus:bg-white focus:ring-8 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all shadow-inner" 
                                 placeholder="0">
                             <div class="absolute ${suffixPosLarge} top-1/2 -translate-y-1/2 text-xs sm:text-sm font-black text-[color:var(--theme-color)]/50">/ ${maxPts}</div>
