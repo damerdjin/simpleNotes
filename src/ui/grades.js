@@ -792,7 +792,7 @@
         if (assignment.exercises && assignment.exercises.length > 0) {
             let hasAnyGrade = false;
             for (const ex of assignment.exercises) {
-                if (window.hasAnyGradeForExercise(studentId, assignmentId, ex.id)) {
+                if (window.hasAnyGradeForExercise(studentGrades, ex)) {
                     hasAnyGrade = true;
                     break;
                 }
@@ -806,10 +806,10 @@
     // Proxies for compatibility with other modules (e.g. summary.js)
     window.getExerciseMaxPoints = (ex) => gradesSvc().getExerciseMaxPoints(ex);
     window.getAssignmentMaxPoints = (assignment) => gradesSvc().getAssignmentMaxPoints(assignment);
-    window.hasAnyGradeForExercise = (studentId, assignmentId, exId) => gradesSvc().hasAnyGradeForExercise(getData(), studentId, assignmentId, exId);
+    window.hasAnyGradeForExercise = (studentGrades, ex) => gradesSvc().hasAnyGradeForExercise(studentGrades, ex);
     window.hasAnyGradeForAssignment = (studentId, assignmentId) => gradesSvc().hasAnyGradeForAssignment(getData(), studentId, assignmentId);
     window.getStudentAssignmentTotal = (studentId, assignmentId) => gradesSvc().getStudentAssignmentTotal(getData(), studentId, assignmentId);
-    window.getStudentExerciseTotal = (studentId, assignmentId, exId) => gradesSvc().getStudentExerciseTotal(getData(), studentId, assignmentId, exId);
+    window.getStudentExerciseTotal = (studentGrades, ex) => gradesSvc().getStudentExerciseTotal(studentGrades, ex);
 
     // --- New 3-Step Flow Logic ---
 
