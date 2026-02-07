@@ -162,6 +162,7 @@
                 <input type="number" min="0" max="${q.maxPoints}" step="0.25" value="${val}"
                     ${mode === 'global' ? 'disabled' : ''}
                     onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','direct',this.value)"
+                    onkeydown="if(event.key==='Enter'){ this.blur(); window.toggleAccordion('grade-ex-${exId}'); }"
                     class="w-full p-2.5 ${inputPadding} bg-white border-2 border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:border-[color:var(--theme-color)] focus:ring-4 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all" 
                     placeholder="0">
                 <div class="absolute ${suffixPos} top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">/ ${q.maxPoints}</div>
@@ -179,6 +180,7 @@
                     <input type="number" min="0" max="${sq.maxPoints}" step="0.25" value="${val}"
                         ${mode === 'global' ? 'disabled' : ''}
                         onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','${sq.id}',this.value)"
+                        onkeydown="if(event.key==='Enter'){ this.blur(); window.toggleAccordion('grade-ex-${exId}'); }"
                         class="w-full p-2 bg-white border-2 border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:border-[color:var(--theme-color)] focus:ring-4 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all text-xs"
                         placeholder="0">
                 </div>`;
@@ -206,6 +208,15 @@
             content.style.opacity = '1';
             content.style.visibility = 'visible';
             if (icon) icon.classList.add('rotate-180');
+
+            // Focus first input
+            setTimeout(() => {
+                const firstInput = content.querySelector('input:not([disabled])');
+                if (firstInput) {
+                    firstInput.focus();
+                    firstInput.select(); // Select content for easier editing
+                }
+            }, 350); // Wait for transition
         }
     };
 
@@ -470,6 +481,7 @@
                                         <input type="number" min="0" max="${maxExPoints}" step="0.25" value="${finalGradeCur}"
                                             ${modeCur === 'detail' ? 'disabled' : ''}
                                             onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
+                                            onkeydown="if(event.key==='Enter'){ this.blur(); window.toggleAccordion('grade-ex-${ex.id}'); }"
                                             class="w-20 p-1.5 ${inputPaddingSmall} bg-white border-2 border-amber-200 rounded-lg text-center font-black text-slate-700 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all text-sm" 
                                             placeholder="0" onclick="event.stopPropagation()">
                                         <div class="absolute ${suffixPos} top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-400">/ ${maxExPoints}</div>
@@ -491,6 +503,7 @@
                                     <div class="relative w-full sm:w-28">
                                         <input type="number" min="0" max="${maxExPoints}" step="0.25" value="${displayVal}"
                                             onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
+                                            onkeydown="if(event.key==='Enter'){ this.blur(); window.toggleAccordion('grade-ex-${ex.id}'); }"
                                             class="w-full p-2 ${inputPaddingMedium} bg-white border-2 border-blue-200 rounded-lg text-center font-black text-blue-900 focus:border-blue-500 outline-none transition-all shadow-sm text-sm" 
                                             placeholder="0">
                                         <div class="absolute ${suffixPos2} top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-400">/ ${maxExPoints}</div>
@@ -513,6 +526,7 @@
                                     <div class="relative w-full sm:w-28">
                                         <input type="number" min="0" max="${ex.maxPoints}" step="0.25" value="${val}"
                                             onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','direct','direct','direct',this.value)"
+                                            onkeydown="if(event.key==='Enter'){ this.blur(); window.toggleAccordion('grade-ex-${ex.id}'); }"
                                             class="w-full p-2 ${inputPaddingMedium} bg-white border-2 border-blue-200 rounded-lg text-center font-black text-blue-900 focus:border-blue-500 outline-none transition-all shadow-sm text-sm" 
                                             placeholder="0">
                                         <div class="absolute ${suffixPos2} top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-400">/ ${ex.maxPoints}</div>
