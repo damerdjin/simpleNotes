@@ -20,6 +20,16 @@ import * as gradesSvc from '../services/grades.service.js';
         return `${s.lastName || ''} ${s.firstName || ''}`.trim() || s.name || '';
     };
 
+    const calculateMedian = (values) => {
+        if (!values || values.length === 0) return null;
+        const sorted = [...values].sort((a, b) => a - b);
+        const middle = Math.floor(sorted.length / 2);
+        if (sorted.length % 2 === 0) {
+            return (sorted[middle - 1] + sorted[middle]) / 2;
+        }
+        return sorted[middle];
+    };
+
     console.log('Summary Module v1.4 Loaded');
 
     window.setSummaryMode = function(mode) {
@@ -1514,8 +1524,9 @@ import * as gradesSvc from '../services/grades.service.js';
                 html += `</tr>`;
             }
 
+            // Average row
             html += `<tr class="bg-gray-100 font-semibold border-t-2">`;
-            html += `<td class="p-3 sticky left-0 border-r border-gray-200">Moyenne</td>`;
+            html += `<td class="p-3 sticky left-0 border-r border-gray-200">${t.average || 'Moyenne'}</td>`;
             for (const a of classAssignments) {
                 if (showDetails) {
                     for (let i = 0; i < a.exercises.length; i++) {
@@ -1535,6 +1546,29 @@ import * as gradesSvc from '../services/grades.service.js';
                 const pct = avgTotal !== null && max > 0 ? (avgTotal / max * 100) : 0;
                 const bgColor = avgTotal === null ? 'bg-gray-100' : (pct >= 70 ? 'bg-green-200' : pct >= 50 ? 'bg-orange-200' : 'bg-red-200');
                 html += `<td class="p-3 text-center font-bold ${bgColor} border-l border-gray-300">${avgTotal === null ? '' : avgTotal.toFixed(2)}</td>`;
+            }
+            html += `</tr>`;
+
+            // Median row
+            html += `<tr class="bg-gray-100 font-semibold border-t">`;
+            html += `<td class="p-3 sticky left-0 border-r border-gray-200">${t.median || 'Médiane'}</td>`;
+            for (const a of classAssignments) {
+                if (showDetails) {
+                    for (let i = 0; i < a.exercises.length; i++) {
+                        html += `<td class="border-l border-gray-200"></td>`;
+                    }
+                }
+                let grades = [];
+                for (const s of classStudents) {
+                    if (window.hasAnyGradeForAssignment(s.id, a.id)) {
+                        grades.push(window.getStudentAssignmentTotal(s.id, a.id));
+                    }
+                }
+                const medTotal = calculateMedian(grades);
+                const max = window.getAssignmentMaxPoints(a);
+                const pct = medTotal !== null && max > 0 ? (medTotal / max * 100) : 0;
+                const bgColor = medTotal === null ? 'bg-gray-100' : (pct >= 70 ? 'bg-green-200' : pct >= 50 ? 'bg-orange-200' : 'bg-red-200');
+                html += `<td class="p-3 text-center font-bold ${bgColor} border-l border-gray-300">${medTotal === null ? '' : medTotal.toFixed(2)}</td>`;
             }
             html += `</tr>`;
 

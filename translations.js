@@ -219,6 +219,9 @@ window.translations = {
         noResultForSearch: "Aucun résultat ne correspond à votre recherche.",
         addStudentsAndAssignmentsToSeeSummary: "Ajoutez des élèves et des devoirs pour voir le récapitulatif.",
 
+        average: "Moyenne",
+        median: "Médiane",
+
         // Messages d'erreur
         enterName: "Veuillez entrer au moins un nom ou un prénom",
         enterAssignmentName: "Veuillez entrer un nom pour le devoir",
