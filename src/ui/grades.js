@@ -203,6 +203,12 @@
             content.style.opacity = '0';
             content.style.visibility = 'hidden';
             if (icon) icon.classList.remove('rotate-180');
+
+            // Focus student selector to allow arrow key navigation
+            const studentSelect = document.getElementById('select-student');
+            if (studentSelect) {
+                studentSelect.focus();
+            }
         } else {
             content.style.maxHeight = '2000px';
             content.style.opacity = '1';
