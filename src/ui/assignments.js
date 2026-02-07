@@ -680,13 +680,15 @@
 
         const data = getData();
         const currentYear = window.getGlobalAcademicYear();
+        const currentUserId = window.currentUser?.email || window.currentUser?.id || 'unknown';
         
-        // Check duplicates: Name + Class + Trimester + Academic Year
+        // Check duplicates: Name + Class + Trimester + Academic Year + Teacher
         const existing = data.assignments.find(a =>
             a.name.toLowerCase() === name.toLowerCase() &&
             a.className === className &&
             a.trimester === trimester &&
-            (a.academicYear || window.getGlobalAcademicYear()) === currentYear &&
+            (a.academicYear || '') === currentYear &&
+            (a.createdBy || 'unknown') === currentUserId &&
             a.id !== editingAssignmentId
         );
         if (existing) return window.showAssignmentError(t.duplicateAssignmentDetailed || t.duplicateAssignmentName);

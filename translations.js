@@ -145,6 +145,7 @@ window.translations = {
         copyGrades: "Copier les notes d'un autre devoir",
         noCopyGrades: "-- Pas de copie de notes --",
         duplicateAssignmentName: "Ce nom de devoir existe déjà pour cette classe. Veuillez en choisir un autre.",
+        duplicateAssignmentDetailed: "Un devoir avec ce nom existe déjà pour cette classe, ce trimestre et cette année scolaire.",
         dragToReorder: "Glisser pour réorganiser",
         copyGradesWarning: "⚠️ Cela écrasera les notes existantes pour ce devoir si vous le modifiez.",
         globalOnlyLabel: "Note globale uniquement (sans exercices détaillés)",
