@@ -504,14 +504,14 @@ import * as gradesSvc from '../services/grades.service.js';
 
                 if (isCompatible) {
                     const has = window.hasAnyGradeForAssignment(s.id, a.id);
+                    const max = window.getAssignmentMaxPoints(a);
                     if (has) {
                         const total = window.getStudentAssignmentTotal(s.id, a.id);
-                        const max = window.getAssignmentMaxPoints(a);
                         const pct = max > 0 ? (total / max * 100) : 0;
                         const bgColor = pct >= 70 ? 'bg-green-100' : pct >= 50 ? 'bg-orange-100' : 'bg-red-100';
-                        row += `<td class="p-3 text-center font-bold ${bgColor}" id="sum-total-${s.id}-${a.id}">${total.toFixed(2)}</td>`;
+                        row += `<td class="p-3 text-center font-bold ${bgColor} cursor-pointer select-none" ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})" id="sum-total-${s.id}-${a.id}">${total.toFixed(2)}</td>`;
                     } else {
-                        row += `<td class="p-3 text-center text-gray-400 bg-gray-50" id="sum-total-${s.id}-${a.id}"></td>`;
+                        row += `<td class="p-3 text-center text-gray-400 bg-gray-50 cursor-pointer select-none" ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})" id="sum-total-${s.id}-${a.id}"></td>`;
                     }
                 } else {
                     row += `<td class="p-3 text-center text-gray-400 bg-gray-50">-</td>`;
@@ -1147,14 +1147,14 @@ import * as gradesSvc from '../services/grades.service.js';
                     const totalBorder = showDetails ? '' : borderClass;
                     if (isStudentClass) {
                         const has = window.hasAnyGradeForAssignment(s.id, a.id);
+                        const max = window.getAssignmentMaxPoints(a);
                         if (has) {
                             const total = window.getStudentAssignmentTotal(s.id, a.id);
-                            const max = window.getAssignmentMaxPoints(a);
                             const pct = max > 0 ? (total / max * 100) : 0;
                             const bgColor = pct >= 70 ? 'bg-green-100' : pct >= 50 ? 'bg-orange-100' : 'bg-red-100';
-                            row += `<td class="p-3 text-center font-bold ${bgColor} ${totalBorder}" id="sum-total-${s.id}-${a.id}">${total.toFixed(2)}</td>`;
+                            row += `<td class="p-3 text-center font-bold ${bgColor} ${totalBorder} cursor-pointer select-none" ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})" id="sum-total-${s.id}-${a.id}">${total.toFixed(2)}</td>`;
                         } else {
-                            row += `<td class="p-3 text-center text-gray-300 ${bgEmpty} ${totalBorder}" id="sum-total-${s.id}-${a.id}"></td>`;
+                            row += `<td class="p-3 text-center text-gray-300 ${bgEmpty} ${totalBorder} cursor-pointer select-none" ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})" id="sum-total-${s.id}-${a.id}"></td>`;
                         }
                     } else {
                         row += `<td class="p-3 text-center text-gray-300 ${bgEmpty} ${totalBorder}">-</td>`;
@@ -1508,16 +1508,14 @@ import * as gradesSvc from '../services/grades.service.js';
                     }
 
                     const has = window.hasAnyGradeForAssignment(s.id, a.id);
+                    const max = window.getAssignmentMaxPoints(a);
                     if (has) {
                         const total = window.getStudentAssignmentTotal(s.id, a.id);
-                        const max = window.getAssignmentMaxPoints(a);
                         const pct = max > 0 ? (total / max * 100) : 0;
                         const bgColor = pct >= 70 ? 'bg-green-100' : pct >= 50 ? 'bg-orange-100' : 'bg-red-100';
-                        html += `<td class="p-3 text-center font-bold ${bgColor} border-l border-gray-300" id="sum-total-${s.id}-${a.id}">
-            ${total.toFixed(2)}
-        </td>`;
+                        html += `<td class="p-3 text-center font-bold ${bgColor} border-l border-gray-300 cursor-pointer select-none" ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})" id="sum-total-${s.id}-${a.id}">${total.toFixed(2)}</td>`;
                     } else {
-                        html += `<td class="p-3 text-center text-gray-300 border-l border-gray-300" id="sum-total-${s.id}-${a.id}"></td>`;
+                        html += `<td class="p-3 text-center text-gray-300 border-l border-gray-300 cursor-pointer select-none" ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})" id="sum-total-${s.id}-${a.id}"></td>`;
                     }
                 }
 
@@ -1585,10 +1583,39 @@ import * as gradesSvc from '../services/grades.service.js';
     window.setGlobalAssignmentGrade = function(studentId, assignmentId, value) {
         const data = getData();
         if (!data.grades[studentId]) data.grades[studentId] = {};
-        if (!data.grades[studentId][assignmentId]) data.grades[studentId][assignmentId] = {};
-        data.grades[studentId][assignmentId].global = value === '' ? '' : (parseFloat(value) || 0);
+        
+        // When setting a total grade directly, we clear all exercise details
+        // and set the global grade for this assignment.
+        data.grades[studentId][assignmentId] = {
+            global: value === '' ? '' : (parseFloat(value.toString().replace(',', '.')) || 0)
+        };
+        
         window.saveData();
         window.renderSummary();
+    };
+
+    window.makeTotalEditable = function(td, studentId, assignmentId, maxPoints) {
+        if (td.querySelector('input')) return;
+        
+        // Get current value, removing any non-numeric characters except decimal point/comma
+        let currentVal = td.innerText.trim();
+        
+        td.innerHTML = `
+            <input type="text" 
+                   value="${currentVal}" 
+                   class="w-16 p-1 text-center border rounded shadow-sm focus:ring-2 focus:ring-blue-500 outline-none" 
+                   style="font-size: 0.9em;"
+                   onblur="window.setGlobalAssignmentGrade('${studentId}', '${assignmentId}', this.value)"
+                   onkeydown="if(event.key==='Enter') window.setGlobalAssignmentGrade('${studentId}', '${assignmentId}', this.value)"
+            >
+        `;
+        
+        const input = td.querySelector('input');
+        input.focus();
+        input.select();
+        
+        // Prevent event propagation
+        input.addEventListener('dblclick', (e) => e.stopPropagation());
     };
 
     window.setExerciseFinalGrade = function(studentId, assignmentId, exId, max, value) {
