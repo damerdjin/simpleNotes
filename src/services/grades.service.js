@@ -79,16 +79,19 @@ export function getStudentExerciseTotal(studentGrades, ex) {
     return parseFloat(finalGrade) || 0;
   }
   if (directQuestions.length === 0 && parts.length === 0) {
-    return exGrades['direct']?.['direct']?.['direct'] || 0;
+    const val = exGrades['direct']?.['direct']?.['direct'];
+    return (val !== undefined && val !== '') ? parseFloat(val) || 0 : 0;
   }
   let total = 0;
   for (const q of directQuestions) {
     const qGrades = exGrades['direct']?.[q.id] || {};
     if (!q.subQuestions || q.subQuestions.length === 0) {
-      total += qGrades['direct'] || 0;
+      const val = qGrades['direct'];
+      total += (val !== undefined && val !== '') ? parseFloat(val) || 0 : 0;
     } else {
       for (const sq of q.subQuestions) {
-        total += qGrades[sq.id] || 0;
+        const val = qGrades[sq.id];
+        total += (val !== undefined && val !== '') ? parseFloat(val) || 0 : 0;
       }
     }
   }
@@ -96,10 +99,12 @@ export function getStudentExerciseTotal(studentGrades, ex) {
     for (const q of (part.questions || [])) {
       const qGrades = exGrades[part.id]?.[q.id] || {};
       if (!q.subQuestions || q.subQuestions.length === 0) {
-        total += qGrades['direct'] || 0;
+        const val = qGrades['direct'];
+        total += (val !== undefined && val !== '') ? parseFloat(val) || 0 : 0;
       } else {
         for (const sq of q.subQuestions) {
-          total += qGrades[sq.id] || 0;
+          const val = qGrades[sq.id];
+          total += (val !== undefined && val !== '') ? parseFloat(val) || 0 : 0;
         }
       }
     }

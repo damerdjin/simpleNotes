@@ -579,8 +579,13 @@
         if (!data.grades[studentId][assignmentId][exId][partKey]) data.grades[studentId][assignmentId][exId][partKey] = {};
         if (!data.grades[studentId][assignmentId][exId][partKey][qId]) data.grades[studentId][assignmentId][exId][partKey][qId] = {};
         
-        const val = parseFloat(value) || 0;
-        data.grades[studentId][assignmentId][exId][partKey][qId][sqId] = val;
+        if (value === '' || value === null || value === undefined) {
+            data.grades[studentId][assignmentId][exId][partKey][qId][sqId] = '';
+        } else {
+            data.grades[studentId][assignmentId][exId][partKey][qId][sqId] = parseFloat(value);
+        }
+        
+        const val = data.grades[studentId][assignmentId][exId][partKey][qId][sqId];
         
         const exGrades = data.grades[studentId][assignmentId][exId];
         const assignment = data.assignments.find(a => a.id === assignmentId);
@@ -690,19 +695,35 @@
             const parts = ex.parts || [];
             const finalGrade = exGrades['final']?.['final']?.['final'];
             
+            // Check if exercise has NO grades at all (truly empty)
+            let isTrulyEmpty = true;
             if (finalGrade !== undefined && finalGrade !== '') {
+                isTrulyEmpty = false;
                 exTotal = parseFloat(finalGrade) || 0;
             } else if (directQuestions.length === 0 && parts.length === 0) {
-                exTotal = exGrades['direct']?.['direct']?.['direct'] || 0;
+                const directVal = exGrades['direct']?.['direct']?.['direct'];
+                if (directVal !== undefined && directVal !== '') {
+                    isTrulyEmpty = false;
+                    exTotal = parseFloat(directVal) || 0;
+                }
             } else {
+                // Check detailed grades
                 for (const q of directQuestions) {
                     let qTotal = 0;
                     const qGrades = exGrades['direct']?.[q.id] || {};
                     if (!q.subQuestions || q.subQuestions.length === 0) {
-                        qTotal = qGrades['direct'] || 0;
+                        const qVal = qGrades['direct'];
+                        if (qVal !== undefined && qVal !== '') {
+                            isTrulyEmpty = false;
+                            qTotal = parseFloat(qVal) || 0;
+                        }
                     } else {
                         for (const sq of q.subQuestions) {
-                            qTotal += qGrades[sq.id] || 0;
+                            const sqVal = qGrades[sq.id];
+                            if (sqVal !== undefined && sqVal !== '') {
+                                isTrulyEmpty = false;
+                                qTotal += parseFloat(sqVal) || 0;
+                            }
                         }
                     }
                     const qEl = document.getElementById('q-total-' + q.id);
@@ -714,10 +735,18 @@
                         let qTotal = 0;
                         const qGrades = exGrades[part.id]?.[q.id] || {};
                         if (!q.subQuestions || q.subQuestions.length === 0) {
-                            qTotal = qGrades['direct'] || 0;
+                            const qVal = qGrades['direct'];
+                            if (qVal !== undefined && qVal !== '') {
+                                isTrulyEmpty = false;
+                                qTotal = parseFloat(qVal) || 0;
+                            }
                         } else {
                             for (const sq of q.subQuestions) {
-                                qTotal += qGrades[sq.id] || 0;
+                                const sqVal = qGrades[sq.id];
+                                if (sqVal !== undefined && sqVal !== '') {
+                                    isTrulyEmpty = false;
+                                    qTotal += parseFloat(sqVal) || 0;
+                                }
                             }
                         }
                         const qEl = document.getElementById('q-total-' + q.id);
@@ -729,11 +758,16 @@
             
             const exEl = document.getElementById('ex-total-' + ex.id);
             if (exEl) {
-                exEl.textContent = exTotal + ' / ' + svc.getExerciseMaxPoints(ex);
-                const isGlobal = finalGrade !== undefined && finalGrade !== '';
-                exEl.className = `text-blue-700 font-bold ${isGlobal ? 'bg-yellow-100' : 'bg-white'} px-3 py-1 rounded-full shadow-sm text-sm`;
+                if (isTrulyEmpty) {
+                    exEl.textContent = '-- / ' + svc.getExerciseMaxPoints(ex);
+                    exEl.className = `text-slate-400 font-medium bg-slate-50 px-3 py-1 rounded-full border border-dashed border-slate-200 text-sm`;
+                } else {
+                    exEl.textContent = exTotal + ' / ' + svc.getExerciseMaxPoints(ex);
+                    const isGlobal = finalGrade !== undefined && finalGrade !== '';
+                    exEl.className = `text-blue-700 font-bold ${isGlobal ? 'bg-yellow-100' : 'bg-white'} px-3 py-1 rounded-full shadow-sm text-sm`;
+                }
             }
-            grandTotal += exTotal;
+            if (!isTrulyEmpty) grandTotal += exTotal;
         }
         
         const totalEl = document.getElementById('grade-total');
