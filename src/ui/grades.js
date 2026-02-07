@@ -778,9 +778,28 @@
         }
         
         const totalEl = document.getElementById('grade-total');
-        if (totalEl) totalEl.textContent = grandTotal;
-        if (studentGrades.global !== undefined && studentGrades.global !== '') {
-            studentGrades.global = grandTotal;
+        if (totalEl) {
+            // Priority: if no exercise has a grade, use the global assignment grade if it exists
+            let finalDisplayTotal = grandTotal;
+            if (grandTotal === 0 && studentGrades.global !== undefined && studentGrades.global !== '') {
+                finalDisplayTotal = parseFloat(studentGrades.global) || 0;
+            }
+            totalEl.textContent = finalDisplayTotal;
+        }
+        
+        // If we have any exercise grades, update the global assignment total
+        // but ONLY if there are exercises defined.
+        if (assignment.exercises && assignment.exercises.length > 0) {
+            let hasAnyGrade = false;
+            for (const ex of assignment.exercises) {
+                if (window.hasAnyGradeForExercise(studentId, assignmentId, ex.id)) {
+                    hasAnyGrade = true;
+                    break;
+                }
+            }
+            if (hasAnyGrade) {
+                studentGrades.global = grandTotal;
+            }
         }
     };
 

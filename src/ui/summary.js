@@ -1580,24 +1580,44 @@ import * as gradesSvc from '../services/grades.service.js';
         if (window.translatePage) window.translatePage();
     };
 
-    window.setGlobalAssignmentGrade = function(studentId, assignmentId, value) {
-        const data = getData();
-        if (!data.grades[studentId]) data.grades[studentId] = {};
+    window.setGlobalAssignmentGrade = function(studentId, assignmentId, value, originalText) {
+        const newValueStr = value.toString().replace(',', '.').trim();
+        const originalValueStr = originalText ? originalText.toString().replace(',', '.').trim() : "";
         
-        // When setting a total grade directly, we clear all exercise details
-        // and set the global grade for this assignment.
-        data.grades[studentId][assignmentId] = {
-            global: value === '' ? '' : (parseFloat(value.toString().replace(',', '.')) || 0)
-        };
+        // Security check: if the value hasn't changed, don't do anything (avoids clearing exercises by mistake)
+        const isSameValue = newValueStr === originalValueStr || 
+                           (newValueStr !== "" && originalValueStr !== "" && parseFloat(newValueStr) === parseFloat(originalValueStr));
         
-        window.saveData();
-        window.renderSummary();
-    };
+        if (isSameValue) {
+             // Just re-render to close the input without saving
+             setTimeout(() => window.renderSummary(), 0);
+             return;
+         }
+
+         const data = getData();
+         if (!data.grades[studentId]) data.grades[studentId] = {};
+         
+         // When setting a total grade directly, we clear all exercise details
+         // and set the global grade for this assignment.
+         const assignment = (data.assignments || []).find(a => a.id === assignmentId);
+         const exercises = assignment ? (assignment.exercises || []) : [];
+         
+         const newGrade = {
+             global: value === '' ? '' : (parseFloat(newValueStr) || 0)
+         };
+         
+         // Completely remove exercise keys to ensure hasAnyGradeForExercise returns false
+         // and the global grade is used as the only source of truth.
+         data.grades[studentId][assignmentId] = newGrade;
+         
+         window.saveData();
+         setTimeout(() => window.renderSummary(), 0);
+     };
 
     window.makeTotalEditable = function(td, studentId, assignmentId, maxPoints) {
         if (td.querySelector('input')) return;
         
-        // Get current value, removing any non-numeric characters except decimal point/comma
+        // Get current value
         let currentVal = td.innerText.trim();
         
         td.innerHTML = `
@@ -1605,8 +1625,8 @@ import * as gradesSvc from '../services/grades.service.js';
                    value="${currentVal}" 
                    class="w-16 p-1 text-center border rounded shadow-sm focus:ring-2 focus:ring-blue-500 outline-none" 
                    style="font-size: 0.9em;"
-                   onblur="window.setGlobalAssignmentGrade('${studentId}', '${assignmentId}', this.value)"
-                   onkeydown="if(event.key==='Enter') window.setGlobalAssignmentGrade('${studentId}', '${assignmentId}', this.value)"
+                   onblur="window.setGlobalAssignmentGrade('${studentId}', '${assignmentId}', this.value, '${currentVal}')"
+                   onkeydown="if(event.key==='Enter') this.blur()"
             >
         `;
         
