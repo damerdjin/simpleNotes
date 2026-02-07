@@ -680,6 +680,7 @@ import * as gradesSvc from '../services/grades.service.js';
         );
 
         const headerBase = ['رقم التعريف', 'اللقب', 'الاسم', 'تاريخ الميلاد'];
+        const showDetails = document.getElementById('show-details')?.checked || false;
 
         for (const cls of sortedClasses) {
             const stu = studentsByClass.get(cls) || [];
@@ -692,7 +693,16 @@ import * as gradesSvc from '../services/grades.service.js';
 
             const header = [...headerBase];
             if (assigns.length > 0) {
-                header.push(...assigns.map(a => a.name));
+                for (const a of assigns) {
+                    if (showDetails && a.exercises) {
+                        for (let i = 0; i < a.exercises.length; i++) {
+                            const ex = a.exercises[i];
+                            const exLabel = ex.name && ex.name !== 'Global' ? ex.name : `Ex${i + 1}`;
+                            header.push(`${a.name} - ${exLabel}`);
+                        }
+                    }
+                    header.push(showDetails ? `${a.name} (Total)` : a.name);
+                }
             }
 
             const rows = [header];
@@ -707,11 +717,62 @@ import * as gradesSvc from '../services/grades.service.js';
                 ];
 
                 for (const a of assigns) {
+                    if (showDetails && a.exercises) {
+                        const studentGrades = data.grades?.[s.id]?.[a.id] || {};
+                        for (const ex of a.exercises) {
+                            if (gradesSvc.hasAnyGradeForExercise(studentGrades, ex)) {
+                                const ev = gradesSvc.getStudentExerciseTotal(studentGrades, ex);
+                                rowData.push(typeof ev === 'number' ? ev : '');
+                            } else {
+                                rowData.push('');
+                            }
+                        }
+                    }
                     const v = window.getStudentAssignmentTotal(s.id, a.id);
                     rowData.push(typeof v === 'number' ? v : '');
                 }
 
                 rows.push(rowData);
+            }
+
+            // Add Averages and Medians Row
+            if (stu.length > 0 && assigns.length > 0) {
+                const avgRow = ['', t.average || 'Moyenne', '', ''];
+                const medianRow = ['', t.median || 'Médiane', '', ''];
+                
+                const firstGradeColIndex = 4;
+                const totalCols = header.length;
+                
+                for (let colIndex = firstGradeColIndex; colIndex < totalCols; colIndex++) {
+                    let sum = 0;
+                    let values = [];
+                    
+                    for (let rowIndex = 1; rowIndex < rows.length; rowIndex++) {
+                        const val = rows[rowIndex][colIndex];
+                        if (typeof val === 'number') {
+                            sum += val;
+                            values.push(val);
+                        }
+                    }
+                    
+                    if (values.length > 0) {
+                        // Average
+                        avgRow.push(Math.round((sum / values.length) * 100) / 100);
+                        
+                        // Median
+                        values.sort((a, b) => a - b);
+                        const mid = Math.floor(values.length / 2);
+                        const median = values.length % 2 !== 0 
+                            ? values[mid] 
+                            : (values[mid - 1] + values[mid]) / 2;
+                        medianRow.push(Math.round(median * 100) / 100);
+                    } else {
+                        avgRow.push('');
+                        medianRow.push('');
+                    }
+                }
+                rows.push(avgRow);
+                rows.push(medianRow);
             }
 
             const ws = window.XLSX.utils.aoa_to_sheet(rows);
