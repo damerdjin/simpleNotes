@@ -388,9 +388,25 @@
                 const accordionId = `grade-ex-${ex.id}`;
                 const maxExPoints = svc.getExerciseMaxPoints(ex);
                 
-                // Always show switcher for exercises with questions/parts
                 const totalQuestions = directQuestions.length + parts.reduce((acc, p) => acc + (p.questions ? p.questions.length : 0), 0);
-                const showSwitcher = totalQuestions > 0;
+                
+                // Detect Single Simple Question
+                let isSingleSimpleQuestion = false;
+                let singleSimpleQVal = '';
+                if (totalQuestions === 1) {
+                    const singleQ = directQuestions[0] || parts[0]?.questions[0];
+                    if (singleQ && (!singleQ.subQuestions || singleQ.subQuestions.length === 0)) {
+                        isSingleSimpleQuestion = true;
+                        // Get value if final is empty
+                        if (finalGradeCur === '') {
+                             const pKey = directQuestions[0] ? 'direct' : parts[0].id;
+                             singleSimpleQVal = exGradesCur[pKey]?.[singleQ.id]?.['direct'] || '';
+                        }
+                    }
+                }
+
+                // Show switcher only if >0 questions AND not a single simple question
+                const showSwitcher = totalQuestions > 0 && !isSingleSimpleQuestion;
                 
                 // Exercise Card
                 let exHtml = `
@@ -460,6 +476,27 @@
                                     </div>
                                 </div>
                             </div>`;
+                } else if (isSingleSimpleQuestion) {
+                     // Single Simple Question - Simplified Global View
+                     const displayVal = finalGradeCur !== '' ? finalGradeCur : singleSimpleQVal;
+                     exHtml += `
+                            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
+                                <div class="flex items-center gap-3 shrink-0 w-full sm:w-auto">
+                                    <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </div>
+                                    <span class="text-xs font-bold text-blue-900">${t.globalGrade || 'Note globale'}</span>
+                                </div>
+                                <div class="flex items-center gap-3 w-full sm:w-auto">
+                                    <div class="relative w-full sm:w-28">
+                                        <input type="number" min="0" max="${maxExPoints}" step="0.25" value="${displayVal}"
+                                            onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
+                                            class="w-full p-2 ${inputPaddingMedium} bg-white border-2 border-blue-200 rounded-lg text-center font-black text-blue-900 focus:border-blue-500 outline-none transition-all shadow-sm text-sm" 
+                                            placeholder="0">
+                                        <div class="absolute ${suffixPos2} top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-400">/ ${maxExPoints}</div>
+                                    </div>
+                                </div>
+                            </div>`;
                 }
                 
                 if (directQuestions.length === 0 && parts.length === 0) {
@@ -482,7 +519,7 @@
                                     </div>
                                 </div>
                             </div>`;
-                } else {
+                } else if (!isSingleSimpleQuestion) {
                     // Wrap detailed questions in a container that can be hidden
                     exHtml += `<div class="${modeCur === 'global' ? 'hidden' : ''}">`;
                     
