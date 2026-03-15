@@ -36,6 +36,11 @@ export const store = {
       .then(() => remote.save(payload))
       .catch(() => {});
   },
+  saveHistory(studentId, assignmentId, snapshot) {
+    if (remote.saveHistory) {
+      remote.saveHistory(studentId, assignmentId, snapshot);
+    }
+  },
   get(key) {
     return local.get(key);
   },

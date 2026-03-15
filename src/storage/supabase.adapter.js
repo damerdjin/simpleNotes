@@ -78,6 +78,26 @@ export function supabaseAdapter() {
         localStorage.setItem('corrections-data', JSON.stringify(payload));
       } catch (_) {}
     },
+    async saveHistory(studentId, assignmentId, snapshot) {
+      try {
+        const userId = getCurrentUserId();
+        const academicYear = getAcademicYear();
+        if (userId && academicYear && studentId && assignmentId) {
+          const { error } = await supabase
+            .from('grades_history')
+            .insert({
+              user_id: userId,
+              academic_year: academicYear,
+              student_id: studentId,
+              assignment_id: assignmentId,
+              snapshot: snapshot
+            });
+          if (error) throw error;
+        }
+      } catch (err) {
+        console.warn('[SupabaseAdapter] Save history error:', err);
+      }
+    },
     get(key) {
       return localStorage.getItem(key);
     },

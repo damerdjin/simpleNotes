@@ -299,6 +299,12 @@
                         <h3 class="text-base sm:text-lg font-black tracking-tight leading-tight truncate">${student.name}</h3>
                         <div class="flex items-center gap-2 mt-0.5 opacity-90 overflow-hidden">
                             <span class="text-xs font-medium opacity-80 truncate">${assignment.name}</span>
+                            ${window.historyService?.hasHistory(studentId, assignmentId) ? `
+                                <button onclick="undoLastGrade('${studentId}', '${assignmentId}')" class="mx-2 p-1 bg-white/20 hover:bg-white/40 rounded-lg transition-all flex items-center gap-1 text-[10px] font-bold" title="${t.undo || 'Annuler'}">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
+                                    ${t.undo || 'Annuler'}
+                                </button>
+                            ` : ''}
                         </div>
                     </div>
                 </div>
@@ -578,8 +584,35 @@
         window.recalculateTotals(assignmentId, studentId);
     };
 
+    window.undoLastGrade = function(studentId, assignmentId) {
+        if (!window.historyService) return;
+        
+        const prevState = window.historyService.popState(studentId, assignmentId);
+        if (prevState) {
+            const data = getData();
+            data.grades[studentId][assignmentId] = prevState;
+            saveData();
+            window.loadGradeEntry();
+            
+            // Notification
+            const t = getTranslations()[getLang()];
+            if (window.showToast) {
+                window.showToast(t.gradeUndone || 'Saisie annulée !', 'success');
+            }
+        }
+    };
+
     window.updateGrade = function(studentId, assignmentId, exId, partKey, qId, sqId, value) {
         const data = getData();
+        
+        // --- History Support ---
+        if (window.historyService) {
+            const currentGrades = data.grades[studentId]?.[assignmentId];
+            if (currentGrades) {
+                window.historyService.pushState(studentId, assignmentId, currentGrades);
+            }
+        }
+        
         if (!data.grades[studentId]) data.grades[studentId] = {};
         if (!data.grades[studentId][assignmentId]) data.grades[studentId][assignmentId] = {};
         if (!data.grades[studentId][assignmentId][exId]) data.grades[studentId][assignmentId][exId] = {};

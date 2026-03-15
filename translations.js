@@ -98,6 +98,8 @@ window.translations = {
         selectStudent: "-- Sélectionner un élève --",
         selectAssignment: "-- Sélectionner un devoir --",
         selectClass: "-- Sélectionner une classe --",
+        undo: "Annuler",
+        gradeUndone: "Saisie annulée !",
         selectClassFirst: "Sélectionnez d'abord une classe",
         selectClassToStart: "Sélectionnez une classe pour commencer",
         enterClass: "Veuillez entrer un nom de classe",
