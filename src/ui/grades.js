@@ -982,11 +982,17 @@
         }
 
         // Load content if needed
-        if (step === 1) window.renderGradesClassList();
+        if (step === 1) await window.renderGradesClassList();
+        if (step === 2) {
+            const classSelect = document.getElementById('select-class-grades');
+            if (classSelect && classSelect.value) {
+                window.renderGradesAssignmentList(classSelect.value);
+            }
+        }
         if (step === 3) await window.loadGradeEntry();
     };
 
-    window.renderGradesClassList = function() {
+    window.renderGradesClassList = async function() {
         const t = getTranslations()[getLang()];
         const isAr = getLang() === 'ar';
         const container = document.getElementById('grades-class-list');
@@ -1000,7 +1006,7 @@
             return;
         }
 
-        const classes = window.getClasses();
+        const classes = await window.getClasses();
         const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
 
         if (classes.length === 0) {
@@ -1063,7 +1069,7 @@
         container.innerHTML = rows;
     };
 
-    window.selectGradeClass = function(className, color) {
+    window.selectGradeClass = async function(className, color) {
         // Store color for next steps
         window.currentClassColor = color || '#3b82f6';
 
@@ -1080,14 +1086,15 @@
             if(!found) {
                 const opt = document.createElement('option');
                 opt.value = className;
-                opt.text = className;
-                classSelect.add(opt);
+                opt.textContent = className;
+                classSelect.appendChild(opt);
                 classSelect.value = className;
             }
-            classSelect.dispatchEvent(new Event('change'));
-            window.renderGradesAssignmentList(className);
-            window.goToGradeStep(2);
         }
+
+        // Trigger loading and move to step 2
+        await window.loadGradeSelectors();
+        await window.goToGradeStep(2);
     };
 
     window.renderGradesAssignmentList = function(className) {

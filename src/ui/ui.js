@@ -150,9 +150,9 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
         window.tabs.registerTab('students', {
             label: t.studentsTab || 'Élèves',
             icon: '👥',
-            onShow: () => {
-                if (window.loadClassSelectors) window.loadClassSelectors();
-                if (window.renderClassList) window.renderClassList();
+            onShow: async () => {
+                if (window.loadClassSelectors) await window.loadClassSelectors();
+                if (window.renderClassList) await window.renderClassList();
                 if (window.renderStudents) window.renderStudents();
             }
         });
@@ -171,9 +171,9 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
         window.tabs.registerTab('grades', {
             label: t.gradesTab || 'Notes',
             icon: '📊',
-            onShow: () => {
-                if (window.loadClassSelectors) window.loadClassSelectors();
-                if (window.loadGradeSelectors) window.loadGradeSelectors();
+            onShow: async () => {
+                if (window.loadClassSelectors) await window.loadClassSelectors();
+                if (window.loadGradeSelectors) await window.loadGradeSelectors();
             }
         });
 
@@ -181,13 +181,13 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
         window.tabs.registerTab('summary', {
             label: t.summaryTab || 'Récapitulatif',
             icon: '📋',
-            onShow: (options = {}) => {
+            onShow: async (options = {}) => {
                 // Si on n'est pas en train de forcer une vue spécifique (ex: via Visualiser les notes)
                 if (!options.keepFilters && window.resetSummaryFilters) {
                     window.resetSummaryFilters();
                 }
                 
-                if (window.loadClassSelectors) window.loadClassSelectors();
+                if (window.loadClassSelectors) await window.loadClassSelectors();
                 if (window.renderSummary) window.renderSummary();
             }
         });
@@ -196,8 +196,8 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
         window.tabs.registerTab('export', {
             label: t.exportPrepTitle || 'Export',
             icon: '📦',
-            onShow: () => {
-                if (window.loadClassSelectorsForExport) window.loadClassSelectorsForExport();
+            onShow: async () => {
+                if (window.loadClassSelectorsForExport) await window.loadClassSelectorsForExport();
                 if (window.renderExportPrep) window.renderExportPrep();
             }
         });
@@ -337,7 +337,7 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
         window.applyLanguage();
     };
 
-    window.applyLanguage = function() {
+    window.applyLanguage = async function() {
         window.isRTL = window.currentLanguage === 'ar';
 
         // Appliquer la direction
@@ -345,19 +345,19 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
         document.body.className = window.isRTL ? 'rtl-layout' : 'ltr-layout';
 
         // Traduire tous les éléments
-        window.translatePage();
+        await window.translatePage();
 
         // Re-rendre les composants dynamiques
         if (typeof window.renderStudents === 'function') window.renderStudents();
-        if (typeof window.renderClassList === 'function') window.renderClassList();
+        if (typeof window.renderClassList === 'function') await window.renderClassList();
         if (typeof window.renderAssignments === 'function') window.renderAssignments();
         if (typeof window.renderSummary === 'function') window.renderSummary();
-        if (typeof window.loadGradeSelectors === 'function') window.loadGradeSelectors();
+        if (typeof window.loadGradeSelectors === 'function') await window.loadGradeSelectors();
         if (typeof window.renderExportPrep === 'function') window.renderExportPrep();
-        if (typeof window.loadClassSelectorsForExport === 'function') window.loadClassSelectorsForExport();
+        if (typeof window.loadClassSelectorsForExport === 'function') await window.loadClassSelectorsForExport();
     };
 
-    window.translatePage = function() {
+    window.translatePage = async function() {
         const lang = getLang();
         const t = getTranslations()[lang];
         if (!t) return;
@@ -426,8 +426,8 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
         window.updateDynamicTexts();
 
         // Rafraîchir les sélecteurs de classe
-        if (typeof window.loadClassSelectors === 'function') window.loadClassSelectors();
-        if (typeof window.loadGradeSelectors === 'function') window.loadGradeSelectors();
+        if (typeof window.loadClassSelectors === 'function') await window.loadClassSelectors();
+        if (typeof window.loadGradeSelectors === 'function') await window.loadGradeSelectors();
     };
 
     window.updateDynamicTexts = function() {

@@ -1,5 +1,6 @@
 -- ==============================================================================
 -- MIGRATION : MODÈLE COLLABORATIF (ÉCOLES, CLASSES ET ÉLÈVES PARTAGÉS)
+-- VERSION : JWT CLAIMS (FIX PERMISSION DENIED ON AUTH.USERS)
 -- ==============================================================================
 
 -- 1. TABLE DES ÉTABLISSEMENTS (SCHOOLS)
@@ -14,12 +15,13 @@ create table if not exists public.schools (
 
 alter table public.schools enable row level security;
 
--- Tout le monde peut lire les écoles (pour s'inscrire/chercher)
+-- Nettoyage et création des politiques pour schools
+drop policy if exists "Schools are readable by everyone" on public.schools;
 create policy "Schools are readable by everyone"
   on public.schools for select
   using (true);
 
--- Seuls les admins ou créateurs peuvent modifier (à affiner)
+drop policy if exists "Users can create schools" on public.schools;
 create policy "Users can create schools"
   on public.schools for insert
   with check (auth.uid() is not null);
@@ -38,25 +40,19 @@ create table if not exists public.classes (
 
 alter table public.classes enable row level security;
 
--- Un prof voit les classes de son école
+-- Nettoyage et création des politiques pour classes (UTILISATION DES JWT CLAIMS)
+drop policy if exists "Users can see classes of their school" on public.classes;
 create policy "Users can see classes of their school"
   on public.classes for select
   using (
-    exists (
-      select 1 from auth.users
-      where auth.uid() = id
-      and (raw_user_meta_data->>'school_id')::uuid = school_id
-    )
+    (auth.jwt() -> 'user_metadata' ->> 'school_id')::uuid = school_id
   );
 
+drop policy if exists "Users can create classes in their school" on public.classes;
 create policy "Users can create classes in their school"
   on public.classes for insert
   with check (
-    exists (
-      select 1 from auth.users
-      where auth.uid() = id
-      and (raw_user_meta_data->>'school_id')::uuid = school_id
-    )
+    (auth.jwt() -> 'user_metadata' ->> 'school_id')::uuid = school_id
   );
 
 
@@ -68,27 +64,21 @@ alter table public.students add column if not exists registration_number text; -
 -- Index pour recherche rapide et unicité au sein du lycée
 create index if not exists idx_students_school_lookup on public.students(school_id, registration_number);
 
--- Nouvelles politiques RLS pour le partage
+-- Nettoyage et création des politiques pour students (UTILISATION DES JWT CLAIMS)
 drop policy if exists "Users can manage their own students" on public.students;
+drop policy if exists "Users can see students of their school" on public.students;
+drop policy if exists "Users can manage students of their school" on public.students;
 
 create policy "Users can see students of their school"
   on public.students for select
   using (
-    exists (
-      select 1 from auth.users
-      where auth.uid() = id
-      and (raw_user_meta_data->>'school_id')::uuid = school_id
-    )
+    (auth.jwt() -> 'user_metadata' ->> 'school_id')::uuid = school_id
   );
 
 create policy "Users can manage students of their school"
   on public.students for all
   using (
-    exists (
-      select 1 from auth.users
-      where auth.uid() = id
-      and (raw_user_meta_data->>'school_id')::uuid = school_id
-    )
+    (auth.jwt() -> 'user_metadata' ->> 'school_id')::uuid = school_id
   );
 
 
@@ -101,6 +91,7 @@ create table if not exists public.teacher_classes (
 
 alter table public.teacher_classes enable row level security;
 
+drop policy if exists "Teachers can manage their class subscriptions" on public.teacher_classes;
 create policy "Teachers can manage their class subscriptions"
   on public.teacher_classes for all
   using (auth.uid() = user_id);

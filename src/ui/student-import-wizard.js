@@ -60,18 +60,18 @@
     }
 
     // --- Entry Point ---
-    window.startImportWizard = function(excelRows, excelClasses, onComplete) {
+    window.startImportWizard = async function(excelRows, excelClasses, onComplete) {
         console.log("Starting Import Wizard...");
         wizardState.excelRows = excelRows;
         wizardState.excelClasses = excelClasses;
         wizardState.onComplete = onComplete;
         
-        checkClassMapping();
+        await checkClassMapping();
     };
 
     // --- Step 1: Check Class Mapping ---
-    function checkClassMapping() {
-        const appClasses = window.getClasses ? window.getClasses() : [];
+    async function checkClassMapping() {
+        const appClasses = window.getClasses ? await window.getClasses() : [];
         const excelClasses = wizardState.excelClasses;
 
         // 1. Identify Orphans: Classes in App that are NOT strictly in Excel

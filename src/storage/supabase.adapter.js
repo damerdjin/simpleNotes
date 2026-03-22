@@ -2,7 +2,15 @@ import { supabase } from '../ui/supabase-client.js';
 import { relationalSyncService } from '../services/relational-sync.service.js';
 
 function getCurrentUserId() {
-  return window.currentUser?.id || null;
+  const user = window.currentUser;
+  if (!user) return null;
+  // Log metadata to debug RLS issues
+  if (user.user_metadata?.school_id) {
+    // console.log('[SupabaseAdapter] User has school_id:', user.user_metadata.school_id);
+  } else {
+    // console.warn('[SupabaseAdapter] User is missing school_id in metadata');
+  }
+  return user.id || null;
 }
 
 function getAcademicYear() {
@@ -136,32 +144,44 @@ export function supabaseAdapter() {
     async getSharedClasses() {
       try {
         const academicYear = getAcademicYear();
-        const { data, error } = await supabase
+        const userId = getCurrentUserId();
+        if (!userId) return [];
+
+        const { data, error, status } = await supabase
           .from('classes')
           .select('name')
           .eq('academic_year', academicYear)
           .order('name');
         
-        if (error) throw error;
-        return data.map(c => c.name);
+        if (error) {
+          // Silent failure for shared data to avoid UI noise if SQL not yet applied
+          return [];
+        }
+        return data ? data.map(c => c.name) : [];
       } catch (err) {
-        console.warn('[SupabaseAdapter] Get shared classes error:', err);
+        // console.warn('[SupabaseAdapter] Get shared classes error:', err);
       }
       return [];
     },
     async getSharedStudents(className) {
       try {
         const academicYear = getAcademicYear();
-        const { data, error } = await supabase
+        const userId = getCurrentUserId();
+        if (!userId) return [];
+
+        const { data, error, status } = await supabase
           .from('students')
           .select('*')
           .eq('academic_year', academicYear)
           .eq('class_name', className)
           .order('last_name', { ascending: true });
         
-        if (error) throw error;
+        if (error) {
+          // Silent failure for shared data to avoid UI noise if SQL not yet applied
+          return [];
+        }
         // Map back to JS structure
-        return data.map(s => ({
+        return data ? data.map(s => ({
           id: s.id,
           name: `${s.last_name || ''} ${s.first_name || ''}`.trim(),
           firstName: s.first_name,
@@ -173,9 +193,9 @@ export function supabaseAdapter() {
           sex: s.sex,
           academicYear: s.academic_year,
           importedBy: s.user_id
-        }));
+        })) : [];
       } catch (err) {
-        console.warn('[SupabaseAdapter] Get shared students error:', err);
+        // console.warn('[SupabaseAdapter] Get shared students error:', err);
       }
       return [];
     },

@@ -8,7 +8,7 @@
     const renderSummary = () => { if (typeof window.renderSummary === 'function') window.renderSummary(); };
     const renderAssignments = () => { if (typeof window.renderAssignments === 'function') window.renderAssignments(); };
     const renderExportPrep = () => { if (typeof window.renderExportPrep === 'function') window.renderExportPrep(); };
-    const loadClassSelectorsForExport = () => { if (typeof window.loadClassSelectorsForExport === 'function') window.loadClassSelectorsForExport(); };
+    const loadClassSelectorsForExport = async () => { if (typeof window.loadClassSelectorsForExport === 'function') await window.loadClassSelectorsForExport(); };
     const translatePage = () => { if (typeof window.translatePage === 'function') window.translatePage(); };
     const genId = () => window.genId();
 
@@ -129,9 +129,9 @@
         }
     };
 
-    window.loadClassSelectorsForAssignments = function() {
-        const classes = window.getClasses();
-        const t = getTranslations()[getLang()]; // Although unused in original code for this function, might be useful
+    window.loadClassSelectorsForAssignments = async function() {
+        const classes = await window.getClasses();
+        const t = getTranslations()[getLang()]; 
 
         // For assignments filter
         const filterSelect = document.getElementById('filter-class-assignments');
@@ -142,7 +142,7 @@
         }
     };
 
-    window.renderClassList = function() {
+    window.renderClassList = async function() {
         const t = getTranslations()[getLang()];
         const isAr = getLang() === 'ar';
         const container = document.getElementById('students-class-list');
@@ -157,7 +157,8 @@
         }
 
         const search = (document.getElementById('students-class-search')?.value || '').toLowerCase();
-        const classes = window.getClasses().filter(c => c.toLowerCase().includes(search));
+        const allClasses = await window.getClasses();
+        const classes = allClasses.filter(c => c.toLowerCase().includes(search));
         
         if (classes.length === 0) {
             container.innerHTML = `<div class="col-span-full text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
@@ -277,7 +278,7 @@
         container.innerHTML = rows;
     };
 
-    window.setStudentsSelectedClass = function(className = '', options = {}) {
+    window.setStudentsSelectedClass = async function(className = '', options = {}) {
         const prevClass = studentsUiState.selectedClass || '';
         const newClass = className || '';
 
@@ -326,11 +327,11 @@
             // Show Classes View
             if (viewList) viewList.classList.add('hidden');
             if (viewClasses) viewClasses.classList.remove('hidden');
-            window.renderClassList();
+            await window.renderClassList();
         }
     };
 
-    window.clearStudentsFilters = function() {
+    window.clearStudentsFilters = async function() {
         if (studentsUiState.selectedClass) {
             // Sur mobile, history.back() est le comportement attendu pour rester synchrone
             // avec le bouton retour du système.
@@ -338,9 +339,9 @@
             
             // Fallback au cas où history.back() ne déclencherait pas popstate immédiatement
             // ou si on est à la fin de la pile d'historique de l'app
-            setTimeout(() => {
+            setTimeout(async () => {
                 if (studentsUiState.selectedClass) {
-                    window.setStudentsSelectedClass('', { skipHistory: true });
+                    await window.setStudentsSelectedClass('', { skipHistory: true });
                 }
             }, 100);
             return;
@@ -352,7 +353,7 @@
         if (search) search.value = '';
         
         // Return to dashboard
-        window.setStudentsSelectedClass('', { skipHistory: true });
+        await window.setStudentsSelectedClass('', { skipHistory: true });
     };
 
     window.setStudentsPageSize = function(value) {
@@ -368,15 +369,15 @@
         window.renderStudents();
     };
 
-    window.deleteClassSafely = function(className) {
+    window.deleteClassSafely = async function(className) {
         const t = getTranslations()[getLang()];
         const promptText = `${t.deleteClassConfirm} "${className}"\n\n${t.confirmActionPrompt || 'Pour confirmer, tapez : '}${t.confirmActionWord || 'OUI'}`;
         const typed = prompt(promptText);
         if (typed && typed.toUpperCase() !== (t.confirmActionWord || 'OUI').toUpperCase()) return;
         if (!typed) return;
         window.deleteClass(className);
-        window.loadClassSelectors();
-        window.renderClassList();
+        await window.loadClassSelectors();
+        await window.renderClassList();
     };
 
     window.deleteClass = function(className) {

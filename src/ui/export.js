@@ -3,7 +3,7 @@
     const getData = () => window.data;
     const getTranslations = () => window.translations;
     const getLang = () => window.currentLanguage;
-    const getClasses = () => window.getClasses();
+    const getClasses = async () => await window.getClasses();
     const saveData = () => window.saveData();
 
     // Import helpers from window.grades if needed, or use the exposed window functions
@@ -402,8 +402,8 @@
     }
     window.calcScaledScore = calcScaledScore; // Exposed for Rakmana
 
-    window.loadClassSelectorsForExport = function() {
-        const classes = getClasses();
+    window.loadClassSelectorsForExport = async function() {
+        const classes = await getClasses();
         const select = document.getElementById('select-class-export');
         const t = getTranslations()[getLang()];
         if (!select) return;

@@ -5,8 +5,8 @@
     const getLang = () => window.currentLanguage;
     const saveData = () => window.saveData();
     const genId = () => window.genId();
-    const loadClassSelectors = () => { if (typeof window.loadClassSelectors === 'function') window.loadClassSelectors(); };
-    const loadGradeSelectors = () => { if (typeof window.loadGradeSelectors === 'function') window.loadGradeSelectors(); }; // might be needed if saving affects grades UI?
+    const loadClassSelectors = async () => { if (typeof window.loadClassSelectors === 'function') await window.loadClassSelectors(); };
+    const loadGradeSelectors = async () => { if (typeof window.loadGradeSelectors === 'function') await window.loadGradeSelectors(); }; // might be needed if saving affects grades UI?
     const renderSummary = () => { if (typeof window.renderSummary === 'function') window.renderSummary(); };
     const renderExportPrep = () => { if (typeof window.renderExportPrep === 'function') window.renderExportPrep(); };
     const translatePage = () => { if (typeof window.translatePage === 'function') window.translatePage(); };
@@ -47,7 +47,7 @@
         window.renderAssignments();
     };
 
-    window.openAssignmentModal = function (assignmentId = null) {
+    window.openAssignmentModal = async function (assignmentId = null) {
         const t = getTranslations()[getLang()];
         const isAr = getLang() === 'ar';
         editingAssignmentId = assignmentId;
@@ -209,7 +209,7 @@
       </div>`;
         document.body.appendChild(overlay);
         try {
-            loadClassSelectors();
+            await loadClassSelectors();
             const globalCheckbox = document.getElementById('assignment-global-only');
             const globalMaxInput = document.getElementById('assignment-global-maxpoints');
             if (assignmentId) {

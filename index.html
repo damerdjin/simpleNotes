@@ -2692,6 +2692,17 @@
                 // Initialize sidebar collapse
                 if (window.initSidebarCollapse) window.initSidebarCollapse();
 
+                // Initialize global helpers
+                window.getGlobalAcademicYear = function() {
+                    const select = document.getElementById('global-academic-year');
+                    return select ? select.value : '2025/2026';
+                };
+                
+                window.getGlobalTrimester = function() {
+                    const select = document.getElementById('global-trimester');
+                    return select ? select.value : '1';
+                };
+
                 // Initialize authentication and data loading
                 if (window.initAuth) await window.initAuth();
 
@@ -2700,9 +2711,10 @@
 
                 // Wait for any async rendering if necessary
                 if (window.renderStudents) renderStudents();
+                if (window.renderClassList) await renderClassList();
                 if (window.renderAssignments) renderAssignments();
                 if (window.loadExportPrepConfig) loadExportPrepConfig();
-                if (window.loadClassSelectorsForExport) loadClassSelectorsForExport();
+                if (window.loadClassSelectorsForExport) await loadClassSelectorsForExport();
                 if (window.initGradesUI) initGradesUI();
 
                 // Give a tiny bit of time for the browser to paint the rendered content
