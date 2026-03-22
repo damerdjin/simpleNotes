@@ -147,30 +147,9 @@ export const relationalSyncService = {
                         }
                     }
 
-                    // 1c. Suppression des élèves qui ne sont plus dans le payload local pour cette année/prof
-                    // ATTENTION: On ne supprime que ceux du PROF pour ne pas supprimer ceux des collègues
-                    const studentIds = studentsPayload.map(s => s.id);
-                    const { error: deleteError } = await supabase
-                        .from('students')
-                        .delete()
-                        .eq('user_id', userId)
-                        .eq('academic_year', academicYear)
-                        .not('id', 'in', `(${studentIds.join(',')})`);
-
-                    if (deleteError) {
-                        console.error('[RelationalSync] Students deletion sync error:', deleteError);
+                    if (!upsertError) {
+                        console.log('[RelationalSync] Students synced successfully (upsert only)');
                     }
-
-                    if (!upsertError && !deleteError) {
-                        console.log('[RelationalSync] Students synced successfully (including deletions)');
-                    }
-                } else {
-                    // Si le payload est vide, on supprime tout pour cette année/prof
-                    await supabase
-                        .from('students')
-                        .delete()
-                        .eq('user_id', userId)
-                        .eq('academic_year', academicYear);
                 }
             }
 
@@ -202,26 +181,6 @@ export const relationalSyncService = {
                         .upsert(assignmentsPayload, { onConflict: 'id' });
 
                     if (upsertError) console.error('[RelationalSync] Assignments sync error:', upsertError);
-
-                    // 2b. Suppression des devoirs qui ne sont plus dans le payload local pour cette année/prof
-                    const assignmentIds = assignmentsPayload.map(a => a.id);
-                    const { error: deleteError } = await supabase
-                        .from('assignments')
-                        .delete()
-                        .eq('user_id', userId)
-                        .eq('academic_year', academicYear)
-                        .not('id', 'in', `(${assignmentIds.join(',')})`);
-
-                    if (deleteError) {
-                        console.error('[RelationalSync] Assignments deletion sync error:', deleteError);
-                    }
-                } else {
-                    // Si le payload est vide, on supprime tout pour cette année/prof
-                    await supabase
-                        .from('assignments')
-                        .delete()
-                        .eq('user_id', userId)
-                        .eq('academic_year', academicYear);
                 }
             }
 
@@ -299,15 +258,6 @@ export const relationalSyncService = {
 
                     if (cleanupError || cleanupError2) {
                         console.error('[RelationalSync] Grades cleanup error:', cleanupError || cleanupError2);
-                    }
-                } else {
-                    // Si aucune note locale pour ces élèves/devoirs, on nettoie tout pour l'année
-                    if (validAssignmentIds.length > 0) {
-                        await supabase
-                            .from('grades')
-                            .delete()
-                            .eq('user_id', userId)
-                            .in('assignment_id', validAssignmentIds);
                     }
                 }
             }

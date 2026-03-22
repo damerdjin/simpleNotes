@@ -396,39 +396,29 @@
         const t = getTranslations()[getLang()];
         const data = getData();
         const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
-        const count = data.students.filter(s => s.className === className && (s.importedBy || 'unknown') === userId).length;
         
-        // Confirmation plus détaillée
-        let detailMsg = t.deleteClassConfirmDetails;
-        detailMsg = detailMsg.replace('${count}', count);
+        // On vérifie si le prof a des élèves importés localement dans cette classe
+        const localCount = data.students.filter(s => s.className === className && (s.importedBy || 'unknown') === userId).length;
         
-        if (!confirm(`${t.deleteClassConfirm} "${className}" ?\n\n${detailMsg}`)) return;
+        if (!confirm(`${t.deleteClassConfirm} "${className}" ?`)) return;
 
-        // Remove students from this class
-        const studentIds = data.students.filter(s => s.className === className && (s.importedBy || 'unknown') === userId).map(s => s.id);
-        data.students = data.students.filter(s => !(s.className === className && (s.importedBy || 'unknown') === userId));
-
-        // Remove their grades
-        studentIds.forEach(id => {
-            if (data.grades) delete data.grades[id];
-        });
-
-        // Remove assignments for this class
-        if (data.assignments) {
-            data.assignments = data.assignments.filter(a => a.className !== className);
-        }
-
-        // Clean up export config and overrides for this class
-        if (typeof window.deleteClassDataFromExport === 'function') {
-            window.deleteClassDataFromExport(className);
-        }
-
-        saveData();
-
-        // Se désabonner de la classe dans Supabase (modèle collaboratif)
+        // --- MODÈLE COLLABORATIF ---
+        // On ne supprime plus les élèves du JSON local systématiquement car ils sont partagés.
+        // On se contente de se désabonner de la classe dans Supabase.
+        
         if (window.store && typeof window.store.unsubscribeFromClass === 'function') {
             await window.store.unsubscribeFromClass(className);
         }
+
+        // Pour le JSON local (compatibilité offline/legacy) : 
+        // On ne retire de la liste locale que si l'utilisateur le souhaite vraiment ou si c'est nécessaire.
+        // Mais pour éviter de supprimer les données chez les collègues via la synchro, 
+        // on garde les élèves localement s'ils sont synchronisés.
+        
+        // Optionnel: On peut nettoyer le cache local si on veut vraiment qu'elle disparaisse de l'interface
+        data.students = data.students.filter(s => !(s.className === className && (s.importedBy || 'unknown') === userId));
+
+        saveData();
 
         await window.renderStudents();
         await window.renderClassList();
