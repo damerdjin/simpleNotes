@@ -440,7 +440,7 @@
         window.renderExportPrep();
     };
 
-    window.renderExportPrep = function() {
+    window.renderExportPrep = async function() {
         if (!getTranslations() || !getLang() || !getTranslations()[getLang()]) return;
         const t = getTranslations()[getLang()];
         const className = document.getElementById('select-class-export')?.value || '';
@@ -602,10 +602,32 @@
         if (ccSelect) ccSelect.value = cfg.ccAssignmentId || '';
         if (compSelect) compSelect.value = cfg.compAssignmentId || '';
 
-        const students = getData().students.filter(s => (s.className || '').trim() === (className || '').trim());
+        // --- COLLABORATIVE MODEL: Fetch and merge students ---
+        const globalUserId = window.currentUser?.email || window.currentUser?.id || 'unknown';
+        const globalAcademicYear = window.getGlobalAcademicYear();
+        
+        let localStudents = getData().students.filter(s => 
+            (s.className || '').trim() === (className || '').trim() &&
+            (s.importedBy || 'unknown') === globalUserId &&
+            (s.academicYear || '') === globalAcademicYear
+        );
+        
+        let sharedStudents = [];
+        if (window.store && typeof window.store.getSharedStudents === 'function') {
+            sharedStudents = await window.store.getSharedStudents(className);
+        }
+
+        const studentMap = new Map();
+        localStudents.forEach(s => studentMap.set(s.id, s));
+        sharedStudents.forEach(s => {
+            const existing = Array.from(studentMap.values()).find(ls => ls.id === s.id || (ls.regNumber && ls.regNumber === s.regNumber));
+            if (!existing) studentMap.set(s.id, s);
+        });
+        
+        const students = Array.from(studentMap.values());
         meta.textContent = `${students.length} ${t.students}`;
 
-        renderExportPreviewTable(className, cfg);
+        await renderExportPreviewTable(className, cfg);
         window.translatePage();
     };
 
@@ -832,7 +854,7 @@
         return R.advice?.[langKey()]?.[idx] || [];
     };
 
-    function renderExportPreviewTable(className, cfg) {
+    async function renderExportPreviewTable(className, cfg) {
         const t = getTranslations()[getLang()];
         const preview = document.getElementById('export-preview-table');
         if (!preview) return;
@@ -840,11 +862,26 @@
         const globalUserId = window.currentUser?.email || window.currentUser?.id || 'unknown';
         const globalAcademicYear = window.getGlobalAcademicYear();
 
-        const students = getData().students
-            .filter(s => (s.className || '').trim() === (className || '').trim() &&
-                         (s.importedBy || 'unknown') === globalUserId &&
-                         (s.academicYear || '') === globalAcademicYear)
-            .slice()
+        // --- COLLABORATIVE MODEL: Fetch and merge students ---
+        let localStudents = getData().students.filter(s => 
+            (s.className || '').trim() === (className || '').trim() &&
+            (s.importedBy || 'unknown') === globalUserId &&
+            (s.academicYear || '') === globalAcademicYear
+        );
+        
+        let sharedStudents = [];
+        if (window.store && typeof window.store.getSharedStudents === 'function') {
+            sharedStudents = await window.store.getSharedStudents(className);
+        }
+
+        const studentMap = new Map();
+        localStudents.forEach(s => studentMap.set(s.id, s));
+        sharedStudents.forEach(s => {
+            const existing = Array.from(studentMap.values()).find(ls => ls.id === s.id || (ls.regNumber && ls.regNumber === s.regNumber));
+            if (!existing) studentMap.set(s.id, s);
+        });
+
+        const students = Array.from(studentMap.values())
             .sort((a, b) => (a.name || '').localeCompare((b.name || ''), 'fr', { sensitivity: 'base' }));
 
         const ccA = cfg.ccAssignmentId ? getData().assignments.find(a => a.id === cfg.ccAssignmentId) : null;
@@ -1275,8 +1312,30 @@
             if (colIndices.cc === -1 || colIndices.devoir === -1 || colIndices.comp === -1) { issues.push(`- ${className}: en-têtes manquants.`); continue; }
             
             const gradesByNIN = {}; let studentsWithNIN = 0;
-            (getData().students || []).forEach(s => {
-                if ((s.className || '').trim() !== className) return;
+            
+            // --- COLLABORATIVE MODEL: Fetch and merge students for this class ---
+            const globalUserId = window.currentUser?.email || window.currentUser?.id || 'unknown';
+            const globalAcademicYear = window.getGlobalAcademicYear();
+            
+            let localStudents = getData().students.filter(s => 
+                (s.className || '').trim() === className &&
+                (s.importedBy || 'unknown') === globalUserId &&
+                (s.academicYear || '') === globalAcademicYear
+            );
+            
+            let sharedStudents = [];
+            if (window.store && typeof window.store.getSharedStudents === 'function') {
+                sharedStudents = await window.store.getSharedStudents(className);
+            }
+
+            const studentMap = new Map();
+            localStudents.forEach(s => studentMap.set(s.id, s));
+            sharedStudents.forEach(s => {
+                const existing = Array.from(studentMap.values()).find(ls => ls.id === s.id || (ls.regNumber && ls.regNumber === s.regNumber));
+                if (!existing) studentMap.set(s.id, s);
+            });
+
+            Array.from(studentMap.values()).forEach(s => {
                 const nin = String(s.nin || '').replace(/\s/g, '').trim();
                 if (!nin) return;
                 studentsWithNIN++;
