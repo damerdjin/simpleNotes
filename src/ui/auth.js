@@ -37,47 +37,39 @@ export async function register(userData) {
         // Handle new school creation logic
         let schoolId = userData.school_id;
         if (schoolId === "") schoolId = null;
-        
-        // If creating a new school, we might need to do it after signup 
-        // because we need to be authenticated to create a school (RLS).
-        // However, standard flow is: SignUp -> Trigger creates User -> Client creates School -> Client updates User.
-        
+
         const { data, error } = await supabase.auth.signUp({
             email: userData.email,
             password: userData.password,
             options: {
                 data: {
                     wilaya: userData.wilaya,
-                    city: userData.commune,
+                    city: userData.city,
                     school_id: schoolId,
                     full_name: userData.full_name || '',
-                    role: 'teacher' // On définit par défaut le rôle teacher
+                    role: 'teacher'
                 }
             }
         });
 
         if (error) {
-            console.log("Supabase signUp error:", error); // Log de l'erreur
+            console.log("Supabase signUp error:", error);
             if (error.message.includes('already registered')) {
-                throw new Error('Cette adresse e-mail est déjà utilisée. Si vous avez initié cette inscription, veuillez vérifier votre boîte de réception pour un lien de connexion. Sinon, veuillez vous connecter avec votre compte existant.');
+                throw new Error('Cette adresse e-mail est déjà utilisée.');
             }
             throw error;
         }
 
         const user = data.user;
+        if (!user) throw new Error('Utilisateur non créé.');
 
-        // If new school, create it and link it
-        if (userData.new_school && user) {
-            // We need to wait a bit for the session to be established? 
-            // supabase.auth.signUp automatically signs in if email confirmation is disabled.
-            // If enabled, we can't create the school yet.
-            // Assuming email confirmation is OFF or we accept the risk.
-            
+        // 1. If new school, create it first
+        if (userData.new_school) {
             const { data: school, error: schoolError } = await supabase
                 .from('schools')
                 .insert([{
                     name: userData.new_school.name,
-                    commune_id: userData.new_school.commune_id, // Ensure this matches DB schema
+                    commune_id: userData.new_school.commune_id,
                     created_by: user.id,
                     approved: false
                 }])
@@ -86,13 +78,54 @@ export async function register(userData) {
 
             if (schoolError) {
                 console.error('Error creating school:', schoolError);
-                // Non-blocking error? Or should we warn user?
             } else if (school) {
-                // Update user with new school_id
-                await supabase
-                    .from('users')
-                    .update({ school_id: school.id })
-                    .eq('id', user.id);
+                schoolId = school.id;
+                // Update user metadata in Auth (for JWT claims)
+                // Note: Auth metadata is updated via auth.updateUser, not public.users table if using JWT Claims pattern
+                await supabase.auth.updateUser({
+                    data: { school_id: schoolId }
+                });
+            }
+        }
+
+        // 2. Associate with classes
+        if (schoolId && userData.selectedClasses && userData.selectedClasses.length > 0) {
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const academicYear = now.getMonth() >= 8 
+                ? `${currentYear}/${currentYear + 1}` 
+                : `${currentYear - 1}/${currentYear}`;
+
+            for (const className of userData.selectedClasses) {
+                try {
+                    // Try to find or create the class
+                    const { data: cls, error: clsError } = await supabase
+                        .from('classes')
+                        .upsert({ 
+                            school_id: schoolId, 
+                            name: className, 
+                            academic_year: academicYear 
+                        }, { onConflict: 'school_id,academic_year,name' })
+                        .select()
+                        .single();
+
+                    if (clsError) {
+                        console.error(`Error finding/creating class ${className}:`, clsError);
+                        continue;
+                    }
+
+                    if (cls) {
+                        // Link teacher to class
+                        await supabase
+                            .from('teacher_classes')
+                            .insert([{ 
+                                user_id: user.id, 
+                                class_id: cls.id 
+                            }]);
+                    }
+                } catch (e) {
+                    console.error(`Failed to link class ${className}:`, e);
+                }
             }
         }
 

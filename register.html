@@ -131,6 +131,30 @@
                 </div>
             </div>
 
+            <!-- Classes Selection (Hidden by default, shown when school is selected) -->
+            <div id="classes-selection-container" class="mb-6 border-t pt-4 hidden">
+                <label class="block text-gray-700 text-sm font-bold mb-2" data-translate="selectYourClassesLabel">
+                    Vos Classes
+                </label>
+                <p class="text-xs text-gray-500 mb-3" data-translate="selectYourClassesHint">Sélectionnez les classes que vous gérez ou ajoutez-en une nouvelle.</p>
+                
+                <div id="shared-classes-list" class="grid grid-cols-2 gap-2 mb-3">
+                    <!-- Classes will be injected here -->
+                </div>
+
+                <div class="flex gap-2">
+                    <input type="text" id="new-class-name" 
+                        class="shadow appearance-none border rounded flex-1 py-2 px-3 text-gray-700 text-sm leading-tight focus:outline-none focus:shadow-outline" 
+                        placeholder="Ex: 2M1" data-translate-placeholder="newClassNamePlaceholder">
+                    <button type="button" id="add-class-btn" class="bg-blue-100 text-blue-600 px-3 py-2 rounded-lg text-sm font-bold hover:bg-blue-200 transition-colors">
+                        +
+                    </button>
+                </div>
+                <div id="selected-classes-tags" class="flex flex-wrap gap-2 mt-3">
+                    <!-- Selected class tags will appear here -->
+                </div>
+            </div>
+
             <div class="flex items-center justify-between">
                 <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full" 
                     type="submit" id="submit-btn" data-translate="registerButton">
@@ -148,6 +172,7 @@
     <script type="module">
         import { register, getSchools, checkAuth } from './src/ui/auth.js';
         import { initLanguage, changeLanguage, t } from './src/ui/i18n.js';
+        import { supabase } from './src/ui/supabase-client.js';
 
         // Initialize language
         initLanguage();
@@ -168,16 +193,54 @@
         const newSchoolContainer = document.getElementById('new-school-container');
         const wilayaSelect = document.getElementById('wilaya-select');
         const communeSelect = document.getElementById('commune-select');
+        const classesSelectionContainer = document.getElementById('classes-selection-container');
+        const sharedClassesList = document.getElementById('shared-classes-list');
+        const newClassNameInput = document.getElementById('new-class-name');
+        const addClassBtn = document.getElementById('add-class-btn');
+        const selectedClassesTags = document.getElementById('selected-classes-tags');
 
         let isNewSchoolMode = false;
         let wilayas = [];
+        let selectedClasses = new Set();
 
+        const updateSelectedClassesUI = () => {
+            selectedClassesTags.innerHTML = '';
+            selectedClasses.forEach(className => {
+                const tag = document.createElement('div');
+                tag.className = 'bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1';
+                tag.innerHTML = `
+                    ${className}
+                    <button type="button" class="hover:text-red-200" onclick="removeSelectedClass('${className}')">×</button>
+                `;
+                selectedClassesTags.appendChild(tag);
+            });
+        };
 
+        window.removeSelectedClass = (className) => {
+            selectedClasses.delete(className);
+            updateSelectedClassesUI();
+            // Also uncheck in grid if present
+            const checkbox = document.querySelector(`.class-checkbox[value="${className}"]`);
+            if (checkbox) checkbox.checked = false;
+        };
+
+        addClassBtn.addEventListener('click', () => {
+            const val = newClassNameInput.value.trim().toUpperCase();
+            if (val && !selectedClasses.has(val)) {
+                selectedClasses.add(val);
+                updateSelectedClassesUI();
+                newClassNameInput.value = '';
+            }
+        });
 
         const loadSchools = async (params = {}) => {
             try {
                 const schools = await getSchools(params);
                 schoolSelect.innerHTML = '<option value="" data-translate="selectSchoolPlaceholder">Sélectionner un lycée...</option>';
+                classesSelectionContainer.classList.add('hidden');
+                selectedClasses.clear();
+                updateSelectedClassesUI();
+
                 if (schools.length === 0) {
                     const option = document.createElement('option');
                     option.disabled = true;
@@ -195,6 +258,60 @@
                 console.error('Error loading schools', e);
             }
         };
+
+        // School select change
+        schoolSelect.addEventListener('change', async () => {
+            const schoolId = schoolSelect.value;
+            
+            // Clear previous selections when school changes
+            selectedClasses.clear();
+            updateSelectedClassesUI();
+
+            if (schoolId) {
+                classesSelectionContainer.classList.remove('hidden');
+                sharedClassesList.innerHTML = '<div class="col-span-2 text-xs text-gray-400 italic">Chargement des classes...</div>';
+                
+                try {
+                    // We can use supabase directly here as it's public for schools/classes
+                    // Fetch classes for this school
+                    const { data: classes, error } = await supabase
+                        .from('classes')
+                        .select('name')
+                        .eq('school_id', schoolId)
+                        .order('name');
+                    
+                    if (error) throw error;
+
+                    if (classes && classes.length > 0) {
+                        sharedClassesList.innerHTML = classes.map(c => `
+                            <label class="flex items-center gap-2 p-2 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                                <input type="checkbox" class="class-checkbox" value="${c.name}">
+                                <span class="text-sm text-gray-700">${c.name}</span>
+                            </label>
+                        `).join('');
+
+                        // Re-attach listeners
+                        document.querySelectorAll('.class-checkbox').forEach(cb => {
+                            cb.addEventListener('change', (e) => {
+                                if (e.target.checked) {
+                                    selectedClasses.add(e.target.value);
+                                } else {
+                                    selectedClasses.delete(e.target.value);
+                                }
+                                updateSelectedClassesUI();
+                            });
+                        });
+                    } else {
+                        sharedClassesList.innerHTML = '<div class="col-span-2 text-xs text-gray-400 italic">Aucune classe existante. Ajoutez la vôtre ci-dessous.</div>';
+                    }
+                } catch (e) {
+                    console.error('Error loading shared classes:', e);
+                    sharedClassesList.innerHTML = '<div class="col-span-2 text-xs text-red-400">Erreur de chargement des classes.</div>';
+                }
+            } else {
+                classesSelectionContainer.classList.add('hidden');
+            }
+        });
 
         // Load wilayas
         (async () => {
@@ -290,7 +407,14 @@
             const city = communeOption ? communeOption.textContent.split(' (')[0] : '';
             const wilaya = wilayaOption ? wilayaOption.textContent.split(' - ')[1] : '';
 
-            const userData = { email, password, city, wilaya, full_name: fullName };
+            const userData = { 
+                email, 
+                password, 
+                city, 
+                wilaya, 
+                full_name: fullName,
+                selectedClasses: Array.from(selectedClasses)
+            };
 
             if (isNewSchoolMode) {
                 userData.new_school = {
