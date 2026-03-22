@@ -40,12 +40,14 @@ create table if not exists public.classes (
 
 alter table public.classes enable row level security;
 
--- Nettoyage et création des politiques pour classes (UTILISATION DES JWT CLAIMS)
+-- Nettoyage et création des politiques pour classes (UTILISATION DES JWT CLAIMS + LECTURE PUBLIQUE POUR INSCRIPTION)
 drop policy if exists "Users can see classes of their school" on public.classes;
 create policy "Users can see classes of their school"
   on public.classes for select
   using (
     (auth.jwt() -> 'user_metadata' ->> 'school_id')::uuid = school_id
+    or 
+    auth.uid() is null -- Autoriser la lecture anonyme pour la page d'inscription
   );
 
 drop policy if exists "Users can create classes in their school" on public.classes;

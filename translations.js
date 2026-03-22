@@ -69,6 +69,11 @@ window.translations = {
 
         // Étudiants
         myClasses: "Mes Classes",
+        joinClass: "Rejoindre une classe",
+        joinClassTitle: "Rejoindre une classe",
+        joinClassSubtitle: "Classes disponibles dans votre établissement",
+        joinClassHint: "Vous ne trouvez pas votre classe ? Ajoutez un élève pour la créer.",
+        alreadyJoined: "Déjà rejoint",
         classManagementSubtitle: "Sélectionnez une classe pour gérer les élèves",
         studentsList: "Liste des Élèves",
         addStudent: "Ajouter un élève",
@@ -400,6 +405,11 @@ window.translations = {
 
         // Étudiants
         myClasses: "My Classes",
+        joinClass: "Join a Class",
+        joinClassTitle: "Join a Class",
+        joinClassSubtitle: "Available classes in your school",
+        joinClassHint: "Can't find your class? Add a student to create it.",
+        alreadyJoined: "Already joined",
         classManagementSubtitle: "Select a class to manage students",
         studentsList: "Students List",
         addStudent: "Add Student",
@@ -739,8 +749,13 @@ window.translations = {
         next: "التالي",
 
         // Étudiants
-        myClasses: "فصولي",
-        classManagementSubtitle: "اختر فصلاً لإدارة الطلاب",
+        myClasses: "أقسامي",
+        joinClass: "الانضمام إلى قسم",
+        joinClassTitle: "الانضمام إلى قسم",
+        joinClassSubtitle: "الأقسام المتوفرة في ثانويتك",
+        joinClassHint: "لا تجد قسمك؟ أضف تلميذاً لإنشائه.",
+        alreadyJoined: "تم الانضمام",
+        classManagementSubtitle: "اختر قسماً لتسيير التلاميذ",
         studentsList: "قائمة الطلاب",
         addStudent: "إضافة طالب",
         importExcel: "استيراد (.xlsx)",

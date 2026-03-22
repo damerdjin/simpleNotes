@@ -123,12 +123,27 @@ export const relationalSyncService = {
                     }));
 
                     if (classesPayload.length > 0) {
-                        const { error: classUpsertError } = await supabase
+                        const { data: syncedClasses, error: classUpsertError } = await supabase
                             .from('classes')
-                            .upsert(classesPayload, { onConflict: 'school_id,academic_year,name' });
+                            .upsert(classesPayload, { onConflict: 'school_id,academic_year,name' })
+                            .select('id');
                         
                         if (classUpsertError) {
                             console.error('[RelationalSync] Classes upsert error:', classUpsertError);
+                        } else if (syncedClasses && syncedClasses.length > 0) {
+                            // 1d. Link teacher to these classes (Subscription)
+                            const teacherClassesPayload = syncedClasses.map(c => ({
+                                user_id: userId,
+                                class_id: c.id
+                            }));
+
+                            const { error: tcError } = await supabase
+                                .from('teacher_classes')
+                                .upsert(teacherClassesPayload, { onConflict: 'user_id,class_id' });
+                            
+                            if (tcError) {
+                                console.error('[RelationalSync] Teacher classes subscription error:', tcError);
+                            }
                         }
                     }
 

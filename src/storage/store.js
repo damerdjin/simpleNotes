@@ -52,11 +52,27 @@ export const store = {
       await remote.deleteHistory(historyId);
     }
   },
-  async getSharedClasses() {
+  async getSharedClasses(onlyMine = false) {
     if (remote.getSharedClasses) {
-      return await remote.getSharedClasses();
+      return await remote.getSharedClasses(onlyMine);
     }
     return [];
+  },
+  async getSharedClassStats() {
+    if (remote.getSharedClassStats) {
+      return await remote.getSharedClassStats();
+    }
+    return {};
+  },
+  async unsubscribeFromClass(className) {
+    if (remote.unsubscribeFromClass) {
+      await remote.unsubscribeFromClass(className);
+    }
+  },
+  async subscribeToClass(className) {
+    if (remote.subscribeToClass) {
+      await remote.subscribeToClass(className);
+    }
   },
   async getSharedStudents(className) {
     if (remote.getSharedStudents) {

@@ -141,28 +141,60 @@ export function supabaseAdapter() {
         console.warn('[SupabaseAdapter] Delete history error:', err);
       }
     },
-    async getSharedClasses() {
+    async getSharedClasses(onlyMine = false) {
       try {
         const academicYear = getAcademicYear();
         const userId = getCurrentUserId();
         if (!userId) return [];
 
-        const { data, error, status } = await supabase
+        let query = supabase
           .from('classes')
           .select('name')
-          .eq('academic_year', academicYear)
-          .order('name');
-        
-        if (error) {
-          // Silent failure for shared data to avoid UI noise if SQL not yet applied
-          return [];
+          .eq('academic_year', academicYear);
+
+        if (onlyMine) {
+          // Join with teacher_classes to get only subscriptions
+          const { data: tcData, error: tcError } = await supabase
+            .from('teacher_classes')
+            .select('class_id')
+            .eq('user_id', userId);
+          
+          if (tcError) throw tcError;
+          if (!tcData || tcData.length === 0) return [];
+          
+          const classIds = tcData.map(tc => tc.class_id);
+          query = query.in('id', classIds);
         }
+
+        const { data, error } = await query.order('name');
+        
+        if (error) return [];
         return data ? data.map(c => c.name) : [];
       } catch (err) {
         // console.warn('[SupabaseAdapter] Get shared classes error:', err);
       }
       return [];
     },
+    async getSharedClassStats() {
+      try {
+        const academicYear = getAcademicYear();
+        const { data, error } = await supabase
+          .from('students')
+          .select('className:class_name')
+          .eq('academic_year', academicYear);
+        
+        if (error) return {};
+        
+        const stats = {};
+        data.forEach(s => {
+          stats[s.className] = (stats[s.className] || 0) + 1;
+        });
+        return stats;
+      } catch (err) {
+        return {};
+      }
+    },
+
     async getSharedStudents(className) {
       try {
         const academicYear = getAcademicYear();
@@ -199,6 +231,70 @@ export function supabaseAdapter() {
       }
       return [];
     },
+
+    async unsubscribeFromClass(className) {
+      try {
+        const userId = getCurrentUserId();
+        const academicYear = getAcademicYear();
+        if (!userId || !academicYear || !className) return;
+
+        // Find the class ID first
+        const { data: cls, error: clsError } = await supabase
+          .from('classes')
+          .select('id')
+          .eq('academic_year', academicYear)
+          .eq('name', className)
+          .maybeSingle();
+
+        if (clsError || !cls) return;
+
+        // Delete the subscription
+        const { error } = await supabase
+          .from('teacher_classes')
+          .delete()
+          .eq('user_id', userId)
+          .eq('class_id', cls.id);
+
+        if (error) throw error;
+      } catch (err) {
+        console.warn('[SupabaseAdapter] Unsubscribe error:', err);
+      }
+    },
+
+    async subscribeToClass(className) {
+      try {
+        const userId = getCurrentUserId();
+        const academicYear = getAcademicYear();
+        if (!userId || !academicYear || !className) return;
+
+        // 1. Find the class ID in this school and academic year
+        const { data: cls, error: clsError } = await supabase
+          .from('classes')
+          .select('id')
+          .eq('academic_year', academicYear)
+          .eq('name', className)
+          .maybeSingle();
+
+        if (clsError || !cls) {
+          // If class doesn't exist, it will be created via standard student add flow later, 
+          // or we could create it here. Let's assume for "Join" it must exist.
+          return;
+        }
+
+        // 2. Add the subscription
+        const { error } = await supabase
+          .from('teacher_classes')
+          .upsert({
+            user_id: userId,
+            class_id: cls.id
+          }, { onConflict: 'user_id,class_id' });
+
+        if (error) throw error;
+      } catch (err) {
+        console.warn('[SupabaseAdapter] Subscribe error:', err);
+      }
+    },
+
     get(key) {
       return localStorage.getItem(key);
     },

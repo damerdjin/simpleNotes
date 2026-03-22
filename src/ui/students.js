@@ -62,7 +62,7 @@
 
     // ===== CLASSES =====
     window.getClasses = async function() {
-        // On combine les classes locales du JSON et les classes partagées du lycée
+        // On combine les classes locales du JSON et les classes auxquelles le prof est abonné
         const localClasses = new Set();
         const globalAcademicYear = window.getGlobalAcademicYear();
         const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
@@ -73,10 +73,11 @@
             }
         });
 
-        // Récupération des classes partagées depuis Supabase
+        // Récupération des classes partagées auxquelles le prof est abonné
         let sharedClasses = [];
         if (window.store && typeof window.store.getSharedClasses === 'function') {
-            sharedClasses = await window.store.getSharedClasses();
+            // true pour ne récupérer que les classes de l'enseignant (via teacher_classes)
+            sharedClasses = await window.store.getSharedClasses(true);
         }
 
         const allClasses = new Set([...localClasses, ...sharedClasses]);
@@ -160,6 +161,12 @@
         const allClasses = await window.getClasses();
         const classes = allClasses.filter(c => c.toLowerCase().includes(search));
         
+        // 1. Get Shared Class Stats
+        let sharedStats = {};
+        if (window.store && typeof window.store.getSharedClassStats === 'function') {
+            sharedStats = await window.store.getSharedClassStats();
+        }
+
         if (classes.length === 0) {
             container.innerHTML = `<div class="col-span-full text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
                 <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
@@ -176,15 +183,20 @@
         const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
         
         const rows = classes.map(c => {
-            const classStudents = getData().students.filter(s => s.className === c && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear);
-            const count = classStudents.length;
+            // Count local students
+            const localStudents = getData().students.filter(s => s.className === c && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear);
             
-            const boys = classStudents.filter(s => {
+            // Total students = Local + Shared (without duplication)
+            // But for simplicity in the grid, we just take the Max or Sum depending on implementation.
+            // Since sharedStats includes ALL students of the school in that class, it's the most accurate total.
+            const count = Math.max(localStudents.length, sharedStats[c] || 0);
+            
+            const boys = localStudents.filter(s => {
                 const sex = (s.sex || '').toLowerCase();
                 return sex.startsWith('m') || sex.includes('ذكر') || sex.includes('garçon');
             }).length;
             
-            const girls = classStudents.filter(s => {
+            const girls = localStudents.filter(s => {
                 const sex = (s.sex || '').toLowerCase();
                 return sex.startsWith('f') || sex.includes('أنث') || sex.includes('fille');
             }).length;
@@ -316,7 +328,7 @@
                      statsEl.textContent = `${count} ${(t.studentsCountLabel || 'Élèves').toUpperCase()}`;
                 }
             
-            window.renderStudents();
+            await window.renderStudents();
         } else {
             // Si on demande la liste des classes (className vide)
             // On pousse un état si on vient d'une classe et qu'on n'est pas en train de faire un retour
@@ -356,17 +368,17 @@
         await window.setStudentsSelectedClass('', { skipHistory: true });
     };
 
-    window.setStudentsPageSize = function(value) {
+    window.setStudentsPageSize = async function(value) {
         const n = Number(value);
         studentsUiState.pageSize = Number.isFinite(n) && n > 0 ? n : 48;
         studentsUiState.page = 1;
-        window.renderStudents();
+        await window.renderStudents();
     };
 
-    window.goStudentsPage = function(page) {
+    window.goStudentsPage = async function(page) {
         const p = Number(page);
         studentsUiState.page = Number.isFinite(p) && p > 0 ? p : 1;
-        window.renderStudents();
+        await window.renderStudents();
     };
 
     window.deleteClassSafely = async function(className) {
@@ -380,7 +392,7 @@
         await window.renderClassList();
     };
 
-    window.deleteClass = function(className) {
+    window.deleteClass = async function(className) {
         const t = getTranslations()[getLang()];
         const data = getData();
         const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
@@ -412,12 +424,124 @@
         }
 
         saveData();
-        window.renderStudents();
-        window.renderClassList();
-        window.loadClassSelectors();
-        window.loadClassSelectorsForAssignments();
+
+        // Se désabonner de la classe dans Supabase (modèle collaboratif)
+        if (window.store && typeof window.store.unsubscribeFromClass === 'function') {
+            await window.store.unsubscribeFromClass(className);
+        }
+
+        await window.renderStudents();
+        await window.renderClassList();
+        await window.loadClassSelectors();
+        await window.loadClassSelectorsForAssignments();
         renderSummary();
         renderAssignments();
+    };
+
+    // ===== JOIN CLASS (COLLABORATIVE) =====
+
+    window.openJoinClassModal = async function() {
+        const modal = document.getElementById('join-class-modal');
+        if (modal) {
+            modal.classList.add('active');
+            modal.classList.remove('pointer-events-none', 'opacity-0');
+            modal.classList.add('opacity-100');
+            modal.querySelector('div').classList.remove('scale-95');
+            modal.querySelector('div').classList.add('scale-100');
+            
+            // Clear search
+            const search = document.getElementById('join-class-search');
+            if (search) search.value = '';
+            
+            await window.renderJoinClassList();
+        }
+    };
+
+    window.closeJoinClassModal = function() {
+        const modal = document.getElementById('join-class-modal');
+        if (modal) {
+            modal.classList.remove('active');
+            modal.classList.add('pointer-events-none', 'opacity-0');
+            modal.classList.remove('opacity-100');
+            modal.querySelector('div').classList.add('scale-95');
+            modal.querySelector('div').classList.remove('scale-100');
+        }
+    };
+
+    window.renderJoinClassList = async function() {
+        const container = document.getElementById('join-class-list');
+        const t = getTranslations()[getLang()];
+        if (!container) return;
+
+        container.innerHTML = `<div class="col-span-full flex items-center justify-center py-12">
+            <div class="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        </div>`;
+
+        try {
+            // 1. Get ALL classes of the school
+            const allSchoolClasses = await window.store.getSharedClasses(false);
+            // 2. Get MY classes (already joined)
+            const myClasses = await window.store.getSharedClasses(true);
+            const myClassesSet = new Set(myClasses);
+
+            const searchTerm = document.getElementById('join-class-search')?.value.trim().toLowerCase() || '';
+            const filteredClasses = allSchoolClasses.filter(c => c.toLowerCase().includes(searchTerm));
+
+            if (filteredClasses.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                    <p class="text-slate-500 font-medium">${t.noClassesFound || 'Aucune classe trouvée'}</p>
+                </div>`;
+                return;
+            }
+
+            container.innerHTML = filteredClasses.map(className => {
+                const isJoined = myClassesSet.has(className);
+                const color = typeof window.getClassColor === 'function' ? window.getClassColor(className) : '#3b82f6';
+                
+                return `
+                    <div class="p-4 rounded-2xl border-2 ${isJoined ? 'border-slate-100 bg-slate-50 opacity-75' : 'border-slate-100 hover:border-blue-200 hover:bg-blue-50/30'} transition-all group flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-xs shadow-sm" style="background-color: ${color}">
+                                ${className.substring(0, 2).toUpperCase()}
+                            </div>
+                            <span class="font-bold text-slate-700">${className}</span>
+                        </div>
+                        ${isJoined ? `
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-200 px-2 py-1 rounded-lg">${t.alreadyJoined}</span>
+                        ` : `
+                            <button onclick="joinClass('${className}')" class="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md shadow-blue-500/20 transition-all hover:scale-110 active:scale-90">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            </button>
+                        `}
+                    </div>
+                `;
+            }).join('');
+        } catch (err) {
+            container.innerHTML = `<p class="col-span-full text-center text-red-500 py-8">${t.errorLoadingData || 'Erreur lors du chargement'}</p>`;
+        }
+    };
+
+    window.joinClass = async function(className) {
+        if (window.store && typeof window.store.subscribeToClass === 'function') {
+            try {
+                await window.store.subscribeToClass(className);
+                
+                // Refresh UI
+                await window.renderClassList();
+                await window.loadClassSelectors();
+                
+                // Show success toast
+                if (window.showToast) {
+                    const t = getTranslations()[getLang()];
+                    window.showToast(`${t.classJoinedSuccess || 'Vous avez rejoint la classe'} ${className}`);
+                }
+                
+                // Close modal
+                window.closeJoinClassModal();
+            } catch (err) {
+                console.error('Join class error:', err);
+            }
+        }
     };
 
     // ===== STUDENTS =====
@@ -558,13 +682,14 @@
         
         // Load classes into select
         if (classSelect) {
-            const classes = window.getClasses ? window.getClasses() : [];
-            let html = `<option value="">-- ${t.classNameOption || '--'} --</option>`;
-            classes.forEach(c => {
-                html += `<option value="${c}">${c}</option>`;
+            window.getClasses().then(classes => {
+                let html = `<option value="">-- ${t.classNameOption || '--'} --</option>`;
+                classes.forEach(c => {
+                    html += `<option value="${c}">${c}</option>`;
+                });
+                html += `<option value="__new__" class="font-bold text-blue-600">+ ${t.newClass}</option>`;
+                classSelect.innerHTML = html;
             });
-            html += `<option value="__new__" class="font-bold text-blue-600">+ ${t.newClass}</option>`;
-            classSelect.innerHTML = html;
         }
 
         if (studentId) {
@@ -677,7 +802,7 @@
         }
     };
 
-    window.addStudent = function() {
+    window.addStudent = async function() {
         const t = getTranslations()[getLang()];
         const data = getData();
         const lastName = document.getElementById('student-lastname').value.trim();
@@ -747,7 +872,7 @@
             studentsUiState.selectedClass = "";
         }
 
-        window.renderStudents();
+        await window.renderStudents();
         window.closeStudentModal();
         
         // Show success confirmation
@@ -756,20 +881,20 @@
         }
 
         // Refresh class lists if a new class was created or changed
-        window.renderClassList();
-        window.loadClassSelectors();
+        await window.renderClassList();
+        await window.loadClassSelectors();
     };
 
-    window.deleteStudent = function(id) {
+    window.deleteStudent = async function(id) {
         const t = getTranslations()[getLang()];
         const data = getData();
         if (!confirm(t.deleteStudent)) return;
         data.students = data.students.filter(s => s.id !== id);
         delete data.grades[id];
         saveData();
-        window.renderStudents();
-        window.renderClassList();
-        window.loadClassSelectors();
+        await window.renderStudents();
+        await window.renderClassList();
+        await window.loadClassSelectors();
     };
 
     window.viewStudentGrades = function(studentId) {
@@ -800,7 +925,7 @@
         }
     };
 
-    window.renderStudents = function() {
+    window.renderStudents = async function() {
         const t = getTranslations()[getLang()];
         const container = document.getElementById('students-list');
         const searchTerm = document.getElementById('student-search')?.value.trim().toLowerCase() || '';
@@ -817,9 +942,28 @@
             return;
         }
 
-        let filteredStudents = data.students.slice();
-        // Filter by user and global academic year
-        filteredStudents = filteredStudents.filter(s => (s.importedBy || 'unknown') === globalUserId && (s.academicYear || '') === globalAcademicYear);
+        // 1. Get Local Students
+        let localStudents = data.students.filter(s => 
+            (s.importedBy || 'unknown') === globalUserId && 
+            (s.academicYear || '') === globalAcademicYear
+        );
+
+        // 2. Get Shared Students (if a class is selected)
+        let sharedStudents = [];
+        if (selectedClass && window.store && typeof window.store.getSharedStudents === 'function') {
+            sharedStudents = await window.store.getSharedStudents(selectedClass);
+        }
+
+        // 3. Merge and Filter
+        const studentMap = new Map();
+        localStudents.forEach(s => studentMap.set(s.id, s));
+        sharedStudents.forEach(s => {
+            if (!studentMap.has(s.id)) studentMap.set(s.id, s);
+        });
+
+        let filteredStudents = Array.from(studentMap.values());
+
+        // Apply filters
         if (selectedClass) {
             filteredStudents = filteredStudents.filter(s => (s.className || '') === selectedClass);
         }
@@ -830,9 +974,7 @@
             });
         }
 
-
-
-        if (data.students.length === 0) {
+        if (filteredStudents.length === 0 && data.students.length === 0) {
             container.className = '';
             container.innerHTML = `<p class="text-gray-500 text-center py-8">${t.noStudentsAddFirst}</p>`;
             const pagination = document.getElementById('students-pagination');
@@ -1053,7 +1195,7 @@
                 };
             }).filter(r => r !== null);
 
-            const runImport = (studentMapping = {}) => {
+            const runImport = async (studentMapping = {}) => {
                 let added = 0;
                 let updated = 0;
                 const data = getData();
@@ -1150,9 +1292,9 @@
             });
 
             saveData();
-            window.renderStudents();
-            window.renderClassList();
-            window.loadClassSelectors();
+            await window.renderStudents();
+            await window.renderClassList();
+            await window.loadClassSelectors();
 
             // Recharger les sélecteurs et le récapitulatif si nécessaire
             if (typeof window.renderSummary === 'function') window.renderSummary();

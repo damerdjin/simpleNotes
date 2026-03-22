@@ -153,7 +153,7 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
             onShow: async () => {
                 if (window.loadClassSelectors) await window.loadClassSelectors();
                 if (window.renderClassList) await window.renderClassList();
-                if (window.renderStudents) window.renderStudents();
+                if (window.renderStudents) await window.renderStudents();
             }
         });
 
@@ -348,7 +348,7 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
         await window.translatePage();
 
         // Re-rendre les composants dynamiques
-        if (typeof window.renderStudents === 'function') window.renderStudents();
+        if (typeof window.renderStudents === 'function') await window.renderStudents();
         if (typeof window.renderClassList === 'function') await window.renderClassList();
         if (typeof window.renderAssignments === 'function') window.renderAssignments();
         if (typeof window.renderSummary === 'function') window.renderSummary();
@@ -596,15 +596,15 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
         console.log("Global State Change: Refreshing all views for year", value);
         
         // Use a small delay to ensure localStorage is settled and avoid race conditions
-        setTimeout(() => {
-            if (window.loadClassSelectors) window.loadClassSelectors();
+        setTimeout(async () => {
+            if (window.loadClassSelectors) await window.loadClassSelectors();
             if (window.loadClassSelectorsForAssignments) window.loadClassSelectorsForAssignments();
-            if (window.loadClassSelectorsForExport) window.loadClassSelectorsForExport();
-            if (window.renderClassList) window.renderClassList();
-            if (window.renderStudents) window.renderStudents();
+            if (window.loadClassSelectorsForExport) await window.loadClassSelectorsForExport();
+            if (window.renderClassList) await window.renderClassList();
+            if (window.renderStudents) await window.renderStudents();
             if (window.renderAssignments) window.renderAssignments();
             if (window.renderSummary) window.renderSummary();
-            if (window.loadGradeSelectors) window.loadGradeSelectors();
+            if (window.loadGradeSelectors) await window.loadGradeSelectors();
             if (window.renderExportPrep) window.renderExportPrep();
             
             // Also update any other global state indicators
@@ -636,11 +636,11 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
         console.log("Global State Change: Refreshing all views for trimester", value);
 
         // Re-render all data-dependent views
-        setTimeout(() => {
-            if (window.renderStudents) window.renderStudents();
-            if (window.renderAssignments) window.renderAssignments();
-            if (window.renderSummary) window.renderSummary();
-            if (window.loadGradeSelectors) window.loadGradeSelectors();
+        setTimeout(async () => {
+            if (window.renderStudents) await window.renderStudents();
+            if (window.renderAssignments) renderAssignments();
+            if (window.renderSummary) renderSummary();
+            if (window.loadGradeSelectors) await window.loadGradeSelectors();
             if (window.renderExportPrep) window.renderExportPrep();
             
             // Update import buttons status
