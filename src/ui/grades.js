@@ -50,7 +50,7 @@
             if (containerStudent) containerStudent.classList.add('hidden');
             assignmentSelect.innerHTML = `<option value="">-- ${t.selectClassFirst || 'Sélectionnez une classe'} --</option>`;
             studentSelect.innerHTML = `<option value="">-- ${t.selectClassFirst || 'Sélectionnez une classe'} --</option>`;
-            window.loadGradeEntry();
+            await window.loadGradeEntry();
             return;
         }
 
@@ -73,8 +73,25 @@
         assignmentSelect.innerHTML = `<option value="">-- ${t.selectAssignment || 'Sélectionner un devoir'} --</option>` +
             filteredAssignments.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
 
-        // Mise à jour de la liste des élèves
-        let filteredStudents = data.students.filter(s => s.className === selectedClass && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear);
+        // Mise à jour de la liste des élèves (Combiner locaux + partagés)
+        let localStudents = data.students.filter(s => s.className === selectedClass && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear);
+        
+        // Récupération des élèves partagés depuis Supabase
+        let sharedStudents = [];
+        if (window.store && typeof window.store.getSharedStudents === 'function') {
+            sharedStudents = await window.store.getSharedStudents(selectedClass);
+        }
+
+        // Fusionner les élèves (éviter les doublons par ID)
+        const studentMap = new Map();
+        localStudents.forEach(s => studentMap.set(s.id, s));
+        sharedStudents.forEach(s => {
+            if (!studentMap.has(s.id)) {
+                studentMap.set(s.id, s);
+            }
+        });
+        
+        let filteredStudents = Array.from(studentMap.values());
         
         // Sort by Last Name then First Name
         filteredStudents.sort((a, b) => {

@@ -61,16 +61,26 @@
     window.studentsUiState = studentsUiState;
 
     // ===== CLASSES =====
-    window.getClasses = function() {
-        const classes = new Set();
+    window.getClasses = async function() {
+        // On combine les classes locales du JSON et les classes partagées du lycée
+        const localClasses = new Set();
         const globalAcademicYear = window.getGlobalAcademicYear();
         const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
+        
         (getData().students || []).forEach(s => {
             if ((s.importedBy || 'unknown') === userId && s.className && globalAcademicYear && s.academicYear === globalAcademicYear) {
-                classes.add(s.className);
+                localClasses.add(s.className);
             }
         });
-        return Array.from(classes).sort();
+
+        // Récupération des classes partagées depuis Supabase
+        let sharedClasses = [];
+        if (window.store && typeof window.store.getSharedClasses === 'function') {
+            sharedClasses = await window.store.getSharedClasses();
+        }
+
+        const allClasses = new Set([...localClasses, ...sharedClasses]);
+        return Array.from(allClasses).sort();
     };
 
     window.getAcademicYears = function() {
@@ -81,8 +91,8 @@
         return Array.from(years).sort();
     };
 
-    window.loadClassSelectors = function() {
-        const classes = window.getClasses();
+    window.loadClassSelectors = async function() {
+        const classes = await window.getClasses();
         const academicYears = window.getAcademicYears();
         const t = getTranslations()[getLang()];
 

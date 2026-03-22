@@ -23,6 +23,12 @@ export const relationalSyncService = {
 
         const userId = user.id;
         const userEmail = user.email;
+        const schoolId = user.user_metadata?.school_id;
+
+        if (!schoolId) {
+            console.warn('[RelationalSync] Sync skipped: user has no school_id');
+            return;
+        }
 
         try {
             const normalizeBirthDate = (val) => {
@@ -82,11 +88,12 @@ export const relationalSyncService = {
                         return {
                             id: s.id,
                             user_id: userId,
+                            school_id: schoolId,
                             academic_year: academicYear,
                             first_name: s.firstName || null,
                             last_name: s.lastName || null,
                             nin: s.nin || null,
-                            reg_number: s.regNumber || null,
+                            registration_number: s.regNumber || null,
                             birthdate: normalizeBirthDate(s.birthDate),
                             class_name: s.className || 'Sans classe',
                             sex: sex,
@@ -98,6 +105,7 @@ export const relationalSyncService = {
                 
                 if (studentsPayload.length > 0) {
                     // 1a. Upsert des élèves présents
+                    // On utilise maintenant l'ID comme conflit, mais le RLS gère la visibilité par lycée
                     const { error: upsertError } = await supabase
                         .from('students')
                         .upsert(studentsPayload, { onConflict: 'id' });
@@ -106,7 +114,26 @@ export const relationalSyncService = {
                         console.error('[RelationalSync] Students upsert error:', upsertError);
                     }
 
-                    // 1b. Suppression des élèves qui ne sont plus dans le payload local pour cette année/prof
+                    // 1b. On synchronise aussi les classes uniques détectées dans l'établissement
+                    const uniqueClasses = [...new Set(studentsPayload.map(s => s.class_name))];
+                    const classesPayload = uniqueClasses.map(c => ({
+                        school_id: schoolId,
+                        academic_year: academicYear,
+                        name: c
+                    }));
+
+                    if (classesPayload.length > 0) {
+                        const { error: classUpsertError } = await supabase
+                            .from('classes')
+                            .upsert(classesPayload, { onConflict: 'school_id,academic_year,name' });
+                        
+                        if (classUpsertError) {
+                            console.error('[RelationalSync] Classes upsert error:', classUpsertError);
+                        }
+                    }
+
+                    // 1c. Suppression des élèves qui ne sont plus dans le payload local pour cette année/prof
+                    // ATTENTION: On ne supprime que ceux du PROF pour ne pas supprimer ceux des collègues
                     const studentIds = studentsPayload.map(s => s.id);
                     const { error: deleteError } = await supabase
                         .from('students')

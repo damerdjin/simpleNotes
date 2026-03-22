@@ -133,6 +133,52 @@ export function supabaseAdapter() {
         console.warn('[SupabaseAdapter] Delete history error:', err);
       }
     },
+    async getSharedClasses() {
+      try {
+        const academicYear = getAcademicYear();
+        const { data, error } = await supabase
+          .from('classes')
+          .select('name')
+          .eq('academic_year', academicYear)
+          .order('name');
+        
+        if (error) throw error;
+        return data.map(c => c.name);
+      } catch (err) {
+        console.warn('[SupabaseAdapter] Get shared classes error:', err);
+      }
+      return [];
+    },
+    async getSharedStudents(className) {
+      try {
+        const academicYear = getAcademicYear();
+        const { data, error } = await supabase
+          .from('students')
+          .select('*')
+          .eq('academic_year', academicYear)
+          .eq('class_name', className)
+          .order('last_name', { ascending: true });
+        
+        if (error) throw error;
+        // Map back to JS structure
+        return data.map(s => ({
+          id: s.id,
+          name: `${s.last_name || ''} ${s.first_name || ''}`.trim(),
+          firstName: s.first_name,
+          lastName: s.last_name,
+          className: s.class_name,
+          birthDate: s.birthdate,
+          nin: s.nin,
+          regNumber: s.registration_number,
+          sex: s.sex,
+          academicYear: s.academic_year,
+          importedBy: s.user_id
+        }));
+      } catch (err) {
+        console.warn('[SupabaseAdapter] Get shared students error:', err);
+      }
+      return [];
+    },
     get(key) {
       return localStorage.getItem(key);
     },

@@ -52,6 +52,18 @@ export const store = {
       await remote.deleteHistory(historyId);
     }
   },
+  async getSharedClasses() {
+    if (remote.getSharedClasses) {
+      return await remote.getSharedClasses();
+    }
+    return [];
+  },
+  async getSharedStudents(className) {
+    if (remote.getSharedStudents) {
+      return await remote.getSharedStudents(className);
+    }
+    return [];
+  },
   get(key) {
     return local.get(key);
   },

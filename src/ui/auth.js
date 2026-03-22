@@ -47,10 +47,11 @@ export async function register(userData) {
             password: userData.password,
             options: {
                 data: {
-                    wilaya: userData.wilaya, // Assuming this is ID
-                    city: userData.commune,   // Assuming this is ID
-                    school_id: schoolId,      // Can be null if new school
-                    full_name: userData.full_name || ''
+                    wilaya: userData.wilaya,
+                    city: userData.commune,
+                    school_id: schoolId,
+                    full_name: userData.full_name || '',
+                    role: 'teacher' // On définit par défaut le rôle teacher
                 }
             }
         });
