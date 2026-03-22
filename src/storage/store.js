@@ -74,6 +74,11 @@ export const store = {
       await remote.subscribeToClass(className);
     }
   },
+  async deleteSharedClassData(className) {
+    if (remote.deleteSharedClassData) {
+      await remote.deleteSharedClassData(className);
+    }
+  },
   async getSharedStudents(className) {
     if (remote.getSharedStudents) {
       return await remote.getSharedStudents(className);

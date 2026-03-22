@@ -410,13 +410,42 @@
             await window.store.unsubscribeFromClass(className);
         }
 
-        // Pour le JSON local (compatibilité offline/legacy) : 
-        // On ne retire de la liste locale que si l'utilisateur le souhaite vraiment ou si c'est nécessaire.
-        // Mais pour éviter de supprimer les données chez les collègues via la synchro, 
-        // on garde les élèves localement s'ils sont synchronisés.
+        // Nettoyage Cloud : Supprimer les devoirs et notes du prof pour cette classe
+        if (window.store && typeof window.store.deleteSharedClassData === 'function') {
+            await window.store.deleteSharedClassData(className);
+        }
+
+        // --- NETTOYAGE LOCAL (JSON) ---
         
-        // Optionnel: On peut nettoyer le cache local si on veut vraiment qu'elle disparaisse de l'interface
+        // 1. Supprimer les élèves de cette classe importés par moi
         data.students = data.students.filter(s => !(s.className === className && (s.importedBy || 'unknown') === userId));
+
+        // 2. Supprimer mes devoirs pour cette classe
+        const myAssignmentIds = (data.assignments || [])
+            .filter(a => a.className === className && (a.createdBy || 'unknown') === userId)
+            .map(a => a.id);
+        
+        if (data.assignments) {
+            data.assignments = data.assignments.filter(a => !myAssignmentIds.includes(a.id));
+        }
+
+        // 3. Supprimer les notes associées à ces devoirs (dans le JSON)
+        if (data.grades) {
+            Object.keys(data.grades).forEach(studentId => {
+                myAssignmentIds.forEach(assignId => {
+                    if (data.grades[studentId][assignId]) {
+                        delete data.grades[studentId][assignId];
+                    }
+                });
+                // Si l'élève n'a plus aucune note du tout, on pourrait nettoyer l'entrée, 
+                // mais on reste prudent pour l'instant.
+            });
+        }
+
+        // 4. Nettoyer la configuration d'export (Rakmana)
+        if (typeof window.deleteClassDataFromExport === 'function') {
+            window.deleteClassDataFromExport(className);
+        }
 
         saveData();
 

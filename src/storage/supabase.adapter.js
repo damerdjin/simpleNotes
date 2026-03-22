@@ -295,6 +295,51 @@ export function supabaseAdapter() {
       }
     },
 
+    async deleteSharedClassData(className) {
+      try {
+        const userId = getCurrentUserId();
+        const academicYear = getAcademicYear();
+        if (!userId || !academicYear || !className) return;
+
+        // 1. Delete grades for my assignments in this class
+        // First get my assignment IDs for this class
+        const { data: myAssigns, error: assignError } = await supabase
+          .from('assignments')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('academic_year', academicYear)
+          .eq('class_name', className);
+        
+        if (assignError) throw assignError;
+
+        if (myAssigns && myAssigns.length > 0) {
+          const assignIds = myAssigns.map(a => a.id);
+          
+          // Delete my grades for these assignments
+          const { error: gradeError } = await supabase
+            .from('grades')
+            .delete()
+            .eq('user_id', userId)
+            .in('assignment_id', assignIds);
+          
+          if (gradeError) throw gradeError;
+
+          // Delete my assignments
+          const { error: deleteAssignError } = await supabase
+            .from('assignments')
+            .delete()
+            .eq('user_id', userId)
+            .in('id', assignIds);
+          
+          if (deleteAssignError) throw deleteAssignError;
+        }
+
+        console.log(`[SupabaseAdapter] Cleaned up assignments and grades for class ${className}`);
+      } catch (err) {
+        console.warn('[SupabaseAdapter] deleteSharedClassData error:', err);
+      }
+    },
+
     get(key) {
       return localStorage.getItem(key);
     },
