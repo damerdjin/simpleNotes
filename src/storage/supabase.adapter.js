@@ -98,6 +98,41 @@ export function supabaseAdapter() {
         console.warn('[SupabaseAdapter] Save history error:', err);
       }
     },
+    async getLatestHistory(studentId, assignmentId) {
+      try {
+        const userId = getCurrentUserId();
+        const academicYear = getAcademicYear();
+        if (userId && academicYear && studentId && assignmentId) {
+          const { data, error } = await supabase
+            .from('grades_history')
+            .select('id, snapshot')
+            .eq('user_id', userId)
+            .eq('academic_year', academicYear)
+            .eq('student_id', studentId)
+            .eq('assignment_id', assignmentId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          
+          if (error) throw error;
+          return data;
+        }
+      } catch (err) {
+        console.warn('[SupabaseAdapter] Get history error:', err);
+      }
+      return null;
+    },
+    async deleteHistory(historyId) {
+      try {
+        const { error } = await supabase
+          .from('grades_history')
+          .delete()
+          .eq('id', historyId);
+        if (error) throw error;
+      } catch (err) {
+        console.warn('[SupabaseAdapter] Delete history error:', err);
+      }
+    },
     get(key) {
       return localStorage.getItem(key);
     },

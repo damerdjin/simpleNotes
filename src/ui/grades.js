@@ -15,7 +15,7 @@
         return q.maxPoints || 0;
     }
 
-    window.navigateStudent = function(direction) {
+    window.navigateStudent = async function(direction) {
         const studentSelect = document.getElementById('select-student');
         if (!studentSelect || studentSelect.options.length <= 1) return;
         
@@ -26,10 +26,10 @@
         if (newIndex >= studentSelect.options.length) newIndex = 1;
         
         studentSelect.selectedIndex = newIndex;
-        window.loadGradeEntry();
+        await window.loadGradeEntry();
     };
 
-    window.loadGradeSelectors = function() {
+    window.loadGradeSelectors = async function() {
         const t = getTranslations()[getLang()];
         const assignmentSelect = document.getElementById('select-assignment');
         const studentSelect = document.getElementById('select-student');
@@ -102,7 +102,7 @@
         }
 
         // Recharger l'interface de saisie (gère aussi la visibilité du sélecteur d'élève)
-        window.loadGradeEntry();
+        await window.loadGradeEntry();
     };
 
     window.getQuestionDisplayName = function(assignmentId, exId, qId, partId) {
@@ -226,7 +226,7 @@
         }
     };
 
-    window.loadGradeEntry = function() {
+    window.loadGradeEntry = async function() {
         const t = getTranslations()[getLang()];
         const assignmentId = document.getElementById('select-assignment').value;
         const studentId = document.getElementById('select-student').value;
@@ -284,6 +284,9 @@
         const inputPaddingMedium = isAr ? 'pl-8' : 'pr-8';
         const inputPaddingSmall = isAr ? 'pl-6' : 'pr-6';
 
+        // On vérifie l'historique pour afficher ou non le bouton Undo
+        const hasHistory = await window.historyService?.hasHistory(studentId, assignmentId);
+
         // Student Header Card (Reduced size & Responsive)
         let html = `
         <div class="rounded-xl p-4 mb-4 sm:mb-6 text-white shadow-md relative overflow-hidden" style="background-color: ${color}">
@@ -299,7 +302,7 @@
                         <h3 class="text-base sm:text-lg font-black tracking-tight leading-tight truncate">${student.name}</h3>
                         <div class="flex items-center gap-2 mt-0.5 opacity-90 overflow-hidden">
                             <span class="text-xs font-medium opacity-80 truncate">${assignment.name}</span>
-                            ${window.historyService?.hasHistory(studentId, assignmentId) ? `
+                            ${hasHistory ? `
                                 <button onclick="undoLastGrade('${studentId}', '${assignmentId}')" class="mx-2 p-1 bg-white/20 hover:bg-white/40 rounded-lg transition-all flex items-center gap-1 text-[10px] font-bold" title="${t.undo || 'Annuler'}">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
                                     ${t.undo || 'Annuler'}
@@ -582,17 +585,19 @@
         container.innerHTML = html;
         saveData();
         window.recalculateTotals(assignmentId, studentId);
+        // On ne recharge l'interface complète que si c'est nécessaire (changement de mode ou undo)
+        // updateGrade est appelé à chaque frappe, donc on évite de tout re-render
     };
 
-    window.undoLastGrade = function(studentId, assignmentId) {
+    window.undoLastGrade = async function(studentId, assignmentId) {
         if (!window.historyService) return;
         
-        const prevState = window.historyService.popState(studentId, assignmentId);
+        const prevState = await window.historyService.popState(studentId, assignmentId);
         if (prevState) {
             const data = getData();
             data.grades[studentId][assignmentId] = prevState;
             saveData();
-            window.loadGradeEntry();
+            await window.loadGradeEntry();
             
             // Notification
             const t = getTranslations()[getLang()];
@@ -682,7 +687,7 @@
         window.recalculateTotals(assignmentId, studentId);
     };
 
-    window.setExerciseMode = function(studentId, assignmentId, exId, mode) {
+    window.setExerciseMode = async function(studentId, assignmentId, exId, mode) {
         const data = getData();
         if (!data.grades[studentId]) data.grades[studentId] = {};
         if (!data.grades[studentId][assignmentId]) data.grades[studentId][assignmentId] = {};
@@ -718,7 +723,7 @@
         
         saveData();
         window.recalculateTotals(assignmentId, studentId);
-        window.loadGradeEntry();
+        await window.loadGradeEntry();
     };
 
     window.recalculateTotals = function(assignmentId, studentId) {
@@ -846,7 +851,7 @@
 
     // --- New 3-Step Flow Logic ---
 
-    window.goToGradeStep = function(step) {
+    window.goToGradeStep = async function(step) {
         window.currentGradeStep = step;
         
         // Determine theme color
@@ -961,6 +966,7 @@
 
         // Load content if needed
         if (step === 1) window.renderGradesClassList();
+        if (step === 3) await window.loadGradeEntry();
     };
 
     window.renderGradesClassList = function() {

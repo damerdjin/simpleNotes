@@ -41,6 +41,17 @@ export const store = {
       remote.saveHistory(studentId, assignmentId, snapshot);
     }
   },
+  async getLatestHistory(studentId, assignmentId) {
+    if (remote.getLatestHistory) {
+      return await remote.getLatestHistory(studentId, assignmentId);
+    }
+    return null;
+  },
+  async deleteHistory(historyId) {
+    if (remote.deleteHistory) {
+      await remote.deleteHistory(historyId);
+    }
+  },
   get(key) {
     return local.get(key);
   },

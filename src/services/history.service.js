@@ -45,28 +45,47 @@ export const historyService = {
      * @param {string} assignmentId 
      * @returns {Object|null} The previous state or null if no history.
      */
-    popState(studentId, assignmentId) {
-        // Find the last entry for this specific student and assignment
+    async popState(studentId, assignmentId) {
+        // 1. D'abord, on cherche dans la pile mémoire locale (plus rapide)
         for (let i = this.stack.length - 1; i >= 0; i--) {
             const entry = this.stack[i];
             if (entry.studentId === studentId && entry.assignmentId === assignmentId) {
-                // Remove from stack and return
                 this.stack.splice(i, 1);
-                
-                // Return the state BEFORE this one, or just the one we found?
-                // Logic: Usually we want the state *before* the current one.
-                // But the stack stores snapshots of states *before* they were changed.
                 return entry.state;
             }
         }
+
+        // 2. Si rien en mémoire (ex: changement de navigateur), on cherche dans Supabase
+        if (window.store && typeof window.store.getLatestHistory === 'function') {
+            const remoteEntry = await window.store.getLatestHistory(studentId, assignmentId);
+            if (remoteEntry) {
+                // On supprime l'entrée de l'historique distant pour qu'on ne puisse pas l'annuler deux fois
+                if (typeof window.store.deleteHistory === 'function') {
+                    await window.store.deleteHistory(remoteEntry.id);
+                }
+                return remoteEntry.snapshot;
+            }
+        }
+        
         return null;
     },
 
     /**
      * Checks if there's history for a specific context.
      */
-    hasHistory(studentId, assignmentId) {
-        return this.stack.some(e => e.studentId === studentId && e.assignmentId === assignmentId);
+    async hasHistory(studentId, assignmentId) {
+        // Check local memory
+        if (this.stack.some(e => e.studentId === studentId && e.assignmentId === assignmentId)) {
+            return true;
+        }
+        
+        // Check remote (Supabase)
+        if (window.store && typeof window.store.getLatestHistory === 'function') {
+            const remoteEntry = await window.store.getLatestHistory(studentId, assignmentId);
+            return !!remoteEntry;
+        }
+
+        return false;
     },
 
     clear() {
