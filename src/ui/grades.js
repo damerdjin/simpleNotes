@@ -80,18 +80,24 @@
         let sharedStudents = [];
         if (window.store && typeof window.store.getSharedStudents === 'function') {
             sharedStudents = await window.store.getSharedStudents(selectedClass);
+            console.log(`[Grades] Found ${sharedStudents.length} shared students for class ${selectedClass}`);
         }
 
-        // Fusionner les élèves (éviter les doublons par ID)
+        // Fusionner les élèves (éviter les doublons par ID ou par Matricule/RegNumber)
         const studentMap = new Map();
         localStudents.forEach(s => studentMap.set(s.id, s));
         sharedStudents.forEach(s => {
-            if (!studentMap.has(s.id)) {
+            // Un élève est considéré comme le même s'il a le même ID ou le même Matricule
+            const existing = Array.from(studentMap.values()).find(ls => ls.id === s.id || (ls.regNumber && ls.regNumber === s.regNumber));
+            if (!existing) {
                 studentMap.set(s.id, s);
             }
         });
         
         let filteredStudents = Array.from(studentMap.values());
+        
+        // Store current class students for other functions (like loadGradeEntry)
+        window.currentClassStudents = filteredStudents;
         
         // Sort by Last Name then First Name
         filteredStudents.sort((a, b) => {
@@ -281,7 +287,14 @@
 
         const data = getData();
         const assignment = data.assignments.find(a => a.id === assignmentId);
-        const student = data.students.find(s => s.id === studentId);
+        
+        // Find student in current class list (merged local + shared)
+        const student = (window.currentClassStudents || []).find(s => s.id === studentId) || data.students.find(s => s.id === studentId);
+        
+        if (!student) {
+            console.error('[Grades] Student not found:', studentId);
+            return;
+        }
         
         if (!data.grades[studentId]) data.grades[studentId] = {};
         if (!data.grades[studentId][assignmentId]) data.grades[studentId][assignmentId] = {};
@@ -1009,6 +1022,12 @@
         const classes = await window.getClasses();
         const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
 
+        // 1. Get Shared Class Stats
+        let sharedStats = {};
+        if (window.store && typeof window.store.getSharedClassStats === 'function') {
+            sharedStats = await window.store.getSharedClassStats();
+        }
+
         if (classes.length === 0) {
              container.innerHTML = `<div class="col-span-full text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
                 <p class="text-slate-500 font-medium">${t.noClassesAutoCreated}</p>
@@ -1017,8 +1036,11 @@
         }
 
         const rows = classes.map(c => {
-            const classStudents = getData().students.filter(s => s.className === c && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear);
-            const count = classStudents.length;
+            // Count local students
+            const localStudents = getData().students.filter(s => s.className === c && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear);
+            
+            // Total students = Max of Local or Shared
+            const count = Math.max(localStudents.length, sharedStats[c] || 0);
             
             const color = typeof window.getClassColor === 'function' ? window.getClassColor(c) : '#3b82f6';
             const colorAlpha = color + '44'; 

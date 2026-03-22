@@ -48,23 +48,23 @@ import * as gradesSvc from '../services/grades.service.js';
         summaryAssignmentFilter.clear();
     };
 
-    window.renderSummary = function() {
+    window.renderSummary = async function() {
         const isMobile = window.innerWidth < 768;
         
         if (isMobile && currentSummaryMode === 'default') {
-            window.renderSummaryMobile();
+            await window.renderSummaryMobile();
             return;
         }
 
         switch (currentSummaryMode) {
             case 'grouped':
-                window.renderSummary2();
+                await window.renderSummary2();
                 break;
             case 'view1':
-                window.renderSummary1();
+                await window.renderSummary1();
                 break;
             default:
-                window.renderSummary0();
+                await window.renderSummary0();
         }
     };
 
@@ -82,14 +82,14 @@ import * as gradesSvc from '../services/grades.service.js';
     let resizeTimer;
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(() => {
+        resizeTimer = setTimeout(async () => {
             if (window.currentTab === 'summary') {
-                window.renderSummary();
+                await window.renderSummary();
             }
         }, 250);
     });
 
-    window.renderSummaryMobile = function() {
+    window.renderSummaryMobile = async function() {
         if (!getTranslations() || !getLang() || !getTranslations()[getLang()]) return;
         const t = getTranslations()[getLang()];
         const container = document.getElementById('summary-table');
@@ -103,27 +103,25 @@ import * as gradesSvc from '../services/grades.service.js';
         const data = getData();
 
         let selectedClass = classSelect ? classSelect.value : '';
-        let searchMatches = data.students.slice();
+        
+        // --- MODÈLE COLLABORATIF : Récupération des classes ---
+        let sharedClasses = [];
+        if (window.store && typeof window.store.getSharedClasses === 'function') {
+            sharedClasses = await window.store.getSharedClasses(true); // true = seulement mes classes
+        }
 
-        // Apply global academic year filter
+        let localClasses = new Set();
         const globalUserId = window.currentUser?.email || window.currentUser?.id || 'unknown';
         const globalAcademicYear = window.getGlobalAcademicYear();
-        if (globalAcademicYear) {
-            searchMatches = searchMatches.filter(s => (s.importedBy || 'unknown') === globalUserId && (s.academicYear || '') === globalAcademicYear);
-        }
+        
+        data.students.forEach(s => {
+            if ((s.importedBy || 'unknown') === globalUserId && (s.academicYear || '') === globalAcademicYear) {
+                if (s.className) localClasses.add(s.className);
+            }
+        });
 
-        if (searchTerm) {
-            searchMatches = searchMatches.filter(s => {
-                const haystack = `${s.name || ''} ${s.firstName || ''} ${s.lastName || ''} ${s.className || ''}`.toLowerCase();
-                return haystack.includes(searchTerm);
-            });
-        }
-
-        const matchingClasses = Array.from(new Set(
-            searchMatches
-                .map(s => (s.className || '').trim())
-                .filter(c => c.length > 0)
-        )).sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
+        const matchingClasses = Array.from(new Set([...localClasses, ...sharedClasses]))
+            .sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
 
         if (classSelect) {
             const previousValue = selectedClass;
@@ -132,9 +130,27 @@ import * as gradesSvc from '../services/grades.service.js';
             selectedClass = classSelect.value;
         }
 
-        let filteredStudents = searchMatches;
+        // --- Récupération des élèves ---
+        let filteredStudents = [];
         if (selectedClass) {
-            filteredStudents = filteredStudents.filter(s => s.className === selectedClass);
+            let localStudents = data.students.filter(s => 
+                s.className === selectedClass && 
+                (s.importedBy || 'unknown') === globalUserId && 
+                (s.academicYear || '') === globalAcademicYear
+            );
+            
+            let sharedStudents = [];
+            if (window.store && typeof window.store.getSharedStudents === 'function') {
+                sharedStudents = await window.store.getSharedStudents(selectedClass);
+            }
+
+            const studentMap = new Map();
+            localStudents.forEach(s => studentMap.set(s.id, s));
+            sharedStudents.forEach(s => {
+                const existing = Array.from(studentMap.values()).find(ls => ls.id === s.id || (ls.regNumber && ls.regNumber === s.regNumber));
+                if (!existing) studentMap.set(s.id, s);
+            });
+            filteredStudents = Array.from(studentMap.values());
         }
 
         let filteredAssignments = data.assignments.slice();
@@ -168,10 +184,6 @@ import * as gradesSvc from '../services/grades.service.js';
 
         // Sort students
         filteredStudents.sort((a, b) => {
-            const classA = (a.className || '').toLowerCase();
-            const classB = (b.className || '').toLowerCase();
-            if (classA !== classB) return classA.localeCompare(classB, 'fr', { sensitivity: 'base' });
-            
             const nameA = (a.lastName || a.name || '').toLowerCase();
             const nameB = (b.lastName || b.name || '').toLowerCase();
             if (nameA.localeCompare(nameB) !== 0) return nameA.localeCompare(nameB);
@@ -189,20 +201,15 @@ import * as gradesSvc from '../services/grades.service.js';
 
         // Assignment Headers
         filteredAssignments.forEach(a => {
-            // Mobile view: we only show the main assignment column, NOT the exercise details
-            // even if showDetails is checked (showDetails is for desktop/large view)
             html += `<th class="assignment-header-mobile" title="${a.name}">${a.name}</th>`;
         });
         html += '</tr></thead><tbody>';
-
-        console.log('Rendering Mobile Summary with ' + filteredStudents.length + ' students and ' + filteredAssignments.length + ' assignments');
 
         filteredStudents.forEach(s => {
             const displayName = truncateStudentName(s);
             html += `<tr><td class="sticky-student" title="${s.name}">${displayName}</td>`;
 
             filteredAssignments.forEach(a => {
-                // Use imported service directly for reliability
                 let total = 0;
                 let max = 0;
                 let hasGrade = false;
@@ -217,7 +224,6 @@ import * as gradesSvc from '../services/grades.service.js';
 
                 const pct = max > 0 ? (total / max * 100) : 0;
                 
-                // Assignment Total Grade only on mobile
                 let gradeClass = 'grade-badge-empty';
                 if (hasGrade) {
                     if (pct >= 70) gradeClass = 'grade-badge-excellent';
@@ -240,7 +246,7 @@ import * as gradesSvc from '../services/grades.service.js';
         if (window.translatePage) window.translatePage();
     };
 
-    window.renderSummary0 = function() {
+    window.renderSummary0 = async function() {
         if (!getTranslations() || !getLang() || !getTranslations()[getLang()]) return;
         const t = getTranslations()[getLang()];
         const container = document.getElementById('summary-table');
@@ -253,75 +259,77 @@ import * as gradesSvc from '../services/grades.service.js';
         const data = getData();
 
         let selectedClass = classSelect ? classSelect.value : '';
-        let searchMatches = data.students.slice();
+        
+        // --- MODÈLE COLLABORATIF : Récupération des classes ---
+        let sharedClasses = [];
+        if (window.store && typeof window.store.getSharedClasses === 'function') {
+            sharedClasses = await window.store.getSharedClasses(true);
+        }
 
-        // Apply global academic year filter to students
+        let localClasses = new Set();
         const globalUserId = window.currentUser?.email || window.currentUser?.id || 'unknown';
         const globalAcademicYear = window.getGlobalAcademicYear();
-        if (globalAcademicYear) {
-            searchMatches = searchMatches.filter(s => (s.importedBy || 'unknown') === globalUserId && (s.academicYear || '') === globalAcademicYear);
-        }
+        
+        data.students.forEach(s => {
+            if ((s.importedBy || 'unknown') === globalUserId && (s.academicYear || '') === globalAcademicYear) {
+                if (s.className) localClasses.add(s.className);
+            }
+        });
 
-        if (searchTerm) {
-            searchMatches = searchMatches.filter(s => {
-                const haystack = `${s.name || ''} ${s.firstName || ''} ${s.lastName || ''} ${s.className || ''}`.toLowerCase();
-                return haystack.includes(searchTerm);
-            });
-        }
-
-        const matchingClasses = Array.from(new Set(
-            searchMatches
-                .map(s => (s.className || '').trim())
-                .filter(c => c.length > 0)
-        )).sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
+        const matchingClasses = Array.from(new Set([...localClasses, ...sharedClasses]))
+            .sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
 
         if (classSelect) {
             const previousValue = selectedClass;
             classSelect.innerHTML = `<option value="">-- ${t.selectClass} --</option>` +
                 matchingClasses.map(c => `<option value="${c}" ${c === previousValue ? 'selected' : ''}>${c}</option>`).join('');
 
-            let autoSelectedClass = '';
-            if (searchMatches.length === 1 && searchMatches[0].className) {
-                autoSelectedClass = searchMatches[0].className;
-            } else if (matchingClasses.length === 1) {
-                autoSelectedClass = matchingClasses[0];
-            }
-
-            if (autoSelectedClass) {
-                classSelect.value = autoSelectedClass;
-            } else if (matchingClasses.includes(previousValue)) {
+            if (matchingClasses.includes(previousValue)) {
                 classSelect.value = previousValue;
+            } else if (matchingClasses.length === 1) {
+                classSelect.value = matchingClasses[0];
             } else {
                 classSelect.value = '';
             }
-
             selectedClass = classSelect.value;
         }
 
-        let filteredStudents = searchMatches;
+        // --- Récupération des élèves ---
+        let filteredStudents = [];
         if (selectedClass) {
-            filteredStudents = filteredStudents.filter(s => s.className === selectedClass);
+            let localStudents = data.students.filter(s => 
+                s.className === selectedClass && 
+                (s.importedBy || 'unknown') === globalUserId && 
+                (s.academicYear || '') === globalAcademicYear
+            );
+            
+            let sharedStudents = [];
+            if (window.store && typeof window.store.getSharedStudents === 'function') {
+                sharedStudents = await window.store.getSharedStudents(selectedClass);
+            }
+
+            const studentMap = new Map();
+            localStudents.forEach(s => studentMap.set(s.id, s));
+            sharedStudents.forEach(s => {
+                const existing = Array.from(studentMap.values()).find(ls => ls.id === s.id || (ls.regNumber && ls.regNumber === s.regNumber));
+                if (!existing) studentMap.set(s.id, s);
+            });
+            filteredStudents = Array.from(studentMap.values());
         }
 
         let filteredAssignments = data.assignments.slice();
-
-        // Filter by user
         filteredAssignments = filteredAssignments.filter(a => (a.createdBy || 'unknown') === globalUserId);
 
-        // Apply global academic year filter
         if (globalAcademicYear) {
             filteredAssignments = filteredAssignments.filter(a => (a.academicYear || '') === globalAcademicYear);
         } else {
-            // If no academic year selected, hide all assignments
             filteredAssignments = [];
         }
 
-        // Apply global trimester filter
         const globalTrimester = window.getGlobalTrimester();
         if (globalTrimester) {
             filteredAssignments = filteredAssignments.filter(a => (a.trimester || '') === globalTrimester);
         } else {
-            // If no trimester selected, hide all assignments
             filteredAssignments = [];
         }
 
@@ -347,11 +355,6 @@ import * as gradesSvc from '../services/grades.service.js';
 
         if (summaryAssignmentFilter && summaryAssignmentFilter.size > 0) {
             filteredAssignments = filteredAssignments.filter(a => summaryAssignmentFilter.has(a.id));
-        }
-
-        if (summaryAssignmentFilter && summaryAssignmentFilter.size > 0 && !selectedClass) {
-            const allowedClasses = new Set(filteredAssignments.map(a => (a.className || '').trim()).filter(c => c.length > 0));
-            filteredStudents = filteredStudents.filter(s => allowedClasses.has((s.className || '').trim()));
         }
 
         if (!window.summaryAssignmentOrder) {
@@ -382,39 +385,21 @@ import * as gradesSvc from '../services/grades.service.js';
         }
 
         if (filteredStudents.length === 0 || filteredAssignments.length === 0) {
-            let emptyMessage = '';
-            if (selectedClass) {
-                emptyMessage = `${t.noStudentOrAssignmentForClass} "${selectedClass}".`;
-            } else if (searchTerm) {
-                emptyMessage = t.noResultForSearch;
-            } else {
-                emptyMessage = t.addStudentsAndAssignmentsToSeeSummary;
-            }
+            let emptyMessage = selectedClass ? `${t.noStudentOrAssignmentForClass} "${selectedClass}".` : (searchTerm ? t.noResultForSearch : t.addStudentsAndAssignmentsToSeeSummary);
             container.innerHTML = `<p class="text-gray-500 text-center py-8">${emptyMessage}</p>`;
             return;
         }
 
         filteredStudents.sort((a, b) => {
-            const classA = (a.className || '').toLowerCase();
-            const classB = (b.className || '').toLowerCase();
-            if (classA !== classB) {
-                return classA.localeCompare(classB, 'fr', { sensitivity: 'base' });
-            }
             if (summarySort.key === 'name') {
                 const nameA = (a.lastName || a.name || '').toLowerCase();
                 const nameB = (b.lastName || b.name || '').toLowerCase();
-                
                 if (nameA.localeCompare(nameB) !== 0) {
-                     return summarySort.direction === 'asc' 
-                        ? nameA.localeCompare(nameB) 
-                        : nameB.localeCompare(nameA);
+                     return summarySort.direction === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
                 }
-                
                 const firstA = (a.firstName || '').toLowerCase();
                 const firstB = (b.firstName || '').toLowerCase();
-                return summarySort.direction === 'asc'
-                    ? firstA.localeCompare(firstB)
-                    : firstB.localeCompare(firstA);
+                return summarySort.direction === 'asc' ? firstA.localeCompare(firstB) : firstB.localeCompare(firstA);
             } else if (summarySort.key.startsWith('assignment-')) {
                 const assignmentId = summarySort.key.split('assignment-')[1];
                 const ta = window.getStudentAssignmentTotal(a.id, assignmentId);
@@ -465,80 +450,46 @@ import * as gradesSvc from '../services/grades.service.js';
             headers += `<th class="p-3 text-center bg-blue-100 font-bold cursor-pointer select-none" onclick="toggleSummarySort('assignment-${a.id}')">${a.name}<br><span class="text-xs">/${window.getAssignmentMaxPoints(a)}</span></th>`;
         }
 
-        let currentClass = '';
         let rows = filteredStudents.map(s => {
-            let classHeader = '';
-            if (s.className !== currentClass) {
-                currentClass = s.className;
-                const colspan = 1 + (showDetails ? filteredAssignments.reduce((sum, a) => sum + (a.exercises || []).length, 0) : 0) + filteredAssignments.length;
-                classHeader = `<tr class="bg-blue-600 text-white font-bold">
-                    <td colspan="${colspan}" class="p-2 text-center text-lg">
-                        ${s.className || '(Sans classe)'}
-                    </td>
-                </tr>`;
-            }
-
             let row = `<td class="p-3 font-medium bg-gray-50 sticky left-0">${s.name}</td>`;
-
             for (const a of filteredAssignments) {
                 const studentGrades = data.grades[s.id]?.[a.id] || {};
-                const isCompatible = ((s.className || '').trim() === (a.className || '').trim());
-
                 if (showDetails) {
                     for (const ex of a.exercises) {
-                        if (isCompatible) {
-                            const exTotal = window.getStudentExerciseTotal(studentGrades, ex);
-                            const max = window.getExerciseMaxPoints(ex);
-                            const existingFinal = studentGrades[ex.id]?.['final']?.['final']?.['final'];
-                            const hasEx = window.hasAnyGradeForExercise(studentGrades, ex);
-                            const val = existingFinal !== undefined && existingFinal !== '' ? existingFinal : (hasEx ? exTotal.toFixed(2) : '');
-                            const exLabel = ex.name && ex.name !== 'Global' ? ex.name : `Ex${a.exercises.indexOf(ex) + 1}`;
-                            row += `<td class="px-2 py-1 text-center">
-                                <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" value="${val}" oninput="sanitizeAndClamp(this, ${max})" onblur="commitSummaryInput('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" onkeydown="handleSummaryInputKey(event, '${s.id}','${a.id}','${ex.id}', ${max})" onfocus="this.select()" id="sum-input-${s.id}-${a.id}-${ex.id}" name="sum-input-${s.id}-${a.id}-${ex.id}" aria-label="Note ${exLabel} pour ${s.name} - ${a.name}" class="summary-grade-input">
-                            </td>`;
-                        } else {
-                            row += `<td class="px-2 py-1 text-center text-gray-300 bg-gray-50">-</td>`;
-                        }
+                        const exTotal = window.getStudentExerciseTotal(studentGrades, ex);
+                        const max = window.getExerciseMaxPoints(ex);
+                        const existingFinal = studentGrades[ex.id]?.['final']?.['final']?.['final'];
+                        const hasEx = window.hasAnyGradeForExercise(studentGrades, ex);
+                        const val = existingFinal !== undefined && existingFinal !== '' ? existingFinal : (hasEx ? exTotal.toFixed(2) : '');
+                        row += `<td class="px-2 py-1 text-center">
+                            <input type="text" value="${val}" onblur="commitSummaryInput('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" class="summary-grade-input">
+                        </td>`;
                     }
                 }
-
-                if (isCompatible) {
-                    const has = window.hasAnyGradeForAssignment(s.id, a.id);
-                    const max = window.getAssignmentMaxPoints(a);
-                    if (has) {
-                        const total = window.getStudentAssignmentTotal(s.id, a.id);
-                        const pct = max > 0 ? (total / max * 100) : 0;
-                        const bgColor = pct >= 70 ? 'bg-green-100' : pct >= 50 ? 'bg-orange-100' : 'bg-red-100';
-                        row += `<td class="p-3 text-center font-bold ${bgColor} cursor-pointer select-none" ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})" id="sum-total-${s.id}-${a.id}">${total.toFixed(2)}</td>`;
-                    } else {
-                        row += `<td class="p-3 text-center text-gray-400 bg-gray-50 cursor-pointer select-none" ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})" id="sum-total-${s.id}-${a.id}"></td>`;
-                    }
+                const has = window.hasAnyGradeForAssignment(s.id, a.id);
+                const max = window.getAssignmentMaxPoints(a);
+                if (has) {
+                    const total = window.getStudentAssignmentTotal(s.id, a.id);
+                    const pct = max > 0 ? (total / max * 100) : 0;
+                    const bgColor = pct >= 70 ? 'bg-green-100' : pct >= 50 ? 'bg-orange-100' : 'bg-red-100';
+                    row += `<td class="p-3 text-center font-bold ${bgColor}">${total.toFixed(2)}</td>`;
                 } else {
-                    row += `<td class="p-3 text-center text-gray-400 bg-gray-50">-</td>`;
+                    row += `<td class="p-3 text-center text-gray-400 bg-gray-50"></td>`;
                 }
             }
-            return classHeader + `<tr class="border-b hover:bg-gray-50">${row}</tr>`;
+            return `<tr class="border-b hover:bg-gray-50">${row}</tr>`;
         }).join('');
 
         const colgroupHtml = (() => {
             let cols = '<col style="width:220px">';
             for (const a of filteredAssignments) {
-                if (showDetails) {
-                    const exCount = (a.exercises || []).length;
-                    for (let i = 0; i < exCount; i++) cols += '<col style="width:70px">';
-                }
+                if (showDetails) for (let i = 0; i < (a.exercises || []).length; i++) cols += '<col style="width:70px">';
                 cols += '<col style="width:84px">';
             }
             return `<colgroup>${cols}</colgroup>`;
         })();
 
-        container.innerHTML = `
-            <table class="w-full table-fixed border-collapse">
-                ${colgroupHtml}
-                <thead><tr class="border-b-2">${headers}</tr></thead>
-                <tbody>${rows}</tbody>
-            </table>
-        `;
+        container.innerHTML = `<table class="w-full table-fixed border-collapse">${colgroupHtml}<thead><tr class="border-b-2">${headers}</tr></thead><tbody>${rows}</tbody></table>`;
         if (window.translatePage) window.translatePage();
     };
 
