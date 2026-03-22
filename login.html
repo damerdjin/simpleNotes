@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - Gestion des Corrections</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="/translations.js"></script>
+    <style>
+        /* Custom styles for notifications */
+        .notification-toast {
+            transition: all 0.3s ease-in-out;
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        .notification-toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ===== SPLASH SCREEN (for transition) ===== */
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in;
+        }
+        #splash-screen.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .loader-dots div {
+            animation-timing-function: cubic-bezier(0, 1, 1, 0);
+        }
+        .loader-dots div:nth-child(1) { left: 8px; animation: loader-dots1 0.6s infinite; }
+        .loader-dots div:nth-child(2) { left: 8px; animation: loader-dots2 0.6s infinite; }
+        .loader-dots div:nth-child(3) { left: 32px; animation: loader-dots2 0.6s infinite; }
+        .loader-dots div:nth-child(4) { left: 56px; animation: loader-dots3 0.6s infinite; }
+        @keyframes loader-dots1 { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+        @keyframes loader-dots3 { 0% { transform: scale(1); } 100% { transform: scale(0); } }
+        @keyframes loader-dots2 { 0% { transform: translate(0, 0); } 100% { transform: translate(24px, 0); } }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen flex items-center justify-center relative">
+    <!-- Splash Screen (for seamless transition) -->
+    <div id="splash-screen">
+        <div class="text-4xl mb-4">📝</div>
+        <div class="text-xl font-bold text-blue-600 mb-8" data-translate="appTitle">Gestion des Corrections</div>
+        <div class="relative w-20 h-20">
+            <div class="loader-dots inline-block relative w-20 h-20">
+                <div class="absolute top-8 w-3 h-3 rounded-full bg-blue-600"></div>
+                <div class="absolute top-8 w-3 h-3 rounded-full bg-blue-600"></div>
+                <div class="absolute top-8 w-3 h-3 rounded-full bg-blue-600"></div>
+                <div class="absolute top-8 w-3 h-3 rounded-full bg-blue-600"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white p-8 rounded shadow-md w-full max-w-md relative">
+        <h2 class="text-2xl font-bold mb-6 text-center text-blue-600" data-translate="loginTitle">Connexion</h2>
+
+        <!-- Notification Area -->
+        <div id="notification-area" class="mb-4 hidden">
+            <!-- Notifications will be injected here -->
+        </div>
+
+        <div id="error-message" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"></div>
+
+        <form id="login-form">
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="email" data-translate="emailLabel">
+                    Email
+                </label>
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="email" type="email" placeholder="email@exemple.com" data-translate-placeholder="emailPlaceholder" autocomplete="email" required>
+            </div>
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="password" data-translate="passwordLabel">
+                    Mot de passe
+                </label>
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="password" type="password" placeholder="******************" autocomplete="current-password" required>
+                <!-- Changed text-right to text-end for RTL support -->
+                <div class="text-end mt-1">
+                    <a class="inline-block align-baseline font-bold text-xs text-blue-500 hover:text-blue-800" href="#" id="forgot-password-link" data-translate="forgotPasswordLink">
+                        Mot de passe oublié ?
+                    </a>
+                </div>
+            </div>
+
+            <div class="mb-4 flex justify-center">
+                <select id="language-selector" class="bg-gray-50 border border-gray-300 text-gray-700 py-1 px-2 rounded focus:outline-none focus:shadow-outline text-sm">
+                    <option value="fr">Français</option>
+                    <option value="en">English</option>
+                    <option value="ar">العربية</option>
+                </select>
+            </div>
+
+            <div class="flex items-center justify-between">
+                <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full" 
+                    type="submit" id="submit-btn" data-translate="loginButton">
+                    Se connecter
+                </button>
+            </div>
+            <div class="mt-4 text-center">
+                <a class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800" href="/register.html" data-translate="createAccountLink">
+                    Créer un compte
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <script type="module">
+        import { login, checkAuth, resetPassword } from './src/ui/auth.js';
+        import { initLanguage, changeLanguage, t } from './src/ui/i18n.js';
+
+        // Initialize language
+        const currentLang = initLanguage();
+        const langSelector = document.getElementById('language-selector');
+        if (langSelector) {
+            langSelector.value = currentLang;
+            langSelector.addEventListener('change', (e) => {
+                changeLanguage(e.target.value);
+            });
+        }
+
+        const form = document.getElementById('login-form');
+        const errorDiv = document.getElementById('error-message');
+        const submitBtn = document.getElementById('submit-btn');
+        const forgotPasswordLink = document.getElementById('forgot-password-link');
+        const notificationArea = document.getElementById('notification-area');
+
+        // Helper function to show notifications instead of alert()
+        function showNotification(message, type = 'info') {
+            const bgColor = type === 'error' ? 'bg-red-100' : 'bg-green-100';
+            const borderColor = type === 'error' ? 'border-red-400' : 'border-green-400';
+            const textColor = type === 'error' ? 'text-red-700' : 'text-green-700';
+
+            notificationArea.className = `mb-4 px-4 py-3 rounded border ${bgColor} ${borderColor} ${textColor} notification-toast show`;
+            notificationArea.textContent = message;
+            notificationArea.classList.remove('hidden');
+
+            // Auto hide after 5 seconds
+            setTimeout(() => {
+                notificationArea.classList.add('hidden');
+            }, 5000);
+        }
+
+        forgotPasswordLink.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+
+            if (!email) {
+                showNotification(t('emailRequired') || 'Veuillez entrer votre email pour réinitialiser le mot de passe.', 'error');
+                return;
+            }
+
+            try {
+                await resetPassword(email);
+                showNotification(t('resetEmailSent') || 'Email de réinitialisation envoyé ! Vérifiez votre boîte mail.', 'success');
+            } catch (err) {
+                showNotification('Erreur: ' + err.message, 'error');
+            }
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorDiv.classList.add('hidden');
+            notificationArea.classList.add('hidden');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<span class="flex items-center justify-center">
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                ${t('loginLoading')}
+            </span>`;
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                await login(email, password);
+                
+                // Success state
+                submitBtn.classList.remove('bg-blue-500', 'hover:bg-blue-700');
+                submitBtn.classList.add('bg-green-500');
+                submitBtn.innerHTML = `<span class="flex items-center justify-center">
+                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    ${t('loginSuccess')}
+                </span>`;
+                
+                setTimeout(() => {
+                    // Show splash screen just before redirect for seamless transition
+                    document.getElementById('splash-screen').classList.add('show');
+                    setTimeout(() => {
+                        window.location.href = '/index.html';
+                    }, 300);
+                }, 600); // Wait a bit to let the user see the success message
+            } catch (err) {
+                errorDiv.textContent = err.message;
+                errorDiv.classList.remove('hidden');
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('bg-green-500');
+                submitBtn.classList.add('bg-blue-500', 'hover:bg-blue-700');
+                submitBtn.textContent = t('loginButton');
+            }
+        });
+    </script>
+</body>
+</html>
