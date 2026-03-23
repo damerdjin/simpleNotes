@@ -683,27 +683,58 @@ import * as gradesSvc from '../services/grades.service.js';
         const searchTerm = (document.getElementById('summary-search')?.value || '').toLowerCase().trim();
         const data = getData();
 
-        const matchingClasses = new Set();
-        for (const s of data.students) {
-            const n = (s.name || '').toLowerCase();
-            const cn = (s.className || '').toLowerCase();
-            if (!searchTerm || n.includes(searchTerm) || cn.includes(searchTerm)) {
-                matchingClasses.add(s.className);
-            }
+        const userEmail = window.currentUser?.email || null;
+        const userUuid = window.currentUser?.id || null;
+        const ownerMatch = (owner) => {
+            const v = owner || 'unknown';
+            return (userEmail && v === userEmail) || (userUuid && v === userUuid);
+        };
+        const globalAcademicYear = window.getGlobalAcademicYear();
+
+        let sharedClasses = [];
+        if (window.store && typeof window.store.getSharedClasses === 'function') {
+            sharedClasses = await window.store.getSharedClasses(true);
         }
 
-        let filteredStudents = data.students.filter(s => {
+        const localClasses = new Set();
+        data.students.forEach(s => {
+            if (ownerMatch(s.importedBy) && (!globalAcademicYear || (s.academicYear || '') === globalAcademicYear) && s.className) {
+                localClasses.add(s.className);
+            }
+        });
+        const allClasses = Array.from(new Set([...localClasses, ...sharedClasses]));
+
+        const studentMap = new Map();
+        const includeStudent = (s) => {
+            if (!s) return false;
             const n = (s.name || '').toLowerCase();
             const cn = (s.className || '').toLowerCase();
             if (searchTerm && !(n.includes(searchTerm) || cn.includes(searchTerm))) return false;
-            if (selectedClass && s.className !== selectedClass) return false;
-            if (!selectedClass && searchTerm && !matchingClasses.has(s.className)) return false;
-            // Filter by user and global academic year
-            const globalUserId = window.currentUser?.email || window.currentUser?.id || 'unknown';
-            const globalAcademicYear = window.getGlobalAcademicYear();
-            if ((s.importedBy || 'unknown') !== globalUserId || (globalAcademicYear && (s.academicYear || '') !== globalAcademicYear)) return false;
+            if (selectedClass && (s.className || '') !== selectedClass) return false;
+            if (globalAcademicYear && (s.academicYear || '') !== globalAcademicYear) return false;
             return true;
+        };
+        const addStudent = (s) => {
+            if (!includeStudent(s)) return;
+            const reg = (s.regNumber || '').toString().trim();
+            const key = s.id || (reg ? `reg:${reg}` : `${s.className || ''}:${s.name || ''}`);
+            if (!studentMap.has(key)) studentMap.set(key, s);
+        };
+
+        data.students.forEach(s => {
+            if (!ownerMatch(s.importedBy)) return;
+            addStudent(s);
         });
+
+        const classesToFetch = selectedClass ? [selectedClass] : allClasses;
+        if (window.store && typeof window.store.getSharedStudents === 'function') {
+            for (const c of classesToFetch) {
+                const shared = await window.store.getSharedStudents(c);
+                shared.forEach(s => addStudent(s));
+            }
+        }
+
+        let filteredStudents = Array.from(studentMap.values());
 
         filteredStudents.sort((a, b) => {
             const classA = (a.className || '').toLowerCase();
@@ -726,11 +757,9 @@ import * as gradesSvc from '../services/grades.service.js';
         });
 
         let filteredAssignments = data.assignments.slice();
-        // Filter by user
-        const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
-        filteredAssignments = filteredAssignments.filter(a => (a.createdBy || 'unknown') === userId);
+        filteredAssignments = filteredAssignments.filter(a => ownerMatch(a.createdBy));
         // Filter by global academic year
-        const currentGlobalAcademicYear = window.getGlobalAcademicYear();
+        const currentGlobalAcademicYear = globalAcademicYear;
         if (currentGlobalAcademicYear) {
             filteredAssignments = filteredAssignments.filter(a => (a.academicYear || '') === currentGlobalAcademicYear);
         }
@@ -743,7 +772,7 @@ import * as gradesSvc from '../services/grades.service.js';
         if (selectedClass) {
             filteredAssignments = filteredAssignments.filter(a => a.className === selectedClass);
         } else {
-            const classFilterSet = new Set(matchingClasses);
+            const classFilterSet = new Set(filteredStudents.map(s => (s.className || '').trim()).filter(Boolean));
             filteredAssignments = filteredAssignments.filter(a => classFilterSet.has(a.className));
         }
         if (summaryAssignmentFilter && summaryAssignmentFilter.size > 0) {
