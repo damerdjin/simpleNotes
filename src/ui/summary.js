@@ -37,6 +37,24 @@ import * as gradesSvc from '../services/grades.service.js';
         window.renderSummary();
     };
 
+    const syncSummaryModeVisibility = () => {
+        const isMobile = window.innerWidth < 768;
+        const firstModeInput = document.querySelector('input[name="summaryMode"]');
+        const modeContainer = firstModeInput ? firstModeInput.closest('div') : null;
+        const detailsCheckbox = document.getElementById('show-details');
+        const detailsContainer = detailsCheckbox ? detailsCheckbox.closest('label') : null;
+        const exportExcelBtn = document.getElementById('btn-export-excel');
+        if (modeContainer) {
+            modeContainer.style.display = isMobile ? 'none' : '';
+        }
+        if (detailsContainer) {
+            detailsContainer.style.display = isMobile ? 'none' : '';
+        }
+        if (exportExcelBtn) {
+            exportExcelBtn.style.display = isMobile ? 'none' : '';
+        }
+    };
+
     window.resetSummaryFilters = function() {
         const searchInput = document.getElementById('summary-search');
         const classSelect = document.getElementById('select-class-summary');
@@ -50,6 +68,7 @@ import * as gradesSvc from '../services/grades.service.js';
 
     window.renderSummary = async function() {
         const isMobile = window.innerWidth < 768;
+        syncSummaryModeVisibility();
         
         if (isMobile) {
             await window.renderSummaryMobile();
@@ -83,6 +102,7 @@ import * as gradesSvc from '../services/grades.service.js';
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(async () => {
+            syncSummaryModeVisibility();
             if (window.currentTab === 'summary') {
                 await window.renderSummary();
             }
