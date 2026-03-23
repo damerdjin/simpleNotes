@@ -2,6 +2,7 @@ import { supabase, allowCors } from '../_lib/supabase.js';
 import { createClient } from '@supabase/supabase-js';
 import jwt from 'jsonwebtoken';
 import cookie from 'cookie';
+import bcrypt from 'bcryptjs';
 
 const JWT_SECRET = process.env.JWT_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || 'default-secret-key-for-students';
 
@@ -14,23 +15,12 @@ async function handler(req, res) {
         const { nin, password } = req.body;
 
         if (!nin || !password) {
-            return res.status(400).json({ error: 'NIN et mot de passe (date de naissance) requis.' });
+            return res.status(400).json({ error: 'NIN et mot de passe requis.' });
         }
-
-        // Le mot de passe attendu est YYYYMMDD, on le transforme en DD/MM/YYYY pour la recherche
-        if (password.length !== 8 || isNaN(Number(password))) {
-            return res.status(400).json({ error: 'Format du mot de passe invalide. Utilisez AAAAMMJJ.' });
-        }
-
-        const year = password.substring(0, 4);
-        const month = password.substring(4, 6);
-        const day = password.substring(6, 8);
-        const formattedBirthdate = `${day}/${month}/${year}`;
 
         console.log(`[Student Login] Tentative connexion pour NIN: ${nin}`);
         
         // Recherche de l'élève via la fonction RPC sécurisée (qui bypass le RLS)
-        // L'utilisation de supabase (avec la clé anon) fonctionnera car la fonction est SECURITY DEFINER
         const { data: students, error } = await supabase
             .rpc('check_student_login', { p_nin: nin });
 
@@ -45,28 +35,49 @@ async function handler(req, res) {
         }
 
         const student = students[0];
+        let isAuthenticated = false;
 
-        console.log(`[Student Login] Élève trouvé en base: ${student.first_name} ${student.last_name}, Date de naissance en base: ${student.birthdate}`);
+        // Si l'élève a défini un mot de passe personnalisé
+        if (student.custom_password) {
+            // Vérification avec bcrypt
+            isAuthenticated = await bcrypt.compare(password, student.custom_password);
+            if (!isAuthenticated) {
+                console.log('[Student Login] Mot de passe personnalisé incorrect.');
+            }
+        } else {
+            // Pas de mot de passe personnalisé, on utilise la date de naissance (format AAAAMMJJ)
+            if (password.length !== 8 || isNaN(Number(password))) {
+                return res.status(400).json({ error: 'Le mot de passe par défaut doit être au format AAAAMMJJ.' });
+            }
 
-        // Comparaison souple de la date de naissance (au cas où il y a des zéros manquants)
-        // La date en base pourrait être "3/5/2000" au lieu de "03/05/2000"
-        let isDateMatch = student.birthdate === formattedBirthdate;
-        
-        if (!isDateMatch && student.birthdate) {
-            const parts = student.birthdate.split('/');
-            if (parts.length === 3) {
-                const dbDay = String(parts[0]).padStart(2, '0');
-                const dbMonth = String(parts[1]).padStart(2, '0');
-                const dbYear = parts[2];
-                const normalizedDbDate = `${dbDay}/${dbMonth}/${dbYear}`;
-                isDateMatch = normalizedDbDate === formattedBirthdate;
-                console.log(`[Student Login] Comparaison normalisée: Base(${normalizedDbDate}) vs Saisi(${formattedBirthdate}) -> Match: ${isDateMatch}`);
+            const year = password.substring(0, 4);
+            const month = password.substring(4, 6);
+            const day = password.substring(6, 8);
+            const formattedBirthdate = `${day}/${month}/${year}`;
+
+            console.log(`[Student Login] Date de naissance en base: ${student.birthdate}`);
+
+            isAuthenticated = student.birthdate === formattedBirthdate;
+            
+            if (!isAuthenticated && student.birthdate) {
+                const parts = student.birthdate.split('/');
+                if (parts.length === 3) {
+                    const dbDay = String(parts[0]).padStart(2, '0');
+                    const dbMonth = String(parts[1]).padStart(2, '0');
+                    const dbYear = parts[2];
+                    const normalizedDbDate = `${dbDay}/${dbMonth}/${dbYear}`;
+                    isAuthenticated = normalizedDbDate === formattedBirthdate;
+                    console.log(`[Student Login] Comparaison normalisée: Base(${normalizedDbDate}) vs Saisi(${formattedBirthdate}) -> Match: ${isAuthenticated}`);
+                }
+            }
+
+            if (!isAuthenticated) {
+                console.log('[Student Login] Le mot de passe (date de naissance) ne correspond pas.');
             }
         }
 
-        if (!isDateMatch) {
-            console.log('[Student Login] Le mot de passe (date de naissance) ne correspond pas.');
-            return res.status(401).json({ error: 'Identifiants incorrects (Date de naissance).' });
+        if (!isAuthenticated) {
+            return res.status(401).json({ error: 'Identifiants incorrects.' });
         }
 
         console.log('[Student Login] Authentification réussie !');

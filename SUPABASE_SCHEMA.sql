@@ -83,6 +83,7 @@ create table if not exists public.students (
   birthdate text,
   class_name text not null,
   sex text check (sex in ('M', 'F')),
+  custom_password text, -- Ajout pour permettre aux élèves de changer de mot de passe
   
   created_at timestamptz default now(),
   updated_at timestamptz default now()
@@ -177,6 +178,8 @@ CREATE POLICY "Users can manage their own grades"
 -- ==============================================================================
 
 -- A. Fonction pour vérifier le login d'un élève (Bypass RLS)
+-- MISE A JOUR: On retourne aussi le custom_password s'il existe
+DROP FUNCTION IF EXISTS public.check_student_login(text);
 CREATE OR REPLACE FUNCTION public.check_student_login(p_nin TEXT)
 RETURNS TABLE(
   id TEXT, 
@@ -185,7 +188,8 @@ RETURNS TABLE(
   class_name TEXT, 
   academic_year TEXT, 
   birthdate TEXT, 
-  school_id UUID
+  school_id UUID,
+  custom_password TEXT
 ) 
 SECURITY DEFINER
 AS $$
@@ -198,7 +202,8 @@ BEGIN
     s.class_name, 
     s.academic_year, 
     s.birthdate, 
-    s.school_id 
+    s.school_id,
+    s.custom_password
   FROM public.students s
   WHERE s.nin = p_nin 
     AND s.school_id IS NOT NULL
@@ -240,5 +245,37 @@ BEGIN
   WHERE g.student_id = p_student_id
     AND a.is_visible = true
   ORDER BY g.updated_at DESC;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- C. Fonction pour mettre à jour le mot de passe personnalisé d'un élève
+CREATE OR REPLACE FUNCTION public.update_student_password(p_student_id TEXT, p_new_password TEXT)
+RETURNS VOID
+SECURITY DEFINER
+AS $$
+BEGIN
+  UPDATE public.students
+  SET custom_password = p_new_password,
+      updated_at = now()
+  WHERE id = p_student_id;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- D. Fonction pour récupérer les infos d'authentification par ID (pour changement de mot de passe)
+CREATE OR REPLACE FUNCTION public.get_student_auth_info(p_student_id TEXT)
+RETURNS TABLE(
+  id TEXT,
+  birthdate TEXT,
+  custom_password TEXT
+)
+SECURITY DEFINER
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT s.id, s.birthdate, s.custom_password
+  FROM public.students s
+  WHERE s.id = p_student_id;
 END;
 $$ LANGUAGE plpgsql;
