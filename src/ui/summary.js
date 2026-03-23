@@ -51,7 +51,7 @@ import * as gradesSvc from '../services/grades.service.js';
     window.renderSummary = async function() {
         const isMobile = window.innerWidth < 768;
         
-        if (isMobile && currentSummaryMode === 'default') {
+        if (isMobile) {
             await window.renderSummaryMobile();
             return;
         }
@@ -205,6 +205,37 @@ import * as gradesSvc from '../services/grades.service.js';
             filteredAssignments = filteredAssignments.filter(a => classFilterSet.has(a.className));
         }
 
+        if (summaryAssignmentFilter && summaryAssignmentFilter.size > 0) {
+            filteredAssignments = filteredAssignments.filter(a => summaryAssignmentFilter.has(a.id));
+        }
+
+        if (summaryAssignmentFilter && summaryAssignmentFilter.size > 0 && !selectedClass) {
+            const allowedClasses = new Set(filteredAssignments.map(a => (a.className || '').trim()).filter(c => c.length > 0));
+            filteredStudents = filteredStudents.filter(s => allowedClasses.has((s.className || '').trim()));
+        }
+
+        const allRelevantAssignments = [...filteredAssignments];
+
+        const tagContainer = document.getElementById('summary-assignment-tags');
+        if (tagContainer) {
+            const tags = allRelevantAssignments.map(a => {
+                const selected = summaryAssignmentFilter.has(a.id);
+                const classColor = window.getClassColor ? window.getClassColor(a.className || '') : '#3b82f6';
+                return `<button class="assignment-tag ${selected ? 'selected' : ''} shrink-0"
+                        onclick="toggleSummaryAssignmentTag('${a.id}')"
+                        style="${selected ? `background-color:${classColor};border-color:${classColor};color:#fff;` : `border-color:${classColor};color:${classColor};`}">
+                        ${a.name}
+                    </button>`;
+            }).join('');
+            tagContainer.innerHTML = `<div class="flex gap-2 overflow-x-auto pb-1">${tags}</div>`;
+            tagContainer.className = "mb-3 p-2 bg-gray-50 rounded-lg assignment-tag-container";
+        }
+
+        if (detailsCheckbox) {
+            detailsCheckbox.checked = false;
+            detailsCheckbox.disabled = true;
+        }
+
         if (filteredStudents.length === 0 || filteredAssignments.length === 0) {
             let emptyMessage = searchTerm ? t.noResultForSearch : t.addStudentsAndAssignmentsToSeeSummary;
             container.innerHTML = `<p class="text-gray-500 text-center py-8">${emptyMessage}</p>`;
@@ -228,55 +259,75 @@ import * as gradesSvc from '../services/grades.service.js';
             return firstA.localeCompare(firstB);
         });
 
-        // Start Building Table
-        let html = '<div class="summary-mobile-wrapper"><table class="summary-mobile-table"><thead><tr>';
-        
-        // Sticky Header for Student
-        html += `<th class="sticky-student">${t.student}</th>`;
+        const totalCells = filteredStudents.length * filteredAssignments.length;
+        const gradedCells = filteredStudents.reduce((acc, s) => {
+            return acc + filteredAssignments.filter(a => gradesSvc.hasAnyGradeForAssignment(data, s.id, a.id)).length;
+        }, 0);
+        const completionPct = totalCells > 0 ? Math.round((gradedCells / totalCells) * 100) : 0;
 
-        // Assignment Headers
-        filteredAssignments.forEach(a => {
-            html += `<th class="assignment-header-mobile" title="${a.name}">${a.name}</th>`;
-        });
-        html += '</tr></thead><tbody>';
+        let html = `
+            <div class="grid grid-cols-3 gap-2 mb-3">
+                <div class="bg-white border border-slate-200 rounded-xl p-2 text-center">
+                    <div class="text-[10px] text-slate-500">${t.students || 'Élèves'}</div>
+                    <div class="text-lg font-bold text-slate-800">${filteredStudents.length}</div>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-xl p-2 text-center">
+                    <div class="text-[10px] text-slate-500">${t.assignments || 'Devoirs'}</div>
+                    <div class="text-lg font-bold text-slate-800">${filteredAssignments.length}</div>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-xl p-2 text-center">
+                    <div class="text-[10px] text-slate-500">${t.progression || 'Progression'}</div>
+                    <div class="text-lg font-bold text-slate-800">${completionPct}%</div>
+                </div>
+            </div>
+            <div class="space-y-3">
+        `;
 
         filteredStudents.forEach(s => {
             const displayName = truncateStudentName(s);
-            html += `<tr><td class="sticky-student" title="${s.name}">${displayName}</td>`;
+            const studentClass = (s.className || '').trim();
+            let gradesHtml = '';
 
             filteredAssignments.forEach(a => {
-                let total = 0;
-                let max = 0;
-                let hasGrade = false;
-                
-                try {
-                    total = gradesSvc.getStudentAssignmentTotal(data, s.id, a.id);
-                    max = gradesSvc.getAssignmentMaxPoints(a);
-                    hasGrade = gradesSvc.hasAnyGradeForAssignment(data, s.id, a.id);
-                } catch (e) {
-                    console.error('Error calculating grade', e);
-                }
+                const isStudentClass = studentClass === ((a.className || '').trim());
+                if (!isStudentClass) return;
 
+                const total = gradesSvc.getStudentAssignmentTotal(data, s.id, a.id);
+                const max = gradesSvc.getAssignmentMaxPoints(a);
+                const hasGrade = gradesSvc.hasAnyGradeForAssignment(data, s.id, a.id);
                 const pct = max > 0 ? (total / max * 100) : 0;
-                
-                let gradeClass = 'grade-badge-empty';
-                if (hasGrade) {
-                    if (pct >= 70) gradeClass = 'grade-badge-excellent';
-                    else if (pct >= 50) gradeClass = 'grade-badge-good';
-                    else gradeClass = 'grade-badge-poor';
-                }
+                const badgeClass = !hasGrade ? 'bg-slate-100 text-slate-400 border-slate-200'
+                    : pct >= 70 ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+                    : pct >= 50 ? 'bg-amber-100 text-amber-700 border-amber-200'
+                    : 'bg-rose-100 text-rose-700 border-rose-200';
 
-                html += `
-                    <td class="summary-grade-cell">
-                        <div class="grade-badge-mobile ${gradeClass}">
-                            ${hasGrade ? (Math.round(total * 10) / 10) : '-'}
+                gradesHtml += `
+                    <div class="flex items-center justify-between gap-2 p-2 rounded-lg border border-slate-100">
+                        <div class="min-w-0">
+                            <div class="text-xs font-semibold text-slate-700 truncate">${a.name}</div>
+                            <div class="text-[10px] text-slate-400">${a.className || ''}</div>
                         </div>
-                    </td>`;
+                        <button class="px-2 py-1 rounded-md border text-xs font-bold ${badgeClass}"
+                                ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})"
+                                id="sum-total-${s.id}-${a.id}">
+                            ${hasGrade ? (Math.round(total * 10) / 10) : '-'}
+                        </button>
+                    </div>
+                `;
             });
-            html += '</tr>';
+
+            html += `
+                <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="font-bold text-slate-800 truncate">${displayName}</div>
+                        <div class="text-[10px] px-2 py-1 rounded-md bg-slate-100 text-slate-500">${studentClass || '-'}</div>
+                    </div>
+                    <div class="space-y-2">${gradesHtml || `<div class="text-xs text-slate-400">${t.noResultForSearch || 'Aucun résultat'}</div>`}</div>
+                </div>
+            `;
         });
 
-        html += '</tbody></table></div>';
+        html += '</div>';
         container.innerHTML = html;
         if (window.translatePage) window.translatePage();
     };
@@ -486,8 +537,6 @@ import * as gradesSvc from '../services/grades.service.js';
             return 0;
         });
 
-        let headers = `<th class="p-3 text-left bg-gray-100 sticky left-0 z-10 cursor-pointer select-none" onclick="toggleSummarySort('name')">${t.student}</th>`;
-
         const tagContainer = document.getElementById('summary-assignment-tags');
         if (tagContainer) {
             const tagHtml = allRelevantAssignments.map(a => {
@@ -514,58 +563,97 @@ import * as gradesSvc from '../services/grades.service.js';
             tagContainer.className = "flex flex-wrap gap-2 mb-4 p-2 bg-gray-50 rounded-lg assignment-tag-container";
         }
 
-        for (const a of filteredAssignments) {
-            if (showDetails) {
-                for (let i = 0; i < a.exercises.length; i++) {
-                    const ex = a.exercises[i];
-                    const exLabel = ex.name && ex.name !== 'Global' ? ex.name : `Ex${i + 1}`;
-                    headers += `<th class="p-2 text-center bg-blue-50 text-sm">${exLabel}<br><span class="text-xs text-gray-500">/${window.getExerciseMaxPoints(ex)}</span></th>`;
-                }
-            }
-            headers += `<th class="p-3 text-center bg-blue-100 font-bold cursor-pointer select-none" onclick="toggleSummarySort('assignment-${a.id}')">${a.name}<br><span class="text-xs">/${window.getAssignmentMaxPoints(a)}</span></th>`;
+        const assignmentsByClass = {};
+        filteredAssignments.forEach(a => {
+            const c = (a.className || '').trim() || '(Sans classe)';
+            if (!assignmentsByClass[c]) assignmentsByClass[c] = [];
+            assignmentsByClass[c].push(a);
+        });
+        Object.keys(assignmentsByClass).forEach(c => sortAssignments(assignmentsByClass[c]));
+        const classOrder = Object.keys(assignmentsByClass).sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
+        const orderedAssignments = classOrder.flatMap(c => assignmentsByClass[c] || []);
+
+        if (orderedAssignments.length === 0) {
+            const emptyMessage = selectedClass ? `${t.noStudentOrAssignmentForClass} "${selectedClass}".` : (searchTerm ? t.noResultForSearch : t.addStudentsAndAssignmentsToSeeSummary);
+            container.innerHTML = `<p class="text-gray-500 text-center py-8">${emptyMessage}</p>`;
+            return;
         }
+
+        let classHeaderRow = `<th class="p-2 bg-slate-100 sticky left-0 z-20 border-r border-slate-200"></th>`;
+        let assignmentHeaderRow = `<th class="p-3 text-left bg-slate-100 sticky left-0 z-20 cursor-pointer select-none border-r border-slate-200" onclick="toggleSummarySort('name')">${t.student}</th>`;
+
+        classOrder.forEach((className, idx) => {
+            const classAssignments = assignmentsByClass[className] || [];
+            let colspan = 0;
+            classAssignments.forEach(a => {
+                if (showDetails) colspan += (a.exercises || []).length;
+                colspan += 1;
+            });
+            const bgClass = idx % 2 === 0 ? 'bg-blue-600' : 'bg-indigo-600';
+            classHeaderRow += `<th colspan="${colspan}" class="p-2 text-center text-white font-bold text-sm ${bgClass} border-l border-white/30">${className}</th>`;
+        });
+
+        orderedAssignments.forEach(a => {
+            if (showDetails) {
+                (a.exercises || []).forEach((ex, i) => {
+                    const exLabel = ex.name && ex.name !== 'Global' ? ex.name : `Ex${i + 1}`;
+                    assignmentHeaderRow += `<th class="p-2 text-center bg-slate-50 text-xs font-semibold border-l border-slate-200">${exLabel}<br><span class="text-[10px] text-slate-500">/${window.getExerciseMaxPoints(ex)}</span></th>`;
+                });
+            }
+            assignmentHeaderRow += `<th class="p-3 text-center bg-slate-100 font-bold cursor-pointer select-none border-l border-slate-200" onclick="toggleSummarySort('assignment-${a.id}')">${a.name}<br><span class="text-xs text-slate-500">/${window.getAssignmentMaxPoints(a)}</span></th>`;
+        });
 
         let rows = filteredStudents.map(s => {
             const displayName = truncateStudentName(s);
-            let row = `<td class="p-3 font-medium bg-gray-50 sticky left-0" title="${s.name}">${displayName}</td>`;
-            for (const a of filteredAssignments) {
+            const studentClassName = (s.className || '').trim();
+            let row = `<td class="p-3 font-medium bg-slate-50 sticky left-0 z-10 border-r border-slate-200" title="${s.name}">${displayName}</td>`;
+            for (const a of orderedAssignments) {
                 const studentGrades = data.grades[s.id]?.[a.id] || {};
+                const isStudentClass = studentClassName === ((a.className || '').trim());
                 if (showDetails) {
                     for (const ex of a.exercises) {
-                        const exTotal = window.getStudentExerciseTotal(studentGrades, ex);
-                        const max = window.getExerciseMaxPoints(ex);
-                        const existingFinal = studentGrades[ex.id]?.['final']?.['final']?.['final'];
-                        const hasEx = window.hasAnyGradeForExercise(studentGrades, ex);
-                        const val = existingFinal !== undefined && existingFinal !== '' ? existingFinal : (hasEx ? exTotal.toFixed(2) : '');
-                        row += `<td class="px-2 py-1 text-center">
-                            <input type="text" value="${val}" onblur="commitSummaryInput('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" class="summary-grade-input">
-                        </td>`;
+                        if (isStudentClass) {
+                            const exTotal = window.getStudentExerciseTotal(studentGrades, ex);
+                            const max = window.getExerciseMaxPoints(ex);
+                            const existingFinal = studentGrades[ex.id]?.['final']?.['final']?.['final'];
+                            const hasEx = window.hasAnyGradeForExercise(studentGrades, ex);
+                            const val = existingFinal !== undefined && existingFinal !== '' ? existingFinal : (hasEx ? exTotal.toFixed(2) : '');
+                            row += `<td class="px-2 py-1 text-center border-l border-slate-200">
+                                <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" value="${val}" oninput="sanitizeAndClamp(this, ${max})" onblur="commitSummaryInput('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" onkeydown="handleSummaryInputKey(event, '${s.id}','${a.id}','${ex.id}', ${max})" class="summary-grade-input">
+                            </td>`;
+                        } else {
+                            row += `<td class="px-2 py-1 text-center text-slate-300 bg-slate-50/70 border-l border-slate-200">-</td>`;
+                        }
                     }
                 }
-                const has = window.hasAnyGradeForAssignment(s.id, a.id);
-                const max = window.getAssignmentMaxPoints(a);
-                if (has) {
-                    const total = window.getStudentAssignmentTotal(s.id, a.id);
-                    const pct = max > 0 ? (total / max * 100) : 0;
-                    const bgColor = pct >= 70 ? 'bg-green-100' : pct >= 50 ? 'bg-orange-100' : 'bg-red-100';
-                    row += `<td class="p-3 text-center font-bold ${bgColor} cursor-pointer select-none" ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})" id="sum-total-${s.id}-${a.id}">${total.toFixed(2)}</td>`;
+                if (isStudentClass) {
+                    const has = window.hasAnyGradeForAssignment(s.id, a.id);
+                    const max = window.getAssignmentMaxPoints(a);
+                    if (has) {
+                        const total = window.getStudentAssignmentTotal(s.id, a.id);
+                        const pct = max > 0 ? (total / max * 100) : 0;
+                        const bgColor = pct >= 70 ? 'bg-emerald-100' : pct >= 50 ? 'bg-amber-100' : 'bg-rose-100';
+                        row += `<td class="p-3 text-center font-bold ${bgColor} cursor-pointer select-none border-l border-slate-200" ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})" id="sum-total-${s.id}-${a.id}">${total.toFixed(2)}</td>`;
+                    } else {
+                        row += `<td class="p-3 text-center text-gray-400 bg-slate-50 cursor-pointer select-none border-l border-slate-200" ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})" id="sum-total-${s.id}-${a.id}"></td>`;
+                    }
                 } else {
-                    row += `<td class="p-3 text-center text-gray-400 bg-gray-50 cursor-pointer select-none" ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})" id="sum-total-${s.id}-${a.id}"></td>`;
+                    row += `<td class="p-3 text-center text-slate-300 bg-slate-50/70 border-l border-slate-200">-</td>`;
                 }
             }
-            return `<tr class="border-b hover:bg-gray-50">${row}</tr>`;
+            return `<tr class="border-b border-slate-100 hover:bg-slate-50">${row}</tr>`;
         }).join('');
 
         const colgroupHtml = (() => {
-            let cols = '<col style="width:220px">';
-            for (const a of filteredAssignments) {
+            let cols = '<col style="width:240px">';
+            for (const a of orderedAssignments) {
                 if (showDetails) for (let i = 0; i < (a.exercises || []).length; i++) cols += '<col style="width:70px">';
-                cols += '<col style="width:84px">';
+                cols += '<col style="width:96px">';
             }
             return `<colgroup>${cols}</colgroup>`;
         })();
 
-        container.innerHTML = `<table class="w-full table-fixed border-collapse">${colgroupHtml}<thead><tr class="border-b-2">${headers}</tr></thead><tbody>${rows}</tbody></table>`;
+        container.innerHTML = `<div class="rounded-xl border border-slate-200 overflow-x-auto bg-white shadow-sm"><table class="w-full table-fixed border-collapse">${colgroupHtml}<thead><tr class="border-b border-slate-200">${classHeaderRow}</tr><tr class="border-b-2 border-slate-200">${assignmentHeaderRow}</tr></thead><tbody>${rows}</tbody></table></div>`;
         if (window.translatePage) window.translatePage();
     };
 
