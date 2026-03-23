@@ -869,7 +869,7 @@
         }
     };
 
-    window.renderAssignments = function() {
+    window.renderAssignments = async function() {
         const t = getTranslations()[getLang()];
         const isAr = getLang() === 'ar';
         const container = document.getElementById('assignments-list');
@@ -942,12 +942,29 @@
         }, {});
 
         // Rendu des groupes
-        container.innerHTML = Object.entries(groupedByClass).map(([className, classAssignments]) => {
-            const assignmentsHTML = classAssignments.map(a => {
+        let finalHtml = '';
+        for (const [className, classAssignments] of Object.entries(groupedByClass)) {
+            let assignmentsHTML = '';
+            for (const a of classAssignments) {
                 const totalPoints = gradesSvc().getAssignmentMaxPoints(a);
-                const classStudents = data.students.filter(s => s.className === a.className && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear);
-                const nbStudents = classStudents.length;
-                const nbGrades = classStudents.filter(s => window.hasAnyGradeForAssignment(s.id, a.id)).length;
+                
+                // --- LOGIQUE DE COMPTAGE FUSIONNÉE ---
+                const localStudents = data.students.filter(s => s.className === a.className && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear);
+                let sharedStudents = [];
+                if (window.store && typeof window.store.getSharedStudents === 'function') {
+                    sharedStudents = await window.store.getSharedStudents(a.className);
+                }
+                const studentMap = new Map();
+                localStudents.forEach(s => studentMap.set(s.id, s));
+                sharedStudents.forEach(s => {
+                    const existing = Array.from(studentMap.values()).find(ls => ls.id === s.id || (ls.regNumber && ls.regNumber === s.regNumber));
+                    if (!existing) studentMap.set(s.id, s);
+                });
+                const allClassStudents = Array.from(studentMap.values());
+                // --- FIN DE LA LOGIQUE ---
+
+                const nbStudents = allClassStudents.length;
+                const nbGrades = allClassStudents.filter(s => window.hasAnyGradeForAssignment(s.id, a.id)).length;
                 const completionRate = nbStudents > 0 ? Math.round((nbGrades / nbStudents) * 100) : 0;
 
                 const classColor = getClassColor(a.className);
@@ -965,7 +982,7 @@
                 const questionMargin = isAr ? 'ml-1' : 'mr-1';
                 const textAlign = isAr ? 'text-right' : 'text-left';
 
-                return `
+                assignmentsHTML += `
                 <div class="bg-white border-2 border-gray-200/60 rounded-2xl overflow-hidden shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.15)] hover:-translate-y-2 transition-all duration-500 group flex flex-col h-full relative" style="${cardStyle}">
                     <!-- Barre de couleur supérieure décorative -->
                     <div class="h-2 w-full" style="background-color: ${classColor}"></div>
@@ -1058,9 +1075,8 @@
                     </div>
                 </div>
                 `;
-            }).join('');
-
-            return `
+            }
+            finalHtml += `
             <div class="assignment-class-group">
                 <div class="flex items-center gap-3 mb-4">
                     <div class="h-8 w-1.5 rounded-full" style="background-color: ${getClassColor(className)}"></div>
@@ -1072,7 +1088,8 @@
                 </div>
             </div>
             `;
-        }).join('');
+        }
+        container.innerHTML = finalHtml;
         
         translatePage();
     };
