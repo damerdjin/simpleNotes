@@ -56,6 +56,7 @@ async function handler(req, res) {
                 name: g.assignment_name,
                 subject: g.assignment_subject,
                 trimester: g.assignment_trimester,
+                academic_year: g.academic_year,
                 is_visible: true // C'est forcé par la requête RPC
             }
         }));

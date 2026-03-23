@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Espace Élève - Mes Notes</title>
+    <title>Espace Élève - Mon Suivi</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="/translations.js"></script>
     <style>
         body {
@@ -48,20 +49,58 @@
     </header>
 
     <!-- Main Content -->
-    <main class="p-4 max-w-lg mx-auto">
+    <main class="p-4 max-w-lg mx-auto pb-24">
         
-        <!-- Summary Stats -->
-        <div class="bg-white rounded-2xl shadow-sm p-4 mb-6 flex justify-between items-center">
-            <div>
-                <p class="text-sm text-gray-500 font-medium">Moyenne Générale</p>
-                <p class="text-2xl font-bold text-gray-800" id="average-display">--/20</p>
+        <!-- Filters -->
+        <div class="bg-white rounded-2xl shadow-sm p-4 mb-6 space-y-3">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="text-sm font-bold text-gray-700 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                    Filtres
+                </h2>
+                <span id="grades-count-badge" class="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded-full">0 note</span>
             </div>
-            <div class="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            
+            <div class="grid grid-cols-2 gap-3">
+                <select id="filter-year" class="w-full bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block p-2.5 outline-none">
+                    <option value="all">Toutes les années</option>
+                </select>
+                <select id="filter-trimester" class="w-full bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block p-2.5 outline-none">
+                    <option value="all">Tous les trimestres</option>
+                    <option value="1">1er Trimestre</option>
+                    <option value="2">2ème Trimestre</option>
+                    <option value="3">3ème Trimestre</option>
+                </select>
+            </div>
+            <select id="filter-subject" class="w-full bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block p-2.5 outline-none">
+                <option value="all">Toutes les matières</option>
+            </select>
+        </div>
+
+        <!-- Graphique d'évolution -->
+        <div class="bg-white rounded-2xl shadow-sm p-4 mb-6">
+            <h2 class="text-sm font-bold text-gray-700 mb-3">Progression</h2>
+            <div class="relative h-48 w-full">
+                <canvas id="progressionChart"></canvas>
             </div>
         </div>
 
-        <h2 class="text-lg font-bold text-gray-700 mb-4 px-1">Dernières Notes</h2>
+        <!-- Stats (Max, Min) -->
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div class="bg-white rounded-2xl p-4 shadow-sm border-l-4 border-green-500">
+                <p class="text-xs text-gray-500 font-medium mb-1">Meilleure Note</p>
+                <p class="text-xl font-bold text-gray-800" id="stat-max">--/20</p>
+            </div>
+            <div class="bg-white rounded-2xl p-4 shadow-sm border-l-4 border-orange-400">
+                <p class="text-xs text-gray-500 font-medium mb-1">Dernière Note</p>
+                <p class="text-xl font-bold text-gray-800" id="stat-last">--/20</p>
+            </div>
+        </div>
+
+        <h2 class="text-lg font-bold text-gray-700 mb-4 px-1 flex items-center justify-between">
+            Historique des notes
+            <span class="text-xs font-normal text-gray-400">Du + récent au + ancien</span>
+        </h2>
 
         <!-- Loading State -->
         <div id="loading-state" class="flex flex-col items-center justify-center py-10">
@@ -91,6 +130,9 @@
     </main>
 
     <script>
+        let allGrades = [];
+        let chartInstance = null;
+
         document.addEventListener('DOMContentLoaded', () => {
             const sessionStr = localStorage.getItem('student_session');
             if (!sessionStr) {
@@ -120,6 +162,11 @@
                 window.location.href = '/login.html';
             });
 
+            // Listeners pour les filtres
+            document.getElementById('filter-year').addEventListener('change', renderFilteredView);
+            document.getElementById('filter-trimester').addEventListener('change', renderFilteredView);
+            document.getElementById('filter-subject').addEventListener('change', renderFilteredView);
+
             fetchGrades(session.token);
         });
 
@@ -127,8 +174,6 @@
             const loadingState = document.getElementById('loading-state');
             const errorState = document.getElementById('error-state');
             const emptyState = document.getElementById('empty-state');
-            const gradesList = document.getElementById('grades-list');
-            const avgDisplay = document.getElementById('average-display');
 
             try {
                 const res = await fetch('/api/student/grades', {
@@ -154,77 +199,232 @@
                     return;
                 }
 
-                // Render Grades
-                let totalScore = 0;
-                let totalMax = 0;
-
-                // Sort by updated_at descending
-                const sortedGrades = data.grades.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
-
-                gradesList.innerHTML = sortedGrades.map(grade => {
-                    const assignment = grade.assignments;
-                    const score = grade.score_final;
-                    const max = grade.score_max || 20; // Default to 20 if not set
-                    
-                    // Calc for average
-                    if (score !== null && score !== undefined) {
-                        // Normalize to /20 for average calculation
-                        totalScore += (score / max) * 20;
-                        totalMax += 20;
-                    }
-
-                    // Get Subject Translation
-                    const subjId = assignment.subject;
-                    let displaySubject = subjId;
-                    if (subjId && window.subjects) {
-                        const sObj = window.subjects.find(s => s.id === subjId);
-                        if (sObj) displaySubject = sObj.fr; // Fallback to fr for now
-                    }
-
-                    // Date formatting
-                    const date = new Date(grade.updated_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
-
-                    // Color coding
-                    const percentage = (score / max) * 100;
-                    let colorClass = 'text-gray-800';
-                    let bgClass = 'bg-gray-100';
-                    if (percentage >= 50) {
-                        colorClass = 'text-emerald-700';
-                        bgClass = 'bg-emerald-100';
-                    } else if (percentage < 50 && score !== null) {
-                        colorClass = 'text-red-600';
-                        bgClass = 'bg-red-100';
-                    }
-
-                    const scoreDisplay = score !== null ? `<span class="text-xl font-bold ${colorClass}">${score}</span><span class="text-sm text-gray-500">/${max}</span>` : '<span class="text-sm text-gray-500 italic">Non noté</span>';
-
-                    return `
-                        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center justify-between grade-card">
-                            <div class="flex-1 min-w-0 pr-4">
-                                ${displaySubject ? `<span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-600 uppercase tracking-wide mb-1">${displaySubject}</span>` : ''}
-                                <h3 class="font-bold text-gray-800 truncate">${assignment.name}</h3>
-                                <p class="text-xs text-gray-400 mt-1">${date} ${assignment.trimester ? `• Trimestre ${assignment.trimester}` : ''}</p>
-                            </div>
-                            <div class="text-right ${bgClass} px-3 py-2 rounded-xl min-w-[70px] flex flex-col items-center justify-center">
-                                ${scoreDisplay}
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-
-                // Update Average
-                if (totalMax > 0) {
-                    const avg = (totalScore / (totalMax / 20)).toFixed(2);
-                    avgDisplay.textContent = `${avg}/20`;
-                    if (avg >= 10) avgDisplay.className = 'text-2xl font-bold text-emerald-600';
-                    else avgDisplay.className = 'text-2xl font-bold text-red-500';
-                }
+                // Sort by updated_at descending (newest first)
+                allGrades = data.grades.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+                
+                populateFilters();
+                renderFilteredView();
 
             } catch (err) {
                 loadingState.classList.add('hidden');
                 errorState.classList.remove('hidden');
                 console.error(err);
             }
+        }
+
+        function populateFilters() {
+            const years = new Set();
+            const subjects = new Map(); // id -> label
+
+            allGrades.forEach(g => {
+                if (g.assignments.academic_year) years.add(g.assignments.academic_year);
+                if (g.assignments.subject) {
+                    const subjId = g.assignments.subject;
+                    let displaySubject = subjId;
+                    if (window.subjects) {
+                        const sObj = window.subjects.find(s => s.id === subjId);
+                        if (sObj) displaySubject = sObj.fr;
+                    }
+                    subjects.set(subjId, displaySubject);
+                }
+            });
+
+            // Populate Year Dropdown
+            const yearSelect = document.getElementById('filter-year');
+            Array.from(years).sort().reverse().forEach(y => {
+                yearSelect.add(new Option(y, y));
+            });
+            // Auto-select latest year if available
+            if (years.size > 0) yearSelect.selectedIndex = 1;
+
+            // Populate Subject Dropdown
+            const subjSelect = document.getElementById('filter-subject');
+            Array.from(subjects.entries()).sort((a,b) => a[1].localeCompare(b[1])).forEach(([id, label]) => {
+                subjSelect.add(new Option(label, id));
+            });
+        }
+
+        function renderFilteredView() {
+            const yearFilter = document.getElementById('filter-year').value;
+            const triFilter = document.getElementById('filter-trimester').value;
+            const subjFilter = document.getElementById('filter-subject').value;
+
+            // Appliquer les filtres
+            const filteredGrades = allGrades.filter(g => {
+                const matchYear = yearFilter === 'all' || g.assignments.academic_year === yearFilter;
+                const matchTri = triFilter === 'all' || g.assignments.trimester === triFilter;
+                const matchSubj = subjFilter === 'all' || g.assignments.subject === subjFilter;
+                return matchYear && matchTri && matchSubj;
+            });
+
+            document.getElementById('grades-count-badge').textContent = `${filteredGrades.length} note${filteredGrades.length > 1 ? 's' : ''}`;
+
+            const gradesList = document.getElementById('grades-list');
+            const emptyState = document.getElementById('empty-state');
+            
+            if (filteredGrades.length === 0) {
+                gradesList.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                updateStats([]);
+                updateChart([]);
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+
+            // Render list
+            gradesList.innerHTML = filteredGrades.map(grade => {
+                const assignment = grade.assignments;
+                const score = grade.score_final;
+                const max = grade.score_max || 20;
+                
+                // Get Subject Translation
+                const subjId = assignment.subject;
+                let displaySubject = subjId;
+                if (subjId && window.subjects) {
+                    const sObj = window.subjects.find(s => s.id === subjId);
+                    if (sObj) displaySubject = sObj.fr;
+                }
+
+                const date = new Date(grade.updated_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+
+                // Color coding
+                const percentage = (score / max) * 100;
+                let colorClass = 'text-gray-800';
+                let bgClass = 'bg-gray-100';
+                if (percentage >= 50) {
+                    colorClass = 'text-emerald-700';
+                    bgClass = 'bg-emerald-100';
+                } else if (percentage < 50 && score !== null) {
+                    colorClass = 'text-red-600';
+                    bgClass = 'bg-red-100';
+                }
+
+                const scoreDisplay = score !== null ? `<span class="text-xl font-bold ${colorClass}">${score}</span><span class="text-xs text-gray-500">/${max}</span>` : '<span class="text-sm text-gray-500 italic">Non noté</span>';
+
+                return `
+                    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center justify-between grade-card">
+                        <div class="flex-1 min-w-0 pr-4">
+                            <div class="flex items-center gap-2 mb-1">
+                                ${displaySubject ? `<span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-600 uppercase tracking-wide border border-purple-100">${displaySubject}</span>` : ''}
+                                ${assignment.trimester ? `<span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-600 uppercase tracking-wide border border-blue-100">T${assignment.trimester}</span>` : ''}
+                            </div>
+                            <h3 class="font-bold text-gray-800 truncate text-sm">${assignment.name}</h3>
+                            <p class="text-[11px] text-gray-400 mt-1">${date} • ${assignment.academic_year || 'Année inconnue'}</p>
+                        </div>
+                        <div class="text-right ${bgClass} px-3 py-2 rounded-xl min-w-[70px] flex flex-col items-center justify-center">
+                            ${scoreDisplay}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            updateStats(filteredGrades);
+            updateChart(filteredGrades);
+        }
+
+        function updateStats(grades) {
+            const statMax = document.getElementById('stat-max');
+            const statLast = document.getElementById('stat-last');
+
+            const validGrades = grades.filter(g => g.score_final !== null && g.score_final !== undefined);
+
+            if (validGrades.length === 0) {
+                statMax.textContent = '--/20';
+                statLast.textContent = '--/20';
+                return;
+            }
+
+            // Normaliser sur 20 pour comparer
+            let maxScore = -1;
+            validGrades.forEach(g => {
+                const normalized = (g.score_final / (g.score_max || 20)) * 20;
+                if (normalized > maxScore) maxScore = normalized;
+            });
+
+            // Last grade is the first in the sorted array
+            const lastG = validGrades[0];
+            const lastScoreStr = `${lastG.score_final}/${lastG.score_max || 20}`;
+
+            statMax.textContent = `${maxScore.toFixed(2).replace('.00', '')}/20`;
+            statLast.textContent = lastScoreStr;
+        }
+
+        function updateChart(grades) {
+            const validGrades = grades.filter(g => g.score_final !== null && g.score_final !== undefined)
+                                      .reverse(); // Chronological order for chart
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            if (validGrades.length < 2) {
+                // Not enough data for a chart line
+                document.getElementById('progressionChart').parentElement.style.display = 'none';
+                return;
+            }
+
+            document.getElementById('progressionChart').parentElement.style.display = 'block';
+
+            const ctx = document.getElementById('progressionChart').getContext('2d');
+            
+            const labels = validGrades.map(g => {
+                const d = new Date(g.updated_at);
+                return `${d.getDate()}/${d.getMonth()+1}`;
+            });
+
+            const dataPoints = validGrades.map(g => {
+                return (g.score_final / (g.score_max || 20)) * 20; // normalize to 20
+            });
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Note (sur 20)',
+                        data: dataPoints,
+                        borderColor: '#10b981', // emerald-500
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#10b981',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const g = validGrades[context.dataIndex];
+                                    return `${g.assignments.name}: ${g.score_final}/${g.score_max || 20}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 20,
+                            ticks: { stepSize: 5, color: '#9ca3af', font: {size: 10} },
+                            grid: { color: '#f3f4f6' },
+                            border: { display: false }
+                        },
+                        x: {
+                            ticks: { color: '#9ca3af', font: {size: 10} },
+                            grid: { display: false },
+                            border: { display: false }
+                        }
+                    }
+                }
+            });
         }
     </script>
 </body>

@@ -218,7 +218,8 @@ RETURNS TABLE(
   assignment_id TEXT,
   assignment_name TEXT,
   assignment_subject TEXT,
-  assignment_trimester TEXT
+  assignment_trimester TEXT,
+  academic_year TEXT
 ) 
 SECURITY DEFINER
 AS $$
@@ -232,10 +233,12 @@ BEGIN
     a.id as assignment_id,
     a.name as assignment_name,
     a.subject as assignment_subject,
-    a.trimester as assignment_trimester
+    a.trimester as assignment_trimester,
+    a.academic_year as academic_year
   FROM public.grades g
   INNER JOIN public.assignments a ON g.assignment_id = a.id
   WHERE g.student_id = p_student_id
-    AND a.is_visible = true;
+    AND a.is_visible = true
+  ORDER BY g.updated_at DESC;
 END;
 $$ LANGUAGE plpgsql;
