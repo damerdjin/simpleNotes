@@ -70,9 +70,8 @@ export const relationalSyncService = {
                 return str;
             };
 
-            // 1. Synchroniser les Élèves (Students)
-            if (data.students && Array.isArray(data.students)) {
-                const studentsPayload = data.students
+            const localStudents = (data.students && Array.isArray(data.students)) ? data.students : [];
+            const studentsPayload = localStudents
                     // On filtre pour ne garder que ceux de l'année et du prof (ID ou Email)
                     .filter(s => {
                         const belongsToUser = !s.importedBy || s.importedBy === userId || s.importedBy === userEmail;
@@ -104,87 +103,121 @@ export const relationalSyncService = {
                         };
                     });
 
-                console.log(`[RelationalSync] Found ${studentsPayload.length} students to sync (out of ${data.students.length})`);
+            console.log(`[RelationalSync] Found ${studentsPayload.length} students to sync (out of ${localStudents.length})`);
+            
+            if (studentsPayload.length > 0) {
+                const { error: upsertError } = await supabase
+                    .from('students')
+                    .upsert(studentsPayload, { onConflict: 'id' });
                 
-                if (studentsPayload.length > 0) {
-                    // 1a. Upsert des élèves présents
-                    // On utilise maintenant l'ID comme conflit, mais le RLS gère la visibilité par lycée
-                    const { error: upsertError } = await supabase
-                        .from('students')
-                        .upsert(studentsPayload, { onConflict: 'id' });
-                    
-                    if (upsertError) {
-                        console.error('[RelationalSync] Students upsert error:', upsertError);
+                if (upsertError) {
+                    console.error('[RelationalSync] Students upsert error:', upsertError);
+                }
+            }
+
+            // 2. Synchroniser les Devoirs (Assignments) + supprimer les devoirs retirés côté app
+            const localAssignments = (data.assignments && Array.isArray(data.assignments)) ? data.assignments : [];
+            const validAssignments = localAssignments
+                .filter(a => {
+                    const belongsToUser = !a.createdBy || a.createdBy === userId || a.createdBy === userEmail;
+                    const isCorrectYear = !a.academicYear || a.academicYear === academicYear;
+                    return belongsToUser && isCorrectYear;
+                });
+
+            const assignmentsPayload = validAssignments.map(a => ({
+                id: a.id,
+                user_id: userId,
+                academic_year: academicYear,
+                name: a.name,
+                class_name: a.className,
+                trimester: a.trimester || null,
+                subject: a.subject || null,
+                is_visible: a.isVisible || false,
+                config: {
+                    exercises: a.exercises || []
+                },
+                updated_at: new Date().toISOString()
+            }));
+
+            const validAssignmentIdsForYear = validAssignments.map(a => a.id);
+
+            if (assignmentsPayload.length > 0) {
+                const { error: upsertError } = await supabase
+                    .from('assignments')
+                    .upsert(assignmentsPayload, { onConflict: 'id' });
+
+                if (upsertError) console.error('[RelationalSync] Assignments sync error:', upsertError);
+            }
+
+            const { data: remoteAssignments, error: remoteAssignmentsError } = await supabase
+                .from('assignments')
+                .select('id')
+                .eq('user_id', userId)
+                .eq('academic_year', academicYear);
+
+            if (remoteAssignmentsError) {
+                console.error('[RelationalSync] Assignments fetch for cleanup error:', remoteAssignmentsError);
+            } else {
+                const remoteIds = (remoteAssignments || []).map(a => a.id);
+                const removedAssignmentIds = remoteIds.filter(id => !validAssignmentIdsForYear.includes(id));
+
+                if (removedAssignmentIds.length > 0) {
+                    const { error: deleteGradesError } = await supabase
+                        .from('grades')
+                        .delete()
+                        .eq('user_id', userId)
+                        .in('assignment_id', removedAssignmentIds);
+
+                    if (deleteGradesError) {
+                        console.error('[RelationalSync] Grades delete for removed assignments error:', deleteGradesError);
                     }
 
-                    // 1b. On synchronise aussi les classes uniques détectées dans l'établissement
-                    const uniqueClasses = [...new Set(studentsPayload.map(s => s.class_name))];
-                    const classesPayload = uniqueClasses.map(c => ({
-                        school_id: schoolId,
-                        academic_year: academicYear,
-                        name: c
-                    }));
+                    const { error: deleteAssignmentsError } = await supabase
+                        .from('assignments')
+                        .delete()
+                        .eq('user_id', userId)
+                        .eq('academic_year', academicYear)
+                        .in('id', removedAssignmentIds);
 
-                    if (classesPayload.length > 0) {
-                        const { data: syncedClasses, error: classUpsertError } = await supabase
-                            .from('classes')
-                            .upsert(classesPayload, { onConflict: 'school_id,academic_year,name' })
-                            .select('id');
-                        
-                        if (classUpsertError) {
-                            console.error('[RelationalSync] Classes upsert error:', classUpsertError);
-                        } else if (syncedClasses && syncedClasses.length > 0) {
-                            // 1d. Link teacher to these classes (Subscription)
-                            const teacherClassesPayload = syncedClasses.map(c => ({
-                                user_id: userId,
-                                class_id: c.id
-                            }));
-
-                            const { error: tcError } = await supabase
-                                .from('teacher_classes')
-                                .upsert(teacherClassesPayload, { onConflict: 'user_id,class_id' });
-                            
-                            if (tcError) {
-                                console.error('[RelationalSync] Teacher classes subscription error:', tcError);
-                            }
-                        }
-                    }
-
-                    if (!upsertError) {
-                        console.log('[RelationalSync] Students synced successfully (upsert only)');
+                    if (deleteAssignmentsError) {
+                        console.error('[RelationalSync] Removed assignments delete error:', deleteAssignmentsError);
+                    } else {
+                        console.log(`[RelationalSync] Deleted ${removedAssignmentIds.length} assignment(s) removed locally.`);
                     }
                 }
             }
 
-            // 2. Synchroniser les Devoirs (Assignments)
-            if (data.assignments && Array.isArray(data.assignments)) {
-                const assignmentsPayload = data.assignments
-                    .filter(a => {
-                        const belongsToUser = !a.createdBy || a.createdBy === userId || a.createdBy === userEmail;
-                        const isCorrectYear = !a.academicYear || a.academicYear === academicYear;
-                        return belongsToUser && isCorrectYear;
-                    })
-                    .map(a => ({
-                        id: a.id, // TEXT
+            const classNamesFromStudents = studentsPayload.map(s => s.class_name).filter(Boolean);
+            const classNamesFromAssignments = assignmentsPayload.map(a => a.class_name).filter(Boolean);
+            const uniqueClasses = [...new Set([...classNamesFromStudents, ...classNamesFromAssignments])];
+
+            if (schoolId && uniqueClasses.length > 0) {
+                const classesPayload = uniqueClasses.map(c => ({
+                    school_id: schoolId,
+                    academic_year: academicYear,
+                    name: c
+                }));
+
+                const { data: syncedClasses, error: classUpsertError } = await supabase
+                    .from('classes')
+                    .upsert(classesPayload, { onConflict: 'school_id,academic_year,name' })
+                    .select('id');
+
+                if (classUpsertError) {
+                    console.error('[RelationalSync] Classes upsert error:', classUpsertError);
+                } else if (syncedClasses && syncedClasses.length > 0) {
+                    const teacherClassesPayload = syncedClasses.map(c => ({
                         user_id: userId,
-                        academic_year: academicYear,
-                        name: a.name,
-                        class_name: a.className,
-                        trimester: a.trimester || null,
-                        subject: a.subject || null,
-                        is_visible: a.isVisible || false,
-                        config: {
-                            exercises: a.exercises || []
-                        },
-                        updated_at: new Date().toISOString()
+                        class_id: c.id
                     }));
 
-                if (assignmentsPayload.length > 0) {
-                    const { error: upsertError } = await supabase
-                        .from('assignments')
-                        .upsert(assignmentsPayload, { onConflict: 'id' });
+                    const { error: tcError } = await supabase
+                        .from('teacher_classes')
+                        .upsert(teacherClassesPayload, { onConflict: 'user_id,class_id' });
 
-                    if (upsertError) console.error('[RelationalSync] Assignments sync error:', upsertError);
+                    if (tcError) {
+                        console.error('[RelationalSync] Teacher classes subscription error:', tcError);
+                    }
                 }
             }
 
@@ -197,7 +230,7 @@ export const relationalSyncService = {
                 // (Ceux qu'on vient de synchroniser)
                 const validStudentIds = data.students.map(s => s.id);
                 
-                const validAssignmentIds = data.assignments.map(a => a.id);
+                const validAssignmentIds = validAssignments.map(a => a.id);
 
                 // On parcourt les élèves
                 Object.entries(data.grades).forEach(([studentId, studentGrades]) => {

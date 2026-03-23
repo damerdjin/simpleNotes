@@ -1,5 +1,7 @@
 import { settingsAdapter } from '../storage/settings.adapter.js';
 import { logout } from './auth.js';
+import { supabase } from './supabase-client.js';
+import { relationalSyncService } from '../services/relational-sync.service.js';
 
 (function () {
     // Helper to access globals
@@ -74,23 +76,22 @@ import { logout } from './auth.js';
         }
     };
 
-    window.handleJsonExportData = function() {
+    window.handleJsonExportData = async function() {
         const t = getTranslations()[getLang()];
         const now = new Date();
         const pad = n => String(n).padStart(2, '0');
         
-        // Récupérer les filtres globaux
         const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
+        const userUuid = window.currentUser?.id || null;
         const globalAcademicYear = window.getGlobalAcademicYear();
         
-        // Filtrer les données à exporter
         const filteredStudents = window.data.students.filter(s => 
-            (s.importedBy || 'unknown') === userId && 
+            ((s.importedBy || 'unknown') === userId || (userUuid && (s.importedBy || 'unknown') === userUuid)) && 
             (s.academicYear || '') === globalAcademicYear
         );
         
         const filteredAssignments = window.data.assignments.filter(a => 
-            (a.createdBy || 'unknown') === userId && 
+            ((a.createdBy || 'unknown') === userId || (userUuid && (a.createdBy || 'unknown') === userUuid)) && 
             (a.academicYear || '') === globalAcademicYear
         );
         
@@ -109,17 +110,13 @@ import { logout } from './auth.js';
             grades: filteredGrades
         };
 
-        // Adapter le nom du fichier avec l'année scolaire et le prof
         const safeUser = userId.split('@')[0].replace(/[^a-z0-9]/gi, '_');
         const safeYear = globalAcademicYear.replace(/[^a-z0-9]/gi, '_');
-        const fname = `simpleNotes-${safeUser}-${safeYear}-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.json`;
+        const fname = `simpleNotes-backup-${safeUser}-${safeYear}-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.json`;
 
-        // === SAUVEGARDE DES MESSAGES PERSO ===
         const teacherMessages = {};
         try {
-            // Récupère TOUS les messages Perso par scope/band
             const scopes = [];
-            // On scanne tous les types de paliers possibles pour Obs et Cons
             for (let band = -1; band <= 10; band++) {
                 scopes.push(`obs@${band}`);
                 scopes.push(`cons@${band}`);
@@ -137,27 +134,61 @@ import { logout } from './auth.js';
             console.warn("Erreur export messages Perso:", e);
         }
 
-        // Filtrer l'exportPrepConfig pour n'inclure que les classes exportées
-        const exportedClasses = new Set(filteredStudents.map(s => s.className));
-        const filteredExportPrepConfig = { 
-            globalRemarks: window.exportPrepConfig?.globalRemarks || {},
-            byClass: {} 
-        };
-        
-        if (window.exportPrepConfig?.byClass) {
-            for (const cls of exportedClasses) {
-                if (window.exportPrepConfig.byClass[cls]) {
-                    filteredExportPrepConfig.byClass[cls] = window.exportPrepConfig.byClass[cls];
-                }
+        const exportPrepConfig = window.exportPrepConfig || (() => {
+            try {
+                return JSON.parse(localStorage.getItem('corrections-export-config-v1') || '{"byClass":{}}');
+            } catch (_) {
+                return { byClass: {} };
             }
+        })();
+
+        const localSettings = {
+            language: localStorage.getItem('corrections-language') || 'fr',
+            globalAcademicYear: localStorage.getItem('corrections-global-academic-year') || globalAcademicYear || '',
+            globalTrimester: localStorage.getItem('corrections-global-trimester') || '',
+            exportPrepConfigRaw: localStorage.getItem('corrections-export-config-v1') || '',
+            remarksOverridesRaw: localStorage.getItem('corrections-remarks-overrides-v1') || '',
+            teacherLibraryRaw: localStorage.getItem('corrections-teacher-remarks-library-v1') || ''
+        };
+
+        let correctionsDataRecords = [];
+        if (userUuid) {
+            try {
+                const { data: rows, error } = await supabase
+                    .from('corrections_data')
+                    .select('academic_year, data, updated_at')
+                    .eq('user_id', userUuid)
+                    .order('academic_year', { ascending: true });
+                if (!error && Array.isArray(rows)) {
+                    correctionsDataRecords = rows.map(r => ({
+                        academicYear: r.academic_year,
+                        data: r.data || { students: [], assignments: [], grades: {} },
+                        updatedAt: r.updated_at || null
+                    }));
+                }
+            } catch (_) {}
+        }
+
+        if (correctionsDataRecords.length === 0) {
+            correctionsDataRecords = [{
+                academicYear: globalAcademicYear,
+                data: filteredData,
+                updatedAt: now.toISOString()
+            }];
         }
 
         const payload = {
+            formatVersion: 2,
+            backupType: 'full-teacher-backup',
             data: filteredData,
-            exportPrepConfig: filteredExportPrepConfig,
+            currentYearData: filteredData,
+            correctionsDataRecords,
+            exportPrepConfig,
             teacherMessages,
+            localSettings,
             metadata: {
                 exportedBy: userId,
+                exportedByUuid: userUuid,
                 academicYear: globalAcademicYear,
                 exportedAt: now.toISOString()
             }
@@ -239,24 +270,120 @@ import { logout } from './auth.js';
         if (!file) return;
 
         const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
+        const userUuid = window.currentUser?.id || null;
         const globalAcademicYear = window.getGlobalAcademicYear();
 
         const reader = new FileReader();
-        reader.onload = function (e) {
+        reader.onload = async function (e) {
             try {
                 const importedRaw = JSON.parse(e.target.result);
                 const importedData = importedRaw.data || importedRaw;
                 const metadata = importedRaw.metadata || {};
                 const data = window.data;
 
-                // --- VALIDATION STRICTE ---
-                // Si le fichier contient des métadonnées, on vérifie si elles correspondent au prof et à l'année
-                if (metadata.exportedBy && metadata.exportedBy !== userId) {
-                    const confirmMsg = t.importWrongUserWarning || `Attention: Ce fichier a été exporté par ${metadata.exportedBy}. Voulez-vous vraiment importer ces données pour votre compte (${userId}) ?`;
-                    if (!confirm(confirmMsg)) return;
+                const exportedBy = metadata.exportedBy || null;
+                const exportedByUuid = metadata.exportedByUuid || null;
+                const sameByEmail = exportedBy && exportedBy === userId;
+                const sameByUuid = exportedByUuid && userUuid && exportedByUuid === userUuid;
+                const hasIdentity = !!(exportedBy || exportedByUuid);
+                const isSameTeacher = sameByEmail || sameByUuid;
+                if (hasIdentity && !isSameTeacher) {
+                    alert(t.importWrongUserWarning || `Import refusé : ce fichier appartient à un autre professeur (${exportedBy || exportedByUuid}).`);
+                    event.target.value = '';
+                    return;
                 }
 
-                // Fonction pour nettoyer
+                if (importedRaw.formatVersion >= 2 && Array.isArray(importedRaw.correctionsDataRecords)) {
+                    const records = importedRaw.correctionsDataRecords
+                        .filter(r => r && r.academicYear && r.data)
+                        .map(r => ({
+                            academicYear: String(r.academicYear),
+                            data: {
+                                students: Array.isArray(r.data.students) ? r.data.students : [],
+                                assignments: Array.isArray(r.data.assignments) ? r.data.assignments : [],
+                                grades: r.data.grades && typeof r.data.grades === 'object' ? r.data.grades : {}
+                            }
+                        }));
+
+                    if (records.length === 0) {
+                        throw new Error('Aucune donnée valide dans le backup.');
+                    }
+
+                    if (importedRaw.localSettings) {
+                        const ls = importedRaw.localSettings;
+                        if (ls.language) localStorage.setItem('corrections-language', ls.language);
+                        if (ls.globalAcademicYear) localStorage.setItem('corrections-global-academic-year', ls.globalAcademicYear);
+                        if (ls.globalTrimester) localStorage.setItem('corrections-global-trimester', ls.globalTrimester);
+                        if (typeof ls.exportPrepConfigRaw === 'string' && ls.exportPrepConfigRaw) localStorage.setItem('corrections-export-config-v1', ls.exportPrepConfigRaw);
+                        if (typeof ls.remarksOverridesRaw === 'string' && ls.remarksOverridesRaw) localStorage.setItem('corrections-remarks-overrides-v1', ls.remarksOverridesRaw);
+                        if (typeof ls.teacherLibraryRaw === 'string' && ls.teacherLibraryRaw) localStorage.setItem('corrections-teacher-remarks-library-v1', ls.teacherLibraryRaw);
+                    }
+
+                    if (importedRaw.exportPrepConfig) {
+                        window.exportPrepConfig = importedRaw.exportPrepConfig;
+                        localStorage.setItem('corrections-export-config-v1', JSON.stringify(importedRaw.exportPrepConfig));
+                    }
+
+                    const teacherData = importedRaw.teacherMessages || {};
+                    Object.entries(teacherData).forEach(([scope, msgs]) => {
+                        if (Array.isArray(msgs) && msgs.length > 0 && window.addTeacherMessage) {
+                            msgs.forEach(m => window.addTeacherMessage(scope, m));
+                        }
+                    });
+
+                    let syncedRows = 0;
+                    let failedRows = 0;
+                    let relationalSyncedRows = 0;
+                    if (userUuid) {
+                        for (const rec of records) {
+                            try {
+                                const { error } = await supabase
+                                    .from('corrections_data')
+                                    .upsert(
+                                        {
+                                            user_id: userUuid,
+                                            academic_year: rec.academicYear,
+                                            data: rec.data,
+                                            updated_at: new Date().toISOString()
+                                        },
+                                        { onConflict: 'user_id,academic_year' }
+                                    );
+                                if (error) {
+                                    failedRows++;
+                                } else {
+                                    syncedRows++;
+                                    try {
+                                        await relationalSyncService.sync(rec.data, rec.academicYear);
+                                        relationalSyncedRows++;
+                                    } catch (_) {}
+                                }
+                            } catch (_) {
+                                failedRows++;
+                            }
+                        }
+                    }
+
+                    const targetYear = globalAcademicYear || metadata.academicYear || records[0].academicYear;
+                    const currentRecord = records.find(r => r.academicYear === targetYear) || records[0];
+                    window.data = currentRecord.data;
+                    window.isDataLoaded = true;
+                    window.saveData();
+
+                    let report = `${t.importSuccess || 'Importation terminée'} :\n`;
+                    report += `- ${records.length} année(s) restaurée(s)\n`;
+                    if (userUuid) {
+                        report += `- ${syncedRows} année(s) synchronisée(s) vers la base`;
+                        report += `\n- ${relationalSyncedRows} année(s) propagée(s) vers les tables classes/élèves/devoirs/notes`;
+                        if (failedRows > 0) report += `\n- ${failedRows} année(s) en échec de synchronisation`;
+                    } else {
+                        report += `- Restauration locale uniquement`;
+                    }
+                    alert(report);
+                    if (window.softResetUI) window.softResetUI();
+                    event.target.value = '';
+                    return;
+                }
+
                 const clean = (val) => String(val || '').trim();
                 const normalizeBirthDate = (val) => {
                     if (val === undefined || val === null) return '';
