@@ -1081,43 +1081,6 @@ import * as gradesSvc from '../services/grades.service.js';
             return 0;
         });
 
-        let classHeaderRow = `<th class="p-3 bg-gray-100 sticky left-0 z-10"></th>`;
-        let assignmentHeaderRow = `<th class="p-3 text-left bg-gray-100 sticky left-0 z-10 cursor-pointer select-none" onclick="toggleSummarySort('name')">${t.student}</th>`;
-
-        classesInOrder.forEach(className => {
-            const classAssignments = assignmentsByClass[className] || [];
-            if (classAssignments.length === 0) return;
-            let colspan = 0;
-            classAssignments.forEach(a => {
-                if (showDetails) colspan += (a.exercises || []).length;
-                colspan += 1;
-            });
-            const classIndex = classesInOrder.indexOf(className);
-            const bgColor = classIndex % 2 === 0 ? 'bg-blue-600' : 'bg-indigo-600';
-            classHeaderRow += `<th colspan="${colspan}" class="p-2 text-center text-white font-bold ${bgColor} border-l-2 border-white">${className}</th>`;
-        });
-
-        classesInOrder.forEach(className => {
-            const classAssignments = assignmentsByClass[className] || [];
-            const classIndex = classesInOrder.indexOf(className);
-            const bgLight = classIndex % 2 === 0 ? 'bg-blue-50' : 'bg-indigo-50';
-            const bgMedium = classIndex % 2 === 0 ? 'bg-blue-100' : 'bg-indigo-100';
-            let isFirstInClass = true;
-
-            classAssignments.forEach(a => {
-                const borderClass = isFirstInClass ? 'border-l-2 border-gray-300' : '';
-                isFirstInClass = false;
-                if (showDetails) {
-                    a.exercises.forEach((ex, exIdx) => {
-                        const exBorder = exIdx === 0 ? borderClass : '';
-                        assignmentHeaderRow += `<th class="p-2 text-center ${bgLight} text-sm ${exBorder}">Ex${exIdx + 1}<br><span class="text-xs text-gray-500">/${window.getExerciseMaxPoints(ex)}</span></th>`;
-                    });
-                }
-                const totalBorder = showDetails ? '' : borderClass;
-                assignmentHeaderRow += `<th class="p-3 text-center ${bgMedium} font-bold cursor-pointer select-none ${totalBorder}" onclick="toggleSummarySort('assignment-${a.id}')">${a.name}<br><span class="text-xs">/${window.getAssignmentMaxPoints(a)}</span></th>`;
-            });
-        });
-
         const tagContainer = document.getElementById('summary-assignment-tags');
         if (tagContainer) {
             let tagHtml = '';
@@ -1151,104 +1114,94 @@ import * as gradesSvc from '../services/grades.service.js';
             tagContainer.innerHTML = tagHtml;
             tagContainer.className = "flex flex-wrap gap-2 mb-4 p-2 bg-gray-50 rounded-lg assignment-tag-container";
         }
+        let html = '';
 
-        let currentClass = '';
-        let rows = filteredStudents.map(s => {
-            let classHeader = '';
-            const studentClassName = (s.className || '').trim();
-            if (studentClassName !== currentClass) {
-                currentClass = studentClassName;
-                const colspan = 1 + orderedAssignments.reduce((sum, a) => sum + (showDetails ? (a.exercises || []).length : 0) + 1, 0);
-                classHeader = `<tr class="bg-gray-800 text-white font-bold">
-                    <td colspan="${colspan}" class="p-2 text-center text-lg">
-                        📚 ${studentClassName || '(Sans classe)'}
-                    </td>
-                </tr>`;
+        for (const className of classesInOrder) {
+            const classStudents = filteredStudents.filter(s => (s.className || '').trim() === className);
+            const classAssignments = assignmentsByClass[className] || [];
+            if (classStudents.length === 0) continue;
+
+            const classColor = window.getClassColor ? window.getClassColor(className) : '#2563eb';
+
+            html += `<div class="mb-8 rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">`;
+            html += `<div class="px-4 py-3 text-white font-bold flex items-center justify-between" style="background:${classColor}">
+                <span>📚 ${className}</span>
+                <span class="text-xs sm:text-sm font-semibold opacity-90">${classStudents.length} ${t.students} • ${classAssignments.length} ${t.assignments}</span>
+            </div>`;
+
+            if (classAssignments.length === 0) {
+                html += `<div class="p-6 text-center text-slate-500">${t.noAssignments || 'Aucun devoir'}</div>`;
+                html += `</div>`;
+                continue;
             }
-            let row = `<td class="p-3 font-medium bg-gray-50 sticky left-0 z-5">${s.name}</td>`;
-            
-            classesInOrder.forEach(className => {
-                const classAssignments = assignmentsByClass[className] || [];
-                const classIndex = classesInOrder.indexOf(className);
-                const isStudentClass = studentClassName === className;
-                let isFirstInClass = true;
-                const bgEmpty = classIndex % 2 === 0 ? 'bg-blue-50/30' : 'bg-indigo-50/30';
 
+            const colgroup = (() => {
+                let cols = '<col style="width:230px">';
+                for (const a of classAssignments) {
+                    if (showDetails) {
+                        const exCount = (a.exercises || []).length;
+                        for (let i = 0; i < exCount; i++) cols += '<col style="width:88px">';
+                    }
+                    cols += '<col style="width:110px">';
+                }
+                return `<colgroup>${cols}</colgroup>`;
+            })();
+
+            let assignmentHeaderRow = `<th class="p-3 text-left bg-slate-100 sticky left-0 z-10 cursor-pointer select-none border-r border-slate-200" onclick="toggleSummarySort('name')">${t.student}</th>`;
+            classAssignments.forEach(a => {
+                if (showDetails) {
+                    a.exercises.forEach((ex, exIdx) => {
+                        assignmentHeaderRow += `<th class="p-2 text-center bg-slate-50 text-xs font-semibold border-l border-slate-200">Ex${exIdx + 1}<br><span class="text-[10px] text-slate-500">/${window.getExerciseMaxPoints(ex)}</span></th>`;
+                    });
+                }
+                assignmentHeaderRow += `<th class="p-3 text-center bg-slate-100 font-bold cursor-pointer select-none border-l border-slate-200" onclick="toggleSummarySort('assignment-${a.id}')">${a.name}<br><span class="text-xs text-slate-500">/${window.getAssignmentMaxPoints(a)}</span></th>`;
+            });
+
+            const rows = classStudents.map(s => {
+                let row = `<td class="p-3 font-medium bg-slate-50 sticky left-0 z-5 border-r border-slate-200">${truncateStudentName(s)}</td>`;
                 classAssignments.forEach(a => {
                     const studentGrades = data.grades[s.id]?.[a.id] || {};
-                    const borderClass = isFirstInClass ? 'border-l-2 border-gray-200' : '';
-                    isFirstInClass = false;
-
                     if (showDetails) {
                         a.exercises.forEach((ex, exIdx) => {
-                            const exBorder = exIdx === 0 ? borderClass : '';
-                            if (isStudentClass) {
-                                const exTotal = window.getStudentExerciseTotal(studentGrades, ex);
-                                const max = window.getExerciseMaxPoints(ex);
-                                const existingFinal = studentGrades[ex.id]?.['final']?.['final']?.['final'];
-                                const hasEx = window.hasAnyGradeForExercise(studentGrades, ex);
-                                const val = existingFinal !== undefined && existingFinal !== '' ? existingFinal : (hasEx ? exTotal.toFixed(2) : '');
-                                row += `<td class="px-2 py-1 text-center ${exBorder}">
-                                    <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" 
-                                        value="${val}" 
-                                        oninput="sanitizeAndClamp(this, ${max})" 
-                                        onblur="commitSummaryInput('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" 
-                                        onkeydown="handleSummaryInputKey(event, '${s.id}','${a.id}','${ex.id}', ${max})" 
-                                        onfocus="this.select()" 
-                                        id="sum-input-${s.id}-${a.id}-${ex.id}" 
-                                        name="sum-input-${s.id}-${a.id}-${ex.id}" 
-                                        aria-label="Note Ex${exIdx + 1} pour ${s.name} - ${a.name}" 
-                                        class="summary-grade-input">
-                                </td>`;
-                            } else {
-                                row += `<td class="px-2 py-1 text-center text-gray-300 ${bgEmpty} ${exBorder}">-</td>`;
-                            }
+                            const exTotal = window.getStudentExerciseTotal(studentGrades, ex);
+                            const max = window.getExerciseMaxPoints(ex);
+                            const existingFinal = studentGrades[ex.id]?.['final']?.['final']?.['final'];
+                            const hasEx = window.hasAnyGradeForExercise(studentGrades, ex);
+                            const val = existingFinal !== undefined && existingFinal !== '' ? existingFinal : (hasEx ? exTotal.toFixed(2) : '');
+                            row += `<td class="px-2 py-1 text-center border-l border-slate-200">
+                                <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" 
+                                    value="${val}" 
+                                    oninput="sanitizeAndClamp(this, ${max})" 
+                                    onblur="commitSummaryInput('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" 
+                                    onkeydown="handleSummaryInputKey(event, '${s.id}','${a.id}','${ex.id}', ${max})" 
+                                    onfocus="this.select()" 
+                                    id="sum-input-${s.id}-${a.id}-${ex.id}" 
+                                    name="sum-input-${s.id}-${a.id}-${ex.id}" 
+                                    aria-label="Note Ex${exIdx + 1} pour ${s.name} - ${a.name}" 
+                                    class="summary-grade-input">
+                            </td>`;
                         });
                     }
 
-                    const totalBorder = showDetails ? '' : borderClass;
-                    if (isStudentClass) {
-                        const has = window.hasAnyGradeForAssignment(s.id, a.id);
-                        const max = window.getAssignmentMaxPoints(a);
-                        if (has) {
-                            const total = window.getStudentAssignmentTotal(s.id, a.id);
-                            const pct = max > 0 ? (total / max * 100) : 0;
-                            const bgColor = pct >= 70 ? 'bg-green-100' : pct >= 50 ? 'bg-orange-100' : 'bg-red-100';
-                            row += `<td class="p-3 text-center font-bold ${bgColor} ${totalBorder} cursor-pointer select-none" ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})" id="sum-total-${s.id}-${a.id}">${total.toFixed(2)}</td>`;
-                        } else {
-                            row += `<td class="p-3 text-center text-gray-300 ${bgEmpty} ${totalBorder} cursor-pointer select-none" ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})" id="sum-total-${s.id}-${a.id}"></td>`;
-                        }
+                    const has = window.hasAnyGradeForAssignment(s.id, a.id);
+                    const max = window.getAssignmentMaxPoints(a);
+                    if (has) {
+                        const total = window.getStudentAssignmentTotal(s.id, a.id);
+                        const pct = max > 0 ? (total / max * 100) : 0;
+                        const bgColor = pct >= 70 ? 'bg-emerald-100' : pct >= 50 ? 'bg-amber-100' : 'bg-rose-100';
+                        row += `<td class="p-3 text-center font-bold ${bgColor} border-l border-slate-200 cursor-pointer select-none" ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})" id="sum-total-${s.id}-${a.id}">${total.toFixed(2)}</td>`;
                     } else {
-                        row += `<td class="p-3 text-center text-gray-300 ${bgEmpty} ${totalBorder}">-</td>`;
+                        row += `<td class="p-3 text-center text-slate-300 border-l border-slate-200 cursor-pointer select-none" ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})" id="sum-total-${s.id}-${a.id}"></td>`;
                     }
                 });
-            });
-            return classHeader + `<tr class="border-b hover:bg-gray-50">${row}</tr>`;
-        }).join('');
+                return `<tr class="border-b border-slate-100 hover:bg-slate-50">${row}</tr>`;
+            }).join('');
 
-        const colgroupHtml = (() => {
-            let cols = '<col style="width:220px">';
-            orderedAssignments.forEach(a => {
-                if (showDetails) {
-                    const exCount = (a.exercises || []).length;
-                    for (let i = 0; i < exCount; i++) cols += '<col style="width:70px">';
-                }
-                cols += '<col style="width:84px">';
-            });
-            return `<colgroup>${cols}</colgroup>`;
-        })();
+            html += `<div class="overflow-x-auto"><table class="w-full table-fixed border-collapse">${colgroup}<thead><tr class="border-b-2 border-slate-200">${assignmentHeaderRow}</tr></thead><tbody>${rows}</tbody></table></div>`;
+            html += `</div>`;
+        }
 
-
-        container.innerHTML = `
-            <table class="w-full table-fixed border-collapse">
-                ${colgroupHtml}
-                <thead>
-                    <tr class="border-b">${classHeaderRow}</tr>
-                    <tr class="border-b-2">${assignmentHeaderRow}</tr>
-                </thead>
-                <tbody>${rows}</tbody>
-            </table>
-        `;
+        container.innerHTML = html;
         window.translatePage();
     };
 
