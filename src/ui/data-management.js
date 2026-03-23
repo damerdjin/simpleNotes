@@ -387,16 +387,49 @@ import { relationalSyncService } from '../services/relational-sync.service.js';
                 }
 
                 if (importedRaw.formatVersion >= 2 && Array.isArray(importedRaw.correctionsDataRecords)) {
+                    const teacherMatches = (owner) => {
+                        if (!owner) return true;
+                        return owner === userId || (userUuid && owner === userUuid) || (metadata.exportedBy && owner === metadata.exportedBy) || (metadata.exportedByUuid && owner === metadata.exportedByUuid);
+                    };
+
                     const records = importedRaw.correctionsDataRecords
                         .filter(r => r && r.academicYear && r.data)
-                        .map(r => ({
-                            academicYear: String(r.academicYear),
-                            data: {
-                                students: Array.isArray(r.data.students) ? r.data.students : [],
-                                assignments: Array.isArray(r.data.assignments) ? r.data.assignments : [],
-                                grades: r.data.grades && typeof r.data.grades === 'object' ? r.data.grades : {}
-                            }
-                        }));
+                        .map(r => {
+                            const academicYear = String(r.academicYear);
+                            const srcStudents = Array.isArray(r.data.students) ? r.data.students : [];
+                            const srcAssignments = Array.isArray(r.data.assignments) ? r.data.assignments : [];
+                            const srcGrades = r.data.grades && typeof r.data.grades === 'object' ? r.data.grades : {};
+
+                            const students = srcStudents.filter(s => {
+                                const owner = s?.importedBy || metadata.exportedBy || metadata.exportedByUuid || userId;
+                                const year = s?.academicYear || academicYear;
+                                return teacherMatches(owner) && year === academicYear;
+                            });
+
+                            const assignments = srcAssignments.filter(a => {
+                                const owner = a?.createdBy || metadata.exportedBy || metadata.exportedByUuid || userId;
+                                const year = a?.academicYear || academicYear;
+                                return teacherMatches(owner) && year === academicYear;
+                            });
+
+                            const validStudentIds = new Set(students.map(s => s.id));
+                            const validAssignmentIds = new Set(assignments.map(a => a.id));
+                            const grades = {};
+                            Object.entries(srcGrades).forEach(([studentId, byAssignment]) => {
+                                if (!validStudentIds.has(studentId) || !byAssignment || typeof byAssignment !== 'object') return;
+                                const filteredByAssignment = {};
+                                Object.entries(byAssignment).forEach(([assignmentId, gradeData]) => {
+                                    if (!validAssignmentIds.has(assignmentId)) return;
+                                    filteredByAssignment[assignmentId] = gradeData;
+                                });
+                                grades[studentId] = filteredByAssignment;
+                            });
+
+                            return {
+                                academicYear,
+                                data: { students, assignments, grades }
+                            };
+                        });
 
                     if (records.length === 0) {
                         throw new Error('Aucune donnée valide dans le backup.');
@@ -427,6 +460,7 @@ import { relationalSyncService } from '../services/relational-sync.service.js';
                     let syncedRows = 0;
                     let failedRows = 0;
                     let relationalSyncedRows = 0;
+                    let classesDetectedCount = 0;
                     if (userUuid) {
                         for (const rec of records) {
                             try {
@@ -445,6 +479,12 @@ import { relationalSyncService } from '../services/relational-sync.service.js';
                                     failedRows++;
                                 } else {
                                     syncedRows++;
+                                    const d = rec.data || {};
+                                    const uniqueClassNames = new Set([
+                                        ...(Array.isArray(d.students) ? d.students.map(s => (s.className || '').trim()).filter(Boolean) : []),
+                                        ...(Array.isArray(d.assignments) ? d.assignments.map(a => (a.className || '').trim()).filter(Boolean) : [])
+                                    ]);
+                                    classesDetectedCount += uniqueClassNames.size;
                                     try {
                                         await relationalSyncService.sync(rec.data, rec.academicYear);
                                         relationalSyncedRows++;
@@ -466,14 +506,19 @@ import { relationalSyncService } from '../services/relational-sync.service.js';
                         const d = rec.data || {};
                         const studentsCount = Array.isArray(d.students) ? d.students.length : 0;
                         const assignmentsCount = Array.isArray(d.assignments) ? d.assignments.length : 0;
+                        const classesCount = new Set([
+                            ...(Array.isArray(d.students) ? d.students.map(s => (s.className || '').trim()).filter(Boolean) : []),
+                            ...(Array.isArray(d.assignments) ? d.assignments.map(a => (a.className || '').trim()).filter(Boolean) : [])
+                        ]).size;
                         const gradesCount = d.grades && typeof d.grades === 'object'
                             ? Object.values(d.grades).reduce((sum, byAssign) => sum + Object.keys(byAssign || {}).length, 0)
                             : 0;
                         acc.students += studentsCount;
                         acc.assignments += assignmentsCount;
+                        acc.classes += classesCount;
                         acc.grades += gradesCount;
                         return acc;
-                    }, { students: 0, assignments: 0, grades: 0 });
+                    }, { students: 0, assignments: 0, classes: 0, grades: 0 });
 
                     window.showImportReportModal({
                         title: t.importSuccess || 'Importation terminée',
@@ -494,6 +539,7 @@ import { relationalSyncService } from '../services/relational-sync.service.js';
                                     { label: 'Années scolaires', value: records.length },
                                     { label: 'Élèves (total)', value: totals.students },
                                     { label: 'Devoirs (total)', value: totals.assignments },
+                                    { label: 'Classes détectées (total)', value: totals.classes },
                                     { label: 'Notes (total)', value: totals.grades }
                                 ]
                             },
@@ -502,6 +548,7 @@ import { relationalSyncService } from '../services/relational-sync.service.js';
                                 items: [
                                     { label: 'Années synchronisées JSON', value: userUuid ? syncedRows : 'Local uniquement' },
                                     { label: 'Années propagées relationnel', value: userUuid ? relationalSyncedRows : 'Local uniquement' },
+                                    { label: 'Classes détectées pour import', value: userUuid ? classesDetectedCount : totals.classes },
                                     { label: 'Échecs', value: failedRows }
                                 ]
                             }
@@ -554,6 +601,7 @@ import { relationalSyncService } from '../services/relational-sync.service.js';
                 let addedAssignments = 0;
                 let ignoredStudents = 0;
                 let ignoredAssignments = 0;
+                const importedClasses = new Set();
 
                 // ========== FUSION DES ÉLÈVES AVEC FILTRAGE STRICT ==========
                 if (importedData.students && Array.isArray(importedData.students)) {
@@ -568,6 +616,7 @@ import { relationalSyncService } from '../services/relational-sync.service.js';
                             ignoredStudents++;
                             return;
                         }
+                        if (importedStudent.className) importedClasses.add(String(importedStudent.className).trim());
 
                         const rawBirthDate = importedStudent.birthDate ?? importedStudent.birthdate ?? importedStudent.birth_date;
                         const normalizedBirthDate = normalizeBirthDate(rawBirthDate);
@@ -617,6 +666,7 @@ import { relationalSyncService } from '../services/relational-sync.service.js';
                             ignoredAssignments++;
                             return;
                         }
+                        if (importedAssignment.className) importedClasses.add(String(importedAssignment.className).trim());
 
                         const existingAssignment = data.assignments.find(a => 
                             (a.id === importedAssignment.id) || 
@@ -665,7 +715,8 @@ import { relationalSyncService } from '../services/relational-sync.service.js';
                             items: [
                                 { label: t.studentsAdded || 'Élèves ajoutés', value: addedStudents },
                                 { label: t.studentsUpdated || 'Élèves mis à jour', value: updatedStudents },
-                                { label: t.assignmentsAdded || 'Devoirs ajoutés', value: addedAssignments }
+                                { label: t.assignmentsAdded || 'Devoirs ajoutés', value: addedAssignments },
+                                { label: 'Classes détectées', value: importedClasses.size }
                             ]
                         },
                         {
