@@ -186,16 +186,27 @@ export function supabaseAdapter() {
     async getSharedClassStats() {
       try {
         const academicYear = getAcademicYear();
+        // Fetch more details to calculate gender statistics server-side (if possible) or aggregate them here.
         const { data, error } = await supabase
           .from('students')
-          .select('className:class_name')
+          .select('className:class_name, sex')
           .eq('academic_year', academicYear);
         
         if (error) return {};
         
         const stats = {};
         data.forEach(s => {
-          stats[s.className] = (stats[s.className] || 0) + 1;
+          if (!stats[s.className]) {
+              stats[s.className] = { total: 0, boys: 0, girls: 0 };
+          }
+          stats[s.className].total += 1;
+          
+          const sex = (s.sex || '').toLowerCase().trim();
+          if (sex === 'm' || sex === 'male' || sex === 'garçon' || sex === 'homme' || sex === 'boy' || sex.includes('ذكر')) {
+              stats[s.className].boys += 1;
+          } else if (sex === 'f' || sex === 'female' || sex === 'fille' || sex === 'femme' || sex === 'girl' || sex.includes('أنثى') || sex.includes('انثى')) {
+              stats[s.className].girls += 1;
+          }
         });
         return stats;
       } catch (err) {

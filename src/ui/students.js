@@ -187,20 +187,32 @@
             // Count local students
             const localStudents = getData().students.filter(s => s.className === c && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear);
             
-            // Total students = Local + Shared (without duplication)
-            // But for simplicity in the grid, we just take the Max or Sum depending on implementation.
-            // Since sharedStats includes ALL students of the school in that class, it's the most accurate total.
-            const count = Math.max(localStudents.length, sharedStats[c] || 0);
+            // Shared Stats now contains { total, boys, girls }
+            const sharedStat = sharedStats[c] || { total: 0, boys: 0, girls: 0 };
             
-            const boys = localStudents.filter(s => {
-                const sex = (s.sex || '').toLowerCase();
-                return sex.startsWith('m') || sex.includes('ذكر') || sex.includes('garçon');
-            }).length;
+            // Si on n'a pas d'élèves locaux, on prend les stats partagées (cloud)
+            // Sinon on prend les locaux (on suppose qu'ils sont synchronisés)
+            const count = Math.max(localStudents.length, sharedStat.total);
             
-            const girls = localStudents.filter(s => {
-                const sex = (s.sex || '').toLowerCase();
-                return sex.startsWith('f') || sex.includes('أنث') || sex.includes('fille');
-            }).length;
+            let boys = 0;
+            let girls = 0;
+
+            if (localStudents.length > 0) {
+                // Calcul local
+                boys = localStudents.filter(s => {
+                    const sex = (s.sex || '').toLowerCase().trim();
+                    return sex === 'm' || sex === 'male' || sex === 'garçon' || sex === 'homme' || sex === 'boy' || sex.includes('ذكر');
+                }).length;
+                
+                girls = localStudents.filter(s => {
+                    const sex = (s.sex || '').toLowerCase().trim();
+                    return sex === 'f' || sex === 'female' || sex === 'fille' || sex === 'femme' || sex === 'girl' || sex.includes('أنثى') || sex.includes('انثى');
+                }).length;
+            } else {
+                // Calcul basé sur les stats du cloud
+                boys = sharedStat.boys;
+                girls = sharedStat.girls;
+            }
 
             const color = typeof window.getClassColor === 'function' ? window.getClassColor(c) : '#3b82f6';
             const colorAlpha = color + '44'; // 25% opacity for shadow
@@ -324,7 +336,23 @@
             if (statsEl) {
                      const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
                      const globalAcademicYear = window.getGlobalAcademicYear();
-                     const count = getData().students.filter(s => s.className === newClass && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear).length;
+                     
+                     // Get Local Students
+                     const localStudents = getData().students.filter(s => s.className === newClass && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear);
+                     let count = localStudents.length;
+
+                     // Merge with Shared Students to get the accurate total count for the header
+                     if (window.store && typeof window.store.getSharedStudents === 'function') {
+                         const sharedStudents = await window.store.getSharedStudents(newClass);
+                         const studentMap = new Map();
+                         localStudents.forEach(s => studentMap.set(s.id, s));
+                         sharedStudents.forEach(s => {
+                             const existing = Array.from(studentMap.values()).find(ls => ls.id === s.id || (ls.regNumber && ls.regNumber === s.regNumber));
+                             if (!existing) studentMap.set(s.id, s);
+                         });
+                         count = studentMap.size;
+                     }
+
                      const t = getTranslations()[getLang()];
                      statsEl.textContent = `${count} ${(t.studentsCountLabel || 'Élèves').toUpperCase()}`;
                 }
