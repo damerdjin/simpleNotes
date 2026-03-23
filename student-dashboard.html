@@ -238,11 +238,25 @@
             if (years.size > 0) yearSelect.selectedIndex = 1;
 
             // Populate Subject Dropdown
-            const subjSelect = document.getElementById('filter-subject');
-            Array.from(subjects.entries()).sort((a,b) => a[1].localeCompare(b[1])).forEach(([id, label]) => {
-                subjSelect.add(new Option(label, id));
-            });
-        }
+        const subjSelect = document.getElementById('filter-subject');
+        Array.from(subjects.entries()).sort((a,b) => a[1].localeCompare(b[1])).forEach(([id, label]) => {
+            subjSelect.add(new Option(label, id));
+        });
+
+        // Sélection automatique du trimestre en fonction du mois actuel
+        const currentMonth = new Date().getMonth() + 1; // getMonth() commence à 0 (Janvier = 1)
+        let defaultTri = 'all';
+        
+        if (currentMonth >= 9 && currentMonth <= 12) {
+            defaultTri = '1'; // Septembre à Décembre
+        } else if (currentMonth >= 1 && currentMonth <= 3) {
+            defaultTri = '2'; // Janvier à Mars
+        } else if (currentMonth >= 4 && currentMonth <= 5) {
+            defaultTri = '3'; // Avril à Mai
+        } // Juin à Août => 'all'
+
+        document.getElementById('filter-trimester').value = defaultTri;
+    }
 
         function renderFilteredView() {
             const yearFilter = document.getElementById('filter-year').value;
