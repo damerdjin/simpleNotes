@@ -291,7 +291,9 @@
                 if (globalMaxInput) globalMaxInput.value = 20;
 
                 const subjectSelect = document.getElementById('assignment-subject');
-                if (subjectSelect) {
+                const classSelect = document.getElementById('assignment-class');
+                const applyAutoSubject = (className = '') => {
+                    if (!subjectSelect) return;
                     const currentYear = window.getGlobalAcademicYear ? window.getGlobalAcademicYear() : '';
                     const userEmail = window.currentUser?.email || null;
                     const userUuid = window.currentUser?.id || null;
@@ -299,10 +301,20 @@
                         const owner = a.createdBy || 'unknown';
                         const sameOwner = (userEmail && owner === userEmail) || (userUuid && owner === userUuid);
                         const sameYear = !currentYear || (a.academicYear || '') === currentYear;
-                        return sameOwner && sameYear;
+                        const sameClass = !className || (a.className || '') === className;
+                        return sameOwner && sameYear && sameClass;
                     });
                     const uniqueSubjects = [...new Set(myAssignments.map(a => (a.subject || '').trim()).filter(Boolean))];
                     subjectSelect.value = uniqueSubjects.length === 1 ? uniqueSubjects[0] : '';
+                };
+
+                if (subjectSelect) {
+                    applyAutoSubject(classSelect?.value || '');
+                    if (classSelect) {
+                        classSelect.addEventListener('change', () => {
+                            applyAutoSubject(classSelect.value || '');
+                        });
+                    }
                 }
 
             }
