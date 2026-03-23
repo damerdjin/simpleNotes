@@ -421,6 +421,11 @@ import * as gradesSvc from '../services/grades.service.js';
             filteredAssignments = filteredAssignments.filter(a => summaryAssignmentFilter.has(a.id));
         }
 
+        if (summaryAssignmentFilter && summaryAssignmentFilter.size > 0 && !selectedClass) {
+            const allowedClasses = new Set(filteredAssignments.map(a => (a.className || '').trim()).filter(c => c.length > 0));
+            filteredStudents = filteredStudents.filter(s => allowedClasses.has((s.className || '').trim()));
+        }
+
         if (!window.summaryAssignmentOrder) {
             try {
                 window.summaryAssignmentOrder = JSON.parse(localStorage.getItem('summary-assignment-order') || '[]');
