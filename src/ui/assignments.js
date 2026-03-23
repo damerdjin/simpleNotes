@@ -290,6 +290,21 @@
                 if (globalCheckbox) globalCheckbox.checked = true;
                 if (globalMaxInput) globalMaxInput.value = 20;
 
+                const subjectSelect = document.getElementById('assignment-subject');
+                if (subjectSelect) {
+                    const currentYear = window.getGlobalAcademicYear ? window.getGlobalAcademicYear() : '';
+                    const userEmail = window.currentUser?.email || null;
+                    const userUuid = window.currentUser?.id || null;
+                    const myAssignments = getData().assignments.filter(a => {
+                        const owner = a.createdBy || 'unknown';
+                        const sameOwner = (userEmail && owner === userEmail) || (userUuid && owner === userUuid);
+                        const sameYear = !currentYear || (a.academicYear || '') === currentYear;
+                        return sameOwner && sameYear;
+                    });
+                    const uniqueSubjects = [...new Set(myAssignments.map(a => (a.subject || '').trim()).filter(Boolean))];
+                    subjectSelect.value = uniqueSubjects.length === 1 ? uniqueSubjects[0] : '';
+                }
+
             }
 
 
