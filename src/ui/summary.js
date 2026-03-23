@@ -130,7 +130,7 @@ import * as gradesSvc from '../services/grades.service.js';
             selectedClass = classSelect.value;
         }
 
-        // --- Récupération des élèves ---
+        // --- Récupération des élèves fusionnés ---
         let filteredStudents = [];
         if (selectedClass) {
             let localStudents = data.students.filter(s => 
@@ -151,6 +151,35 @@ import * as gradesSvc from '../services/grades.service.js';
                 if (!existing) studentMap.set(s.id, s);
             });
             filteredStudents = Array.from(studentMap.values());
+        } else {
+            // All students for all matching classes
+            const studentMap = new Map();
+            
+            // Local
+            data.students.forEach(s => {
+                if ((s.importedBy || 'unknown') === globalUserId && (s.academicYear || '') === globalAcademicYear && matchingClasses.includes(s.className)) {
+                    studentMap.set(s.id, s);
+                }
+            });
+            
+            // Shared (one by one for each matching class)
+            for (const c of sharedClasses) {
+                if (window.store && typeof window.store.getSharedStudents === 'function') {
+                    const shared = await window.store.getSharedStudents(c);
+                    shared.forEach(s => {
+                        const existing = Array.from(studentMap.values()).find(ls => ls.id === s.id || (ls.regNumber && ls.regNumber === s.regNumber));
+                        if (!existing) studentMap.set(s.id, s);
+                    });
+                }
+            }
+            filteredStudents = Array.from(studentMap.values());
+        }
+
+        if (searchTerm) {
+            filteredStudents = filteredStudents.filter(s => {
+                const haystack = `${s.name || ''} ${s.firstName || ''} ${s.lastName || ''} ${s.className || ''}`.toLowerCase();
+                return haystack.includes(searchTerm);
+            });
         }
 
         let filteredAssignments = data.assignments.slice();
@@ -294,7 +323,7 @@ import * as gradesSvc from '../services/grades.service.js';
             selectedClass = classSelect.value;
         }
 
-        // --- Récupération des élèves ---
+        // --- Récupération des élèves fusionnés ---
         let filteredStudents = [];
         if (selectedClass) {
             let localStudents = data.students.filter(s => 
@@ -315,6 +344,35 @@ import * as gradesSvc from '../services/grades.service.js';
                 if (!existing) studentMap.set(s.id, s);
             });
             filteredStudents = Array.from(studentMap.values());
+        } else {
+            // All students for all matching classes
+            const studentMap = new Map();
+            
+            // Local
+            data.students.forEach(s => {
+                if ((s.importedBy || 'unknown') === globalUserId && (s.academicYear || '') === globalAcademicYear && matchingClasses.includes(s.className)) {
+                    studentMap.set(s.id, s);
+                }
+            });
+            
+            // Shared (one by one for each matching class)
+            for (const c of sharedClasses) {
+                if (window.store && typeof window.store.getSharedStudents === 'function') {
+                    const shared = await window.store.getSharedStudents(c);
+                    shared.forEach(s => {
+                        const existing = Array.from(studentMap.values()).find(ls => ls.id === s.id || (ls.regNumber && ls.regNumber === s.regNumber));
+                        if (!existing) studentMap.set(s.id, s);
+                    });
+                }
+            }
+            filteredStudents = Array.from(studentMap.values());
+        }
+
+        if (searchTerm) {
+            filteredStudents = filteredStudents.filter(s => {
+                const haystack = `${s.name || ''} ${s.firstName || ''} ${s.lastName || ''} ${s.className || ''}`.toLowerCase();
+                return haystack.includes(searchTerm);
+            });
         }
 
         let filteredAssignments = data.assignments.slice();
@@ -451,7 +509,8 @@ import * as gradesSvc from '../services/grades.service.js';
         }
 
         let rows = filteredStudents.map(s => {
-            let row = `<td class="p-3 font-medium bg-gray-50 sticky left-0">${s.name}</td>`;
+            const displayName = truncateStudentName(s);
+            let row = `<td class="p-3 font-medium bg-gray-50 sticky left-0" title="${s.name}">${displayName}</td>`;
             for (const a of filteredAssignments) {
                 const studentGrades = data.grades[s.id]?.[a.id] || {};
                 if (showDetails) {
@@ -472,9 +531,9 @@ import * as gradesSvc from '../services/grades.service.js';
                     const total = window.getStudentAssignmentTotal(s.id, a.id);
                     const pct = max > 0 ? (total / max * 100) : 0;
                     const bgColor = pct >= 70 ? 'bg-green-100' : pct >= 50 ? 'bg-orange-100' : 'bg-red-100';
-                    row += `<td class="p-3 text-center font-bold ${bgColor}">${total.toFixed(2)}</td>`;
+                    row += `<td class="p-3 text-center font-bold ${bgColor} cursor-pointer select-none" ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})" id="sum-total-${s.id}-${a.id}">${total.toFixed(2)}</td>`;
                 } else {
-                    row += `<td class="p-3 text-center text-gray-400 bg-gray-50"></td>`;
+                    row += `<td class="p-3 text-center text-gray-400 bg-gray-50 cursor-pointer select-none" ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})" id="sum-total-${s.id}-${a.id}"></td>`;
                 }
             }
             return `<tr class="border-b hover:bg-gray-50">${row}</tr>`;
