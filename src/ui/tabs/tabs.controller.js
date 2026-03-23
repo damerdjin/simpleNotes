@@ -198,10 +198,11 @@ export class TabsController {
 
     // Keyboard navigation
     this.container?.addEventListener('keydown', (e) => {
+      const btn = e.target.closest('.tab-btn');
+      if (!btn) return;
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        const btn = e.target.closest('.tab-btn');
-        if (btn) this.showTab(btn.dataset.tab);
+        this.showTab(btn.dataset.tab);
       }
     });
 
