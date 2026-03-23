@@ -305,7 +305,11 @@
                         return sameOwner && sameYear && sameClass;
                     });
                     const uniqueSubjects = [...new Set(myAssignments.map(a => (a.subject || '').trim()).filter(Boolean))];
-                    subjectSelect.value = uniqueSubjects.length === 1 ? uniqueSubjects[0] : '';
+                    if (uniqueSubjects.length === 1) {
+                        subjectSelect.value = uniqueSubjects[0];
+                    } else if (uniqueSubjects.length > 1) {
+                        subjectSelect.value = '';
+                    }
                 };
 
                 if (subjectSelect) {

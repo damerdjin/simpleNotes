@@ -228,14 +228,29 @@ export const relationalSyncService = {
                 
                 // On récupère les IDs valides des élèves et devoirs pour cette année/prof
                 // (Ceux qu'on vient de synchroniser)
-                const validStudentIds = data.students.map(s => s.id);
+                const localValidStudentIds = studentsPayload.map(s => s.id);
+                const gradeStudentIds = Object.keys(data.grades || {});
+                const validStudentIdsSet = new Set(localValidStudentIds);
+                if (gradeStudentIds.length > 0) {
+                    const { data: existingStudents, error: existingStudentsError } = await supabase
+                        .from('students')
+                        .select('id')
+                        .eq('academic_year', academicYear)
+                        .in('id', gradeStudentIds);
+                    if (existingStudentsError) {
+                        console.error('[RelationalSync] Students lookup for grades sync error:', existingStudentsError);
+                    } else {
+                        (existingStudents || []).forEach(s => validStudentIdsSet.add(s.id));
+                    }
+                }
+                const validStudentIds = [...validStudentIdsSet];
                 
                 const validAssignmentIds = validAssignments.map(a => a.id);
 
                 // On parcourt les élèves
                 Object.entries(data.grades).forEach(([studentId, studentGrades]) => {
                     // On ne synchronise que si l'élève appartient à l'année/prof active
-                    if (!validStudentIds.includes(studentId)) return;
+                    if (!validStudentIdsSet.has(studentId)) return;
                     
                     Object.entries(studentGrades).forEach(([assignmentId, gradeData]) => {
                         // On ne synchronise que si le devoir appartient à l'année/prof active
@@ -273,24 +288,24 @@ export const relationalSyncService = {
                     // On supprime les notes qui concernent des devoirs de CETTE année scolaire
                     // mais qui ne sont plus dans le payload local.
                     // Note: Supabase gère déjà le 'on delete cascade', mais ici on gère la désynchronisation logicielle.
-                    const { error: cleanupError } = await supabase
-                        .from('grades')
-                        .delete()
-                        .eq('user_id', userId)
-                        .in('assignment_id', validAssignmentIds) // Concerne nos devoirs valides
-                        .not('student_id', 'in', `(${validStudentIds.join(',')})`); // Mais pour des élèves qui n'existent plus
+                    if (validAssignmentIds.length > 0 && validStudentIds.length > 0) {
+                        const { error: cleanupError } = await supabase
+                            .from('grades')
+                            .delete()
+                            .eq('user_id', userId)
+                            .in('assignment_id', validAssignmentIds)
+                            .not('student_id', 'in', `(${validStudentIds.join(',')})`);
 
-                    // Et inversement pour les devoirs supprimés (déjà géré par le cascade si assignment supprimé,
-                    // mais plus sûr de nettoyer par student_id aussi si besoin)
-                    const { error: cleanupError2 } = await supabase
-                        .from('grades')
-                        .delete()
-                        .eq('user_id', userId)
-                        .in('student_id', validStudentIds)
-                        .not('assignment_id', 'in', `(${validAssignmentIds.join(',')})`);
+                        const { error: cleanupError2 } = await supabase
+                            .from('grades')
+                            .delete()
+                            .eq('user_id', userId)
+                            .in('student_id', validStudentIds)
+                            .not('assignment_id', 'in', `(${validAssignmentIds.join(',')})`);
 
-                    if (cleanupError || cleanupError2) {
-                        console.error('[RelationalSync] Grades cleanup error:', cleanupError || cleanupError2);
+                        if (cleanupError || cleanupError2) {
+                            console.error('[RelationalSync] Grades cleanup error:', cleanupError || cleanupError2);
+                        }
                     }
                 }
             }
