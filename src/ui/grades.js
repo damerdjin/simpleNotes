@@ -1040,7 +1040,11 @@
             const localStudents = getData().students.filter(s => s.className === c && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear);
             
             // Total students = Max of Local or Shared
-            const count = Math.max(localStudents.length, sharedStats[c] || 0);
+            const sharedStatValue = sharedStats[c];
+            const sharedTotal = typeof sharedStatValue === 'number'
+                ? sharedStatValue
+                : (sharedStatValue && typeof sharedStatValue.total === 'number' ? sharedStatValue.total : 0);
+            const count = Math.max(localStudents.length, sharedTotal);
             
             const color = typeof window.getClassColor === 'function' ? window.getClassColor(c) : '#3b82f6';
             const colorAlpha = color + '44'; 
