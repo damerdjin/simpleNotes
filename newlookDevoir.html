@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Corrections - Devoirs</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --accent-green: #10b981;
+            --accent-green-hover: #059669;
+            --sidebar-width: 260px;
+            --header-height: 70px;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Navigation */
+        aside {
+            width: var(--sidebar-width);
+            background-color: #ffffff;
+            border-right: 1px solid var(--border);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .brand {
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .brand-logo {
+            width: 35px;
+            height: 35px;
+            background: var(--primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .brand-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--primary);
+        }
+
+        nav {
+            padding: 20px 12px;
+            flex-grow: 1;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            text-decoration: none;
+            color: var(--text-muted);
+            border-radius: 8px;
+            margin-bottom: 4px;
+            transition: all 0.2s;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background-color: #f1f5f9;
+            color: var(--primary);
+        }
+
+        .nav-item.active {
+            background-color: #e0e7ff;
+            color: var(--primary);
+        }
+
+        /* Main Content */
+        main {
+            flex-grow: 1;
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+        }
+
+        header {
+            height: var(--header-height);
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            position: sticky;
+            top: 0;
+            z-index: 90;
+        }
+
+        .header-context {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .select-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .select-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        header select {
+            border: none;
+            background: transparent;
+            font-weight: 600;
+            color: var(--text-main);
+            outline: none;
+            padding: 2px 0;
+            cursor: pointer;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        /* Page Layout */
+        .content-area {
+            padding: 32px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .view-section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .title-group h1 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .btn-success {
+            background-color: var(--accent-green);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: var(--accent-green-hover);
+        }
+
+        .btn-outline {
+            background-color: white;
+            border-color: var(--border);
+            color: var(--text-main);
+        }
+
+        /* Filters Bar */
+        .filters-container {
+            background: white;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .filter-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .pills-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .pill {
+            padding: 6px 16px;
+            border-radius: 20px;
+            background: #f1f5f9;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .pill:hover {
+            background: #e2e8f0;
+        }
+
+        .pill.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .search-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .search-input-wrapper {
+            flex-grow: 1;
+            position: relative;
+        }
+
+        .search-input-wrapper input {
+            width: 100%;
+            padding: 10px 16px 10px 40px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-input-wrapper input:focus {
+            border-color: var(--primary);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        /* Assignment Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 20px;
+        }
+
+        .assignment-card {
+            background: white;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .assignment-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .card-header {
+            padding: 16px 20px;
+            background: #fcfcfd;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .class-tag {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--primary);
+            background: #eef2ff;
+            padding: 4px 10px;
+            border-radius: 6px;
+            max-width: 70%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .assignment-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 16px;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .progress-container {
+            margin-top: 8px;
+        }
+
+        .progress-bar-bg {
+            height: 8px;
+            background: #f1f5f9;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 4px;
+        }
+
+        .card-footer {
+            padding: 12px 20px;
+            background: #f8fafc;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .icon-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+
+        .icon-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .icon-btn.delete:hover {
+            background: #ef4444;
+            border-color: #ef4444;
+        }
+
+        /* RTL Handling for specific Arabic classes */
+        .rtl {
+            direction: rtl;
+            text-align: right;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            aside { transform: translateX(-100%); }
+            main { margin-left: 0; width: 100%; }
+            .cards-grid { grid-template-columns: 1fr; }
+            .page-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <aside>
+        <div class="brand">
+            <div class="brand-logo">G</div>
+            <div class="brand-name">Correction Pro</div>
+        </div>
+        <nav>
+            <div class="nav-item" data-tab="eleves">
+                <span>👥</span>
+                <span>Élèves</span>
+            </div>
+            <div class="nav-item active" data-tab="devoirs">
+                <span>📝</span>
+                <span>Devoirs</span>
+            </div>
+            <div class="nav-item" data-tab="notes">
+                <span>📊</span>
+                <span>Notes</span>
+            </div>
+            <div class="nav-item" data-tab="recap">
+                <span>📋</span>
+                <span>Récapitulatif</span>
+            </div>
+        </nav>
+    </aside>
+
+    <main>
+        <!-- Top Header -->
+        <header>
+            <div class="header-context">
+                <div class="select-group">
+                    <span class="select-label">Année Scolaire</span>
+                    <select>
+                        <option selected>2025 / 2026</option>
+                        <option>2024 / 2025</option>
+                    </select>
+                </div>
+                <div style="width: 1px; height: 30px; background: var(--border);"></div>
+                <div class="select-group">
+                    <span class="select-label">Trimestre</span>
+                    <select>
+                        <option selected>Trimestre 1</option>
+                        <option>Trimestre 2</option>
+                        <option>Trimestre 3</option>
+                    </select>
+                </div>
+            </div>
+            <div class="user-profile">
+                <span style="font-size: 0.85rem; color: var(--text-muted);">world101com@outlook.com</span>
+                <div class="avatar">W</div>
+            </div>
+        </header>
+
+        <div class="content-area">
+            
+            <!-- VIEW: DEVOIRS -->
+            <section id="view-devoirs" class="view-section active">
+                <div class="page-header">
+                    <div class="title-group">
+                        <h1>Gestion des Devoirs</h1>
+                    </div>
+                    <button class="btn btn-success">
+                        <span>＋</span> Créer un Devoir
+                    </button>
+                </div>
+
+                <div class="filters-container">
+                    <span class="filter-label">Filtrer par classe</span>
+                    <div class="pills-group">
+                        <div class="pill active">Toutes les classes</div>
+                        <div class="pill rtl">ثانية ثانوي رياضيات 1</div>
+                        <div class="pill rtl">ثالثة ثانوي تقني رياضي هندسة ميكانيكية 1</div>
+                        <div class="pill rtl">ثالثة ثانوي تقني رياضي هندسة كهربائية 1</div>
+                    </div>
+
+                    <div class="search-row">
+                        <div class="search-input-wrapper">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="devSearch" placeholder="Rechercher un devoir par nom ou référence...">
+                        </div>
+                        <button class="btn btn-outline">Réinitialiser</button>
+                    </div>
+                </div>
+
+                <div class="cards-grid" id="devoirsGrid">
+                    <!-- Cards will be injected by JS -->
+                </div>
+            </section>
+
+            <!-- VIEW: ELEVES (Placeholder) -->
+            <section id="view-eleves" class="view-section">
+                <div class="page-header">
+                    <h1>Liste des Élèves</h1>
+                </div>
+                <div style="padding: 100px; text-align: center; color: var(--text-muted); background: white; border-radius: 12px;">
+                    Vue de la liste des élèves (Intégrée)
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script>
+        // Data mimicking the image provided
+        const assignments = [
+            {
+                id: 'devE101',
+                title: 'devE101',
+                className: 'ثالثة ثانوي تقني رياضي هندسة كهربائية 1',
+                points: 20,
+                submitted: 10,
+                totalStudents: 10,
+                trimestre: 'T1'
+            },
+            {
+                id: 'devM101',
+                title: 'devM101',
+                className: 'ثالثة ثانوي تقني رياضي هندسة ميكانيكية 1',
+                points: 20,
+                submitted: 0,
+                totalStudents: 12,
+                trimestre: 'T1'
+            },
+            {
+                id: 'sdef',
+                title: 'sdef',
+                className: 'ثانية ثانوي رياضيات 1',
+                points: 20,
+                submitted: 5,
+                totalStudents: 15,
+                trimestre: 'T1'
+            },
+            {
+                id: 'compo',
+                title: 'compo',
+                className: 'ثالثة ثانوي تقني رياضي هندسة كهربائية 1',
+                points: 40,
+                submitted: 8,
+                totalStudents: 10,
+                trimestre: 'T1'
+            }
+        ];
+
+        function renderDevoirs(data) {
+            const grid = document.getElementById('devoirsGrid');
+            grid.innerHTML = '';
+
+            data.forEach(dev => {
+                const percentage = (dev.submitted / dev.totalStudents) * 100;
+                const card = document.createElement('div');
+                card.className = 'assignment-card';
+                card.innerHTML = `
+                    <div class="card-header">
+                        <span class="class-tag rtl">${dev.className}</span>
+                        <span style="font-size: 0.7rem; font-weight: 800; color: #94a3b8;">${dev.trimestre}</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="assignment-title">${dev.title}</div>
+                        <div class="stats-row">
+                            <div class="stat-item">
+                                <span class="stat-label">Barème</span>
+                                <span class="stat-value">🎯 ${dev.points} <small style="font-weight: 400; color: var(--text-muted); margin-left: 2px;">pts</small></span>
+                            </div>
+                            <div class="stat-item" style="flex-grow: 1;">
+                                <span class="stat-label">Corrigés</span>
+                                <span class="stat-value">✅ ${dev.submitted} / ${dev.totalStudents} <small style="font-weight: 400; color: var(--text-muted); margin-left: 4px;">(${Math.round(percentage)}%)</small></span>
+                                <div class="progress-container">
+                                    <div class="progress-bar-bg">
+                                        <div class="progress-bar-fill" style="width: ${percentage}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button class="icon-btn" title="Modifier">✏️</button>
+                        <button class="icon-btn" title="Exporter">📄</button>
+                        <button class="icon-btn" title="Saisir les notes">📋</button>
+                        <button class="icon-btn delete" title="Supprimer">🗑️</button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Tab Switching Logic
+        const navItems = document.querySelectorAll('.nav-item');
+        const sections = document.querySelectorAll('.view-section');
+
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const target = item.getAttribute('data-tab');
+                
+                // UI updates
+                navItems.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+
+                sections.forEach(s => s.classList.remove('active'));
+                const activeSection = document.getElementById(`view-${target}`);
+                if (activeSection) activeSection.classList.add('active');
+            });
+        });
+
+        // Search filtering
+        document.getElementById('devSearch').addEventListener('input', (e) => {
+            const val = e.target.value.toLowerCase();
+            const filtered = assignments.filter(a => 
+                a.title.toLowerCase().includes(val) || 
+                a.className.toLowerCase().includes(val)
+            );
+            renderDevoirs(filtered);
+        });
+
+        // Pill filtering simulation
+        document.querySelectorAll('.pill').forEach(pill => {
+            pill.addEventListener('click', function() {
+                document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+                
+                const filterText = this.innerText;
+                if (filterText === 'Toutes les classes') {
+                    renderDevoirs(assignments);
+                } else {
+                    const filtered = assignments.filter(a => a.className === filterText);
+                    renderDevoirs(filtered);
+                }
+            });
+        });
+
+        // Initial load
+        window.addEventListener('DOMContentLoaded', () => {
+            renderDevoirs(assignments);
+        });
+    </script>
+</body>
+</html>
