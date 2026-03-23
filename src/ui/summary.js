@@ -1125,7 +1125,7 @@ import * as gradesSvc from '../services/grades.service.js';
                                     onclick="toggleSummaryAssignmentTag('${a.id}')"
                                     style="${selected ? `background-color: ${classColor}; border-color: ${classColor}; color: white;` : `border-color: ${classColor}; color: ${classColor};`}"
                                     title="${t.dragToReorder || 'Glisser pour réorganiser'}">
-                                ${a.name} <span class="text-xs opacity-70">(${a.className || '?'})</span>
+                                ${a.name}
                             </button>
                         </div>`;
                 });
