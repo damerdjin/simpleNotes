@@ -213,6 +213,12 @@ import * as gradesSvc from '../services/grades.service.js';
 
         // Sort students
         filteredStudents.sort((a, b) => {
+            const classA = (a.className || '').toLowerCase();
+            const classB = (b.className || '').toLowerCase();
+            if (classA !== classB) {
+                return classA.localeCompare(classB, 'fr', { sensitivity: 'base' });
+            }
+
             const nameA = (a.lastName || a.name || '').toLowerCase();
             const nameB = (b.lastName || b.name || '').toLowerCase();
             if (nameA.localeCompare(nameB) !== 0) return nameA.localeCompare(nameB);
@@ -449,6 +455,12 @@ import * as gradesSvc from '../services/grades.service.js';
         }
 
         filteredStudents.sort((a, b) => {
+            const classA = (a.className || '').toLowerCase();
+            const classB = (b.className || '').toLowerCase();
+            if (classA !== classB) {
+                return classA.localeCompare(classB, 'fr', { sensitivity: 'base' });
+            }
+
             if (summarySort.key === 'name') {
                 const nameA = (a.lastName || a.name || '').toLowerCase();
                 const nameB = (b.lastName || b.name || '').toLowerCase();

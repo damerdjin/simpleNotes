@@ -279,3 +279,5 @@ BEGIN
   WHERE s.id = p_student_id;
 END;
 $$ LANGUAGE plpgsql;
+
+UPDATE public.students SET custom_password = NULL WHERE nin = 'LE_NIN_DE_LELEVE';
