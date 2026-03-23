@@ -787,11 +787,22 @@
                     if (sourceAssignment) {
                         const students = data.students.filter(s => s.className === className);
                         students.forEach(s => {
+                            const hasSourceGrade = window.hasAnyGradeForAssignment
+                                ? window.hasAnyGradeForAssignment(s.id, sourceId)
+                                : gradesSvc().hasAnyGradeForAssignment(data, s.id, sourceId);
+
+                            if (!data.grades[s.id]) data.grades[s.id] = {};
+
+                            if (!hasSourceGrade) {
+                                if (data.grades[s.id][targetId]) {
+                                    delete data.grades[s.id][targetId];
+                                }
+                                return;
+                            }
+
                             const sourceGrade = window.getStudentAssignmentTotal(s.id, sourceId);
-                            // On stocke la note dans le premier exercice pour le mode global
                             if (finalExercises.length > 0) {
                                 const firstExId = finalExercises[0].id;
-                                if (!data.grades[s.id]) data.grades[s.id] = {};
                                 if (!data.grades[s.id][targetId]) data.grades[s.id][targetId] = {};
                                 if (!data.grades[s.id][targetId][firstExId]) data.grades[s.id][targetId][firstExId] = {};
                                 if (!data.grades[s.id][targetId][firstExId].final) data.grades[s.id][targetId][firstExId].final = {};
