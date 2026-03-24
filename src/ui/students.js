@@ -1136,7 +1136,6 @@
                 ${displayName}
             </div>
             <div class="student-meta flex flex-wrap items-center gap-2">
-                ${s.className ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-600 rounded-md text-[10px] font-bold border border-blue-100 truncate max-w-[120px]" title="${s.className}">🏷️ ${cleanClassName(s.className)}</span>` : ''}
                 ${birth ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-50 text-slate-500 rounded-md text-[10px] font-bold border border-slate-100">🎂 ${birth}</span>` : ''}
             </div>
             
