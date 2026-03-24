@@ -1105,26 +1105,48 @@
             const birth = window.formatDate ? window.formatDate(window.parseDateMaybeExcel(s.birthDate || '')) : '';
 
             return `
-    <div class="student-item">
-        <div class="student-level ${levelClass}" title="${t.levelLabel || 'Niveau'}">${level}</div>
-        <div class="student-info">
-            <div class="student-name">${displayName}</div>
-            <div class="student-meta">
-                ${s.className ? `<span class="student-chip class" title="${s.className}">🏷️ ${cleanClassName(s.className)}</span>` : ''}
-                ${birth ? `<span class="student-chip birth">🎂 ${birth}</span>` : ''}
+    <div class="student-item group relative bg-white p-4 sm:p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 flex items-center gap-4">
+        <!-- Badge Sexe/Niveau -->
+        <div class="student-level ${levelClass} shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-xl sm:text-2xl font-black text-white shadow-inner transition-transform group-hover:scale-110" title="${t.levelLabel || 'Niveau'}">
+            ${level}
+        </div>
+
+        <!-- Informations Élève -->
+        <div class="student-info min-w-0 flex-1">
+            <div class="student-name text-base sm:text-lg font-bold text-slate-800 truncate mb-1" title="${displayName}">
+                ${displayName}
             </div>
-            <button onclick="viewStudentGrades('${s.id}')" class="view-grades-btn">
+            <div class="student-meta flex flex-wrap items-center gap-2">
+                ${s.className ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-600 rounded-md text-[10px] font-bold border border-blue-100 truncate max-w-[120px]" title="${s.className}">🏷️ ${cleanClassName(s.className)}</span>` : ''}
+                ${birth ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-50 text-slate-500 rounded-md text-[10px] font-bold border border-slate-100">🎂 ${birth}</span>` : ''}
+            </div>
+            
+            <!-- Actions Rapides Mobile -->
+            <div class="flex items-center gap-2 mt-3 sm:hidden">
+                <button onclick="viewStudentGrades('${s.id}')" class="flex-1 flex items-center justify-center gap-1.5 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold shadow-sm active:scale-95 transition-all">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    <span>Notes</span>
+                </button>
+                <button onclick="openStudentModal('${s.id}')" class="p-2 bg-slate-100 text-slate-600 rounded-xl active:scale-90 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Desktop Actions & Secondary Info -->
+        <div class="hidden sm:flex flex-col items-end gap-2">
+            <button onclick="viewStudentGrades('${s.id}')" class="view-grades-btn px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-xl text-xs font-bold border border-blue-100 transition-all flex items-center gap-2">
                 <svg class="w-4 h-4 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                 <span>${t.viewGrades || 'Visualiser les notes'}</span>
             </button>
-        </div>
-        <div class="student-actions">
-            <button onclick="openStudentModal('${s.id}')" class="btn-edit" title="${t.edit}">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 00-2 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-            </button>
-            <button onclick="deleteStudent('${s.id}')" class="btn-delete" title="${t.delete}">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-            </button>
+            <div class="flex items-center gap-2">
+                <button onclick="openStudentModal('${s.id}')" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="${t.edit}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                </button>
+                <button onclick="deleteStudent('${s.id}')" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="${t.delete}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+            </div>
         </div>
     </div>`;
             }).join('');
