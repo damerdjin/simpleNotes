@@ -860,44 +860,49 @@
 }
 
 #mobile-bottom-nav {
-    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.1);
-    background-color: #ffffff;
-    height: 64px;
-    min-height: 64px;
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    z-index: 100;
-    overflow: visible;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.12);
+    background-color: #ffffff !important;
+    height: auto !important;
+    min-height: 70px !important;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px) !important;
+    padding-top: 8px !important;
+    z-index: 9999 !important;
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 .mobile-nav-item {
-    color: #94a3b8;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    color: #64748b !important;
+    transition: all 0.3s ease;
     min-width: 0;
     flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
     position: relative;
-    overflow: visible;
+    background: transparent !important;
+    border: none !important;
 }
 
 .nav-icon-wrapper {
-    width: 32px;
-    height: 32px;
-    margin-bottom: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 12px;
+    width: 32px !important;
+    height: 32px !important;
+    margin-bottom: 4px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 12px !important;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    visibility: visible !important;
 }
 
 .mobile-nav-item span.text-xl {
-    font-size: 1.25rem;
-    line-height: 1;
-    display: block;
+    font-size: 1.5rem !important;
+    line-height: 1 !important;
+    display: block !important;
+    visibility: visible !important;
 }
 
 .mobile-nav-item.active {
@@ -906,22 +911,35 @@
 
 .mobile-nav-item.active .nav-icon-wrapper {
     background-color: #eff6ff !important;
-    transform: translateY(-8px);
-    box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.3);
-    width: 40px;
-    height: 40px;
+    transform: translateY(-10px);
+    box-shadow: 0 12px 20px -5px rgba(37, 99, 235, 0.4);
+    width: 44px !important;
+    height: 44px !important;
 }
 
 .mobile-nav-item span:last-child {
-    font-size: 10px;
-    font-weight: 800;
+    font-size: 11px !important;
+    font-weight: 800 !important;
     transition: all 0.2s;
-    line-height: 1;
+    line-height: 1.2 !important;
+    display: block !important;
+    visibility: visible !important;
+    text-transform: uppercase;
 }
 
 .mobile-nav-item.active span:last-child {
     transform: translateY(-4px);
-    color: #2563eb;
+    color: #2563eb !important;
+}
+
+/* Custom Scrollbar for chips */
+.custom-scrollbar {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;  /* IE and Edge */
+}
+.custom-scrollbar::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for Chrome, Safari and Opera */
 }
 
 /* Fix for safe area on newer iPhones */
@@ -936,13 +954,6 @@
     
     #app-sidebar.mobile-visible {
         transform: translateX(0) !important;
-    }
-
-    /* Hide text labels in small mobiles if needed */
-    @media (max-width: 360px) {
-        .mobile-nav-item span:last-child {
-            display: none;
-        }
     }
 }
 

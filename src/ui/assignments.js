@@ -984,7 +984,7 @@
         const assignmentsForYearAndUser = data.assignments.filter(a => (a.academicYear || '') === globalAcademicYear && (a.createdBy || 'unknown') === userId && (a.trimester || '') === globalTrimester);
         const allClasses = [...new Set(assignmentsForYearAndUser.map(a => a.className))].filter(Boolean).sort();
         if (chipsContainer) {
-            const allChip = `<button onclick="toggleAssignmentClassFilter('')" class="px-4 py-1.5 rounded-full text-sm font-bold transition-all ${activeClassFilters.length === 0 ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-100'}">${t.allClassesFilter || 'Toutes'}</button>`;
+            const allChip = `<button onclick="toggleAssignmentClassFilter('')" class="whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-bold transition-all ${activeClassFilters.length === 0 ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-100'}">${t.allClassesFilter || 'Toutes'}</button>`;
             const classChips = allClasses.map(c => {
                 const isActive = activeClassFilters.includes(c);
                 const classColor = getClassColor(c);
@@ -993,10 +993,13 @@
                 
                 return `<button onclick="toggleAssignmentClassFilter('${c}')" 
                     style="${activeStyle} ${!isActive ? borderStyle : ''}"
-                    class="px-4 py-1.5 rounded-full text-sm font-bold transition-all shadow-sm hover:scale-105 active:scale-95">
+                    class="whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-bold transition-all shadow-sm hover:scale-105 active:scale-95">
                     ${c}
                 </button>`;
             }).join('');
+            
+            // UX: Scroll horizontal sur mobile, wrap sur desktop
+            chipsContainer.className = "flex overflow-x-auto sm:flex-wrap gap-2 pb-2 sm:pb-0 custom-scrollbar";
             chipsContainer.innerHTML = allChip + classChips;
         }
 
@@ -1091,7 +1094,10 @@
                                     ${a.name}
                                 </h4>
                                 <div class="flex items-center gap-2 mt-2.5">
-                                    <div class="px-2.5 py-1 rounded-lg bg-gray-100 text-[10px] font-bold text-gray-500 uppercase ${labelTracking} border border-gray-200/50 shadow-sm">${t.totalPointsLabel || 'Total Points'}</div>
+                                    <div class="px-2.5 py-1 rounded-lg bg-gray-100 text-[10px] font-bold text-gray-500 uppercase ${labelTracking} border border-gray-200/50 shadow-sm">
+                                        <span class="sm:hidden">${t.totalPointsShort || t.totalPointsLabel}</span>
+                                        <span class="hidden sm:inline">${t.totalPointsLabel || 'Total Points'}</span>
+                                    </div>
                                     <span class="text-sm ${fontBlack} text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100 shadow-sm">${totalPoints} ${t.points}</span>
                                 </div>
                             </div>
@@ -1105,7 +1111,8 @@
                             <div class="flex items-center justify-between text-[11px] ${fontBlack} uppercase ${progressTracking}">
                                 <span class="text-gray-500 flex items-center gap-2">
                                     <div class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></div>
-                                    ${t.progression || 'Progression'}
+                                    <span class="sm:hidden">${t.progressionShort || t.progression}</span>
+                                    <span class="hidden sm:inline">${t.progression || 'Progression'}</span>
                                 </span>
                                 <span class="px-2.5 py-1 rounded-full ${completionRate === 100 ? 'bg-green-100 text-green-700 border-green-200' : 'bg-blue-100 text-blue-700 border-blue-200'} border ${fontBlack} text-[10px] shadow-sm">
                                     ${nbGrades} / ${nbStudents} (${completionRate}%)
