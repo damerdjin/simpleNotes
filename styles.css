@@ -852,3 +852,45 @@
             flex-direction: row-reverse !important;
             justify-content: flex-end !important;
         }
+
+/* ===== MOBILE NAVIGATION ===== */
+#mobile-bottom-nav {
+    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.mobile-nav-item.active {
+    color: #2563eb !important;
+}
+
+.mobile-nav-item.active div {
+    background-color: #eff6ff !important;
+    transform: translateY(-4px);
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1);
+}
+
+/* Fix for safe area on newer iPhones */
+.safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (max-width: 768px) {
+    #app-sidebar {
+        z-index: 1000;
+    }
+    
+    #app-sidebar.mobile-visible {
+        transform: translateX(0) !important;
+    }
+
+    /* Hide text labels in small mobiles if needed */
+    @media (max-width: 360px) {
+        .mobile-nav-item span:last-child {
+            display: none;
+        }
+    }
+}
+
+/* RTL Support for Mobile Nav */
+.rtl-layout #mobile-bottom-nav {
+    flex-direction: row-reverse !important;
+}

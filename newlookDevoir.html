@@ -448,12 +448,339 @@
             text-align: right;
         }
 
-        /* Responsive */
+        /* Mobile-First Responsive Design */
         @media (max-width: 768px) {
-            aside { transform: translateX(-100%); }
-            main { margin-left: 0; width: 100%; }
-            .cards-grid { grid-template-columns: 1fr; }
-            .page-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+            /* Hide desktop sidebar */
+            aside { 
+                transform: translateX(-100%); 
+                width: 280px;
+                box-shadow: 0 0 20px rgba(0,0,0,0.1);
+                transition: transform 0.3s ease;
+            }
+            
+            aside.mobile-open {
+                transform: translateX(0);
+            }
+            
+            /* Mobile header */
+            header {
+                height: 60px;
+                padding: 0 16px;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+                z-index: 1000;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            }
+            
+            .header-context {
+                display: none; /* Hide year/trimester selectors */
+            }
+            
+            .user-profile span {
+                display: none; /* Hide email on mobile */
+            }
+            
+            .avatar {
+                width: 32px;
+                height: 32px;
+                font-size: 0.9rem;
+            }
+            
+            /* Mobile menu button */
+            .mobile-menu-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 40px;
+                height: 40px;
+                border-radius: 8px;
+                background: #f1f5f9;
+                border: none;
+                cursor: pointer;
+                margin-right: 12px;
+            }
+            
+            .mobile-header-left {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            
+            .mobile-header-title {
+                font-size: 1.1rem;
+                font-weight: 700;
+                color: var(--text-main);
+            }
+            
+            /* Main content adjustments */
+            main {
+                margin-left: 0;
+                width: 100%;
+                margin-top: 60px; /* Account for fixed header */
+            }
+            
+            .content-area {
+                padding: 16px;
+            }
+            
+            /* Page header compact */
+            .page-header {
+                flex-direction: row;
+                align-items: center;
+                margin-bottom: 20px;
+                gap: 12px;
+            }
+            
+            .title-group h1 {
+                font-size: 1.4rem;
+                margin-bottom: 0;
+            }
+            
+            .btn {
+                padding: 8px 16px;
+                font-size: 0.85rem;
+                white-space: nowrap;
+            }
+            
+            /* Filters compact */
+            .filters-container {
+                padding: 16px;
+                margin-bottom: 20px;
+            }
+            
+            .pills-group {
+                display: flex;
+                overflow-x: auto;
+                gap: 6px;
+                padding-bottom: 8px;
+                margin-bottom: 16px;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+            
+            .pills-group::-webkit-scrollbar {
+                display: none;
+            }
+            
+            .pill {
+                padding: 6px 14px;
+                font-size: 0.8rem;
+                flex-shrink: 0;
+            }
+            
+            .search-row {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .search-input-wrapper input {
+                padding: 10px 16px 10px 40px;
+                font-size: 0.9rem;
+            }
+            
+            /* Cards as compact list */
+            .cards-grid {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .assignment-card {
+                border-radius: 12px;
+                border: 1px solid #e2e8f0;
+                background: white;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            }
+            
+            .card-header {
+                padding: 12px 16px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .class-tag {
+                max-width: 100%;
+                font-size: 0.75rem;
+                padding: 4px 10px;
+            }
+            
+            .card-body {
+                padding: 16px;
+            }
+            
+            .assignment-title {
+                font-size: 1.1rem;
+                margin-bottom: 12px;
+            }
+            
+            .stats-row {
+                flex-direction: column;
+                gap: 16px;
+                margin-bottom: 16px;
+            }
+            
+            .stat-item {
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+            }
+            
+            .stat-label {
+                font-size: 0.75rem;
+            }
+            
+            .stat-value {
+                font-size: 0.95rem;
+            }
+            
+            .progress-container {
+                margin-top: 4px;
+            }
+            
+            .card-footer {
+                padding: 10px 16px;
+                justify-content: space-between;
+                background: #f8fafc;
+            }
+            
+            .icon-btn {
+                width: 40px;
+                height: 40px;
+                border-radius: 8px;
+                font-size: 1.1rem;
+            }
+            
+            /* Mobile bottom navigation */
+            .mobile-bottom-nav {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: white;
+                border-top: 1px solid var(--border);
+                display: flex;
+                justify-content: space-around;
+                padding: 8px 0;
+                z-index: 1000;
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            }
+            
+            .nav-tab {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 4px;
+                padding: 8px 12px;
+                border-radius: 8px;
+                background: transparent;
+                border: none;
+                color: var(--text-muted);
+                font-size: 0.75rem;
+                cursor: pointer;
+                transition: all 0.2s;
+                flex: 1;
+                max-width: 80px;
+            }
+            
+            .nav-tab.active {
+                color: var(--primary);
+                background: #eef2ff;
+            }
+            
+            .nav-tab-icon {
+                font-size: 1.2rem;
+            }
+            
+            /* Mobile overlay for sidebar */
+            .mobile-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.5);
+                z-index: 999;
+                display: none;
+            }
+            
+            .mobile-overlay.active {
+                display: block;
+            }
+            
+            /* Pull to refresh indicator */
+            .pull-to-refresh {
+                position: absolute;
+                top: -50px;
+                left: 0;
+                right: 0;
+                height: 50px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: var(--text-muted);
+                font-size: 0.9rem;
+            }
+            
+            /* Swipe actions */
+            .assignment-card {
+                position: relative;
+                overflow: hidden;
+            }
+            
+            .swipe-actions {
+                position: absolute;
+                top: 0;
+                right: -150px;
+                bottom: 0;
+                width: 150px;
+                background: linear-gradient(90deg, transparent, #f8fafc);
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+                padding-right: 16px;
+                gap: 8px;
+                transition: right 0.3s ease;
+            }
+            
+            .assignment-card.swiped .swipe-actions {
+                right: 0;
+            }
+            
+            .swipe-btn {
+                width: 44px;
+                height: 44px;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: white;
+                border: 1px solid var(--border);
+                cursor: pointer;
+                font-size: 1.1rem;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            }
+            
+            .swipe-btn.edit {
+                color: var(--primary);
+            }
+            
+            .swipe-btn.delete {
+                color: #ef4444;
+            }
+        }
+        
+        /* Desktop adjustments */
+        @media (min-width: 769px) {
+            .mobile-menu-btn,
+            .mobile-bottom-nav,
+            .mobile-overlay,
+            .swipe-actions {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -485,9 +812,19 @@
         </nav>
     </aside>
 
+    <!-- Mobile Overlay for Sidebar -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+
     <main>
         <!-- Top Header -->
         <header>
+            <div class="mobile-header-left">
+                <button class="mobile-menu-btn" id="mobileMenuBtn">
+                    <span style="font-size: 1.2rem;">☰</span>
+                </button>
+                <span class="mobile-header-title">Devoirs</span>
+            </div>
+            
             <div class="header-context">
                 <div class="select-group">
                     <span class="select-label">Année Scolaire</span>
@@ -561,6 +898,26 @@
         </div>
     </main>
 
+    <!-- Mobile Bottom Navigation -->
+    <div class="mobile-bottom-nav">
+        <button class="nav-tab" data-tab="eleves">
+            <span class="nav-tab-icon">👥</span>
+            <span>Élèves</span>
+        </button>
+        <button class="nav-tab active" data-tab="devoirs">
+            <span class="nav-tab-icon">📝</span>
+            <span>Devoirs</span>
+        </button>
+        <button class="nav-tab" data-tab="notes">
+            <span class="nav-tab-icon">📊</span>
+            <span>Notes</span>
+        </button>
+        <button class="nav-tab" data-tab="recap">
+            <span class="nav-tab-icon">📋</span>
+            <span>Récap</span>
+        </button>
+    </div>
+
     <script>
         // Data mimicking the image provided
         const assignments = [
@@ -610,7 +967,12 @@
                 const percentage = (dev.submitted / dev.totalStudents) * 100;
                 const card = document.createElement('div');
                 card.className = 'assignment-card';
+                card.setAttribute('data-id', dev.id);
                 card.innerHTML = `
+                    <div class="swipe-actions">
+                        <button class="swipe-btn edit" title="Modifier">✏️</button>
+                        <button class="swipe-btn delete" title="Supprimer">🗑️</button>
+                    </div>
                     <div class="card-header">
                         <span class="class-tag rtl">${dev.className}</span>
                         <span style="font-size: 0.7rem; font-weight: 800; color: #94a3b8;">${dev.trimestre}</span>
@@ -641,6 +1003,9 @@
                     </div>
                 `;
                 grid.appendChild(card);
+                
+                // Add swipe functionality for mobile
+                addSwipeFunctionality(card, dev.id);
             });
         }
 
@@ -688,9 +1053,191 @@
             });
         });
 
+        // Mobile navigation functions
+        function setupMobileNavigation() {
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const mobileOverlay = document.getElementById('mobileOverlay');
+            const sidebar = document.querySelector('aside');
+            const mobileTabs = document.querySelectorAll('.mobile-bottom-nav .nav-tab');
+            
+            // Mobile menu toggle
+            mobileMenuBtn.addEventListener('click', () => {
+                sidebar.classList.add('mobile-open');
+                mobileOverlay.classList.add('active');
+            });
+            
+            mobileOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('mobile-open');
+                mobileOverlay.classList.remove('active');
+            });
+            
+            // Mobile bottom navigation
+            mobileTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const target = this.getAttribute('data-tab');
+                    
+                    // Update active tab
+                    mobileTabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Switch view
+                    sections.forEach(s => s.classList.remove('active'));
+                    const activeSection = document.getElementById(`view-${target}`);
+                    if (activeSection) activeSection.classList.add('active');
+                    
+                    // Update header title
+                    const titleMap = {
+                        'eleves': 'Élèves',
+                        'devoirs': 'Devoirs',
+                        'notes': 'Notes',
+                        'recap': 'Récapitulatif'
+                    };
+                    document.querySelector('.mobile-header-title').textContent = titleMap[target] || 'Devoirs';
+                });
+            });
+        }
+        
+        // Swipe functionality for assignment cards
+        function addSwipeFunctionality(card, assignmentId) {
+            let startX = 0;
+            let currentX = 0;
+            let isSwiped = false;
+            const swipeThreshold = 50;
+            
+            card.addEventListener('touchstart', (e) => {
+                startX = e.touches[0].clientX;
+                card.style.transition = 'none';
+            }, { passive: true });
+            
+            card.addEventListener('touchmove', (e) => {
+                if (!startX) return;
+                
+                currentX = e.touches[0].clientX;
+                const diff = startX - currentX;
+                
+                // Only allow right-to-left swipe (negative diff)
+                if (diff > 0) {
+                    const translateX = Math.min(0, -Math.min(diff, 150));
+                    card.style.transform = `translateX(${translateX}px)`;
+                    
+                    if (Math.abs(diff) > swipeThreshold && !isSwiped) {
+                        card.classList.add('swiped');
+                        isSwiped = true;
+                    }
+                }
+            }, { passive: true });
+            
+            card.addEventListener('touchend', () => {
+                card.style.transition = 'transform 0.3s ease';
+                card.style.transform = 'translateX(0)';
+                
+                if (!isSwiped && card.classList.contains('swiped')) {
+                    card.classList.remove('swiped');
+                }
+                
+                startX = 0;
+                currentX = 0;
+                isSwiped = false;
+            });
+            
+            // Click on swipe buttons
+            card.querySelectorAll('.swipe-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const action = btn.classList.contains('edit') ? 'edit' : 'delete';
+                    
+                    if (action === 'edit') {
+                        alert(`Modifier le devoir: ${assignmentId}`);
+                    } else {
+                        if (confirm(`Supprimer le devoir "${assignmentId}" ?`)) {
+                            // Remove card with animation
+                            card.style.transform = 'translateX(-100%)';
+                            card.style.opacity = '0';
+                            setTimeout(() => {
+                                card.remove();
+                            }, 300);
+                        }
+                    }
+                    
+                    // Close swipe actions
+                    card.classList.remove('swiped');
+                });
+            });
+            
+            // Click on card to close swipe
+            card.addEventListener('click', () => {
+                if (card.classList.contains('swiped')) {
+                    card.classList.remove('swiped');
+                }
+            });
+        }
+        
+        // Pull to refresh simulation
+        function setupPullToRefresh() {
+            const contentArea = document.querySelector('.content-area');
+            let startY = 0;
+            let pulling = false;
+            
+            contentArea.addEventListener('touchstart', (e) => {
+                if (contentArea.scrollTop === 0) {
+                    startY = e.touches[0].clientY;
+                }
+            }, { passive: true });
+            
+            contentArea.addEventListener('touchmove', (e) => {
+                if (!startY || contentArea.scrollTop > 0) return;
+                
+                const currentY = e.touches[0].clientY;
+                const diff = currentY - startY;
+                
+                if (diff > 50 && !pulling) {
+                    pulling = true;
+                    // Show refresh indicator
+                    console.log('Pull to refresh triggered');
+                }
+            }, { passive: true });
+            
+            contentArea.addEventListener('touchend', () => {
+                if (pulling) {
+                    pulling = false;
+                    // Simulate refresh
+                    setTimeout(() => {
+                        renderDevoirs(assignments);
+                        console.log('Data refreshed');
+                    }, 1000);
+                }
+                startY = 0;
+            });
+        }
+        
         // Initial load
         window.addEventListener('DOMContentLoaded', () => {
             renderDevoirs(assignments);
+            setupMobileNavigation();
+            setupPullToRefresh();
+            
+            // Add click handlers for swipe buttons
+            document.querySelectorAll('.swipe-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const card = this.closest('.assignment-card');
+                    const assignmentId = card.getAttribute('data-id');
+                    
+                    if (this.classList.contains('edit')) {
+                        alert(`Modifier le devoir: ${assignmentId}`);
+                    } else {
+                        if (confirm(`Supprimer le devoir "${assignmentId}" ?`)) {
+                            card.style.transform = 'translateX(-100%)';
+                            card.style.opacity = '0';
+                            setTimeout(() => {
+                                card.remove();
+                            }, 300);
+                        }
+                    }
+                    
+                    card.classList.remove('swiped');
+                });
+            });
         });
     </script>
 </body>

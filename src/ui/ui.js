@@ -220,6 +220,11 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
             const isAlreadyActive = window.tabs.activeTab === tabId;
             const success = await window.tabs.activateTab(tabId, options);
             
+            // Highlight active tab in mobile bottom nav
+            document.querySelectorAll('.mobile-nav-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.tab === tabId);
+            });
+
             // Si on clique sur l'onglet déjà actif, on reset sa vue interne
             if (isAlreadyActive && !options.skipHistory) {
                 if (tabId === 'students' && window.setStudentsSelectedClass) {
