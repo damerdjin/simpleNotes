@@ -746,6 +746,7 @@
         if (!trimester) return window.showAssignmentError(t.needTrimester);
         if (!name) return window.showAssignmentError(t.enterAssignmentName);
         if (!className) return window.showAssignmentError(t.selectAssignmentClass);
+        if (!subject) return window.showAssignmentError(t.selectSubject);
 
         const data = getData();
         const currentYear = window.getGlobalAcademicYear();
