@@ -624,7 +624,11 @@
             if (!existing) studentMap.set(s.id, s);
         });
         
-        const students = Array.from(studentMap.values());
+        let students = Array.from(studentMap.values());
+        
+        // --- FILTRE ARCHIVÉS ---
+        students = students.filter(s => s.status !== 'archived');
+        
         meta.textContent = `${students.length} ${t.students}`;
 
         await renderExportPreviewTable(className, cfg);
@@ -881,8 +885,12 @@
             if (!existing) studentMap.set(s.id, s);
         });
 
-        const students = Array.from(studentMap.values())
-            .sort((a, b) => (a.name || '').localeCompare((b.name || ''), 'fr', { sensitivity: 'base' }));
+        let students = Array.from(studentMap.values());
+        
+        // --- FILTRE ARCHIVÉS ---
+        students = students.filter(s => s.status !== 'archived');
+        
+        students.sort((a, b) => (a.name || '').localeCompare((b.name || ''), 'fr', { sensitivity: 'base' }));
 
         const ccA = cfg.ccAssignmentId ? getData().assignments.find(a => a.id === cfg.ccAssignmentId) : null;
         const tpA = cfg.tpAssignmentId ? getData().assignments.find(a => a.id === cfg.tpAssignmentId) : null;
@@ -1334,8 +1342,12 @@
                 const existing = Array.from(studentMap.values()).find(ls => ls.id === s.id || (ls.regNumber && ls.regNumber === s.regNumber));
                 if (!existing) studentMap.set(s.id, s);
             });
+            
+            let studentsForClass = Array.from(studentMap.values());
+            // --- FILTRE ARCHIVÉS POUR L'EXPORT RAKMANA ---
+            studentsForClass = studentsForClass.filter(s => s.status !== 'archived');
 
-            Array.from(studentMap.values()).forEach(s => {
+            studentsForClass.forEach(s => {
                 const nin = String(s.nin || '').replace(/\s/g, '').trim();
                 if (!nin) return;
                 studentsWithNIN++;

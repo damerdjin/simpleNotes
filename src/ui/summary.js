@@ -742,6 +742,9 @@ import * as gradesSvc from '../services/grades.service.js';
 
         let filteredStudents = Array.from(studentMap.values());
 
+        // Masquer les élèves archivés de l'export Excel
+        filteredStudents = filteredStudents.filter(s => s.status !== 'archived');
+
         filteredStudents.sort((a, b) => {
             const classA = (a.className || '').toLowerCase();
             const classB = (b.className || '').toLowerCase();
