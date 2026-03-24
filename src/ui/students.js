@@ -1140,12 +1140,12 @@
             </div>
             
             <!-- Actions Rapides Mobile -->
-            <div class="flex items-center gap-2 mt-3 sm:hidden">
-                <button onclick="viewStudentGrades('${s.id}')" class="flex-1 flex items-center justify-center gap-1.5 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold shadow-sm active:scale-95 transition-all whitespace-nowrap overflow-hidden">
+            <div class="flex items-center gap-2 mt-3 sm:hidden w-full">
+                <button onclick="viewStudentGrades('${s.id}')" class="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-bold shadow-sm active:scale-95 transition-all whitespace-nowrap overflow-hidden min-w-0">
                     <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                     <span class="truncate">${t.viewGradesShort || 'Notes'}</span>
                 </button>
-                <button onclick="openStudentModal('${s.id}')" class="p-2 bg-slate-100 text-slate-600 rounded-xl active:scale-90 transition-all shrink-0">
+                <button onclick="openStudentModal('${s.id}')" class="p-2.5 bg-slate-100 text-slate-600 rounded-xl active:scale-90 transition-all shrink-0 border border-slate-200">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                 </button>
             </div>

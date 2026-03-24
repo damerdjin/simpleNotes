@@ -6,6 +6,15 @@
     [dir="rtl"] .rtl\:text-right {
         text-align: right !important;
     }
+    
+    /* Fix for Arabic button alignment and spacing */
+    [dir="rtl"] .flex-row {
+        flex-direction: row !important;
+    }
+    
+    [dir="rtl"] .student-item .flex-1 {
+        min-width: 0;
+    }
 }
 
         /* ===== FLEX & LAYOUT GÉNÉRAUX ===== */

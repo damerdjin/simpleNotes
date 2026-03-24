@@ -2069,23 +2069,23 @@
                     
                     <!-- VIEW 1: Class Dashboard -->
                     <div id="students-view-classes" class="container mx-auto max-w-7xl animate-in fade-in duration-300">
-                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 overflow-hidden">
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-8">
                             <div class="header-scroll-hide">
-                                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
-                                    <div class="min-w-0">
-                                        <h2 class="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight truncate rtl:text-right" data-translate="myClasses">Mes Classes</h2>
+                                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
+                                    <div class="min-w-0 w-full lg:w-auto">
+                                        <h2 class="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight rtl:text-right" data-translate="myClasses">Mes Classes</h2>
                                         <p class="text-slate-500 mt-1 text-sm sm:text-base rtl:text-right" data-translate="classManagementSubtitle">Sélectionnez une classe pour gérer les élèves</p>
                                     </div>
-                                    <div class="flex flex-row items-center gap-3">
+                                    <div class="flex flex-row items-center gap-3 w-full lg:w-auto">
                                         <button onclick="openJoinClassModal()" 
-                                            class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-blue-600 border-2 border-blue-100 px-4 py-3 rounded-xl font-semibold transition-all active:scale-95 text-sm sm:text-base">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                            class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-blue-600 border-2 border-blue-100 px-3 py-3 rounded-xl font-bold transition-all active:scale-95 text-xs sm:text-base whitespace-nowrap">
+                                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                                             <span class="sm:hidden" data-translate="joinClassShort">+Classe</span>
                                             <span class="hidden sm:inline" data-translate="joinClass">Rejoindre une classe</span>
                                         </button>
                                         <button onclick="openStudentModal()" 
-                                            class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl font-semibold shadow-lg shadow-blue-500/20 transition-all active:scale-95 text-sm sm:text-base">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                            class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-3 rounded-xl font-bold shadow-lg shadow-blue-500/20 transition-all active:scale-95 text-xs sm:text-base whitespace-nowrap">
+                                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                                             <span class="sm:hidden" data-translate="addStudentShort">+Élève</span>
                                             <span class="hidden sm:inline" data-translate="addStudent">Ajouter un élève</span>
                                         </button>
