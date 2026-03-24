@@ -68,12 +68,12 @@
         const inputPadding = isAr ? 'pr-10 pl-4' : 'pl-10 pr-4';
 
         overlay.innerHTML = `
-      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200" style="${modalFlex}">
+      <div class="animate-in zoom-in-95 duration-200">
         <!-- Header -->
-        <div class="px-6 py-4 border-b flex items-center justify-between bg-gray-50/50">
+        <div class="px-6 py-4 border-b flex items-center justify-between bg-gray-50/50 shrink-0">
           <div>
-            <h3 id="assignment-modal-title" class="text-xl font-bold text-gray-800">${t.createAssignmentTitle || 'Créer un Devoir'}</h3>
-            <p class="text-sm text-gray-500">${t.assignmentModalSubtitle || 'Configurez les détails et les exercices de votre devoir'}</p>
+            <h3 id="assignment-modal-title" class="text-xl font-bold text-gray-800 leading-tight">${t.createAssignmentTitle || 'Créer un Devoir'}</h3>
+            <p class="text-[10px] text-gray-500 font-medium uppercase tracking-wider mt-0.5">${t.assignmentModalSubtitle || 'Détails du devoir'}</p>
           </div>
           <button onclick="closeAssignmentModal()" class="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-500">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -81,7 +81,7 @@
         </div>
 
         <!-- Scrollable Content -->
-        <div class="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+        <div class="modal-content-scroll custom-scrollbar space-y-6">
           <!-- UI Error Zone -->
           <div id="assignment-modal-error" class="hidden animate-in slide-in-from-top-4 duration-300">
             <div class="flex items-start gap-3 p-4 bg-red-50 border-2 border-red-100 rounded-2xl text-red-700 shadow-sm">
@@ -159,7 +159,7 @@
                 </div>
                 <div>
                   <label for="assignment-visible" class="font-semibold text-gray-800 block">${t.visibleToStudents || 'Visible par les élèves'}</label>
-                  <p class="text-xs text-gray-500">${t.visibleToStudentsDesc || 'Autoriser les élèves à voir les notes de ce devoir'}</p>
+                  <p class="text-xs text-gray-500">${t.visibleToStudentsDesc || 'Autoriser les élèves à voir les notes'}</p>
                 </div>
               </div>
               <label class="relative inline-flex items-center cursor-pointer">
@@ -232,7 +232,7 @@
         </div>
 
         <!-- Footer -->
-        <div class="px-6 py-4 border-t bg-gray-50/80 flex gap-3 justify-end items-center">
+        <div class="modal-footer-fixed flex gap-3 justify-end items-center">
           <button onclick="closeAssignmentModal()" 
             class="px-6 py-2.5 text-gray-600 font-semibold hover:bg-gray-200 rounded-xl transition-all" 
             data-translate="cancel">${t.cancel || 'Annuler'}</button>
