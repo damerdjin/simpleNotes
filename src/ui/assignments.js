@@ -1094,11 +1094,13 @@
                                     ${a.name}
                                 </h4>
                                 <div class="flex items-center gap-2 mt-2.5">
-                                    <div class="px-2.5 py-1 rounded-lg bg-gray-100 text-[10px] font-bold text-gray-500 uppercase ${labelTracking} border border-gray-200/50 shadow-sm">
+                                    <div class="px-2.5 py-1 rounded-lg bg-gray-100 text-[10px] font-bold text-gray-500 uppercase ${labelTracking} border border-gray-200/50 shadow-sm shrink-0">
                                         <span class="sm:hidden">${t.totalPointsShort || t.totalPointsLabel}</span>
                                         <span class="hidden sm:inline">${t.totalPointsLabel || 'Total Points'}</span>
                                     </div>
-                                    <span class="text-sm ${fontBlack} text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100 shadow-sm">${totalPoints} ${t.points}</span>
+                                    <span class="text-sm ${fontBlack} text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100 shadow-sm whitespace-nowrap">
+                                        ${totalPoints} ${t.points}
+                                    </span>
                                 </div>
                             </div>
                             <div id="icon-${a.id}" class="w-11 h-11 rounded-2xl bg-white shadow-md border border-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 group-hover:rotate-180 transition-all duration-500">
