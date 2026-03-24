@@ -231,12 +231,16 @@
             }
 
             const originClass = isAr ? 'origin-right' : 'origin-left';
-            // In RTL, we want a taller line-height and potentially slightly larger font for readability
-            const titleClass = isAr ? 'text-2xl font-bold leading-normal' : 'text-2xl font-black leading-tight tracking-tight';
             
-            // Fix RTL Animations: Button should slide OUT from the badge (which is on the Left in RTL)
-            // LTR: Button (Left) slides out from Badge (Right) -> Start +4 (Right), End 0.
-            // RTL: Button (Right) slides out from Badge (Left) -> Start -4 (Left), End 0.
+            // LOGIQUE DE TAILLE DE POLICE DYNAMIQUE
+            const cleanedName = cleanClassName(c);
+            let fontSizeClass = isAr ? 'text-2xl' : 'text-2xl';
+            if (cleanedName.length > 25) fontSizeClass = 'text-lg';
+            else if (cleanedName.length > 15) fontSizeClass = 'text-xl';
+
+            const titleClass = isAr ? `${fontSizeClass} font-bold leading-normal` : `${fontSizeClass} font-black leading-tight tracking-tight`;
+            
+            // Fix RTL Animations
             const translateClass = isAr ? 'sm:-translate-x-4' : 'sm:translate-x-4';
             
             // CRITICAL FIX: The global CSS .rtl-layout .flex { flex-direction: row-reverse } breaks everything.
@@ -330,9 +334,24 @@
             
             // Update Header
             const titleEl = document.getElementById('selected-class-title');
+            const titleCompactEl = document.getElementById('selected-class-title-compact');
             const statsEl = document.getElementById('selected-class-stats');
             
-            if (titleEl) titleEl.textContent = newClass;
+            if (titleEl) {
+                titleEl.textContent = newClass;
+                if (titleCompactEl) titleCompactEl.textContent = newClass;
+                
+                // Ajuster la police si le nom est trop long
+                if (newClass.length > 25) {
+                    titleEl.classList.remove('text-xl', 'sm:text-2xl');
+                    titleEl.classList.add('text-base', 'sm:text-lg');
+                } else if (newClass.length > 15) {
+                    titleEl.classList.remove('text-xl', 'sm:text-2xl');
+                    titleEl.classList.add('text-lg', 'sm:text-xl');
+                } else {
+                    titleEl.classList.add('text-xl', 'sm:text-2xl');
+                }
+            }
             if (statsEl) {
                      const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
                      const globalAcademicYear = window.getGlobalAcademicYear();

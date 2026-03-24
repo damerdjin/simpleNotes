@@ -347,6 +347,16 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
 
         // Appliquer la direction
         document.body.dir = window.isRTL ? 'rtl' : 'ltr';
+
+        // Scroll listener for sticky headers
+        window.addEventListener('scroll', () => {
+            const threshold = 100;
+            if (window.scrollY > threshold) {
+                document.body.classList.add('scrolled');
+            } else {
+                document.body.classList.remove('scrolled');
+            }
+        });
         document.body.className = window.isRTL ? 'rtl-layout' : 'ltr-layout';
 
         // Traduire tous les éléments

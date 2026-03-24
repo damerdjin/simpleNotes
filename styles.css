@@ -865,7 +865,37 @@
             justify-content: flex-end !important;
         }
 
-/* ===== MOBILE NAVIGATION ===== */
+/* ===== SMART STICKY HEADER ===== */
+@media (max-width: 768px) {
+    .header-scroll-hide {
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        max-height: 200px;
+        opacity: 1;
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+
+    .scrolled .header-scroll-hide {
+        max-height: 0;
+        opacity: 0;
+        margin-bottom: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        pointer-events: none;
+    }
+
+    /* Le titre de la classe reste collé mais plus compact */
+     .sticky-header-mobile {
+         position: sticky;
+         top: 0.5rem;
+         z-index: 50;
+         transition: all 0.3s ease;
+     }
+
+     .scrolled .sticky-title-compact {
+         display: flex !important;
+     }
+ }
 @media (max-width: 480px) {
     .xs\:inline { display: inline !important; }
     .xs\:hidden { display: none !important; }
