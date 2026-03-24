@@ -290,6 +290,7 @@ window.translations = {
         emptyFile: "Fichier vide ou aucune donnée.",
         importSuccess: "Importation terminée. Nouveaux élèves ajoutés : ",
         newStudentsAdded: "", // Vide car déjà inclus dans importSuccess
+        archivedCount: "(${count} archivés)",
 
         // RAKMANA
         exportPrepTitle: "Préparation des notes (CC/Devoir/Composition)",
@@ -634,7 +635,8 @@ window.translations = {
         importCompleted: "Import completed. New students added:",
         emptyFile: "Empty file or no data.",
         importSuccess: "Import completed. New students added: ",
-        newStudentsAdded: "", // Vide car déjà inclus dans importSuccess
+        newStudentsAdded: "",
+        archivedCount: "(${count} archived)", // Vide car déjà inclus dans importSuccess
 
         // RAKMANA
         exportPrepTitle: "Grade Preparation (CC/Homework/Test)",
@@ -982,10 +984,11 @@ window.translations = {
         selectClassToStart: "اختر فصلاً للبدء",
 
         // Import
-        importCompleted: "اكتمل الاستيراد. تمت إضافة طلاب جدد:",
+        importCompleted: "تم الاستيراد. تمت إضافة طلاب جدد:",
         emptyFile: "ملف فارغ أو لا توجد بيانات.",
-        importSuccess: "اكتمل الاستيراد. تمت إضافة طلاب جدد: ",
-        newStudentsAdded: "", // Vide car déjà inclus dans importSuccess
+        importSuccess: "تم الاستيراد. تمت إضافة طلاب جدد: ",
+        newStudentsAdded: "",
+        archivedCount: "(${count} مؤرشفين)", // Vide car déjà inclus dans importSuccess
 
         // RAKMANA
         exportPrepTitle: "تحضير النقاط (مستمر/فرض/اختبار)",

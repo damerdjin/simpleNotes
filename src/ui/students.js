@@ -184,10 +184,10 @@
         const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
         
         const rows = classes.map(c => {
-            // Count local students
-            const localStudents = getData().students.filter(s => s.className === c && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear);
+            // Count local students (excluding archived)
+            const localStudents = getData().students.filter(s => s.className === c && s.status !== 'archived' && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear);
             
-            // Shared Stats now contains { total, boys, girls }
+            // Shared Stats now contains { total, boys, girls } (already filtered from archived in adapter)
             const sharedStat = sharedStats[c] || { total: 0, boys: 0, girls: 0 };
             
             // Si on n'a pas d'élèves locaux, on prend les stats partagées (cloud)
@@ -339,23 +339,41 @@
                      
                      // Get Local Students
                      const localStudents = getData().students.filter(s => s.className === newClass && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear);
-                     let count = localStudents.length;
 
                      // Merge with Shared Students to get the accurate total count for the header
+                     const studentMap = new Map();
+                     localStudents.forEach(s => studentMap.set(s.id, s));
+
                      if (window.store && typeof window.store.getSharedStudents === 'function') {
                          const sharedStudents = await window.store.getSharedStudents(newClass);
-                         const studentMap = new Map();
-                         localStudents.forEach(s => studentMap.set(s.id, s));
                          sharedStudents.forEach(s => {
                              const existing = Array.from(studentMap.values()).find(ls => ls.id === s.id || (ls.regNumber && ls.regNumber === s.regNumber));
                              if (!existing) studentMap.set(s.id, s);
                          });
-                         count = studentMap.size;
                      }
 
+                     const allStudents = Array.from(studentMap.values());
+                     const activeStudentsCount = allStudents.filter(s => s.status !== 'archived').length;
+                     const archivedStudentsCount = allStudents.length - activeStudentsCount;
+                     
                      const t = getTranslations()[getLang()];
-                     statsEl.textContent = `${count} ${(t.studentsCountLabel || 'Élèves').toUpperCase()}`;
-                }
+                     let countLabel = `${activeStudentsCount} ${t.studentsCountLabel || 'élèves'}`;
+                     if (getLang() === 'ar') {
+                         if (activeStudentsCount === 0) countLabel = 'لا يوجد طلاب';
+                         else if (activeStudentsCount === 1) countLabel = 'طالب واحد';
+                         else if (activeStudentsCount === 2) countLabel = 'طالبان';
+                         else if (activeStudentsCount <= 10) countLabel = `${activeStudentsCount} طلاب`;
+                         else countLabel = `${activeStudentsCount} طالباً`;
+                     }
+
+                     // Add the archived mention in the title if there are any
+                     if (archivedStudentsCount > 0) {
+                         const archivedMention = (t.archivedCount || '(dont ${count} archivés)').replace('${count}', archivedStudentsCount);
+                         countLabel += ` <span class="text-amber-500 lowercase font-medium ml-1">${archivedMention}</span>`;
+                     }
+
+                     statsEl.innerHTML = countLabel;
+                 }
             
             await window.renderStudents();
         } else {
@@ -1011,6 +1029,13 @@
         });
 
         let filteredStudents = Array.from(studentMap.values());
+
+        // Compter les élèves archivés avant de les masquer
+        let archivedCount = 0;
+        if (selectedClass) {
+            const classStudentsBeforeFilter = filteredStudents.filter(s => (s.className || '') === selectedClass);
+            archivedCount = classStudentsBeforeFilter.filter(s => s.status === 'archived').length;
+        }
 
         // Masquer les élèves archivés par défaut
         filteredStudents = filteredStudents.filter(s => s.status !== 'archived');

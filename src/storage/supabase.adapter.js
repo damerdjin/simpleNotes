@@ -189,13 +189,16 @@ export function supabaseAdapter() {
         // Fetch more details to calculate gender statistics server-side (if possible) or aggregate them here.
         const { data, error } = await supabase
           .from('students')
-          .select('className:class_name, sex')
+          .select('className:class_name, sex, status')
           .eq('academic_year', academicYear);
         
         if (error) return {};
         
         const stats = {};
         data.forEach(s => {
+          // Ignorer les élèves archivés dans les statistiques
+          if (s.status === 'archived') return;
+
           if (!stats[s.className]) {
               stats[s.className] = { total: 0, boys: 0, girls: 0 };
           }

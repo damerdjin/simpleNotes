@@ -1034,11 +1034,12 @@
             for (const a of classAssignments) {
                 const totalPoints = gradesSvc().getAssignmentMaxPoints(a);
                 
-                // --- LOGIQUE DE COMPTAGE FUSIONNÉE ---
-                const localStudents = data.students.filter(s => s.className === a.className && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear);
+                // --- LOGIQUE DE COMPTAGE FUSIONNÉE ET FILTRÉE ---
+                const localStudents = data.students.filter(s => s.className === a.className && s.status !== 'archived' && (s.importedBy || 'unknown') === userId && (s.academicYear || '') === globalAcademicYear);
                 let sharedStudents = [];
                 if (window.store && typeof window.store.getSharedStudents === 'function') {
                     sharedStudents = await window.store.getSharedStudents(a.className);
+                    sharedStudents = sharedStudents.filter(s => s.status !== 'archived');
                 }
                 const studentMap = new Map();
                 localStudents.forEach(s => studentMap.set(s.id, s));
