@@ -1022,11 +1022,27 @@
         }
 
         // 3. Merge and Filter
+        // SYNC DOWN : Mettre à jour le statut local si le cloud a un statut différent
         const studentMap = new Map();
         localStudents.forEach(s => studentMap.set(s.id, s));
+        
+        let needsLocalSave = false;
         sharedStudents.forEach(s => {
-            if (!studentMap.has(s.id)) studentMap.set(s.id, s);
+            const localS = studentMap.get(s.id);
+            if (localS) {
+                // Si l'élève partagé est archivé mais le local est actif (ou inversement), le Cloud gagne
+                if (localS.status !== s.status) {
+                    localS.status = s.status;
+                    needsLocalSave = true;
+                }
+            } else {
+                studentMap.set(s.id, s);
+            }
         });
+
+        if (needsLocalSave) {
+            window.saveData(); // Sauvegarde silencieuse pour garder la cohérence
+        }
 
         let filteredStudents = Array.from(studentMap.values());
 
