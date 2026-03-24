@@ -49,6 +49,19 @@ L'application suit une architecture **Client-Side Heavy** (majoritairement côt�
 
 ## 4. Flux de Données et État de l'Application
 
+### Architecture Hybride et Migration Progressive
+L'application est actuellement dans une phase de transition majeure ("Modèle Hybride") :
+1. **L'Héritage (Le Blob JSON) :** Tout l'état de l'application est stocké en mémoire dans `window.data` et sauvegardé dans la table `corrections_data` sur Supabase. Ce fichier appartient *exclusivement* à un professeur.
+2. **La Cible (Le Cloud Relationnel) :** Les données sont extraites du Blob en arrière-plan via `relational-sync.service.js` et injectées dans des tables SQL classiques (ex: `students`, `teacher_classes`). Cela permet de passer d'une logique "Centrée sur le Professeur" à une logique "Centrée sur l'Établissement" (les classes et élèves appartiennent à l'école, les notes appartiennent au professeur).
+
+### Gestion de la Collaboration et des Élèves (Smart Merge & Soft Delete)
+Pour permettre à plusieurs professeurs de travailler sur la même classe sans conflits :
+- **Smart Merge :** Lors de l'import d'un fichier Excel, l'application télécharge les élèves partagés via `getSharedStudents()`. S'il trouve une correspondance (NIN, Matricule, Nom), il réutilise l'ID existant au lieu de créer un doublon.
+- **Soft Delete (Archivage) :** Si un élève quitte la classe (absent du nouveau fichier Excel), il n'est pas supprimé (ce qui détruirait les notes des autres profs). Il reçoit le statut `status: 'archived'`.
+- **Sync-Down (Mise à jour ascendante) :** Lors du chargement des élèves (`students.js`), le statut du Cloud (Supabase) écrase toujours le statut du JSON local. Si Prof B archive un élève, le JSON de Prof A sera automatiquement mis à jour à sa prochaine connexion.
+- **Politique d'affichage :** Les élèves avec `status === 'archived'` sont systématiquement filtrés des listes UI, des barres de progression, et des exports (Excel et Rakmana). Les compteurs de classe affichent le nombre d'actifs avec la mention *(dont X archivés)*.
+- **Suppression de classe :** L'action de suppression est un *Hard Delete* local. Elle efface tous les élèves de la classe du JSON local et supprime les devoirs/notes sur Supabase. Rejoindre la classe plus tard retélécharge les élèves, mais les données de notes sont perdues.
+
 ### Authentification
 L'application utilise un système hybride :
 1. **Client** : Utilise `supabase.auth` pour gérer la session utilisateur et le profil.
