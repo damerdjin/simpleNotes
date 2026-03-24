@@ -96,6 +96,9 @@
         
         let filteredStudents = Array.from(studentMap.values());
         
+        // Filtrer les élèves archivés pour la saisie des notes
+        filteredStudents = filteredStudents.filter(s => s.status !== 'archived');
+        
         // Store current class students for other functions (like loadGradeEntry)
         window.currentClassStudents = filteredStudents;
         

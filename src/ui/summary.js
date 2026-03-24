@@ -195,6 +195,9 @@ import * as gradesSvc from '../services/grades.service.js';
             filteredStudents = Array.from(studentMap.values());
         }
 
+        // Masquer les élèves archivés
+        filteredStudents = filteredStudents.filter(s => s.status !== 'archived');
+
         if (searchTerm) {
             filteredStudents = filteredStudents.filter(s => {
                 const haystack = `${s.name || ''} ${s.firstName || ''} ${s.lastName || ''} ${s.className || ''}`.toLowerCase();
@@ -444,6 +447,9 @@ import * as gradesSvc from '../services/grades.service.js';
             }
             filteredStudents = Array.from(studentMap.values());
         }
+
+        // Masquer les élèves archivés
+        filteredStudents = filteredStudents.filter(s => s.status !== 'archived');
 
         if (searchTerm) {
             filteredStudents = filteredStudents.filter(s => {
@@ -1054,6 +1060,9 @@ import * as gradesSvc from '../services/grades.service.js';
             filteredStudents = Array.from(studentMap.values());
         }
 
+        // Masquer les élèves archivés
+        filteredStudents = filteredStudents.filter(s => s.status !== 'archived');
+
         if (searchTerm) {
             filteredStudents = filteredStudents.filter(s => {
                 const haystack = `${s.name || ''} ${s.firstName || ''} ${s.lastName || ''} ${s.className || ''}`.toLowerCase();
@@ -1432,6 +1441,9 @@ import * as gradesSvc from '../services/grades.service.js';
             }
             filteredStudents = Array.from(studentMap.values());
         }
+
+        // Masquer les élèves archivés
+        filteredStudents = filteredStudents.filter(s => s.status !== 'archived');
 
         if (searchTerm) {
             filteredStudents = filteredStudents.filter(s => {

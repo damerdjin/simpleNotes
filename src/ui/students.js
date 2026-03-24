@@ -446,8 +446,9 @@
 
         // --- NETTOYAGE LOCAL (JSON) ---
         
-        // 1. Supprimer les élèves de cette classe importés par moi
-        data.students = data.students.filter(s => !(s.className === className && (s.importedBy || 'unknown') === userId));
+        // 1. Supprimer TOUS les élèves de cette classe de mon JSON local
+        // (Qu'ils m'appartiennent ou qu'ils aient été injectés via un Smart Merge depuis un autre prof)
+        data.students = data.students.filter(s => s.className !== className);
 
         // 2. Supprimer mes devoirs pour cette classe
         const myAssignmentIds = (data.assignments || [])
@@ -1011,6 +1012,9 @@
 
         let filteredStudents = Array.from(studentMap.values());
 
+        // Masquer les élèves archivés par défaut
+        filteredStudents = filteredStudents.filter(s => s.status !== 'archived');
+
         // Apply filters
         if (selectedClass) {
             filteredStudents = filteredStudents.filter(s => (s.className || '') === selectedClass);
@@ -1246,7 +1250,45 @@
             const runImport = async (studentMapping = {}) => {
                 let added = 0;
                 let updated = 0;
+                let archived = 0;
                 const data = getData();
+                const currentAcademicYear = window.getGlobalAcademicYear();
+
+                // Collect all unique classes present in the Excel file
+                const importedClasses = new Set();
+                rows.forEach((row) => {
+                    if (!row || row.length === 0) return;
+                    const className = idxClasse >= 0 ? cleanStr(row[idxClasse]) : '';
+                    if (className) importedClasses.add(className);
+                });
+
+                // --- ÉTAPE 0 : Auto-Abonnement et Récupération des données partagées ---
+                // Pour que le Prof B puisse mettre à jour et archiver correctement,
+                // il doit être abonné à ces classes et avoir les élèves en local.
+                if (window.store && typeof window.store.subscribeToClass === 'function') {
+                    for (const className of importedClasses) {
+                        try {
+                            // S'abonner à la classe
+                            await window.store.subscribeToClass(className);
+                            // Récupérer les élèves partagés existants pour cette classe
+                            const sharedStudents = await window.store.getSharedStudents(className);
+                            
+                            // Fusionner les élèves partagés dans le data.students local
+                            // pour que la logique de Smart Merge et d'Archivage les trouve.
+                            sharedStudents.forEach(sharedStudent => {
+                                const existsLocally = data.students.find(s => s.id === sharedStudent.id);
+                                if (!existsLocally) {
+                                    data.students.push(sharedStudent);
+                                }
+                            });
+                        } catch (err) {
+                            console.warn(`Erreur lors de l'abonnement automatique à la classe ${className}`, err);
+                        }
+                    }
+                }
+
+                // Set to keep track of students found in Excel
+                const processedExcelStudents = new Set();
 
                 rows.forEach((row, index) => {
                     if (!row || row.length === 0) return;
@@ -1263,10 +1305,18 @@
                     if (!lastName && !firstName) return;
                     const name = (lastName + ' ' + firstName).trim();
 
+                    // Track students in the excel file for deletion logic later
+                    processedExcelStudents.add(regNumber ? `${className}_${regNumber}` : `${className}_${name}`);
+
                     // --- CORRECTION 1 : LOGIQUE DE RECHERCHE AMÉLIORÉE ---
                     const currentUserId = window.currentUser?.email || window.currentUser?.id || 'unknown';
                     const currentAcademicYear = window.getGlobalAcademicYear();
-                    const userStudents = data.students.filter(s => (s.importedBy || 'unknown') === currentUserId && (s.academicYear || '') === currentAcademicYear);
+                    
+                    // --- SMART MERGE : Recherche dans les élèves partagés ---
+                    // Au lieu de chercher uniquement dans les élèves "importés par moi",
+                    // on cherche dans TOUS les élèves (y compris les partagés de Supabase) 
+                    // qui appartiennent à la classe qu'on est en train d'importer.
+                    const userStudents = data.students.filter(s => (s.academicYear || '') === currentAcademicYear);
                     let existing = null;
 
                     // 0. Priorité absolue : Mapping manuel du Wizard
@@ -1318,8 +1368,20 @@
                 });
 
                 if (existing) {
-                    // MISE A JOUR de l'élève existant
-                    Object.assign(existing, studentData); // Met à jour infos perso
+                    // MISE A JOUR de l'élève existant (Smart Merge)
+                    
+                    // S'il était archivé, on le compte comme "restauré"
+                    if (existing.status === 'archived') {
+                        console.log(`[Smart Merge] Élève restauré : ${existing.name}`);
+                    }
+                    
+                    // Important : On ne modifie PAS le `importedBy` s'il existait déjà 
+                    // pour conserver la propriété originelle (Prof A)
+                    Object.assign(existing, {
+                        ...studentData,
+                        // Assurer que le statut est actif s'il revient
+                        status: 'active'
+                    }); 
                     
                     // Note: Les notes importées via ce fichier Excel (type Rakmana) ne sont pas compatibles 
                     // avec la structure data.grades[studentId][assignmentId].
@@ -1332,10 +1394,47 @@
                     data.students.push({
                         id: genId(),
                         academicYear: window.getGlobalAcademicYear(),
-                     importedBy: window.currentUser?.email || window.currentUser?.id || 'unknown',
+                        importedBy: window.currentUser?.email || window.currentUser?.id || 'unknown',
+                        status: 'active', // Nouvel élève = actif
                         ...studentData
                     });
                     added++;
+                }
+            });
+
+            // --- ARCHIVAGE DES ÉLÈVES DISPARUS ---
+            // On vérifie les élèves existants dans les classes importées
+            data.students.forEach(s => {
+                // Si l'élève appartient à une classe qui vient d'être importée, 
+                // qu'il est de cette année scolaire, 
+                // et qu'il n'était pas dans le fichier Excel...
+                if (
+                    importedClasses.has(s.className) && 
+                    (s.academicYear || '') === currentAcademicYear &&
+                    s.status !== 'archived' // Déjà archivé, on l'ignore
+                ) {
+                    // Normalize pour éviter les faux positifs d'espaces
+                    const cleanName = s.name ? s.name.replace(/\s+/g, ' ').trim() : '';
+                    const studentKeyReg = s.regNumber ? `${s.className}_${s.regNumber}` : null;
+                    const studentKeyName = `${s.className}_${cleanName}`;
+                    
+                    // S'il n'a pas été trouvé dans le fichier Excel
+                    // On vérifie de manière plus robuste dans processedExcelStudents
+                    let foundInExcel = false;
+                    for (const excelKey of processedExcelStudents) {
+                        if (excelKey === studentKeyReg || excelKey === studentKeyName || 
+                           (cleanName && excelKey.includes(cleanName))) {
+                            foundInExcel = true;
+                            break;
+                        }
+                    }
+
+                    if (!foundInExcel) {
+                        // On le marque comme archivé au lieu de le supprimer
+                        s.status = 'archived';
+                        archived++;
+                        console.log(`[Smart Merge] Élève archivé car absent du fichier Excel : ${s.name} (${s.className})`);
+                    }
                 }
             });
 
@@ -1361,7 +1460,9 @@
                 console.warn("Refresh:", e);
             }
             
-            alert(`${t.importSuccess}\nAjoutés: ${added}\nMis à jour: ${updated}`);
+            let message = `${t.importSuccess}\nAjoutés: ${added}\nMis à jour: ${updated}`;
+            if (archived > 0) message += `\nArchivés (disparus du fichier): ${archived}`;
+            alert(message);
             event.target.value = '';
         };
 

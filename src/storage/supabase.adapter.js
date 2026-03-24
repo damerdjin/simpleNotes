@@ -243,7 +243,8 @@ export function supabaseAdapter() {
           regNumber: s.registration_number,
           sex: s.sex,
           academicYear: s.academic_year,
-          importedBy: s.user_id
+          importedBy: s.user_id,
+          status: s.status || 'active'
         })) : [];
       } catch (err) {
         // console.warn('[SupabaseAdapter] Get shared students error:', err);

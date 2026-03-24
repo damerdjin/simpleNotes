@@ -72,11 +72,14 @@ export const relationalSyncService = {
 
             const localStudents = (data.students && Array.isArray(data.students)) ? data.students : [];
             const studentsPayload = localStudents
-                    // On filtre pour ne garder que ceux de l'année et du prof (ID ou Email)
+                    // On synchronise : 
+                    // 1. Les élèves créés par ce prof (belongsToUser)
+                    // 2. Les élèves partagés que ce prof a modifiés (par ex: status passé de active à archived, ou l'inverse)
+                    // Puisque data.students ne contient désormais que les élèves "utiles" au prof (ses propres élèves + ceux des classes qu'il a importées/rejointes),
+                    // on peut se permettre de synchroniser tous les élèves présents en mémoire locale pour l'année en cours.
                     .filter(s => {
-                        const belongsToUser = !s.importedBy || s.importedBy === userId || s.importedBy === userEmail;
                         const isCorrectYear = !s.academicYear || s.academicYear === academicYear;
-                        return belongsToUser && isCorrectYear;
+                        return isCorrectYear;
                     })
                     .map(s => {
                         // Normaliser le sexe pour la contrainte CHECK (M, F)
@@ -99,6 +102,7 @@ export const relationalSyncService = {
                             birthdate: normalizeBirthDate(s.birthDate),
                             class_name: s.className || 'Sans classe',
                             sex: sex,
+                            status: s.status || 'active', // Synchroniser le statut (active/archived)
                             updated_at: new Date().toISOString()
                         };
                     });

@@ -83,6 +83,7 @@ create table if not exists public.students (
   birthdate text,
   class_name text not null,
   sex text check (sex in ('M', 'F')),
+  status text default 'active' check (status in ('active', 'archived')), -- Ajout statut pour soft-delete
   custom_password text, -- Ajout pour permettre aux élèves de changer de mot de passe
   
   created_at timestamptz default now(),
