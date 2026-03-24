@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription - Gestion des Corrections</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="/translations.js"></script>
+    <style>
+        /* ===== SPLASH SCREEN (for transition) ===== */
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in;
+        }
+        #splash-screen.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .loader-dots div {
+            animation-timing-function: cubic-bezier(0, 1, 1, 0);
+        }
+        .loader-dots div:nth-child(1) { left: 8px; animation: loader-dots1 0.6s infinite; }
+        .loader-dots div:nth-child(2) { left: 8px; animation: loader-dots2 0.6s infinite; }
+        .loader-dots div:nth-child(3) { left: 32px; animation: loader-dots2 0.6s infinite; }
+        .loader-dots div:nth-child(4) { left: 56px; animation: loader-dots3 0.6s infinite; }
+        @keyframes loader-dots1 { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+        @keyframes loader-dots3 { 0% { transform: scale(1); } 100% { transform: scale(0); } }
+        @keyframes loader-dots2 { 0% { transform: translate(0, 0); } 100% { transform: translate(24px, 0); } }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
+    <!-- Splash Screen (for seamless transition) -->
+    <div id="splash-screen">
+        <div class="text-4xl mb-4">📝</div>
+        <div class="text-xl font-bold text-blue-600 mb-8" data-translate="appTitle">Gestion des Corrections</div>
+        <div class="relative w-20 h-20">
+            <div class="loader-dots inline-block relative w-20 h-20">
+                <div class="absolute top-8 w-3 h-3 rounded-full bg-blue-600"></div>
+                <div class="absolute top-8 w-3 h-3 rounded-full bg-blue-600"></div>
+                <div class="absolute top-8 w-3 h-3 rounded-full bg-blue-600"></div>
+                <div class="absolute top-8 w-3 h-3 rounded-full bg-blue-600"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white p-8 rounded shadow-md w-full max-w-lg">
+        <h2 class="text-2xl font-bold mb-6 text-center text-blue-600" data-translate="registerTitle">Inscription</h2>
+        
+        <div id="error-message" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"></div>
+
+        <form id="register-form">
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="full-name" data-translate="fullNameLabel">
+                    Nom et Prénom
+                </label>
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                    id="full-name" type="text" placeholder="Ex: Mohamed Benali" data-translate-placeholder="fullNamePlaceholder" autocomplete="name" required>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="email" data-translate="emailLabel">
+                    Email
+                </label>
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                    id="email" type="email" placeholder="email@exemple.com" data-translate-placeholder="emailPlaceholder" autocomplete="email" required>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="password" data-translate="passwordLabel">
+                    Mot de passe
+                </label>
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                    id="password" type="password" minlength="6" autocomplete="new-password" required>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="wilaya-select" data-translate="wilayaLabel">
+                    Wilaya
+                </label>
+                <select class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="wilaya-select" required disabled>
+                    <option value="">Chargement des wilayas...</option>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="commune-select" data-translate="communeLabel">
+                    Commune
+                </label>
+                <select class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="commune-select" required disabled>
+                    <option value="">Sélectionner une commune...</option>
+                </select>
+            </div>
+
+            <div class="mb-6 border-t pt-4">
+                <div class="flex justify-between items-center mb-4">
+                    <label class="block text-gray-700 text-sm font-bold" for="school-select" data-translate="schoolLabel">
+                        Lycée
+                    </label>
+                    <button type="button" id="toggle-school-mode" class="text-sm text-blue-500 hover:text-blue-800" data-translate="schoolNotFoundLink">
+                        Je ne trouve pas mon lycée
+                    </button>
+                </div>
+
+                <div id="existing-school-container">
+                    <select class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                        id="school-select">
+                        <option value="" data-translate="selectSchoolPlaceholder">Sélectionner un lycée...</option>
+                    </select>
+                </div>
+
+                <div id="new-school-container" class="hidden">
+                    <div class="mb-3">
+                        <label class="block text-gray-700 text-xs font-bold mb-1" data-translate="schoolNameLabel">Nom du lycée</label>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            id="new-school-name" type="text" placeholder="Ex: Lycée Emir Abdelkader" data-translate-placeholder="schoolNamePlaceholder">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Classes Selection (Hidden by default, shown when school is selected) -->
+            <div id="classes-selection-container" class="mb-6 border-t pt-4 hidden">
+                <label class="block text-gray-700 text-sm font-bold mb-2" data-translate="selectYourClassesLabel">
+                    Vos Classes
+                </label>
+                <p class="text-xs text-gray-500 mb-3" data-translate="selectYourClassesHint">Sélectionnez les classes que vous gérez ou ajoutez-en une nouvelle.</p>
+                
+                <div id="shared-classes-list" class="grid grid-cols-2 gap-2 mb-3">
+                    <!-- Classes will be injected here -->
+                </div>
+
+                <div class="flex gap-2">
+                    <input type="text" id="new-class-name" 
+                        class="shadow appearance-none border rounded flex-1 py-2 px-3 text-gray-700 text-sm leading-tight focus:outline-none focus:shadow-outline" 
+                        placeholder="Ex: 2M1" data-translate-placeholder="newClassNamePlaceholder">
+                    <button type="button" id="add-class-btn" class="bg-blue-100 text-blue-600 px-3 py-2 rounded-lg text-sm font-bold hover:bg-blue-200 transition-colors">
+                        +
+                    </button>
+                </div>
+                <div id="selected-classes-tags" class="flex flex-wrap gap-2 mt-3">
+                    <!-- Selected class tags will appear here -->
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between">
+                <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full" 
+                    type="submit" id="submit-btn" data-translate="registerButton">
+                    S'inscrire
+                </button>
+            </div>
+            <div class="mt-4 text-center">
+                <a class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800" href="/login.html" data-translate="haveAccountLink">
+                    Déjà un compte ? Se connecter
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <script type="module">
+        import { register, getSchools, checkAuth } from './src/ui/auth.js';
+        import { initLanguage, changeLanguage, t } from './src/ui/i18n.js';
+        import { supabase } from './src/ui/supabase-client.js';
+
+        // Initialize language
+        initLanguage();
+
+        // Redirect if already logged in
+        // checkAuth().then(user => {
+        //     if (user) {
+        //         window.location.href = '/index.html';
+        //     }
+        // });
+
+        const form = document.getElementById('register-form');
+        const errorDiv = document.getElementById('error-message');
+        const submitBtn = document.getElementById('submit-btn');
+        const schoolSelect = document.getElementById('school-select');
+        const toggleSchoolBtn = document.getElementById('toggle-school-mode');
+        const existingSchoolContainer = document.getElementById('existing-school-container');
+        const newSchoolContainer = document.getElementById('new-school-container');
+        const wilayaSelect = document.getElementById('wilaya-select');
+        const communeSelect = document.getElementById('commune-select');
+        const classesSelectionContainer = document.getElementById('classes-selection-container');
+        const sharedClassesList = document.getElementById('shared-classes-list');
+        const newClassNameInput = document.getElementById('new-class-name');
+        const addClassBtn = document.getElementById('add-class-btn');
+        const selectedClassesTags = document.getElementById('selected-classes-tags');
+
+        let isNewSchoolMode = false;
+        let wilayas = [];
+        let selectedClasses = new Set();
+
+        const updateSelectedClassesUI = () => {
+            selectedClassesTags.innerHTML = '';
+            selectedClasses.forEach(className => {
+                const tag = document.createElement('div');
+                tag.className = 'bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1';
+                tag.innerHTML = `
+                    ${className}
+                    <button type="button" class="hover:text-red-200" onclick="removeSelectedClass('${className}')">×</button>
+                `;
+                selectedClassesTags.appendChild(tag);
+            });
+        };
+
+        window.removeSelectedClass = (className) => {
+            selectedClasses.delete(className);
+            updateSelectedClassesUI();
+            // Also uncheck in grid if present
+            const checkbox = document.querySelector(`.class-checkbox[value="${className}"]`);
+            if (checkbox) checkbox.checked = false;
+        };
+
+        addClassBtn.addEventListener('click', () => {
+            const val = newClassNameInput.value.trim().toUpperCase();
+            if (val && !selectedClasses.has(val)) {
+                selectedClasses.add(val);
+                updateSelectedClassesUI();
+                newClassNameInput.value = '';
+            }
+        });
+
+        const loadSchools = async (params = {}) => {
+            try {
+                const schools = await getSchools(params);
+                schoolSelect.innerHTML = '<option value="" data-translate="selectSchoolPlaceholder">Sélectionner un lycée...</option>';
+                classesSelectionContainer.classList.add('hidden');
+                selectedClasses.clear();
+                updateSelectedClassesUI();
+
+                if (schools.length === 0) {
+                    const option = document.createElement('option');
+                    option.disabled = true;
+                    option.textContent = 'Aucun lycée n\'est disponible';
+                    schoolSelect.appendChild(option);
+                } else {
+                    schools.forEach(school => {
+                        const option = document.createElement('option');
+                        option.value = school.id;
+                        option.textContent = school.name;
+                        schoolSelect.appendChild(option);
+                    });
+                }
+            } catch (e) {
+                console.error('Error loading schools', e);
+            }
+        };
+
+        // School select change
+        schoolSelect.addEventListener('change', async () => {
+            const schoolId = schoolSelect.value;
+            
+            // Clear previous selections when school changes
+            selectedClasses.clear();
+            updateSelectedClassesUI();
+
+            if (schoolId) {
+                classesSelectionContainer.classList.remove('hidden');
+                sharedClassesList.innerHTML = '<div class="col-span-2 text-xs text-gray-400 italic">Chargement des classes...</div>';
+                
+                try {
+                    // We can use supabase directly here as it's public for schools/classes
+                    // Fetch classes for this school
+                    const { data: classes, error } = await supabase
+                        .from('classes')
+                        .select('name')
+                        .eq('school_id', schoolId)
+                        .order('name');
+                    
+                    if (error) throw error;
+
+                    if (classes && classes.length > 0) {
+                        sharedClassesList.innerHTML = classes.map(c => `
+                            <label class="flex items-center gap-2 p-2 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                                <input type="checkbox" class="class-checkbox" value="${c.name}">
+                                <span class="text-sm text-gray-700">${c.name}</span>
+                            </label>
+                        `).join('');
+
+                        // Re-attach listeners
+                        document.querySelectorAll('.class-checkbox').forEach(cb => {
+                            cb.addEventListener('change', (e) => {
+                                if (e.target.checked) {
+                                    selectedClasses.add(e.target.value);
+                                } else {
+                                    selectedClasses.delete(e.target.value);
+                                }
+                                updateSelectedClassesUI();
+                            });
+                        });
+                    } else {
+                        sharedClassesList.innerHTML = '<div class="col-span-2 text-xs text-gray-400 italic">Aucune classe existante. Ajoutez la vôtre ci-dessous.</div>';
+                    }
+                } catch (e) {
+                    console.error('Error loading shared classes:', e);
+                    sharedClassesList.innerHTML = '<div class="col-span-2 text-xs text-red-400">Erreur de chargement des classes.</div>';
+                }
+            } else {
+                classesSelectionContainer.classList.add('hidden');
+            }
+        });
+
+        // Load wilayas
+        (async () => {
+            try {
+                const wilRes = await fetch('/api/wilayas');
+                const wilData = await wilRes.json();
+                wilayas = wilData.wilayas;
+                wilayaSelect.innerHTML = '<option value="">Sélectionner une wilaya...</option>';
+                wilayas.forEach(w => {
+                    const option = document.createElement('option');
+                    option.value = w.id;
+                    option.textContent = `${w.code} - ${w.name_fr}`;
+                    wilayaSelect.appendChild(option);
+                });
+                wilayaSelect.disabled = false;
+            } catch (e) {
+                console.error('Error loading wilayas', e);
+                wilayaSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+            }
+        })();
+
+        toggleSchoolBtn.addEventListener('click', () => {
+            isNewSchoolMode = !isNewSchoolMode;
+            if (isNewSchoolMode) {
+                existingSchoolContainer.classList.add('hidden');
+                newSchoolContainer.classList.remove('hidden');
+                toggleSchoolBtn.textContent = t('selectExistingSchoolLink');
+            } else {
+                existingSchoolContainer.classList.remove('hidden');
+                newSchoolContainer.classList.add('hidden');
+                toggleSchoolBtn.textContent = t('schoolNotFoundLink');
+            }
+        });
+
+        // Wilaya select change
+        wilayaSelect.addEventListener('change', async () => {
+            const wilayaId = wilayaSelect.value;
+            if (wilayaId) {
+                communeSelect.innerHTML = '<option value="">Chargement des communes...</option>';
+                communeSelect.disabled = true;
+                try {
+                    const comRes = await fetch(`/api/communes?wilaya_id=${wilayaId}`);
+                    const comData = await comRes.json();
+                    const communes = comData.communes;
+                    communeSelect.innerHTML = '<option value="">Sélectionner une commune...</option>';
+                    communes.forEach(c => {
+                        const option = document.createElement('option');
+                        option.value = c.id;
+                        option.textContent = c.code_postal ? `${c.name_fr} (${c.code_postal})` : c.name_fr;
+                        communeSelect.appendChild(option);
+                    });
+                    communeSelect.disabled = false;
+                } catch (e) {
+                    console.error('Error loading communes', e);
+                    communeSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+                }
+            } else {
+                communeSelect.innerHTML = '<option value="">Sélectionner une commune...</option>';
+                communeSelect.disabled = true;
+            }
+        });
+
+        // Commune select change
+        communeSelect.addEventListener('change', () => {
+            if (communeSelect.value) {
+                loadSchools({commune_id: communeSelect.value});
+            } else {
+                schoolSelect.innerHTML = '<option value="" data-translate="selectSchoolPlaceholder">Sélectionner un lycée...</option>';
+            }
+        });
+
+
+
+
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorDiv.classList.add('hidden');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<span class="flex items-center justify-center">
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                ${t('registerLoading')}
+            </span>`;
+
+            const email = document.getElementById('email').value;
+            const fullName = document.getElementById('full-name').value;
+            const password = document.getElementById('password').value;
+            const wilayaOption = wilayaSelect.options[wilayaSelect.selectedIndex];
+            const communeOption = communeSelect.options[communeSelect.selectedIndex];
+            const city = communeOption ? communeOption.textContent.split(' (')[0] : '';
+            const wilaya = wilayaOption ? wilayaOption.textContent.split(' - ')[1] : '';
+
+            const userData = { 
+                email, 
+                password, 
+                city, 
+                wilaya, 
+                full_name: fullName,
+                selectedClasses: Array.from(selectedClasses)
+            };
+
+            if (isNewSchoolMode) {
+                userData.new_school = {
+                    name: document.getElementById('new-school-name').value,
+                    commune_id: communeSelect.value
+                };
+            } else {
+                userData.school_id = schoolSelect.value;
+            }
+
+            try {
+                await register(userData);
+                
+                // Success state
+                submitBtn.classList.remove('bg-blue-500', 'hover:bg-blue-700');
+                submitBtn.classList.add('bg-green-500');
+                submitBtn.innerHTML = `<span class="flex items-center justify-center">
+                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    ${t('registerSuccess')}
+                </span>`;
+
+                setTimeout(() => {
+                    // Show splash screen just before redirect for seamless transition
+                    document.getElementById('splash-screen').classList.add('show');
+                    setTimeout(() => {
+                        window.location.href = '/index.html';
+                    }, 300);
+                }, 600);
+            } catch (err) {
+                errorDiv.textContent = err.message;
+                errorDiv.classList.remove('hidden');
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('bg-green-500');
+                submitBtn.classList.add('bg-blue-500', 'hover:bg-blue-700');
+                submitBtn.textContent = t('registerButton');
+            }
+        });
+    </script>
+</body>
+</html>
+
