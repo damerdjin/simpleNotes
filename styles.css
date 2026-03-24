@@ -2,7 +2,11 @@
         .rtl-layout {
             direction: rtl;
             text-align: right;
-        }
+            /* RTL Specific Fixes for Mobile */
+    [dir="rtl"] .rtl\:text-right {
+        text-align: right !important;
+    }
+}
 
         /* ===== FLEX & LAYOUT GÉNÉRAUX ===== */
         .rtl-layout .flex {

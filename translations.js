@@ -816,6 +816,7 @@ window.translations = {
         noStudents: "لا يوجد طلاب. أضف طالبك الأول!",
         deleteStudent: "حذف هذا الطالب وجميع نقاطه ؟",
         student: "الطالب",
+        viewGradesShort: "النقاط",
         students: "طلاب",
         studentsCountLabel: "طلاب",
         confirmActionWord: "نعم",

@@ -2069,12 +2069,12 @@
                     
                     <!-- VIEW 1: Class Dashboard -->
                     <div id="students-view-classes" class="container mx-auto max-w-7xl animate-in fade-in duration-300">
-                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 overflow-hidden">
                             <div class="header-scroll-hide">
                                 <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
-                                    <div>
-                                        <h2 class="text-3xl font-bold text-slate-800 tracking-tight" data-translate="myClasses">Mes Classes</h2>
-                                        <p class="text-slate-500 mt-1" data-translate="classManagementSubtitle">Sélectionnez une classe pour gérer les élèves</p>
+                                    <div class="min-w-0">
+                                        <h2 class="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight truncate rtl:text-right" data-translate="myClasses">Mes Classes</h2>
+                                        <p class="text-slate-500 mt-1 text-sm sm:text-base rtl:text-right" data-translate="classManagementSubtitle">Sélectionnez une classe pour gérer les élèves</p>
                                     </div>
                                     <div class="flex flex-row items-center gap-3">
                                         <button onclick="openJoinClassModal()" 
