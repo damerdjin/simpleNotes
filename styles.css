@@ -8,8 +8,16 @@
     }
     
     /* Fix for Arabic button alignment and spacing */
-    [dir="rtl"] .flex-row {
+    [dir="rtl"] .flex-row,
+    [dir="rtl"] .student-item button {
         flex-direction: row !important;
+        display: flex !important;
+        flex-wrap: nowrap !important;
+    }
+    
+    [dir="rtl"] .student-item .flex-row {
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
     }
     
     [dir="rtl"] .student-item .flex-1 {
