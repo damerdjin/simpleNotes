@@ -2024,27 +2024,27 @@
         </header>
 
         <!-- Bottom Navigation Mobile -->
-        <nav id="mobile-bottom-nav" class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-[90] flex items-center justify-around px-2 py-2 safe-area-bottom shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
-            <button onclick="switchTab('students')" data-tab="students" class="mobile-nav-item flex flex-col items-center gap-1 py-1 px-3 text-gray-400 transition-all active:scale-95">
-                <div class="w-10 h-10 flex items-center justify-center rounded-xl transition-all">
+        <nav id="mobile-bottom-nav" class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-[90] flex items-stretch justify-around safe-area-bottom shadow-[0_-4px_12px_rgba(0,0,0,0.08)] h-16">
+            <button onclick="switchTab('students')" data-tab="students" class="mobile-nav-item flex-1 flex flex-col items-center justify-center gap-1 text-gray-400 transition-all active:scale-95">
+                <div class="nav-icon-wrapper w-8 h-8 flex items-center justify-center rounded-xl transition-all">
                     <span class="text-xl">👥</span>
                 </div>
                 <span class="text-[10px] font-bold uppercase tracking-tight" data-translate="studentsTab">Élèves</span>
             </button>
-            <button onclick="switchTab('assignments')" data-tab="assignments" class="mobile-nav-item flex flex-col items-center gap-1 py-1 px-3 text-gray-400 transition-all active:scale-95">
-                <div class="w-10 h-10 flex items-center justify-center rounded-xl transition-all">
+            <button onclick="switchTab('assignments')" data-tab="assignments" class="mobile-nav-item flex-1 flex flex-col items-center justify-center gap-1 text-gray-400 transition-all active:scale-95">
+                <div class="nav-icon-wrapper w-8 h-8 flex items-center justify-center rounded-xl transition-all">
                     <span class="text-xl">📝</span>
                 </div>
                 <span class="text-[10px] font-bold uppercase tracking-tight" data-translate="assignmentsTab">Devoirs</span>
             </button>
-            <button onclick="switchTab('grades')" data-tab="grades" class="mobile-nav-item flex flex-col items-center gap-1 py-1 px-3 text-gray-400 transition-all active:scale-95">
-                <div class="w-10 h-10 flex items-center justify-center rounded-xl transition-all">
+            <button onclick="switchTab('grades')" data-tab="grades" class="mobile-nav-item flex-1 flex flex-col items-center justify-center gap-1 text-gray-400 transition-all active:scale-95">
+                <div class="nav-icon-wrapper w-8 h-8 flex items-center justify-center rounded-xl transition-all">
                     <span class="text-xl">📊</span>
                 </div>
                 <span class="text-[10px] font-bold uppercase tracking-tight" data-translate="gradesTab">Notes</span>
             </button>
-            <button onclick="switchTab('summary')" data-tab="summary" class="mobile-nav-item flex flex-col items-center gap-1 py-1 px-3 text-gray-400 transition-all active:scale-95">
-                <div class="w-10 h-10 flex items-center justify-center rounded-xl transition-all">
+            <button onclick="switchTab('summary')" data-tab="summary" class="mobile-nav-item flex-1 flex flex-col items-center justify-center gap-1 text-gray-400 transition-all active:scale-95">
+                <div class="nav-icon-wrapper w-8 h-8 flex items-center justify-center rounded-xl transition-all">
                     <span class="text-xl">📋</span>
                 </div>
                 <span class="text-[10px] font-bold uppercase tracking-tight" data-translate="summaryTab">Récap</span>
@@ -2052,7 +2052,7 @@
         </nav>
 
         <!-- Page Layout Area -->
-        <div class="content-area mb-16 md:mb-0">
+        <div class="content-area mb-20 md:mb-0">
             <!-- Splash Screen -->
             <div id="splash-screen">
                 <div class="text-4xl mb-4">📝</div>
@@ -2074,19 +2074,19 @@
                     <!-- VIEW 1: Class Dashboard -->
                     <div id="students-view-classes" class="container mx-auto max-w-7xl animate-in fade-in duration-300">
                         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
-                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
                                 <div>
                                     <h2 class="text-3xl font-bold text-slate-800 tracking-tight" data-translate="myClasses">Mes Classes</h2>
                                     <p class="text-slate-500 mt-1" data-translate="classManagementSubtitle">Sélectionnez une classe pour gérer les élèves</p>
                                 </div>
-                                <div class="flex items-center gap-3">
+                                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                                     <button onclick="openJoinClassModal()" 
-                                        class="inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-blue-600 border-2 border-blue-100 px-5 py-3 rounded-xl font-semibold transition-all hover:scale-105 active:scale-95">
+                                        class="inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-blue-600 border-2 border-blue-100 px-4 py-3 rounded-xl font-semibold transition-all active:scale-95 text-sm sm:text-base">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                                         <span data-translate="joinClass">Rejoindre une classe</span>
                                     </button>
                                     <button onclick="openStudentModal()" 
-                                        class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl font-semibold shadow-lg shadow-blue-500/20 transition-all hover:scale-105 active:scale-95">
+                                        class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl font-semibold shadow-lg shadow-blue-500/20 transition-all active:scale-95 text-sm sm:text-base">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                                         <span data-translate="addStudent">Ajouter un élève</span>
                                     </button>
@@ -2112,30 +2112,29 @@
                     <div id="students-view-list" class="hidden container mx-auto max-w-7xl animate-in slide-in-from-right duration-300">
                         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
                             <!-- Header -->
-                            <div class="bg-slate-50/50 rounded-2xl border border-slate-100 p-4 mb-8 sticky top-4 z-20 backdrop-blur-md">
-                                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div class="bg-slate-50/50 rounded-2xl border border-slate-100 p-3 sm:p-4 mb-8 sticky top-4 z-20 backdrop-blur-md">
+                                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                                     <div class="flex items-center gap-4">
-                                        <button onclick="clearStudentsFilters()" class="p-2.5 rounded-xl bg-white text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-all border border-slate-200 shadow-sm">
+                                        <button onclick="clearStudentsFilters()" class="p-2.5 rounded-xl bg-white text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-all border border-slate-200 shadow-sm shrink-0">
                                             <svg class="w-5 h-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                                         </button>
-                                        <div>
-                                            <h2 id="selected-class-title" class="text-2xl font-bold text-slate-800">--</h2>
-                                            <p class="text-xs font-bold text-blue-600 uppercase tracking-wider" id="selected-class-stats">--</p>
+                                        <div class="min-w-0">
+                                            <h2 id="selected-class-title" class="text-xl sm:text-2xl font-bold text-slate-800 truncate">--</h2>
+                                            <p class="text-[10px] sm:text-xs font-bold text-blue-600 uppercase tracking-wider truncate" id="selected-class-stats">--</p>
                                         </div>
                                     </div>
 
-                                    <div class="flex items-center gap-3 flex-wrap">
-                                        <div class="relative group flex-1 md:flex-none md:w-64">
-                                            <input type="text" id="student-search" data-translate-placeholder="searchStudentPlaceholder" placeholder="Rechercher un élève..."
+                                    <div class="flex items-center gap-2 sm:gap-3">
+                                        <div class="relative group flex-1">
+                                            <input type="text" id="student-search" data-translate-placeholder="searchStudentPlaceholder" placeholder="Rechercher..."
                                                 oninput="renderStudents()" 
-                                                class="w-full ps-10 pe-4 py-2.5 bg-white border-slate-200 hover:border-blue-300 focus:border-blue-500 rounded-xl outline-none transition-all text-sm border shadow-sm">
+                                                class="w-full ps-9 pe-4 py-2.5 bg-white border-slate-200 hover:border-blue-300 focus:border-blue-500 rounded-xl outline-none transition-all text-xs sm:text-sm border shadow-sm">
                                             <svg class="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                                         </div>
-                                        <div class="h-8 w-px bg-slate-200 hidden md:block"></div>
                                         <button onclick="openStudentModal()" 
-                                            class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold shadow-sm transition-all text-sm">
+                                            class="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-bold shadow-sm transition-all text-sm shrink-0">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                                            <span class="hidden sm:inline" data-translate="add">Ajouter</span>
+                                            <span class="hidden xs:inline" data-translate="add">Ajouter</span>
                                         </button>
                                     </div>
                                 </div>
@@ -2149,27 +2148,28 @@
 
                 <!-- Assignments Tab -->
                 <div id="content-assignments" class="view-section">
-                    <div class="bg-white rounded-xl shadow-lg p-6">
-                        <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                             <h2 class="text-2xl font-bold text-gray-800" data-translate="assignmentsManagement">Gestion des Devoirs</h2>
                             <button onclick="openAssignmentModal()"
-                                class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition"
+                                class="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-green-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"
                                 data-translate="createAssignment">
-                                + Créer un devoir</button>
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                <span>Créer un devoir</span>
+                            </button>
                         </div>
-                        <!-- Filters + assignments-list existants -->
-                        <div class="mb-6 space-y-4">
-                            <div class="p-4 bg-gray-50 rounded-lg">
-                                <label class="block text-sm font-medium text-gray-700 mb-3" data-translate="filterByClass">Filtrer par classe :</label>
+                        <!-- Filters -->
+                        <div class="mb-8 space-y-4">
+                            <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3" data-translate="filterByClass">Filtrer par classe</label>
                                 <div id="assignment-class-chips" class="flex flex-wrap gap-2"></div>
                             </div>
-                            <div class="flex gap-4 flex-wrap">
-                                <div class="flex-1 min-w-48">
-                                    <input type="text" id="filter-name-assignments" placeholder="Rechercher un devoir..."
-                                        data-translate-placeholder="searchAssignment"
-                                        onkeyup="renderAssignments()"
-                                        class="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 outline-none">
-                                </div>
+                            <div class="relative group">
+                                <input type="text" id="filter-name-assignments" placeholder="Rechercher un devoir..."
+                                    data-translate-placeholder="searchAssignment"
+                                    onkeyup="renderAssignments()"
+                                    class="w-full ps-11 pe-4 py-3 bg-white border-2 border-slate-100 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-medium text-slate-600">
+                                <svg class="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                             </div>
                         </div>
                         <div id="assignments-list" class="space-y-8"></div>

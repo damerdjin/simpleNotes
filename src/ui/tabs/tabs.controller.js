@@ -87,6 +87,11 @@ export class TabsController {
       item.classList.toggle('active', item.dataset.tab === tabId);
     });
 
+    // Update mobile bottom nav items
+    document.querySelectorAll('.mobile-nav-item').forEach(item => {
+      item.classList.toggle('active', item.dataset.tab === tabId);
+    });
+
     // Update content (supports both .tab-content and .view-section)
     const contents = this.contentContainer?.querySelectorAll('.tab-content, .view-section') || [];
     contents.forEach(content => {

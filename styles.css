@@ -854,18 +854,74 @@
         }
 
 /* ===== MOBILE NAVIGATION ===== */
+@media (max-width: 480px) {
+    .xs\:inline { display: inline !important; }
+    .xs\:hidden { display: none !important; }
+}
+
 #mobile-bottom-nav {
-    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.1);
+    background-color: #ffffff;
+    height: 64px;
+    min-height: 64px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    z-index: 100;
+    overflow: visible;
+}
+
+.mobile-nav-item {
+    color: #94a3b8;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    position: relative;
+    overflow: visible;
+}
+
+.nav-icon-wrapper {
+    width: 32px;
+    height: 32px;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mobile-nav-item span.text-xl {
+    font-size: 1.25rem;
+    line-height: 1;
+    display: block;
 }
 
 .mobile-nav-item.active {
     color: #2563eb !important;
 }
 
-.mobile-nav-item.active div {
+.mobile-nav-item.active .nav-icon-wrapper {
     background-color: #eff6ff !important;
+    transform: translateY(-8px);
+    box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.3);
+    width: 40px;
+    height: 40px;
+}
+
+.mobile-nav-item span:last-child {
+    font-size: 10px;
+    font-weight: 800;
+    transition: all 0.2s;
+    line-height: 1;
+}
+
+.mobile-nav-item.active span:last-child {
     transform: translateY(-4px);
-    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1);
+    color: #2563eb;
 }
 
 /* Fix for safe area on newer iPhones */
