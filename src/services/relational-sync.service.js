@@ -128,6 +128,7 @@ export const relationalSyncService = {
                 academic_year: academicYear,
                 name: a.name,
                 class_name: a.className,
+                grade_date: a.gradeDate || null, // Synchroniser la date du devoir
                 trimester: a.trimester || null,
                 subject: a.subject || null,
                 is_visible: a.isVisible || false,

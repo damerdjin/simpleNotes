@@ -51,6 +51,7 @@ async function handler(req, res) {
             score_final: g.score_final,
             score_max: g.score_max,
             updated_at: g.updated_at,
+            grade_date: g.grade_date,
             assignments: {
                 id: g.assignment_id,
                 name: g.assignment_name,

@@ -104,6 +104,7 @@ create table if not exists public.assignments (
   class_name text not null,
   trimester text,
   subject text,
+  grade_date timestamptz, -- Ajout de la date au niveau du devoir
   is_visible boolean default false,
   
   config jsonb not null default '{}'::jsonb, -- Détails (questions, barème)
@@ -117,20 +118,20 @@ alter table public.assignments enable row level security;
 
 -- TABLE NOTES (GRADES)
 create table if not exists public.grades (
-  id uuid not null default gen_random_uuid() primary key,
-  user_id uuid not null references auth.users(id) on delete cascade,
-  
-  student_id text not null references public.students(id) on delete cascade,
-  assignment_id text not null references public.assignments(id) on delete cascade,
-  
-  score_final numeric,
-  score_max numeric,
-  score_details jsonb,
-  comments text,
-  
-  updated_at timestamptz default now(),
-  
-  unique (student_id, assignment_id) -- Un seul set de notes par élève/devoir
+   id uuid not null default gen_random_uuid() primary key,
+   user_id uuid not null references auth.users(id) on delete cascade,
+   
+   student_id text not null references public.students(id) on delete cascade,
+   assignment_id text not null references public.assignments(id) on delete cascade,
+   
+   score_final numeric,
+   score_max numeric,
+   score_details jsonb,
+   comments text,
+   
+   updated_at timestamptz default now(),
+   
+   unique (student_id, assignment_id) -- Un seul set de notes par élève/devoir
 );
 
 alter table public.grades enable row level security;
@@ -218,16 +219,17 @@ $$ LANGUAGE plpgsql;
 -- B. Fonction pour récupérer les notes visibles d'un élève (Bypass RLS)
 CREATE OR REPLACE FUNCTION public.get_student_visible_grades(p_student_id TEXT)
 RETURNS TABLE(
-  id UUID, 
-  score_final NUMERIC, 
-  score_max NUMERIC, 
-  updated_at TIMESTAMPTZ, 
-  assignment_id TEXT,
-  assignment_name TEXT,
-  assignment_subject TEXT,
-  assignment_trimester TEXT,
-  academic_year TEXT
-) 
+   id UUID,
+   score_final NUMERIC,
+   score_max NUMERIC,
+   updated_at TIMESTAMPTZ,
+   grade_date TIMESTAMPTZ,
+   assignment_id TEXT,
+   assignment_name TEXT,
+   assignment_subject TEXT,
+   assignment_trimester TEXT,
+   academic_year TEXT
+)
 SECURITY DEFINER
 AS $$
 BEGIN
@@ -237,6 +239,7 @@ BEGIN
     g.score_final,
     g.score_max,
     g.updated_at,
+    a.grade_date,
     a.id as assignment_id,
     a.name as assignment_name,
     a.subject as assignment_subject,

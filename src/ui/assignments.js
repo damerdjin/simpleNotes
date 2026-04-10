@@ -151,6 +151,17 @@
                 </div>
             </div>
 
+            <!-- Grade Date Section -->
+            <div class="relative group">
+                <label class="absolute -top-2 ${labelPos} px-1.5 bg-white text-[11px] font-bold text-blue-600 z-10 transition-all group-focus-within:text-blue-700">${t.gradeDate || 'Date du devoir'}</label>
+                <div class="relative flex items-center">
+                    <div class="absolute ${iconPos} text-gray-400 group-focus-within:text-blue-500 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v3m8 4v-3M8 11h.01M8 15h.01M11 8h.01M11 12h.01M11 16h.01"></path></svg>
+                    </div>
+                    <input type="date" id="assignment-grade-date" class="w-full ${inputPadding} py-3 bg-gray-50/50 border-2 border-gray-100 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all font-medium text-gray-700" placeholder="YYYY-MM-DD">
+                </div>
+            </div>
+
             <!-- Visibility Toggle Section -->
             <div class="bg-purple-50/50 p-4 rounded-xl border border-purple-100 flex items-center justify-between gap-4 mt-4">
               <div class="flex items-center gap-3">
@@ -254,6 +265,16 @@
                 document.getElementById('assignment-class').value = assignment.className;
                 document.getElementById('assignment-subject').value = assignment.subject || '';
                 document.getElementById('assignment-visible').checked = assignment.isVisible || false;
+                
+                // Charger la date du devoir en mode modification
+                const dateInput = document.getElementById('assignment-grade-date');
+                if (dateInput && assignment.gradeDate) {
+                    dateInput.value = assignment.gradeDate;
+                } else if (dateInput) {
+                    // Fallback sur aujourd'hui si pas de date
+                    dateInput.value = new Date().toISOString().split('T')[0];
+                }
+
                 const exs = assignment.exercises || [];
                 if (exs.length === 1 && (!exs[0].questions || exs[0].questions.length === 0) && (!exs[0].parts || exs[0].parts.length === 0)) {
                     isGlobalAssignment = true;
@@ -289,6 +310,12 @@
                 isGlobalAssignment = true;
                 if (globalCheckbox) globalCheckbox.checked = true;
                 if (globalMaxInput) globalMaxInput.value = 20;
+
+                // Initialiser la date par défaut (aujourd'hui) en mode création
+                const dateInput = document.getElementById('assignment-grade-date');
+                if (dateInput) {
+                    dateInput.value = new Date().toISOString().split('T')[0];
+                }
 
                 const subjectSelect = document.getElementById('assignment-subject');
                 const classSelect = document.getElementById('assignment-class');
@@ -736,6 +763,7 @@
 
         const name = document.getElementById('assignment-name').value.trim();
         const className = document.getElementById('assignment-class').value;
+        const gradeDate = document.getElementById('assignment-grade-date')?.value || '';
         const subject = document.getElementById('assignment-subject')?.value.trim() || '';
         const isVisible = document.getElementById('assignment-visible')?.checked || false;
         const trimester = document.getElementById('assignment-trimester')?.value || window.getGlobalTrimester();
@@ -803,6 +831,7 @@
                 assignment.name = name;
                 assignment.className = className;
                 assignment.subject = subject;
+                assignment.gradeDate = gradeDate; // Mise à jour de la date
                 assignment.isVisible = isVisible;
                 assignment.trimester = trimester;
                 assignment.academicYear = assignment.academicYear || currentYear;
@@ -855,6 +884,7 @@
                 name,
                 className,
                 subject,
+                gradeDate, // Ajout de la date à la création
                 isVisible,
                 trimester,
                 exercises: finalExercises,
