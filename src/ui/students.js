@@ -1398,10 +1398,12 @@
         const reader = new FileReader();
         reader.onload = function (e) {
             const dataBinary = new Uint8Array(e.target.result);
+            // On réactive cellDates pour avoir des objets Date propres
             const workbook = XLSX.read(dataBinary, { type: 'array', cellDates: true });
             const firstSheetName = workbook.SheetNames[0];
             const sheet = workbook.Sheets[firstSheetName];
-            const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+            // On repasse en raw: true pour avoir les objets Date ou les nombres bruts
+            const json = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true });
 
             if (json.length < 2) {
                 alert(t.emptyFile);
@@ -1415,38 +1417,37 @@
 
             const normalizeBirthDate = (val) => {
                 if (val === undefined || val === null) return '';
-                const str = cleanStr(val);
-                if (!str) return '';
+                
+                let d = null;
 
-                const m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-                if (m) {
-                    const dd = String(m[1]).padStart(2, '0');
-                    const mm = String(m[2]).padStart(2, '0');
-                    const yyyy = m[3];
-                    return `${dd}/${mm}/${yyyy}`;
+                // CAS 1 : C'est déjà un objet Date (le plus fréquent avec cellDates: true)
+                if (val instanceof Date && !isNaN(val)) {
+                    // CRITIQUE : On arrondit au jour le plus proche pour compenser les décalages (ex: 22:59:39 -> J+1)
+                    const ms = val.getTime();
+                    d = new Date(Math.round(ms / 86400000) * 86400000);
+                } 
+                // CAS 2 : C'est un nombre de série Excel (ex: 38962)
+                else if (typeof val === 'number' && val > 10000) {
+                    const ms = (Math.round(val) - 25569) * 86400 * 1000;
+                    d = new Date(ms);
+                }
+                // CAS 3 : C'est une chaîne de caractères
+                else {
+                    const str = cleanStr(val);
+                    if (!str) return '';
+                    const m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+                    if (m) return `${m[1].padStart(2, '0')}/${m[2].padStart(2, '0')}/${m[3]}`;
+                    return str;
                 }
 
-                try {
-                    const d = typeof window.parseDateMaybeExcel === 'function' ? window.parseDateMaybeExcel(val) : null;
-                    if (d) {
-                        const dd = String(d.getUTCDate()).padStart(2, '0');
-                        const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
-                        const yyyy = d.getUTCFullYear();
-                        return `${dd}/${mm}/${yyyy}`;
-                    }
-                } catch (_) { }
-
-                const num = Number(str);
-                if (!isNaN(num) && num > 10000) {
-                    const ms = Date.UTC(1899, 11, 30) + Math.round(num) * 86400 * 1000;
-                    const d = new Date(ms);
+                if (d) {
                     const dd = String(d.getUTCDate()).padStart(2, '0');
                     const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
                     const yyyy = d.getUTCFullYear();
                     return `${dd}/${mm}/${yyyy}`;
                 }
 
-                return str;
+                return cleanStr(val);
             };
 
             const getIndex = (label) => headers.findIndex(h => cleanStr(h) === label);

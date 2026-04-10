@@ -562,34 +562,25 @@ import { relationalSyncService } from '../services/relational-sync.service.js';
                 const clean = (val) => String(val || '').trim();
                 const normalizeBirthDate = (val) => {
                     if (val === undefined || val === null) return '';
+
                     const str = clean(val);
                     if (!str) return '';
 
-                    const m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-                    if (m) {
-                        const dd = String(m[1]).padStart(2, '0');
-                        const mm = String(m[2]).padStart(2, '0');
-                        const yyyy = m[3];
-                        return `${dd}/${mm}/${yyyy}`;
+                    // Gestion robuste des formats texte (DD/MM/YYYY, D/M/YY, etc.)
+                    const parts = str.split(/[\/\-\.]/);
+                    if (parts.length === 3) {
+                        const d = parts[0].padStart(2, '0');
+                        const m = parts[1].padStart(2, '0');
+                        let y = parts[2];
+                        if (y.length === 2) y = parseInt(y) > 25 ? '19' + y : '20' + y;
+                        return `${d}/${m}/${y}`;
                     }
 
-                    try {
-                        const d = typeof window.parseDateMaybeExcel === 'function' ? window.parseDateMaybeExcel(val) : null;
-                        if (d) {
-                            const dd = String(d.getUTCDate()).padStart(2, '0');
-                            const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
-                            const yyyy = d.getUTCFullYear();
-                            return `${dd}/${mm}/${yyyy}`;
-                        }
-                    } catch (_) { }
-
-                    const num = Number(str);
-                    if (!isNaN(num) && num > 10000) {
-                        const ms = Date.UTC(1899, 11, 30) + Math.round(num) * 86400 * 1000;
-                        const d = new Date(ms);
-                        const dd = String(d.getUTCDate()).padStart(2, '0');
-                        const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
-                        const yyyy = d.getUTCFullYear();
+                    // Fallback pour les objets Date
+                    if (val instanceof Date && !isNaN(val)) {
+                        const dd = String(val.getDate()).padStart(2, '0');
+                        const mm = String(val.getMonth() + 1).padStart(2, '0');
+                        const yyyy = val.getFullYear();
                         return `${dd}/${mm}/${yyyy}`;
                     }
 
