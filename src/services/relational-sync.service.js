@@ -102,12 +102,15 @@ export const relationalSyncService = {
                             birthdate: normalizeBirthDate(s.birthDate),
                             class_name: s.className || 'Sans classe',
                             sex: sex,
-                            status: s.status || 'active', // Synchroniser le statut (active/archived)
+                            status: s.status || 'active',
+                            is_official: s.isOfficial || false,
+                            imported_by: s.importedBy || null,
                             updated_at: new Date().toISOString()
                         };
                     });
 
-            console.log(`[RelationalSync] Found ${studentsPayload.length} students to sync (out of ${localStudents.length})`);
+            const archivedCount = studentsPayload.filter(s => s.status === 'archived').length;
+            console.log(`[RelationalSync] Found ${studentsPayload.length} students to sync (${archivedCount} archived) out of ${localStudents.length}`);
             
             if (studentsPayload.length > 0) {
                 const { error: upsertError } = await supabase

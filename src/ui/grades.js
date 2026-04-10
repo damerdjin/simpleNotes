@@ -1022,7 +1022,7 @@
             return;
         }
 
-        const classes = await window.getClasses();
+        const classes = window.getClasses ? await window.getClasses() : [];
         const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
 
         // 1. Get Shared Class Stats

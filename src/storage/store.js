@@ -85,6 +85,17 @@ export const store = {
     }
     return [];
   },
+  async getStudentById(studentId) {
+    if (remote.getStudentById) {
+      return await remote.getStudentById(studentId);
+    }
+    return null;
+  },
+  async archiveStudent(studentId) {
+    if (remote.archiveStudent) {
+      await remote.archiveStudent(studentId);
+    }
+  },
   get(key) {
     return local.get(key);
   },

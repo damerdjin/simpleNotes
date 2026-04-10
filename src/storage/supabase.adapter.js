@@ -246,13 +246,72 @@ export function supabaseAdapter() {
           regNumber: s.registration_number,
           sex: s.sex,
           academicYear: s.academic_year,
-          importedBy: s.user_id,
+          importedBy: s.imported_by,
+          isOfficial: s.is_official || false,
           status: s.status || 'active'
         })) : [];
       } catch (err) {
         // console.warn('[SupabaseAdapter] Get shared students error:', err);
       }
       return [];
+    },
+
+    async getStudentById(studentId) {
+      try {
+        const academicYear = getAcademicYear();
+        if (!studentId) return null;
+
+        const { data, error } = await supabase
+          .from('students')
+          .select('*')
+          .eq('id', studentId)
+          .maybeSingle();
+
+        if (error) {
+          console.warn('[SupabaseAdapter] Get student by ID error:', error);
+          return null;
+        }
+
+        if (!data) return null;
+
+        // Map back to JS structure
+        return {
+          id: data.id,
+          name: `${data.last_name || ''} ${data.first_name || ''}`.trim(),
+          firstName: data.first_name,
+          lastName: data.last_name,
+          className: data.class_name,
+          birthDate: data.birthdate,
+          nin: data.nin,
+          regNumber: data.registration_number,
+          sex: data.sex,
+          academicYear: data.academic_year,
+          importedBy: data.imported_by,
+          isOfficial: data.is_official || false,
+          status: data.status || 'active'
+        };
+      } catch (err) {
+        console.warn('[SupabaseAdapter] Get student by ID error:', err);
+        return null;
+      }
+    },
+
+    async archiveStudent(studentId) {
+      try {
+        if (!studentId) return;
+        const { error } = await supabase
+          .from('students')
+          .update({ 
+            status: 'archived',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', studentId);
+        
+        if (error) throw error;
+        console.log(`[SupabaseAdapter] Student ${studentId} archived directly in Supabase`);
+      } catch (err) {
+        console.warn('[SupabaseAdapter] Archive student error:', err);
+      }
     },
 
     async unsubscribeFromClass(className) {

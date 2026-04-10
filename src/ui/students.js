@@ -653,7 +653,7 @@
         }
     };
 
-    window.openStudentModal = function(studentId = null) {
+    window.openStudentModal = async function(studentId = null) {
         const modal = document.getElementById('student-modal');
         const header = document.getElementById('app-header');
         const t = getTranslations()[getLang()];
@@ -768,7 +768,7 @@
         
         // Load classes into select and THEN populate student data if editing
         if (classSelect) {
-            window.getClasses().then(classes => {
+            window.getClasses().then(async classes => {
                 let html = `<option value="">-- ${t.classNameOption || '--'} --</option>`;
                 classes.forEach(c => {
                     html += `<option value="${c}">${c}</option>`;
@@ -779,7 +779,20 @@
                 // Move selection logic inside the promise to ensure options exist
                 if (studentId) {
                     const data = getData();
-                    const student = data.students.find(s => s.id === studentId);
+                    let student = data.students.find(s => s.id === studentId);
+                    
+                    // Si l'élève n'est pas trouvé localement, essayer de le récupérer depuis la base de données
+                    if (!student && window.store && typeof window.store.getStudentById === 'function') {
+                        try {
+                            student = await window.store.getStudentById(studentId);
+                            if (student) {
+                                // Ajouter l'élève récupéré aux données locales
+                                data.students.push(student);
+                            }
+                        } catch (err) {
+                            console.warn("Erreur lors de la récupération de l'élève depuis la base de données", err);
+                        }
+                    }
                     if (student) {
                         const optionExists = Array.from(classSelect.options).some(opt => opt.value === student.className);
                         if (optionExists) {
@@ -801,11 +814,52 @@
             // EDIT MODE
             editingStudentId = studentId;
             const data = getData();
-            const student = data.students.find(s => s.id === studentId);
+            let student = data.students.find(s => s.id === studentId);
+
+            // Si l'élève n'est pas trouvé localement, essayer de le récupérer depuis la base de données
+            if (!student && window.store && typeof window.store.getStudentById === 'function') {
+                try {
+                    student = await window.store.getStudentById(studentId);
+                    if (student) {
+                        // Ajouter l'élève récupéré aux données locales
+                        data.students.push(student);
+                    }
+                } catch (err) {
+                    console.warn("Erreur lors de la récupération de l'élève depuis la base de données", err);
+                }
+            }
             
             if (student) {
-                if (titleEl) titleEl.textContent = t.editStudentTitle || 'Modifier l\'élève';
-                if (btnAdd) btnAdd.textContent = t.save || 'Enregistrer';
+                // Vérifier si l'élève est officiel (importé via Excel)
+                const isOfficial = student.importedBy && student.importedBy.includes('@');
+                
+                if (isOfficial) {
+                    // Élève officiel : désactiver le formulaire
+                    if (titleEl) titleEl.textContent = t.viewStudentTitle || 'Voir l\'élève (Officiel)';
+                    if (btnAdd) {
+                        btnAdd.textContent = t.locked || 'Verrouillé';
+                        btnAdd.disabled = true;
+                    }
+                    
+                    // Désactiver tous les champs de saisie
+                    const formInputs = modal.querySelectorAll('input, select');
+                    formInputs.forEach(input => {
+                        input.disabled = true;
+                    });
+                } else {
+                    // Élève manuel : permettre la modification
+                    if (titleEl) titleEl.textContent = t.editStudentTitle || 'Modifier l\'élève';
+                    if (btnAdd) {
+                        btnAdd.textContent = t.save || 'Enregistrer';
+                        btnAdd.disabled = false;
+                    }
+                    
+                    // Réactiver tous les champs de saisie
+                    const formInputs = modal.querySelectorAll('input, select');
+                    formInputs.forEach(input => {
+                        input.disabled = false;
+                    });
+                }
 
                 // Fill inputs
                 if (lastNameInput) lastNameInput.value = student.lastName || '';
@@ -824,6 +878,12 @@
             editingStudentId = null;
             if (titleEl) titleEl.textContent = t.addStudentTitle;
             if (btnAdd) btnAdd.textContent = t.add;
+
+            // Réactiver tous les champs de saisie (au cas où ils étaient désactivés)
+            const formInputs = modal.querySelectorAll('input, select');
+            formInputs.forEach(input => {
+                input.disabled = false;
+            });
 
             // Reset inputs
             const inputs = ['student-lastname', 'student-firstname', 'student-class-new', 'student-nin'];
@@ -924,7 +984,9 @@
             s.className === className && 
             s.academicYear === academicYear &&
             (s.importedBy || 'unknown') === currentUserId &&
-            s.id !== editingStudentId
+            s.id !== editingStudentId &&
+            // Ne vérifier que les élèves manuels pour éviter les faux doublons avec les élèves officiels
+            (!s.isOfficial || (s.importedBy || 'unknown') === currentUserId)
         );
 
         if (duplicate) return window.showStudentError(t.duplicateStudent || 'Cet élève existe déjà dans cette classe.');
@@ -933,6 +995,10 @@
             // UPDATE
             const student = data.students.find(s => s.id === editingStudentId);
             if (student) {
+                // Vérifier si l'élève est officiel (importé via Excel)
+                if (student.isOfficial) {
+                    return window.showStudentError(t.officialStudentLocked || 'Cet élève provient du fichier officiel et ne peut pas être modifié.');
+                }
                 student.lastName = lastName;
                 student.firstName = firstName;
                 student.name = name;
@@ -943,8 +1009,61 @@
                 // Preserve other fields like grades (linked by ID), sex, birthDate, etc.
             }
         } else {
-            // CREATE
-            data.students.push({ id: genId(), name, className, academicYear, nin: nin || genId(), firstName, lastName, importedBy: window.currentUser?.email || window.currentUser?.id || 'unknown' });
+            // CREATE - Marquer comme manuel avec l'UUID du prof actuel
+            const currentUserId = window.currentUser?.id || window.currentUser?.email || genId();
+            
+            // Vérifier si un élève avec le même nom, classe et année existe déjà dans la base de données
+            let existingStudent = null;
+            
+            // Chercher dans les élèves locaux
+            existingStudent = data.students.find(s => 
+                s.name.toLowerCase() === name.toLowerCase() &&
+                s.className === className &&
+                s.academicYear === academicYear
+            );
+            
+            // Si non trouvé localement, chercher dans la base de données
+            if (!existingStudent && window.store && typeof window.store.getSharedStudents === 'function') {
+                try {
+                    // Récupérer toutes les classes partagées
+                    const sharedClasses = await window.store.getSharedClasses();
+                    
+                    // Chercher l'élève dans chaque classe partagée
+                    for (const className of sharedClasses) {
+                        const sharedStudents = await window.store.getSharedStudents(className);
+                        const found = sharedStudents.find(s => 
+                            s.name.toLowerCase() === name.toLowerCase() &&
+                            s.className === className &&
+                            s.academicYear === academicYear
+                        );
+                        
+                        if (found) {
+                            existingStudent = found;
+                            break;
+                        }
+                    }
+                } catch (err) {
+                    console.warn("Erreur lors de la recherche de l'élève dans la base de données", err);
+                }
+            }
+            
+            // Si un élève existe déjà, afficher une erreur
+            if (existingStudent) {
+                return window.showStudentError(t.duplicateStudent || 'Cet élève existe déjà dans cette classe.');
+            }
+            
+            // Sinon, créer le nouvel élève
+            data.students.push({ 
+                id: genId(), 
+                name, 
+                className, 
+                academicYear, 
+                nin: nin || genId(), 
+                firstName, 
+                lastName, 
+                importedBy: currentUserId,
+                isOfficial: false // Manuel
+            });
         }
 
         saveData();
@@ -978,10 +1097,35 @@
     window.deleteStudent = async function(id) {
         const t = getTranslations()[getLang()];
         const data = getData();
+        let student = data.students.find(s => s.id === id);
+        
+        // Si l'élève n'est pas trouvé en local, on tente de le récupérer via le store
+        if (!student && window.store && typeof window.store.getStudentById === 'function') {
+            student = await window.store.getStudentById(id);
+            if (student) {
+                // On l'ajoute temporairement à data.students pour que saveData() le prenne en compte
+                data.students.push(student);
+            }
+        }
+        
+        if (!student) return;
+
+        // Vérifier si l'élève est officiel (importé via Excel)
+        if (student.isOfficial) {
+            return alert(t.officialStudentLocked || 'Cet élève provient du fichier officiel et ne peut pas être supprimé.');
+        }
+        
         if (!confirm(t.deleteStudent)) return;
-        data.students = data.students.filter(s => s.id !== id);
-        delete data.grades[id];
+        
+        // 1. Mise à jour locale (Archivage)
+        student.status = 'archived';
         saveData();
+
+        // 2. Mise à jour directe dans Supabase (Source de vérité)
+        if (window.store && typeof window.store.archiveStudent === 'function') {
+            await window.store.archiveStudent(id);
+        }
+        
         await window.renderStudents();
         await window.renderClassList();
         await window.loadClassSelectors();
@@ -1053,9 +1197,9 @@
         sharedStudents.forEach(s => {
             const localS = studentMap.get(s.id);
             if (localS) {
-                // Si l'élève partagé est archivé mais le local est actif (ou inversement), le Cloud gagne
+                // Si divergence, privilégier 'archived' pour éviter le rebond visuel
                 if (localS.status !== s.status) {
-                    localS.status = s.status;
+                    localS.status = (localS.status === 'archived' || s.status === 'archived') ? 'archived' : s.status;
                     needsLocalSave = true;
                 }
             } else {
@@ -1129,9 +1273,14 @@
 
             // Template de la carte élève (Nom en haut, actions en bas pour éviter les coupures)
             return `
-            <div class="student-item group ${levelClass} bg-white p-3 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col gap-2 relative overflow-hidden">
+            <div class="student-item group ${levelClass} ${s.isOfficial ? 'official-student' : ''} bg-white p-3 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col gap-2 relative overflow-hidden">
                 <!-- Overlay subtil au hover -->
                 <div class="absolute inset-0 bg-slate-50/0 group-hover:bg-slate-50/30 transition-colors pointer-events-none"></div>
+                
+                <!-- Badge officiel (uniquement pour les élèves importés via Excel) -->
+                ${s.isOfficial ? `<div class="absolute top-2 ${getLang() === 'ar' ? 'left-2' : 'right-2'} z-20 inline-flex items-center gap-1 px-2 py-0.5 bg-blue-500 text-white rounded text-[10px] font-bold shadow-sm">
+                    🔒 ${t.official || 'Officiel'}
+                </div>` : ''}
 
                 <!-- Ligne 1: Nom (Pleine largeur) -->
                 <div class="student-name text-base font-bold text-slate-700 z-10 leading-tight" title="${displayName}">
@@ -1156,15 +1305,15 @@
                     
                     <div class="flex items-center gap-1.5">
                         <!-- Bouton Modifier -->
-                        <button onclick="openStudentModal('${s.id}')" 
-                            class="w-8 h-8 flex items-center justify-center bg-slate-50 text-slate-400 hover:text-blue-600 hover:bg-white rounded-lg active:scale-90 transition-all border border-slate-100"
+                        <button onclick="${s.isOfficial ? '': `openStudentModal('${s.id}')`}" 
+                            class="w-8 h-8 flex items-center justify-center bg-slate-50 ${s.isOfficial ? 'text-slate-300 cursor-not-allowed' : 'text-slate-400 hover:text-blue-600 hover:bg-white'} rounded-lg ${s.isOfficial ? '' : 'active:scale-90'} transition-all border border-slate-100"
                             title="${t.edit}">
                             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                         </button>
 
                         <!-- Bouton Supprimer -->
-                        <button onclick="deleteStudent('${s.id}')" 
-                            class="w-8 h-8 flex items-center justify-center bg-slate-50 text-slate-400 hover:text-red-600 hover:bg-white rounded-lg active:scale-90 transition-all border border-slate-100"
+                        <button onclick="${s.isOfficial ? '': `deleteStudent('${s.id}')`}" 
+                            class="w-8 h-8 flex items-center justify-center bg-slate-50 ${s.isOfficial ? 'text-slate-300 cursor-not-allowed' : 'text-slate-400 hover:text-red-600 hover:bg-white'} rounded-lg ${s.isOfficial ? '' : 'active:scale-90'} transition-all border border-slate-100"
                             title="${t.delete}">
                             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         </button>
@@ -1438,7 +1587,8 @@
                     lastName,
                     sex,
                     birthDate,
-                    regNumber
+                    regNumber,
+                    isOfficial: true // Marqué comme officiel lors de l'import Excel
                 };
 
                 // --- CORRECTION 2 : IMPORTATION DES NOTES (Colonnes supplémentaires) ---
@@ -1460,12 +1610,16 @@
                         console.log(`[Smart Merge] Élève restauré : ${existing.name}`);
                     }
                     
-                    // Important : On ne modifie PAS le `importedBy` s'il existait déjà 
-                    // pour conserver la propriété originelle (Prof A)
+                    // Important : On préserve le champ `importedBy` de l'élève existant
+                    // Si l'élève a déjà un importedBy (email), on le garde
+                    // Sinon, on le marque avec l'email/ID du prof qui importe
+                    const currentUserId = window.currentUser?.email || window.currentUser?.id || 'unknown';
                     Object.assign(existing, {
                         ...studentData,
                         // Assurer que le statut est actif s'il revient
-                        status: 'active'
+                        status: 'active',
+                        // Préserver importedBy s'il existe (email), sinon utiliser le currentUserId
+                        importedBy: existing.importedBy && existing.importedBy.includes('@') ? existing.importedBy : currentUserId
                     }); 
                     
                     // Note: Les notes importées via ce fichier Excel (type Rakmana) ne sont pas compatibles 
@@ -1476,10 +1630,12 @@
                     updated++;
                 } else {
                     // CRÉATION d'un nouvel élève
+                    const currentUserId = window.currentUser?.email || window.currentUser?.id || 'unknown';
                     data.students.push({
                         id: genId(),
                         academicYear: window.getGlobalAcademicYear(),
-                        importedBy: window.currentUser?.email || window.currentUser?.id || 'unknown',
+                        // Marquer comme officiel (importé via Excel) avec l'email du prof
+                        importedBy: currentUserId,
                         status: 'active', // Nouvel élève = actif
                         ...studentData
                     });
