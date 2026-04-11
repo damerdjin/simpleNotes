@@ -67,8 +67,8 @@
             </div>
             
             <div class="grid grid-cols-2 gap-3">
-                <select id="filter-year" class="w-full bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block p-2.5 outline-none">
-                    <option value="all">Toutes les années</option>
+                <select id="filter-year" class="w-full bg-gray-100 border border-gray-200 text-gray-500 text-sm rounded-xl block p-2.5 outline-none cursor-not-allowed" disabled>
+                    <option value="current">Année en cours</option>
                 </select>
                 <select id="filter-trimester" class="w-full bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block p-2.5 outline-none">
                     <option value="all">Tous les trimestres</option>
@@ -202,7 +202,7 @@
             });
 
             // Listeners pour les filtres
-            document.getElementById('filter-year').addEventListener('change', renderFilteredView);
+            // filter-year is disabled, no listener needed
             document.getElementById('filter-trimester').addEventListener('change', renderFilteredView);
             document.getElementById('filter-subject').addEventListener('change', renderFilteredView);
 
@@ -321,11 +321,9 @@
         }
 
         function populateFilters() {
-            const years = new Set();
             const subjects = new Map(); // id -> label
 
             allGrades.forEach(g => {
-                if (g.assignments.academic_year) years.add(g.assignments.academic_year);
                 if (g.assignments.subject) {
                     const subjId = g.assignments.subject;
                     let displaySubject = subjId;
@@ -337,13 +335,7 @@
                 }
             });
 
-            // Populate Year Dropdown
-            const yearSelect = document.getElementById('filter-year');
-            Array.from(years).sort().reverse().forEach(y => {
-                yearSelect.add(new Option(y, y));
-            });
-            // Auto-select latest year if available
-            if (years.size > 0) yearSelect.selectedIndex = 1;
+            // Year dropdown is static, no population needed
 
             // Populate Subject Dropdown
         const subjSelect = document.getElementById('filter-subject');
@@ -367,16 +359,14 @@
     }
 
         function renderFilteredView() {
-            const yearFilter = document.getElementById('filter-year').value;
             const triFilter = document.getElementById('filter-trimester').value;
             const subjFilter = document.getElementById('filter-subject').value;
 
             // Appliquer les filtres
             const filteredGrades = allGrades.filter(g => {
-                const matchYear = yearFilter === 'all' || g.assignments.academic_year === yearFilter;
                 const matchTri = triFilter === 'all' || g.assignments.trimester === triFilter;
                 const matchSubj = subjFilter === 'all' || g.assignments.subject === subjFilter;
-                return matchYear && matchTri && matchSubj;
+                return matchTri && matchSubj;
             });
 
             document.getElementById('grades-count-badge').textContent = `${filteredGrades.length} note${filteredGrades.length > 1 ? 's' : ''}`;
