@@ -2,7 +2,9 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#10b981">
+    <link rel="manifest" href="/manifest.json">
     <title data-translate="studentSpaceTitle">Espace Élève - Mon Suivi</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -175,12 +177,73 @@
         </div>
     </div>
 
+    <!-- Modal Détails de la Note (Bottom Sheet) -->
+    <div id="grade-details-modal" class="fixed inset-0 bg-black/60 z-[60] hidden opacity-0 transition-opacity duration-300 flex flex-col justify-end">
+        <div id="grade-details-content" class="bg-white rounded-t-3xl w-full translate-y-full transition-transform duration-300">
+            <!-- Handle indicator -->
+            <div class="w-full flex justify-center pt-4 pb-2 cursor-pointer" id="close-details-handle">
+                <div class="w-12 h-1.5 bg-gray-300 rounded-full"></div>
+            </div>
+            
+            <div class="p-6 pt-2 pb-10 max-w-lg mx-auto w-full">
+                <div class="text-center mb-6">
+                    <p class="text-sm text-gray-500 font-medium mb-1 inline-block px-3 py-1 rounded-full bg-purple-50 text-purple-600" id="detail-subject">Matière</p>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-2" id="detail-title">Devoir</h3>
+                    <p class="text-sm text-gray-400 mt-1" id="detail-date">Date</p>
+                </div>
+                
+                <div class="flex justify-center mb-6">
+                    <div class="text-center p-5 bg-emerald-50 rounded-3xl border-2 border-emerald-100 min-w-[140px] shadow-sm">
+                        <p class="text-xs text-emerald-600 font-bold uppercase mb-1" data-translate="noteLabel">Note</p>
+                        <p class="text-4xl font-black text-emerald-700" id="detail-score">--<span class="text-xl text-emerald-500 font-bold">/--</span></p>
+                    </div>
+                </div>
+
+                <div class="space-y-4 mb-8">
+                    <!-- Commentaire prof -->
+                    <div id="detail-comment-container" class="hidden bg-gradient-to-r from-indigo-50 to-purple-50 p-4 rounded-2xl border border-indigo-100 shadow-sm">
+                        <p class="text-[11px] font-bold text-indigo-600 uppercase mb-2 flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                            <span data-translate="teacherComment">Commentaire du professeur</span>
+                        </p>
+                        <p class="text-gray-700 text-sm italic font-medium" id="detail-comment"></p>
+                    </div>
+
+                    <!-- Stats classe -->
+                    <div id="detail-stats-container" class="grid grid-cols-3 gap-3">
+                        <div class="bg-gray-50 rounded-2xl p-4 text-center border border-gray-100 shadow-sm">
+                            <p class="text-[10px] text-gray-500 font-bold uppercase mb-1" data-translate="classAvg">Classe</p>
+                            <p class="font-black text-lg text-gray-800" id="detail-avg">--</p>
+                        </div>
+                        <div class="bg-green-50 rounded-2xl p-4 text-center border border-green-100 shadow-sm">
+                            <p class="text-[10px] text-green-600 font-bold uppercase mb-1" data-translate="classMax">Max</p>
+                            <p class="font-black text-lg text-green-700" id="detail-max">--</p>
+                        </div>
+                        <div class="bg-orange-50 rounded-2xl p-4 text-center border border-orange-100 shadow-sm">
+                            <p class="text-[10px] text-orange-600 font-bold uppercase mb-1" data-translate="classMin">Min</p>
+                            <p class="font-black text-lg text-orange-700" id="detail-min">--</p>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="close-details-btn" class="w-full py-3.5 bg-gray-100 font-bold text-gray-700 rounded-xl hover:bg-gray-200 transition focus:outline-none focus:ring-2 focus:ring-gray-300" data-translate="close">Fermer</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         // Import translation functions
         import { t, initLanguage, changeLanguage } from './src/ui/i18n.js';
 
         let allGrades = [];
         let chartInstance = null;
+        let sessionData = null;
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW registration failed', err));
+            });
+        }
 
         // Initialize language on page load
         document.addEventListener('DOMContentLoaded', () => {
@@ -204,15 +267,14 @@
                 document.documentElement.lang = savedLang;
             }
 
-            let session;
             try {
-                session = JSON.parse(sessionStr);
+                sessionData = JSON.parse(sessionStr);
             } catch(e) {
                 window.location.href = '/login.html';
                 return;
             }
 
-            document.getElementById('student-name').textContent = session.info.name + (session.info.className ? ` - ${session.info.className}` : '');
+            document.getElementById('student-name').textContent = sessionData.info.name + (sessionData.info.className ? ` - ${sessionData.info.className}` : '');
 
             document.getElementById('logout-btn').addEventListener('click', async () => {
                 // Appeler l'API pour nettoyer le cookie sécurisé
@@ -291,7 +353,7 @@
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${session.token}`
+                            'Authorization': `Bearer ${sessionData.token}`
                         },
                         body: JSON.stringify({ oldPassword, newPassword })
                     });
@@ -316,7 +378,13 @@
                 }
             });
 
-            fetchGrades(session.token);
+            // Init Pull-to-refresh
+            initPullToRefresh();
+            
+            // Init Bottom Sheet Modal Events
+            initBottomSheet();
+
+            fetchGrades(sessionData.token);
         });
 
         async function fetchGrades(token) {
@@ -462,17 +530,22 @@
 
                 const scoreDisplay = score !== null ? `<span class="text-xl font-bold ${colorClass}">${score}</span><span class="text-xs text-gray-500">/${max}</span>` : `<span class="text-sm text-gray-500 italic">${t('notGraded')}</span>`;
 
+                // Red Dot pour les notes < 24h
+                const isNew = (Date.now() - new Date(grade.updated_at).getTime()) < 24 * 60 * 60 * 1000;
+
                 return `
-                    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center justify-between grade-card">
-                        <div class="flex-1 min-w-0 pr-4">
-                            <div class="flex items-center gap-2 mb-1">
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between grade-card relative overflow-hidden active:scale-95 transition-transform" onclick="window.openGradeDetails('${grade.id}')">
+                        ${isNew ? `<div class="absolute top-3 left-3 w-2.5 h-2.5 bg-red-500 rounded-full border border-white" title="${t('newBadge')}"></div>` : ''}
+                        
+                        <div class="flex-1 min-w-0 pr-4 py-4 pl-${isNew ? '7' : '4'}">
+                            <div class="flex items-center gap-2 mb-1.5 flex-wrap">
                                 ${displaySubject ? `<span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-600 uppercase tracking-wide border border-purple-100">${displaySubject}</span>` : ''}
                                 ${assignment.trimester ? `<span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-600 uppercase tracking-wide border border-blue-100">T${assignment.trimester}</span>` : ''}
                             </div>
-                            <h3 class="font-bold text-gray-800 truncate text-sm">${assignment.name}</h3>
+                            <h3 class="font-bold text-gray-800 truncate text-sm leading-tight">${assignment.name}</h3>
                             <p class="text-[11px] text-gray-400 mt-1">${date} • ${assignment.academic_year || t('unknownYear')}</p>
                         </div>
-                        <div class="text-right ${bgClass} px-3 py-2 rounded-xl min-w-[70px] flex flex-col items-center justify-center">
+                        <div class="text-right ${bgClass} px-3 py-4 rounded-r-2xl min-w-[75px] h-full flex flex-col items-center justify-center border-l border-gray-50 flex-shrink-0">
                             ${scoreDisplay}
                         </div>
                     </div>
@@ -585,6 +658,134 @@
                     }
                 }
             });
+        }
+
+        function initPullToRefresh() {
+            let touchstartY = 0;
+            const pTRContainer = document.body;
+
+            pTRContainer.addEventListener('touchstart', e => {
+                if (window.scrollY === 0) touchstartY = e.changedTouches[0].screenY;
+            }, {passive: true});
+
+            pTRContainer.addEventListener('touchend', e => {
+                if (window.scrollY === 0) {
+                    const touchendY = e.changedTouches[0].screenY;
+                    if (touchendY > touchstartY + 100) {
+                        // Vibrate if supported
+                        if (navigator.vibrate) navigator.vibrate(50);
+                        if (sessionData && sessionData.token) {
+                            fetchGrades(sessionData.token);
+                        }
+                    }
+                }
+            }, {passive: true});
+        }
+
+        // Global functions for inline HTML events
+        const detailsModal = document.getElementById('grade-details-modal');
+        const detailsContent = document.getElementById('grade-details-content');
+        
+        window.openGradeDetails = function(gradeId) {
+            const grade = allGrades.find(g => g.id === gradeId);
+            if (!grade) return;
+
+            // Populate Data
+            const assignment = grade.assignments;
+            const subjId = assignment?.subject;
+            let displaySubject = subjId;
+            if (subjId && window.subjects) {
+                const sObj = window.subjects.find(s => s.id === subjId);
+                if (sObj) {
+                    const currentLang = localStorage.getItem('corrections-language') || 'fr';
+                    displaySubject = sObj[currentLang] || sObj.fr;
+                }
+            }
+
+            document.getElementById('detail-subject').textContent = displaySubject || '';
+            document.getElementById('detail-title').textContent = assignment?.name || '';
+            const dateStr = new Date(grade.updated_at).toLocaleDateString(document.documentElement.lang || 'fr', { day: '2-digit', month: 'long', year: 'numeric' });
+            document.getElementById('detail-date').textContent = dateStr;
+
+            // Score
+            if (grade.score_final !== null && grade.score_final !== undefined) {
+                document.getElementById('detail-score').innerHTML = `${grade.score_final}<span class="text-xl text-emerald-500 font-bold">/${grade.score_max || 20}</span>`;
+            } else {
+                document.getElementById('detail-score').textContent = t('notGraded');
+            }
+
+            // Stats
+            const statsContainer = document.getElementById('detail-stats-container');
+            const avgEl = document.getElementById('detail-avg');
+            const maxEl = document.getElementById('detail-max');
+            const minEl = document.getElementById('detail-min');
+
+            if (grade.class_avg !== null && grade.class_avg !== undefined) {
+                statsContainer.classList.remove('hidden');
+                
+                avgEl.textContent = `${grade.class_avg}`;
+                maxEl.textContent = `${grade.class_max}`;
+                minEl.textContent = `${grade.class_min}`;
+            } else {
+                // Not returned by the DB yet
+                avgEl.textContent = '--';
+                maxEl.textContent = '--';
+                minEl.textContent = '--';
+            }
+
+            // Comment
+            const commentContainer = document.getElementById('detail-comment-container');
+            const commentEl = document.getElementById('detail-comment');
+            if (grade.comments && grade.comments.trim() !== '') {
+                commentContainer.classList.remove('hidden');
+                commentEl.textContent = grade.comments;
+            } else {
+                commentContainer.classList.add('hidden');
+                commentEl.textContent = '';
+            }
+
+            // Show Modal
+            detailsModal.classList.remove('hidden');
+            // Small timeout to allow display:block to process before opacity transition
+            setTimeout(() => {
+                detailsModal.classList.remove('opacity-0');
+                detailsContent.classList.remove('translate-y-full');
+            }, 10);
+            
+            // Disable body scroll
+            document.body.style.overflow = 'hidden';
+        };
+
+        function closeGradeDetails() {
+            detailsModal.classList.add('opacity-0');
+            detailsContent.classList.add('translate-y-full');
+            
+            // Wait for transition before hiding
+            setTimeout(() => {
+                detailsModal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }, 300);
+        }
+
+        function initBottomSheet() {
+            document.getElementById('close-details-btn').addEventListener('click', closeGradeDetails);
+            document.getElementById('close-details-handle').addEventListener('click', closeGradeDetails);
+            detailsModal.addEventListener('click', (e) => {
+                if(e.target === detailsModal) closeGradeDetails();
+            });
+
+            // Touch swipe down to close
+            let touchStartY = 0;
+            detailsContent.addEventListener('touchstart', e => {
+                touchStartY = e.changedTouches[0].screenY;
+            }, {passive: true});
+            
+            detailsContent.addEventListener('touchmove', e => {
+                const currentY = e.changedTouches[0].screenY;
+                if (currentY > touchStartY + 50) {
+                    closeGradeDetails();
+                }
+            }, {passive: true});
         }
     </script>
 </body>

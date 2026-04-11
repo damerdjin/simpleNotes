@@ -63,6 +63,18 @@ async function build() {
     await fs.copy(srcRemarksMessages, path.join(distDir, 'remarks.messages.js'));
   }
 
+  // Copy manifest.json if present
+  const srcManifest = path.join(root, 'manifest.json');
+  if (await fs.pathExists(srcManifest)) {
+    await fs.copy(srcManifest, path.join(distDir, 'manifest.json'));
+  }
+
+  // Copy sw.js if present
+  const srcSw = path.join(root, 'sw.js');
+  if (await fs.pathExists(srcSw)) {
+    await fs.copy(srcSw, path.join(distDir, 'sw.js'));
+  }
+
   // Copy src directory (recursively) to ensure modules are available
   const srcDir = path.join(root, 'src');
   if (await fs.pathExists(srcDir)) {
