@@ -825,7 +825,7 @@ window.translations = {
         studentNinPlaceholder: "مثال: 1234567890",
         studentPasswordPlaceholder: "YYYYMMDD أو كلمة المرور الخاصة بك",
         // Student Dashboard
-        studentSpaceTitle: "مساحة الطالب",
+        studentSpaceTitle: "فضاء التلميذ",
         loading: "جاري التحميل...",
         changePassword: "تغيير كلمة المرور",
         logout: "تسجيل الخروج",

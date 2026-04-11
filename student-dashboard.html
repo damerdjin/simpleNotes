@@ -45,7 +45,7 @@
         </div>
         <div class="flex items-center gap-2">
             <!-- Language Selector -->
-            <select id="language-selector" class="bg-emerald-700 text-white text-sm rounded-full p-1.5 border border-emerald-500 focus:ring-2 focus:ring-emerald-400 focus:outline-none transition">
+            <select id="language-selector" class="bg-emerald-700 text-white text-sm rounded-full p-1.5 border border-emerald-500 focus:ring-2 focus:ring-emerald-400 focus:outline-none transition" hidden>
                 <option value="fr" selected>Français</option>
                 <option value="en">English</option>
                 <option value="ar">العربية</option>
@@ -191,8 +191,9 @@
                 return;
             }
 
-            // Initialize language system from login storage
-            const savedLang = localStorage.getItem('language') || 'fr';
+            // Initialize language system from localStorage (corrections-language)
+            // This matches the key used in index.html
+            const savedLang = localStorage.getItem('corrections-language') || 'fr';
             initLanguage();
             changeLanguage(savedLang);
 
@@ -233,12 +234,13 @@
             // Language selector listener
             const languageSelector = document.getElementById('language-selector');
             if (languageSelector) {
-                languageSelector.addEventListener('change', async (e) => {
+                languageSelector.addEventListener('change', (e) => {
                     const newLang = e.target.value;
-                    await changeLanguage(newLang);
+                    changeLanguage(newLang);
                     
-                    // Persist the language choice
-                    localStorage.setItem('language', newLang);
+                    // Persist the language choice using the same key as index.html
+                    // Note: changeLanguage already saves to localStorage, but we ensure consistency
+                    // localStorage.setItem('corrections-language', newLang);
                     
                     // Change html lang attribute
                     document.documentElement.lang = newLang;
@@ -369,7 +371,7 @@
                     if (window.subjects) {
                         const sObj = window.subjects.find(s => s.id === subjId);
                         if (sObj) {
-                            const currentLang = localStorage.getItem('language') || 'fr';
+                            const currentLang = localStorage.getItem('corrections-language') || 'fr';
                             displaySubject = sObj[currentLang] || sObj.fr;
                         }
                     }
@@ -439,7 +441,7 @@
                 if (subjId && window.subjects) {
                     const sObj = window.subjects.find(s => s.id === subjId);
                     if (sObj) {
-                        const currentLang = localStorage.getItem('language') || 'fr';
+                        const currentLang = localStorage.getItem('corrections-language') || 'fr';
                         displaySubject = sObj[currentLang] || sObj.fr;
                     }
                 }
