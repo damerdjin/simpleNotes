@@ -75,6 +75,12 @@ async function build() {
     await fs.copy(srcSw, path.join(distDir, 'sw.js'));
   }
 
+  // Copy icon.svg if present
+  const srcIconSvg = path.join(root, 'icon.svg');
+  if (await fs.pathExists(srcIconSvg)) {
+    await fs.copy(srcIconSvg, path.join(distDir, 'icon.svg'));
+  }
+
   // Copy src directory (recursively) to ensure modules are available
   const srcDir = path.join(root, 'src');
   if (await fs.pathExists(srcDir)) {
