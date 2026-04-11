@@ -1,8 +1,8 @@
 {
-  "name": "Espace Élève",
-  "short_name": "Élève",
-  "description": "Suivi des notes et devoirs",
-  "start_url": "/student-dashboard.html",
+  "name": "Simple Notes",
+  "short_name": "SimpleNotes",
+  "description": "Gestion et suivi des notes scolaires",
+  "start_url": "/login.html",
   "display": "standalone",
   "background_color": "#f3f4f6",
   "theme_color": "#10b981",
