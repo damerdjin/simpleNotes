@@ -30,6 +30,8 @@ window.translations = {
     fr: {
         // Auth
         loginTitle: "Connexion",
+        teacherLabel: "Professeur",
+        studentLabel: "Élève",
         emailLabel: "Email",
         emailPlaceholder: "email@exemple.com",
         passwordLabel: "Mot de passe",
@@ -376,6 +378,8 @@ window.translations = {
     en: {
         // Auth
         loginTitle: "Login",
+        teacherLabel: "Teacher",
+        studentLabel: "Student",
         emailLabel: "Email",
         emailPlaceholder: "email@example.com",
         passwordLabel: "Password",
@@ -732,6 +736,8 @@ window.translations = {
     ar: {
         // Auth
         loginTitle: "تسجيل الدخول",
+        teacherLabel: "أستاذ",
+        studentLabel: "طالب",
         emailLabel: "البريد الإلكتروني",
         emailPlaceholder: "email@example.com",
         fullNameLabel: "الاسم الكامل",
