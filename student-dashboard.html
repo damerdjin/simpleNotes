@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Espace Élève - Mon Suivi</title>
+    <title data-translate="studentSpaceTitle">Espace Élève - Mon Suivi</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="/translations.js"></script>
@@ -40,14 +40,21 @@
     <!-- Header -->
     <header class="bg-emerald-600 text-white p-4 shadow-md sticky top-0 z-10 flex justify-between items-center">
         <div>
-            <h1 class="text-xl font-bold">Espace Élève</h1>
-            <p class="text-sm text-emerald-100" id="student-name">Chargement...</p>
+            <h1 class="text-xl font-bold" data-translate="studentSpaceTitle">Espace Élève</h1>
+            <p class="text-sm text-emerald-100" id="student-name" data-translate="loading">Chargement...</p>
         </div>
         <div class="flex items-center gap-2">
-            <button id="btn-change-password" class="p-2 bg-emerald-700 rounded-full hover:bg-emerald-800 transition" title="Changer de mot de passe">
+            <!-- Language Selector -->
+            <select id="language-selector" class="bg-emerald-700 text-white text-sm rounded-full p-1.5 border border-emerald-500 focus:ring-2 focus:ring-emerald-400 focus:outline-none transition">
+                <option value="fr" selected>Français</option>
+                <option value="en">English</option>
+                <option value="ar">العربية</option>
+            </select>
+            
+            <button id="btn-change-password" class="p-2 bg-emerald-700 rounded-full hover:bg-emerald-800 transition" data-translate-title="changePassword" title="Changer de mot de passe">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
             </button>
-            <button id="logout-btn" class="p-2 bg-emerald-700 rounded-full hover:bg-emerald-800 transition" title="Se déconnecter">
+            <button id="logout-btn" class="p-2 bg-emerald-700 rounded-full hover:bg-emerald-800 transition" data-translate-title="logout" title="Se déconnecter">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
             </button>
         </div>
@@ -61,30 +68,30 @@
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-sm font-bold text-gray-700 flex items-center gap-2">
                     <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
-                    Filtres
+                    <span data-translate="filters">Filtres</span>
                 </h2>
                 <span id="grades-count-badge" class="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded-full">0 note</span>
             </div>
             
             <div class="grid grid-cols-2 gap-3">
                 <select id="filter-year" class="w-full bg-gray-100 border border-gray-200 text-gray-500 text-sm rounded-xl block p-2.5 outline-none cursor-not-allowed" disabled>
-                    <option value="current">Année en cours</option>
+                    <option value="current" data-translate="yearCurrent">Année en cours</option>
                 </select>
                 <select id="filter-trimester" class="w-full bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block p-2.5 outline-none">
-                    <option value="all">Tous les trimestres</option>
-                    <option value="1">1er Trimestre</option>
-                    <option value="2">2ème Trimestre</option>
-                    <option value="3">3ème Trimestre</option>
+                    <option value="all" data-translate="trimesterAll">Tous les trimestres</option>
+                    <option value="1" data-translate="trimester1">1er Trimestre</option>
+                    <option value="2" data-translate="trimester2">2ème Trimestre</option>
+                    <option value="3" data-translate="trimester3">3ème Trimestre</option>
                 </select>
             </div>
             <select id="filter-subject" class="w-full bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block p-2.5 outline-none">
-                <option value="all">Toutes les matières</option>
+                <option value="all" data-translate="subjectAll">Toutes les matières</option>
             </select>
         </div>
 
         <!-- Graphique d'évolution -->
         <div class="bg-white rounded-2xl shadow-sm p-4 mb-6">
-            <h2 class="text-sm font-bold text-gray-700 mb-3">Progression</h2>
+            <h2 class="text-sm font-bold text-gray-700 mb-3" data-translate="progression">Progression</h2>
             <div class="relative h-48 w-full">
                 <canvas id="progressionChart"></canvas>
             </div>
@@ -93,29 +100,29 @@
         <!-- Stats (Max, Min) -->
         <div class="grid grid-cols-2 gap-4 mb-6">
             <div class="bg-white rounded-2xl p-4 shadow-sm border-l-4 border-green-500">
-                <p class="text-xs text-gray-500 font-medium mb-1">Meilleure Note</p>
+                <p class="text-xs text-gray-500 font-medium mb-1" data-translate="bestGrade">Meilleure Note</p>
                 <p class="text-xl font-bold text-gray-800" id="stat-max">--/20</p>
             </div>
             <div class="bg-white rounded-2xl p-4 shadow-sm border-l-4 border-orange-400">
-                <p class="text-xs text-gray-500 font-medium mb-1">Dernière Note</p>
+                <p class="text-xs text-gray-500 font-medium mb-1" data-translate="lastGrade">Dernière Note</p>
                 <p class="text-xl font-bold text-gray-800" id="stat-last">--/20</p>
             </div>
         </div>
 
         <h2 class="text-lg font-bold text-gray-700 mb-4 px-1 flex items-center justify-between">
-            Historique des notes
-            <span class="text-xs font-normal text-gray-400">Du + récent au + ancien</span>
+            <span data-translate="historyTitle">Historique des notes</span>
+            <span class="text-xs font-normal text-gray-400" data-translate="historySubtitle">Du + récent au + ancien</span>
         </h2>
 
         <!-- Loading State -->
         <div id="loading-state" class="flex flex-col items-center justify-center py-10">
             <div class="loader mb-3"></div>
-            <p class="text-gray-500 text-sm">Récupération de vos notes...</p>
+            <p class="text-gray-500 text-sm" data-translate="loadingGrades">Récupération de vos notes...</p>
         </div>
 
         <!-- Error State -->
         <div id="error-state" class="hidden bg-red-50 text-red-600 p-4 rounded-xl text-sm text-center border border-red-100">
-            Impossible de charger les notes. Veuillez réessayer.
+            <span data-translate="errorLoadingGrades">Impossible de charger les notes. Veuillez réessayer.</span>
         </div>
 
         <!-- Empty State -->
@@ -123,8 +130,8 @@
             <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3 text-gray-400">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
             </div>
-            <p class="text-gray-600 font-medium">Aucune note disponible</p>
-            <p class="text-gray-400 text-sm mt-1">Vos professeurs n'ont pas encore publié de notes pour vous.</p>
+            <p class="text-gray-600 font-medium" data-translate="noGradesAvailable">Aucune note disponible</p>
+            <p class="text-gray-400 text-sm mt-1" data-translate="noGradesDescription">Vos professeurs n'ont pas encore publié de notes pour vous.</p>
         </div>
 
         <!-- Grades List -->
@@ -138,7 +145,7 @@
     <div id="password-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-gray-800">Changer mon mot de passe</h3>
+                <h3 class="text-lg font-bold text-gray-800" data-translate="changePasswordTitle">Changer mon mot de passe</h3>
                 <button id="close-password-modal" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
@@ -146,37 +153,54 @@
             
             <form id="password-form" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe actuel</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" data-translate="currentPassword">Mot de passe actuel</label>
                     <input type="password" id="old-password" required class="w-full border border-gray-300 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="AAAAMMJJ ou votre mot de passe">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Nouveau mot de passe</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" data-translate="newPassword">Nouveau mot de passe</label>
                     <input type="password" id="new-password" required minlength="6" class="w-full border border-gray-300 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="6 caractères minimum">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Confirmer le nouveau</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" data-translate="confirmPassword">Confirmer le nouveau</label>
                     <input type="password" id="confirm-password" required minlength="6" class="w-full border border-gray-300 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="Retapez le nouveau mot de passe">
                 </div>
 
                 <div id="password-error" class="hidden text-red-600 text-sm bg-red-50 p-2 rounded-lg"></div>
-                <div id="password-success" class="hidden text-emerald-700 text-sm bg-emerald-50 p-2 rounded-lg">Mot de passe modifié avec succès !</div>
+                <div id="password-success" class="hidden text-emerald-700 text-sm bg-emerald-50 p-2 rounded-lg" data-translate="passwordModified">Mot de passe modifié avec succès !</div>
 
-                <button type="submit" id="submit-password" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl hover:bg-emerald-700 transition flex justify-center items-center">
+                <button type="submit" id="submit-password" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl hover:bg-emerald-700 transition flex justify-center items-center" data-translate="save">
                     Enregistrer
                 </button>
             </form>
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        // Import translation functions
+        import { t, initLanguage, changeLanguage } from './src/ui/i18n.js';
+
         let allGrades = [];
         let chartInstance = null;
 
+        // Initialize language on page load
         document.addEventListener('DOMContentLoaded', () => {
+            // Load session
             const sessionStr = localStorage.getItem('student_session');
             if (!sessionStr) {
                 window.location.href = '/login.html';
                 return;
+            }
+
+            // Initialize language system from login storage
+            const savedLang = localStorage.getItem('language') || 'fr';
+            initLanguage();
+            changeLanguage(savedLang);
+
+            // Set language selector to current language
+            const languageSelectorCtrl = document.getElementById('language-selector');
+            if (languageSelectorCtrl) {
+                languageSelectorCtrl.value = savedLang;
+                document.documentElement.lang = savedLang;
             }
 
             let session;
@@ -205,6 +229,21 @@
             // filter-year is disabled, no listener needed
             document.getElementById('filter-trimester').addEventListener('change', renderFilteredView);
             document.getElementById('filter-subject').addEventListener('change', renderFilteredView);
+
+            // Language selector listener
+            const languageSelector = document.getElementById('language-selector');
+            if (languageSelector) {
+                languageSelector.addEventListener('change', async (e) => {
+                    const newLang = e.target.value;
+                    await changeLanguage(newLang);
+                    
+                    // Persist the language choice
+                    localStorage.setItem('language', newLang);
+                    
+                    // Change html lang attribute
+                    document.documentElement.lang = newLang;
+                });
+            }
 
             // Modal Password
             const pwdModal = document.getElementById('password-modal');
@@ -329,7 +368,10 @@
                     let displaySubject = subjId;
                     if (window.subjects) {
                         const sObj = window.subjects.find(s => s.id === subjId);
-                        if (sObj) displaySubject = sObj.fr;
+                        if (sObj) {
+                            const currentLang = localStorage.getItem('language') || 'fr';
+                            displaySubject = sObj[currentLang] || sObj.fr;
+                        }
                     }
                     subjects.set(subjId, displaySubject);
                 }
@@ -369,7 +411,8 @@
                 return matchTri && matchSubj;
             });
 
-            document.getElementById('grades-count-badge').textContent = `${filteredGrades.length} note${filteredGrades.length > 1 ? 's' : ''}`;
+            const countText = filteredGrades.length === 1 ? t('gradesCount') : t('gradesCountPlural');
+            document.getElementById('grades-count-badge').textContent = `${filteredGrades.length} ${countText}`;
 
             const gradesList = document.getElementById('grades-list');
             const emptyState = document.getElementById('empty-state');
@@ -395,7 +438,10 @@
                 let displaySubject = subjId;
                 if (subjId && window.subjects) {
                     const sObj = window.subjects.find(s => s.id === subjId);
-                    if (sObj) displaySubject = sObj.fr;
+                    if (sObj) {
+                        const currentLang = localStorage.getItem('language') || 'fr';
+                        displaySubject = sObj[currentLang] || sObj.fr;
+                    }
                 }
 
                 const date = new Date(grade.updated_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -412,7 +458,7 @@
                     bgClass = 'bg-red-100';
                 }
 
-                const scoreDisplay = score !== null ? `<span class="text-xl font-bold ${colorClass}">${score}</span><span class="text-xs text-gray-500">/${max}</span>` : '<span class="text-sm text-gray-500 italic">Non noté</span>';
+                const scoreDisplay = score !== null ? `<span class="text-xl font-bold ${colorClass}">${score}</span><span class="text-xs text-gray-500">/${max}</span>` : `<span class="text-sm text-gray-500 italic">${t('notGraded')}</span>`;
 
                 return `
                     <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center justify-between grade-card">
@@ -422,7 +468,7 @@
                                 ${assignment.trimester ? `<span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-600 uppercase tracking-wide border border-blue-100">T${assignment.trimester}</span>` : ''}
                             </div>
                             <h3 class="font-bold text-gray-800 truncate text-sm">${assignment.name}</h3>
-                            <p class="text-[11px] text-gray-400 mt-1">${date} • ${assignment.academic_year || 'Année inconnue'}</p>
+                            <p class="text-[11px] text-gray-400 mt-1">${date} • ${assignment.academic_year || t('unknownYear')}</p>
                         </div>
                         <div class="text-right ${bgClass} px-3 py-2 rounded-xl min-w-[70px] flex flex-col items-center justify-center">
                             ${scoreDisplay}
@@ -494,7 +540,7 @@
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Note (sur 20)',
+                        label: t('noteLabel'),
                         data: dataPoints,
                         borderColor: '#10b981', // emerald-500
                         backgroundColor: 'rgba(16, 185, 129, 0.1)',

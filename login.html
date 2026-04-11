@@ -75,6 +75,15 @@
             <button id="btn-student" class="px-4 py-2 text-gray-500 hover:text-blue-500 font-semibold w-1/2" data-translate="studentLabel">Élève</button>
         </div>
 
+        <!-- Language Selector (shared) -->
+        <div class="mb-4 flex justify-center">
+            <select id="language-selector" class="bg-gray-50 border border-gray-300 text-gray-700 py-1 px-2 rounded focus:outline-none focus:shadow-outline text-sm">
+                <option value="fr">Français</option>
+                <option value="en">English</option>
+                <option value="ar">العربية</option>
+            </select>
+        </div>
+
         <!-- Notification Area -->
         <div id="notification-area" class="mb-4 hidden">
             <!-- Notifications will be injected here -->
@@ -105,14 +114,6 @@
                 </div>
             </div>
 
-            <div class="mb-4 flex justify-center">
-                <select id="language-selector" class="bg-gray-50 border border-gray-300 text-gray-700 py-1 px-2 rounded focus:outline-none focus:shadow-outline text-sm">
-                    <option value="fr">Français</option>
-                    <option value="en">English</option>
-                    <option value="ar">العربية</option>
-                </select>
-            </div>
-
             <div class="flex items-center justify-between">
                 <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full" 
                     type="submit" id="submit-btn" data-translate="loginButton">
@@ -129,24 +130,23 @@
         <!-- FORM ELEVE (Hidden by default) -->
         <form id="student-login-form" class="hidden">
             <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="student-nin">
-                    Identifiant National (NIN)
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="student-nin" data-translate="studentNinLabel">
+                    National Identifier (NIN)
                 </label>
                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    id="student-nin" type="text" placeholder="Ex: 1234567890" required>
+                    id="student-nin" type="text" placeholder="Ex: 1234567890" data-translate-placeholder="studentNinPlaceholder" required>
             </div>
             <div class="mb-6">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="student-password">
-                    Mot de passe <span class="text-xs text-gray-500 font-normal">(Par défaut : Date de naissance)</span>
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="student-password" data-translate="studentPasswordLabel">
+                    Password <span class="text-xs text-gray-500 font-normal">(Default: Date of birth)</span>
                 </label>
                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    id="student-password" type="password" placeholder="AAAAMMJJ ou votre mot de passe personnalisé" autocomplete="current-password" required>
+                    id="student-password" type="password" placeholder="AAAAMMJJ ou votre mot de passe personnalisé" data-translate-placeholder="studentPasswordPlaceholder" autocomplete="current-password" required>
                 <p class="text-xs text-gray-500 mt-1">Format par défaut : Année, Mois, Jour (ex: 20000331 pour 31 Mars 2000)</p>
             </div>
-
             <div class="flex items-center justify-between">
-                <button class="bg-emerald-500 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full" 
-                    type="submit" id="student-submit-btn">
+                <button class="bg-emerald-500 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
+                    type="submit" id="student-submit-btn" data-translate="studentSubmitButton">
                     Accéder à mes notes
                 </button>
             </div>
@@ -196,6 +196,8 @@
             btnStudent.className = 'px-4 py-2 text-emerald-600 border-b-2 border-emerald-600 font-bold w-1/2';
             btnProf.className = 'px-4 py-2 text-gray-500 hover:text-blue-500 font-semibold w-1/2 border-b-2 border-transparent';
             errorDiv.classList.add('hidden');
+            // Ensure language selector remains visible
+            if (langSelector) langSelector.classList.remove('hidden');
         });
 
         // Helper function to show notifications instead of alert()

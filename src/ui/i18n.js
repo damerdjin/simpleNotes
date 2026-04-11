@@ -3,19 +3,11 @@
 // Handles language initialization and application
 
 export const initLanguage = () => {
-    // Check localStorage first
+    // Always set French as default on first visit
     let savedLang = localStorage.getItem('corrections-language');
-    
-    // If not set, detect from browser
     if (!savedLang) {
-        const browserLang = navigator.language || navigator.userLanguage;
-        if (browserLang.startsWith('ar')) {
-            savedLang = 'ar';
-        } else if (browserLang.startsWith('en')) {
-            savedLang = 'en';
-        } else {
-            savedLang = 'fr';
-        }
+        savedLang = 'fr';
+        localStorage.setItem('corrections-language', savedLang);
     }
     
     // Apply the language
