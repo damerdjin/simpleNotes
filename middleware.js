@@ -9,10 +9,12 @@ export const config = {
      * - login.html (login page)
      * - register.html (register page)
      * - student-dashboard.html (student page)
+     * - manifest.json (PWA)
+     * - sw.js (Service Worker)
      * - src (static assets)
      * - dist (built assets)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|login.html|register.html|student-dashboard.html|src|dist).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|manifest.json|sw.js|login.html|register.html|student-dashboard.html|src|dist).*)',
   ],
 };
 
@@ -25,6 +27,8 @@ export default function middleware(req) {
       pathname === '/login.html' ||
       pathname === '/register.html' ||
       pathname === '/student-dashboard.html' ||
+      pathname === '/manifest.json' ||
+      pathname === '/sw.js' ||
       pathname.startsWith('/src/') ||
       pathname.startsWith('/dist/') ||
       pathname === '/favicon.ico') {
