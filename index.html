@@ -4,6 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#10b981">
+    <link rel="manifest" href="/manifest.json" crossorigin="use-credentials">
     <title>Gestion des Corrections</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -2459,6 +2461,11 @@
         // Language Management
         const initApp = async () => {
             try {
+                // Initialize Service Worker
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW registration failed', err));
+                }
+
                 // Initialize language from storage
                 if (window.initLanguage) window.initLanguage();
 

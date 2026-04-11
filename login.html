@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#10b981">
+    <link rel="manifest" href="/manifest.json" crossorigin="use-credentials">
     <title>Connexion - Gestion des Corrections</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="/translations.js"></script>
@@ -156,6 +158,12 @@
     <script type="module">
         import { login, checkAuth, resetPassword } from './src/ui/auth.js';
         import { initLanguage, changeLanguage, t } from './src/ui/i18n.js';
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW registration failed', err));
+            });
+        }
 
         // Initialize language
         const currentLang = initLanguage();
