@@ -487,7 +487,7 @@
                 const opacity = usedElsewhere ? 'opacity-50 cursor-not-allowed' : '';
                 return `
                     <label class="flex items-center gap-2 p-2 border rounded-lg bg-white hover:bg-gray-50 ${opacity}">
-                        <input type="checkbox" ${checked} ${disabled}
+                        <input type="checkbox" id="export-check-${groupKey}-${a.id}" name="export-check-${groupKey}-${a.id}" ${checked} ${disabled}
                         onchange="toggleExportGroupAssignment('${groupKey}','${a.id}',this.checked)" class="w-4 h-4">
                             <span class="flex-1 min-w-0 truncate font-medium">${a.name}</span>
                             <span class="text-xs text-gray-500">/${getAssignmentMaxPoints(a)} ${t.points}</span>
@@ -546,7 +546,7 @@
                 <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
                     <h3 class="font-bold text-gray-800" data-translate="devoirLabel">Devoir (moyenne Devoir 1 & Devoir 2)</h3>
                     <div class="flex items-center gap-3 flex-wrap">
-                        <label class="text-sm font-semibold text-gray-700">${t.outputOn} <input type="number" min="1" step="1" value="${cfg.outMax}" class="w-20 p-2 border rounded bg-white ml-2" onchange="setExportOutMax(this.value)"></label>
+                        <label class="text-sm font-semibold text-gray-700">${t.outputOn} <input type="number" id="export-out-max" name="export-out-max" min="1" step="1" value="${cfg.outMax}" class="w-20 p-2 border rounded bg-white ml-2" onchange="setExportOutMax(this.value)"></label>
                     </div>
                 </div>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -558,13 +558,13 @@
                                 ${d1Issue ? `<span class="text-xs font-semibold text-amber-800" title="${t.exportNotOn20 || ''}">⚠️</span>` : ``}
                             </div>
                             <div class="flex items-center gap-2">
-                                <select class="p-2 border rounded bg-white text-sm" onchange="setExportGroupField('devoir1','combine',this.value)">
+                                <select id="export-d1-combine" name="export-d1-combine" class="p-2 border rounded bg-white text-sm" onchange="setExportGroupField('devoir1','combine',this.value)">
                                     <option value="sum" ${cfg.devoir1.combine === 'sum' ? 'selected' : ''}>${t.sum}</option>
                                     <option value="avg" ${cfg.devoir1.combine === 'avg' ? 'selected' : ''}>${t.average}</option>
                                     <option value="max" ${cfg.devoir1.combine === 'max' ? 'selected' : ''}>${t.max}</option>
                                 </select>
-                                <label class="text-sm flex items-center gap-2"><input type="checkbox" class="w-4 h-4" ${cfg.devoir1.normalize ? 'checked' : ''} onchange="setExportGroupField('devoir1','normalize',this.checked)"> <span data-translate="normalize">${t.normalize}</span></label>
-                                <input type="number" min="1" step="1" value="${cfg.devoir1.targetMax ?? 20}" class="w-20 p-2 border rounded bg-white text-sm" title="${t.targetMax}" onchange="setExportGroupField('devoir1','targetMax',this.value)">
+                                <label class="text-sm flex items-center gap-2"><input type="checkbox" id="export-d1-normalize" name="export-d1-normalize" class="w-4 h-4" ${cfg.devoir1.normalize ? 'checked' : ''} onchange="setExportGroupField('devoir1','normalize',this.checked)"> <span data-translate="normalize">${t.normalize}</span></label>
+                                <input type="number" id="export-d1-target" name="export-d1-target" min="1" step="1" value="${cfg.devoir1.targetMax ?? 20}" class="w-20 p-2 border rounded bg-white text-sm" title="${t.targetMax}" onchange="setExportGroupField('devoir1','targetMax',this.value)">
                             </div>
                         </div>
                         <div class="text-xs text-gray-500 mb-2" data-translate="groupHint">Sélectionnez un ou plusieurs devoirs de la classe, puis choisissez Somme ou Moyenne.</div>
@@ -578,13 +578,13 @@
                                 ${d2Issue ? `<span class="text-xs font-semibold text-amber-800" title="${t.exportNotOn20 || ''}">⚠️</span>` : ``}
                             </div>
                             <div class="flex items-center gap-2">
-                                <select class="p-2 border rounded bg-white text-sm" onchange="setExportGroupField('devoir2','combine',this.value)">
+                                <select id="export-d2-combine" name="export-d2-combine" class="p-2 border rounded bg-white text-sm" onchange="setExportGroupField('devoir2','combine',this.value)">
                                     <option value="sum" ${cfg.devoir2.combine === 'sum' ? 'selected' : ''}>${t.sum}</option>
                                     <option value="avg" ${cfg.devoir2.combine === 'avg' ? 'selected' : ''}>${t.average}</option>
                                     <option value="max" ${cfg.devoir2.combine === 'max' ? 'selected' : ''}>${t.max}</option>
                                 </select>
-                                <label class="text-sm flex items-center gap-2"><input type="checkbox" class="w-4 h-4" ${cfg.devoir2.normalize ? 'checked' : ''} onchange="setExportGroupField('devoir2','normalize',this.checked)"> <span data-translate="normalize">${t.normalize}</span></label>
-                                <input type="number" min="1" step="1" value="${cfg.devoir2.targetMax ?? 20}" class="w-20 p-2 border rounded bg-white text-sm" title="${t.targetMax}" onchange="setExportGroupField('devoir2','targetMax',this.value)">
+                                <label class="text-sm flex items-center gap-2"><input type="checkbox" id="export-d2-normalize" name="export-d2-normalize" class="w-4 h-4" ${cfg.devoir2.normalize ? 'checked' : ''} onchange="setExportGroupField('devoir2','normalize',this.checked)"> <span data-translate="normalize">${t.normalize}</span></label>
+                                <input type="number" id="export-d2-target" name="export-d2-target" min="1" step="1" value="${cfg.devoir2.targetMax ?? 20}" class="w-20 p-2 border rounded bg-white text-sm" title="${t.targetMax}" onchange="setExportGroupField('devoir2','targetMax',this.value)">
                             </div>
                         </div>
                         <div class="text-xs text-gray-500 mb-2" data-translate="groupHint">Sélectionnez un ou plusieurs devoirs de la classe, puis choisissez Somme ou Moyenne.</div>
