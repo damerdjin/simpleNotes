@@ -107,7 +107,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <!-- Assignment Name -->
                 <div class="relative group">
-                    <label class="absolute -top-2 ${labelPos} px-1.5 bg-white text-[11px] font-bold text-blue-600 z-10 transition-all group-focus-within:text-blue-700">${t.assignmentName || 'Nom du devoir'}</label>
+                    <label class="absolute -top-2 ${labelPos} px-1.5 bg-white text-[11px] font-bold text-blue-600 z-10 transition-all group-focus-within:text-blue-700" for="assignment-name">${t.assignmentName || 'Nom du devoir'}</label>
                     <div class="relative flex items-center">
                         <div class="absolute ${iconPos} text-gray-400 group-focus-within:text-blue-500 transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
@@ -119,7 +119,7 @@
 
                 <!-- Class Selection -->
                 <div class="relative group">
-                    <label class="absolute -top-2 ${labelPos} px-1.5 bg-white text-[11px] font-bold text-emerald-600 z-10 transition-all group-focus-within:text-emerald-700">${t.selectClass || 'Classe'}</label>
+                    <label class="absolute -top-2 ${labelPos} px-1.5 bg-white text-[11px] font-bold text-emerald-600 z-10 transition-all group-focus-within:text-emerald-700" for="assignment-class">${t.selectClass || 'Classe'}</label>
                     <div class="relative flex items-center">
                         <div class="absolute ${iconPos} text-gray-400 group-focus-within:text-emerald-500 transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
@@ -135,7 +135,7 @@
 
                 <!-- Subject Selection -->
                 <div class="relative group">
-                    <label class="absolute -top-2 ${labelPos} px-1.5 bg-white text-[11px] font-bold text-purple-600 z-10 transition-all group-focus-within:text-purple-700">${t.subject || 'Matière'}</label>
+                    <label class="absolute -top-2 ${labelPos} px-1.5 bg-white text-[11px] font-bold text-purple-600 z-10 transition-all group-focus-within:text-purple-700" for="assignment-subject">${t.subject || 'Matière'}</label>
                     <div class="relative flex items-center">
                         <div class="absolute ${iconPos} text-gray-400 group-focus-within:text-purple-500 transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
@@ -153,7 +153,7 @@
 
             <!-- Grade Date Section -->
             <div class="relative group">
-                <label class="absolute -top-2 ${labelPos} px-1.5 bg-white text-[11px] font-bold text-blue-600 z-10 transition-all group-focus-within:text-blue-700">${t.gradeDate || 'Date du devoir'}</label>
+                <label class="absolute -top-2 ${labelPos} px-1.5 bg-white text-[11px] font-bold text-blue-600 z-10 transition-all group-focus-within:text-blue-700" for="assignment-grade-date">${t.gradeDate || 'Date du devoir'}</label>
                 <div class="relative flex items-center">
                     <div class="absolute ${iconPos} text-gray-400 group-focus-within:text-blue-500 transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v3m8 4v-3M8 11h.01M8 15h.01M11 8h.01M11 12h.01M11 16h.01"></path></svg>
@@ -201,11 +201,11 @@
           <div id="global-maxpoints-container" class="hidden animate-in slide-in-from-top-2 duration-200">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-amber-50/50 rounded-xl border border-amber-100">
               <div class="space-y-1">
-                <label class="text-sm font-semibold text-amber-900 ml-1">${t.globalMaxLabel || 'Note maximale'}</label>
+                <label class="text-sm font-semibold text-amber-900 ml-1" for="assignment-global-maxpoints">${t.globalMaxLabel || 'Note maximale'}</label>
                 <input type="number" id="assignment-global-maxpoints" class="w-full p-2.5 border-2 border-amber-100 rounded-lg focus:border-amber-500 outline-none" min="0" step="0.25" value="20">
               </div>
               <div id="global-default-grade-container" class="${editingAssignmentId ? 'hidden' : ''} space-y-1">
-                <label class="text-sm font-semibold text-amber-900 ml-1">${t.defaultGrade || 'Note par défaut'}</label>
+                <label class="text-sm font-semibold text-amber-900 ml-1" for="assignment-global-defaultgrade">${t.defaultGrade || 'Note par défaut'}</label>
                 <input type="number" id="assignment-global-defaultgrade" class="w-full p-2.5 border-2 border-amber-100 rounded-lg focus:border-amber-500 outline-none" min="0" step="0.25" value="">
               </div>
             </div>
@@ -229,7 +229,7 @@
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path></svg>
                 </div>
                 <div class="flex-1">
-                  <label class="block font-semibold text-indigo-900 mb-1">${t.copyGrades || 'Copier les notes d\'un autre devoir'}</label>
+                  <label class="block font-semibold text-indigo-900 mb-1" for="copy-grades-source">${t.copyGrades || 'Copier les notes d\'un autre devoir'}</label>
                   <select id="copy-grades-source" class="w-full p-2.5 border-2 border-indigo-100 rounded-lg bg-white focus:border-indigo-500 outline-none text-sm transition-all">
                       <option value="">${t.noCopyGrades || '-- Ne pas copier --'}</option>
                   </select>
@@ -411,6 +411,7 @@
                     <span class="text-xs font-bold text-emerald-600 uppercase tracking-wider">${t.questionPrefix || 'Q'}</span>
                     <input type="text" placeholder="1, 2..." value="${q.name || ''}"
                         onchange="${basePath}.name = this.value"
+                        aria-label="${t.questionName || 'Nom de la question'}"
                         class="w-12 p-1 border border-emerald-200 rounded-lg text-sm font-bold text-emerald-700 bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none">
                 </div>
                 
@@ -419,6 +420,7 @@
                         <span class="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">${t.pointsAbbr || 'Pts'}</span>
                         <input type="number" placeholder="0" value="${q.maxPoints || ''}" min="0" step="0.25"
                             onchange="${basePath}.maxPoints = parseFloat(this.value); window.renderExercisesBuilder()"
+                            aria-label="${t.questionPoints || 'Points'}"
                             class="w-14 p-0.5 text-sm font-semibold text-gray-700 outline-none text-center" title="${t.questionPoints}">
                     </div>
                 ` : `
@@ -446,11 +448,13 @@
                         <div class="flex items-center gap-2 bg-white/80 p-1.5 rounded-lg border border-emerald-100 shadow-sm hover:border-emerald-300 transition-all">
                             <input type="text" value="${sq.name || ''}" 
                                 onchange="${basePath}.subQuestions[${sqIdx}].name = this.value"
+                                aria-label="${t.subQuestionName || 'Nom de la sous-question'}"
                                 class="w-8 p-1 border-0 text-orange-600 font-bold text-center text-sm focus:ring-0">
                             <span class="text-orange-400 font-bold">)</span>
                             <div class="flex items-center gap-1 flex-1 min-w-[50px]">
                                 <input type="number" placeholder="${t.pointsAbbr || 'Pts'}" value="${sq.maxPoints || ''}" min="0" step="0.25"
                                     onchange="${basePath}.subQuestions[${sqIdx}].maxPoints = parseFloat(this.value); window.renderExercisesBuilder()"
+                                    aria-label="${t.questionPoints || 'Points'}"
                                     class="w-full p-1 text-xs font-semibold text-gray-700 border-b border-transparent focus:border-emerald-400 outline-none" title="${t.questionPoints}">
                             </div>
                             <button onclick="${basePath}.subQuestions.splice(${sqIdx}, 1); window.renderExercisesBuilder()" 
@@ -530,6 +534,7 @@
                            placeholder="${t.exerciseNameAbbr || 'Nom'}" 
                            value="${ex.name || ''}" 
                            onchange="window.tempExercises[${i}].name = this.value"
+                           aria-label="${t.exerciseName || 'Nom de l\'exercice'}"
                            class="w-full p-1.5 border border-blue-200 focus:border-blue-400 rounded-lg text-[11px] font-medium bg-white/50 focus:bg-white outline-none transition-all"
                            title="${t.exerciseName}">
                 </div>
@@ -546,6 +551,7 @@
                             <span class="text-[10px] font-bold text-amber-600 uppercase tracking-tighter">${t.defaultGrade || 'Def'}</span>
                             <input type="number" placeholder="-" value="${ex.defaultGrade || ''}" min="0" step="0.25"
                                 onchange="window.tempExercises[${i}].defaultGrade = this.value === '' ? '' : parseFloat(this.value)"
+                                aria-label="${t.defaultGrade || 'Note par défaut'}"
                                 class="w-14 text-sm font-bold text-amber-700 bg-transparent outline-none text-center">
                         </div>
                     ` : ''}
