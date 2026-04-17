@@ -1686,12 +1686,12 @@
                         </div>
 
                         <!-- Hidden selects for compatibility with existing JS -->
-                        <select id="global-trimester" class="hidden">
+                        <select id="global-trimester" class="hidden" aria-label="Trimestre">
                             <option value="1">1</option>
                             <option value="2">2</option>
                             <option value="3">3</option>
                         </select>
-                        <select id="global-academic-year" class="hidden">
+                        <select id="global-academic-year" class="hidden" aria-label="Année académique">
                             <option value="2025/2026">2025/2026</option>
                             <option value="2024/2025">2024/2025</option>
                         </select>
@@ -1799,6 +1799,7 @@
                                 <!-- Search Classes -->
                                 <div class="relative max-w-md mb-8 group">
                                     <input type="text" id="students-class-search" data-translate-placeholder="searchClassPlaceholder" placeholder="Rechercher une classe..." 
+                                        aria-label="Rechercher une classe"
                                         oninput="renderClassList()"
                                         class="w-full ps-12 pe-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-medium text-slate-600 placeholder:text-slate-400">
                                     <svg class="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -1831,6 +1832,7 @@
                                     <div class="flex items-center gap-2 sm:gap-3">
                                         <div class="relative group flex-1">
                                             <input type="text" id="student-search" data-translate-placeholder="searchStudentPlaceholder" placeholder="Rechercher..."
+                                                aria-label="Rechercher un élève"
                                                 oninput="renderStudents()" 
                                                 class="w-full ps-9 pe-4 py-2.5 bg-slate-50 border-slate-200 hover:border-blue-300 focus:border-blue-500 rounded-xl outline-none transition-all text-xs sm:text-sm border shadow-sm">
                                             <svg class="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -1865,12 +1867,13 @@
                         <!-- Filters -->
                         <div class="mb-8 space-y-4">
                             <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3" data-translate="filterByClass">Filtrer par classe</label>
+                                <p class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3" data-translate="filterByClass">Filtrer par classe</p>
                                 <div id="assignment-class-chips" class="flex flex-wrap gap-2"></div>
                             </div>
                             <div class="relative group">
                                 <input type="text" id="filter-name-assignments" placeholder="Rechercher un devoir..."
                                     data-translate-placeholder="searchAssignment"
+                                    aria-label="Rechercher un devoir"
                                     onkeyup="renderAssignments()"
                                     class="w-full ps-11 pe-4 py-3 bg-white border-2 border-slate-100 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-medium text-slate-600">
                                 <svg class="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -1943,11 +1946,11 @@
                         <div id="grade-step-3" class="step-content hidden transition-all duration-500">
                             <!-- Hidden Selectors to maintain compatibility -->
                             <div class="hidden">
-                                 <select id="select-class-grades" onchange="loadGradeSelectors()"></select>
+                                 <select id="select-class-grades" onchange="loadGradeSelectors()" aria-label="Sélectionner une classe"></select>
                             </div>
                             <!-- Assignment Select (Hidden but functional) -->
                              <div class="hidden">
-                                <select id="select-assignment" onchange="loadGradeEntry()"></select>
+                                <select id="select-assignment" onchange="loadGradeEntry()" aria-label="Sélectionner un devoir"></select>
                             </div>
                             
                              <div class="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4 px-4">
@@ -1962,7 +1965,7 @@
                                         <svg class="w-5 h-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                                     </button>
                                      <div class="relative flex-1 sm:w-64">
-                                        <select id="select-student" onchange="loadGradeEntry()" class="w-full appearance-none bg-transparent font-bold text-center text-slate-700 outline-none cursor-pointer py-1 truncate px-2">
+                                        <select id="select-student" onchange="loadGradeEntry()" class="w-full appearance-none bg-transparent font-bold text-center text-slate-700 outline-none cursor-pointer py-1 truncate px-2" aria-label="Sélectionner un élève">
                                             <!-- Populated by JS -->
                                         </select>
                                         <div class="absolute inset-y-0 right-0 rtl:right-auto rtl:left-0 flex items-center px-2 pointer-events-none text-slate-400">
@@ -1989,28 +1992,29 @@
                         <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
                             <h2 class="text-2xl font-bold text-gray-800" data-translate="summaryTitle">Récapitulatif des Notes</h2>
                             <div class="flex items-center gap-2 mb-4">
-                                <label class="flex items-center gap-2">
-                                    <input type="radio" name="summaryMode" value="default" checked
+                                <label class="flex items-center gap-2" for="summaryMode-default">
+                                    <input type="radio" id="summaryMode-default" name="summaryMode" value="default" checked
                                         onchange="setSummaryMode('default')">
                                     <span data-translate="defaultView">Vue par défaut</span>
                                 </label>
-                                <label class="flex items-center gap-2">
-                                    <input type="radio" name="summaryMode" value="view1" onchange="setSummaryMode('view1')">
+                                <label class="flex items-center gap-2" for="summaryMode-view1">
+                                    <input type="radio" id="summaryMode-view1" name="summaryMode" value="view1" onchange="setSummaryMode('view1')">
                                     <span data-translate="view1">Vue 1</span>
                                 </label>
-                                <label class="flex items-center gap-2">
-                                    <input type="radio" name="summaryMode" value="grouped"
+                                <label class="flex items-center gap-2" for="summaryMode-grouped">
+                                    <input type="radio" id="summaryMode-grouped" name="summaryMode" value="grouped"
                                         onchange="setSummaryMode('grouped')">
                                     <span data-translate="view2">Vue 2</span>
                                 </label>
                             </div>
                             <div class="flex items-center gap-4 flex-wrap">
                                 <input type="text" id="summary-search" placeholder="Rechercher (nom, prénom, classe)" data-translate-placeholder="searchPlaceholderSummary"
+                                    aria-label="Rechercher un élève dans le récapitulatif"
                                     oninput="renderSummary()" class="p-3 border rounded-lg min-w-60">
-                                <select id="select-class-summary" onchange="renderSummary()" class="p-3 border rounded-lg">
+                                <select id="select-class-summary" onchange="renderSummary()" class="p-3 border rounded-lg" aria-label="Filtrer par classe dans le récapitulatif">
                                     <option value="">-- Sélectionner une classe --</option>
                                 </select>
-                                <label class="flex items-center gap-2">
+                                <label class="flex items-center gap-2" for="show-details">
                                     <input type="checkbox" id="show-details" onchange="renderSummary()" class="w-5 h-5">
                                     <span data-translate="showDetailsExercises">Afficher les détails (exercices)</span>
                                 </label>
@@ -2042,7 +2046,7 @@
 
                             <!-- Choix classe -->
                             <div id="export-class-card" class="mb-4 p-4 bg-gray-50 rounded-lg">
-                                <label class="block text-sm font-medium text-gray-700 mb-2" data-translate="selectClass">
+                                <label class="block text-sm font-medium text-gray-700 mb-2" data-translate="selectClass" for="select-class-export">
                                     -- Sélectionner une classe --
                                 </label>
                                 <select id="select-class-export"
@@ -2111,7 +2115,7 @@
                                     </h3>
                                     <div class="space-y-4">
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-600 mb-2" data-translate="languageLabel">Langue</label>
+                                            <label class="block text-sm font-medium text-gray-600 mb-2" data-translate="languageLabel" for="config-language-select">Langue</label>
                                             <select id="config-language-select" 
                                                     class="w-full p-3 bg-white border rounded-lg hover:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition cursor-pointer text-sm">
                                                 <option value="fr">Français</option>
@@ -2129,7 +2133,7 @@
                                         📥 <span data-translate="importData">Importation</span>
                                     </h3>
                                     <div class="space-y-3">
-                                        <label class="flex items-center justify-between p-3 bg-white border rounded-lg hover:border-blue-400 cursor-pointer transition group">
+                                        <label class="flex items-center justify-between p-3 bg-white border rounded-lg hover:border-blue-400 cursor-pointer transition group" for="json-import">
                                             <span class="text-sm font-medium text-gray-600" data-translate="importJson">Importer (.json)</span>
                                             <span class="text-blue-500 group-hover:translate-x-1 transition">➔</span>
                                             <input type="file" id="json-import" accept=".json" class="hidden">
@@ -2186,6 +2190,7 @@
             <div class="modal-content-scroll custom-scrollbar">
                 <div class="relative mb-4 group">
                     <input type="text" id="join-class-search" data-translate-placeholder="searchClassPlaceholder" placeholder="Rechercher une classe..." 
+                        aria-label="Rechercher une classe à rejoindre"
                         oninput="renderJoinClassList()"
                         class="w-full ps-10 pe-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all text-sm font-medium">
                     <svg class="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -2263,7 +2268,7 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                         <!-- Last Name -->
                         <div class="relative group">
-                            <label class="absolute -top-2 left-3 px-1.5 bg-white text-[9px] sm:text-[10px] font-bold text-gray-400 group-focus-within:text-blue-600 transition-colors z-10" data-translate="lastName">Nom</label>
+                            <label class="absolute -top-2 left-3 px-1.5 bg-white text-[9px] sm:text-[10px] font-bold text-gray-400 group-focus-within:text-blue-600 transition-colors z-10" data-translate="lastName" for="student-lastname">Nom</label>
                             <div class="flex items-center border-2 border-gray-100 rounded-xl group-focus-within:border-blue-500/30 group-focus-within:ring-4 group-focus-within:ring-blue-500/10 transition-all bg-gray-50/30 group-focus-within:bg-white overflow-hidden">
                                 <div class="pl-3.5 text-gray-400 group-focus-within:text-blue-500 transition-colors">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
@@ -2274,7 +2279,7 @@
 
                         <!-- First Name -->
                         <div class="relative group">
-                            <label class="absolute -top-2 left-3 px-1.5 bg-white text-[9px] sm:text-[10px] font-bold text-gray-400 group-focus-within:text-blue-600 transition-colors z-10" data-translate="firstName">Prénom</label>
+                            <label class="absolute -top-2 left-3 px-1.5 bg-white text-[9px] sm:text-[10px] font-bold text-gray-400 group-focus-within:text-blue-600 transition-colors z-10" data-translate="firstName" for="student-firstname">Prénom</label>
                             <div class="flex items-center border-2 border-gray-100 rounded-xl group-focus-within:border-blue-500/30 group-focus-within:ring-4 group-focus-within:ring-blue-500/10 transition-all bg-gray-50/30 group-focus-within:bg-white overflow-hidden">
                                 <div class="pl-3.5 text-gray-400 group-focus-within:text-blue-500 transition-colors">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
@@ -2286,7 +2291,7 @@
 
                     <!-- NIN -->
                     <div class="relative group">
-                        <label class="absolute -top-2 left-3 px-1.5 bg-white text-[9px] sm:text-[10px] font-bold text-gray-400 group-focus-within:text-blue-600 transition-colors z-10" data-translate="nin">NIN</label>
+                        <label class="absolute -top-2 left-3 px-1.5 bg-white text-[9px] sm:text-[10px] font-bold text-gray-400 group-focus-within:text-blue-600 transition-colors z-10" data-translate="nin" for="student-nin">NIN</label>
                         <div class="flex items-center border-2 border-gray-100 rounded-xl group-focus-within:border-blue-500/30 group-focus-within:ring-4 group-focus-within:ring-blue-500/10 transition-all bg-gray-50/30 group-focus-within:bg-white overflow-hidden">
                             <div class="pl-3.5 text-gray-400 group-focus-within:text-blue-500 transition-colors">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path></svg>
@@ -2308,7 +2313,7 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                         <!-- Class Select -->
                         <div class="relative group">
-                            <label class="absolute -top-2 left-3 px-1.5 bg-white text-[9px] sm:text-[10px] font-bold text-gray-400 group-focus-within:text-emerald-600 transition-colors z-10" data-translate="class">Classe</label>
+                            <label class="absolute -top-2 left-3 px-1.5 bg-white text-[9px] sm:text-[10px] font-bold text-gray-400 group-focus-within:text-emerald-600 transition-colors z-10" data-translate="class" for="student-class-select">Classe</label>
                             <div class="flex items-center border-2 border-gray-100 rounded-xl group-focus-within:border-emerald-500/30 group-focus-within:ring-4 group-focus-within:ring-emerald-500/10 transition-all bg-gray-50/30 group-focus-within:bg-white overflow-hidden">
                                 <div class="pl-3.5 text-gray-400 group-focus-within:text-emerald-500 transition-colors">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
@@ -2324,7 +2329,7 @@
 
                         <!-- Academic Year -->
                         <div class="relative group">
-                            <label class="absolute -top-2 left-3 px-1.5 bg-white text-[9px] sm:text-[10px] font-bold text-gray-400 group-focus-within:text-emerald-600 transition-colors z-10" data-translate="academicYear">Année Scolaire</label>
+                            <label class="absolute -top-2 left-3 px-1.5 bg-white text-[9px] sm:text-[10px] font-bold text-gray-400 group-focus-within:text-emerald-600 transition-colors z-10" data-translate="academicYear" for="student-academic-year">Année Scolaire</label>
                             <div class="flex items-center border-2 border-gray-100 rounded-xl group-focus-within:border-emerald-500/30 group-focus-within:ring-4 group-focus-within:ring-emerald-500/10 transition-all bg-gray-50/30 group-focus-within:bg-white overflow-hidden">
                                 <div class="pl-3.5 text-gray-400 group-focus-within:text-emerald-500 transition-colors">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
@@ -2343,7 +2348,7 @@
 
                     <!-- New Class Input (Hidden by default) -->
                     <div id="student-class-new-container" class="relative group hidden animate-in zoom-in-95 duration-200">
-                        <label class="absolute -top-2 left-3 px-1.5 bg-white text-[9px] sm:text-[10px] font-bold text-gray-400 group-focus-within:text-emerald-600 transition-colors z-10" data-translate="newClass">Nouvelle Classe</label>
+                        <label class="absolute -top-2 left-3 px-1.5 bg-white text-[9px] sm:text-[10px] font-bold text-gray-400 group-focus-within:text-emerald-600 transition-colors z-10" data-translate="newClass" for="student-class-new">Nouvelle Classe</label>
                         <div class="flex items-center border-2 border-emerald-100 rounded-xl group-focus-within:border-emerald-500/30 group-focus-within:ring-4 group-focus-within:ring-emerald-500/10 transition-all bg-emerald-50/10 group-focus-within:bg-white overflow-hidden">
                             <div class="pl-3.5 text-emerald-400">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
@@ -2375,12 +2380,12 @@
                     </div>
                     <p class="text-xs text-slate-500 mb-4">Si ce n'est pas l'année souhaitée, changez-la dans la barre supérieure avant d'importer pour éviter les écrasements.</p>
                     
-                    <label class="block w-full cursor-pointer group">
+                    <label class="block w-full cursor-pointer group" for="student-bulk-import-input">
                         <div class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center justify-center gap-3">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                             <span data-translate="importOstadButton">Sélectionner le fichier</span>
                         </div>
-                        <input type="file" accept=".xlsx,.xls" class="hidden" onchange="handleStudentImport(event)">
+                        <input type="file" id="student-bulk-import-input" accept=".xlsx,.xls" class="hidden" onchange="handleStudentImport(event)" aria-label="Sélectionner le fichier Excel à importer">
                     </label>
                 </div>
                 
