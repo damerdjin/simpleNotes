@@ -185,7 +185,7 @@
             const val = qGrades['direct'] || '';
             qHtml += `
             <div class="relative ${mode === 'global' ? 'opacity-40 grayscale pointer-events-none' : ''}">
-                <input type="number" min="0" max="${q.maxPoints}" step="0.25" value="${val}"
+                <input type="number" id="grade-direct-${q.id}" name="grade-direct-${q.id}" min="0" max="${q.maxPoints}" step="0.25" value="${val}"
                     ${mode === 'global' ? 'disabled' : ''}
                     onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','direct',this.value)"
                     onkeydown="if(event.key==='Enter'){ this.blur(); window.toggleAccordion('grade-ex-${exId}'); }"
@@ -203,7 +203,7 @@
                         <span class="text-[10px] font-bold text-slate-500 uppercase">${window.getSubQuestionLetter(q, sq.id)})</span>
                         <span class="text-[10px] font-bold text-slate-400">/${sq.maxPoints}</span>
                     </div>
-                    <input type="number" min="0" max="${sq.maxPoints}" step="0.25" value="${val}"
+                    <input type="number" id="grade-sq-${sq.id}" name="grade-sq-${sq.id}" min="0" max="${sq.maxPoints}" step="0.25" value="${val}"
                         ${mode === 'global' ? 'disabled' : ''}
                         onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','${sq.id}',this.value)"
                         onkeydown="if(event.key==='Enter'){ this.blur(); window.toggleAccordion('grade-ex-${exId}'); }"
@@ -418,7 +418,7 @@
                     
                     <div class="flex items-center gap-4 w-full sm:w-auto">
                         <div class="relative flex-1 sm:w-56">
-                            <input type="number" inputmode="decimal" min="0" max="${maxPts}" step="0.25" value="${val}"
+                            <input type="number" id="grade-simple-${qId}" name="grade-simple-${qId}" inputmode="decimal" min="0" max="${maxPts}" step="0.25" value="${val}"
                                 onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','${partKey}','${qId}','direct',this.value)"
                                 onkeydown="if(event.key==='Enter'){ this.blur(); const sel = document.getElementById('select-student'); if(sel) sel.focus(); }"
                                 class="w-full p-3 sm:p-5 ${inputPaddingLarge} bg-[color:var(--theme-color)]/5 border-2 border-[color:var(--theme-color)]/20 rounded-2xl text-center font-black text-[color:var(--theme-color)] text-2xl sm:text-3xl focus:border-[color:var(--theme-color)] focus:bg-white focus:ring-8 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all shadow-inner" 
@@ -527,7 +527,7 @@
                                 <div class="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto ${modeCur === 'detail' ? 'opacity-40 grayscale pointer-events-none' : ''}">
                                     <span class="text-xs font-bold text-slate-500 uppercase tracking-tight truncate mr-2 sm:mr-0">${t.globalGrade || 'Note globale'} :</span>
                                     <div class="relative shrink-0">
-                                        <input type="number" min="0" max="${maxExPoints}" step="0.25" value="${finalGradeCur}"
+                                        <input type="number" id="grade-global-${ex.id}" name="grade-global-${ex.id}" min="0" max="${maxExPoints}" step="0.25" value="${finalGradeCur}"
                                             ${modeCur === 'detail' ? 'disabled' : ''}
                                             onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
                                             onkeydown="if(event.key==='Enter'){ this.blur(); window.toggleAccordion('grade-ex-${ex.id}'); }"
@@ -550,7 +550,7 @@
                                 </div>
                                 <div class="flex items-center gap-3 w-full sm:w-auto">
                                     <div class="relative w-full sm:w-28">
-                                        <input type="number" min="0" max="${maxExPoints}" step="0.25" value="${displayVal}"
+                                        <input type="number" id="grade-single-simple-${ex.id}" name="grade-single-simple-${ex.id}" min="0" max="${maxExPoints}" step="0.25" value="${displayVal}"
                                             onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
                                             onkeydown="if(event.key==='Enter'){ this.blur(); window.toggleAccordion('grade-ex-${ex.id}'); }"
                                             class="w-full p-2 ${inputPaddingMedium} bg-white border-2 border-blue-200 rounded-lg text-center font-black text-blue-900 focus:border-blue-500 outline-none transition-all shadow-sm text-sm" 
@@ -573,7 +573,7 @@
                                 </div>
                                 <div class="flex items-center gap-3 w-full sm:w-auto">
                                     <div class="relative w-full sm:w-28">
-                                        <input type="number" min="0" max="${ex.maxPoints}" step="0.25" value="${val}"
+                                        <input type="number" id="grade-no-q-${ex.id}" name="grade-no-q-${ex.id}" min="0" max="${ex.maxPoints}" step="0.25" value="${val}"
                                             onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','direct','direct','direct',this.value)"
                                             onkeydown="if(event.key==='Enter'){ this.blur(); window.toggleAccordion('grade-ex-${ex.id}'); }"
                                             class="w-full p-2 ${inputPaddingMedium} bg-white border-2 border-blue-200 rounded-lg text-center font-black text-blue-900 focus:border-blue-500 outline-none transition-all shadow-sm text-sm" 
