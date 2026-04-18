@@ -230,7 +230,7 @@ window.translations = {
         editAssignment: "Modifier le devoir",
         createAssignmentTitle: "Créer un Devoir",
         assignmentModalSubtitle: "Configurez les détails et les exercices de votre devoir",
-        assignmentName: "Nom du devoir (ex: Devoir 1)",
+        assignmentName: "Nom du devoir",
         assignmentNamePlaceholder: "Ex: Devoir 1",
         subject: "Matière",
         subjectPlaceholder: "-- Sélectionner une matière --",
