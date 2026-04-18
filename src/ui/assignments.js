@@ -58,6 +58,19 @@
         overlay.style.background = 'rgba(15, 23, 42, 0.75)';
         overlay.style.backdropFilter = 'blur(4px)';
         document.body.style.overflow = 'hidden';
+
+        let assignment = null;
+        let isBlocked = false;
+        if (assignmentId) {
+            assignment = (getData().assignments || []).find(a => a.id === assignmentId);
+            if (assignment) {
+                const year = assignment.academicYear || window.getGlobalAcademicYear();
+                isBlocked = window.isTrimesterBlocked(assignment.trimester, year);
+            }
+        } else {
+            // New assignment: check if the currently selected trimester in header is blocked
+            isBlocked = window.isTrimesterBlocked(window.getGlobalTrimester(), window.getGlobalAcademicYear());
+        }
         
         // ARABIC FIX: Modal Layout and Typography
         const modalFlex = isAr ? 'flex-direction: column !important;' : '';
@@ -143,6 +156,24 @@
                         <select id="assignment-subject" class="w-full ${inputPadding} py-3 bg-gray-50/50 border-2 border-gray-100 rounded-xl focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 outline-none transition-all font-medium text-gray-700 appearance-none cursor-pointer">
                             <option value="">${t.subjectPlaceholder || '-- Sélectionner une matière --'}</option>
                             ${(window.subjects || []).map(s => `<option value="${s.id}">${s[getLang()] || s.fr}</option>`).join('')}
+                        </select>
+                        <div class="absolute ${chevronPos} pointer-events-none text-gray-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trimester Selection -->
+                <div class="relative group">
+                    <label class="absolute -top-2 ${labelPos} px-1.5 bg-white text-[11px] font-bold text-amber-600 z-10 transition-all group-focus-within:text-amber-700" for="assignment-trimester">${t.assignmentTrimesterLabel || 'Trimestre du devoir'}</label>
+                    <div class="relative flex items-center">
+                        <div class="absolute ${iconPos} text-gray-400 group-focus-within:text-amber-500 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        </div>
+                        <select id="assignment-trimester" class="w-full ${inputPadding} py-3 bg-gray-50/50 border-2 border-gray-100 rounded-xl focus:bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all font-medium text-gray-700 appearance-none cursor-pointer">
+                            <option value="1">T1</option>
+                            <option value="2">T2</option>
+                            <option value="3">T3</option>
                         </select>
                         <div class="absolute ${chevronPos} pointer-events-none text-gray-400">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -247,26 +278,48 @@
           <button onclick="closeAssignmentModal()" 
             class="px-6 py-2.5 text-gray-600 font-semibold hover:bg-gray-200 rounded-xl transition-all" 
             data-translate="cancel">${t.cancel || 'Annuler'}</button>
-          <button onclick="saveAssignment()" 
-            class="px-8 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 active:scale-95 transition-all" 
+          <button id="assignment-save-btn" onclick="saveAssignment()" 
+            class="px-8 py-2.5 bg-blue-600 text-white font-black rounded-xl hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/30 transition-all active:scale-95 flex items-center gap-2" 
             data-translate="save">${t.save || 'Enregistrer le devoir'}</button>
         </div>
       </div>`;
         document.body.appendChild(overlay);
+
+        if (isBlocked) {
+            const titleEl = document.getElementById('assignment-modal-title');
+            if (titleEl) titleEl.textContent += ` (${t.lockedLabel || 'Verrouillé'})`;
+            
+            const errorZone = document.getElementById('assignment-modal-error');
+            const errorText = document.getElementById('assignment-modal-error-text');
+            if (errorZone && errorText) {
+                errorText.textContent = t.trimesterLockedAlert || 'Ce trimestre est verrouillé.';
+                errorZone.classList.remove('hidden');
+                errorZone.querySelector('.bg-red-50').classList.replace('bg-red-50', 'bg-amber-50');
+                errorZone.querySelector('.border-red-100').classList.replace('border-red-100', 'border-amber-100');
+                errorZone.querySelector('.text-red-700').classList.replace('text-red-700', 'text-amber-800');
+                errorZone.querySelector('.bg-red-100').classList.replace('bg-red-100', 'bg-amber-100');
+                errorZone.querySelector('.text-red-600').classList.replace('text-red-600', 'text-amber-600');
+            }
+            
+            const saveBtn = document.getElementById('assignment-save-btn');
+            if (saveBtn) {
+                saveBtn.classList.add('opacity-30', 'cursor-not-allowed', 'pointer-events-none');
+            }
+        }
+
         try {
             await loadClassSelectors();
             const globalCheckbox = document.getElementById('assignment-global-only');
             const globalMaxInput = document.getElementById('assignment-global-maxpoints');
             if (assignmentId) {
-                const assignment = getData().assignments.find(a => a.id === assignmentId);
                 if (!assignment) return;
                 document.getElementById('assignment-modal-title').textContent = t.editAssignment || 'Modifier le devoir';
                 document.getElementById('assignment-name').value = assignment.name;
                 document.getElementById('assignment-class').value = assignment.className;
                 document.getElementById('assignment-subject').value = assignment.subject || '';
+                document.getElementById('assignment-trimester').value = assignment.trimester || '1';
                 document.getElementById('assignment-visible').checked = assignment.isVisible || false;
                 
-                // Charger la date du devoir en mode modification
                 const dateInput = document.getElementById('assignment-grade-date');
                 if (dateInput && assignment.gradeDate) {
                     dateInput.value = assignment.gradeDate;
@@ -309,9 +362,13 @@
                 window.tempExercises = [];
                 isGlobalAssignment = true;
                 if (globalCheckbox) globalCheckbox.checked = true;
-                if (globalMaxInput) globalMaxInput.value = 20;
+                
+                // New assignment: set default trimester to current global filter
+                const triSelect = document.getElementById('assignment-trimester');
+                if (triSelect) {
+                    triSelect.value = window.getGlobalTrimester() || '1';
+                }
 
-                // Initialiser la date par défaut (aujourd'hui) en mode création
                 const dateInput = document.getElementById('assignment-grade-date');
                 if (dateInput) {
                     dateInput.value = new Date().toISOString().split('T')[0];
@@ -784,6 +841,24 @@
 
         const data = getData();
         const currentYear = window.getGlobalAcademicYear();
+        const academicYear = editingAssignmentId 
+            ? data.assignments.find(a => a.id === editingAssignmentId)?.academicYear 
+            : currentYear;
+
+        // Security check for existing assignments
+        if (editingAssignmentId) {
+            const assignment = data.assignments.find(a => a.id === editingAssignmentId);
+            if (window.isTrimesterBlocked(assignment?.trimester, assignment?.academicYear)) {
+                if (window.showToast) window.showToast(t.trimesterLockedAlert, 'error');
+                return;
+            }
+        }
+        
+        // Security check for new assignments being created in a past trimester
+        if (!editingAssignmentId && window.isTrimesterBlocked(trimester, academicYear)) {
+            if (window.showToast) window.showToast(t.trimesterLockedAlert, 'error');
+            return;
+        }
         const currentUserId = window.currentUser?.email || window.currentUser?.id || 'unknown';
         
         // Check duplicates: Name + Class + Trimester + Academic Year + Teacher
@@ -922,6 +997,13 @@
     window.deleteAssignment = function (id) {
         const t = getTranslations()[getLang()];
         const data = getData();
+        const assignment = data.assignments.find(a => a.id === id);
+
+        if (window.isTrimesterBlocked(assignment?.trimester, assignment?.academicYear)) {
+            if (window.showToast) window.showToast(t.trimesterLockedAlert, 'error');
+            return;
+        }
+
         if (!confirm(t.deleteAssignment)) return;
 
         data.assignments = data.assignments.filter(a => a.id !== id);
@@ -940,6 +1022,15 @@
         const data = getData();
         const original = data.assignments.find(a => a.id === id);
         if (!original) return;
+
+        // Security check: cannot duplicate TO a blocked trimester (if original is blocked)
+        // actually usually duplication is allowed but save is blocked. 
+        // Let's block here too for consistency.
+        if (window.isTrimesterBlocked(original.trimester, original.academicYear)) {
+            const t = getTranslations()[getLang()];
+            if (window.showToast) window.showToast(t.trimesterLockedAlert, 'error');
+            return;
+        }
 
         const newId = genId();
         const newAssignment = {
@@ -1091,7 +1182,14 @@
                 // --- FIN DE LA LOGIQUE ---
 
                 const nbStudents = allClassStudents.length;
-                const nbGrades = allClassStudents.filter(s => window.hasAnyGradeForAssignment(s.id, a.id)).length;
+                const hasGradeFunc = window.hasAnyGradeForAssignment || ((sid, aid) => gradesSvc()?.hasAnyGradeForAssignment?.(data, sid, aid));
+                const nbGrades = allClassStudents.filter(s => {
+                    try {
+                        return hasGradeFunc(s.id, a.id);
+                    } catch(e) {
+                        return false;
+                    }
+                }).length;
                 const completionRate = nbStudents > 0 ? Math.round((nbGrades / nbStudents) * 100) : 0;
 
                 const classColor = getClassColor(a.className);
@@ -1170,14 +1268,14 @@
                             <button onclick="openAssignmentModal('${a.id}')" class="p-2.5 text-gray-600 hover:text-orange-600 hover:bg-white hover:shadow-md rounded-xl transition-all active:scale-90 border border-transparent hover:border-orange-100" title="${t.edit}">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                             </button>
-                            <button onclick="duplicateAssignment('${a.id}')" class="p-2.5 text-gray-600 hover:text-emerald-600 hover:bg-white hover:shadow-md rounded-xl transition-all active:scale-90 border border-transparent hover:border-emerald-100" title="${t.duplicate}">
+                            <button onclick="duplicateAssignment('${a.id}')" class="p-2.5 text-gray-600 hover:text-emerald-600 hover:bg-white hover:shadow-md rounded-xl transition-all active:scale-90 border border-transparent hover:border-emerald-100 ${window.isTrimesterBlocked(a.trimester, a.academicYear) ? 'opacity-30 cursor-not-allowed' : ''}" title="${t.duplicate}">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path></svg>
                             </button>
-                            <button onclick="duplicateAssignment('${a.id}', true)" class="p-2.5 text-gray-600 hover:text-amber-600 hover:bg-white hover:shadow-md rounded-xl transition-all active:scale-90 border border-transparent hover:border-amber-100" title="${t.duplicateNotes}">
+                            <button onclick="duplicateAssignment('${a.id}', true)" class="p-2.5 text-gray-600 hover:text-amber-600 hover:bg-white hover:shadow-md rounded-xl transition-all active:scale-90 border border-transparent hover:border-amber-100 ${window.isTrimesterBlocked(a.trimester, a.academicYear) ? 'opacity-30 cursor-not-allowed' : ''}" title="${t.duplicateNotes}">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
                             </button>
                         </div>
-                        <button onclick="deleteAssignment('${a.id}')" class="p-2.5 text-gray-400 hover:text-red-600 hover:bg-white hover:shadow-md rounded-xl transition-all active:scale-90 border border-transparent hover:border-red-100" title="${t.delete}">
+                        <button onclick="deleteAssignment('${a.id}')" class="p-2.5 text-gray-400 hover:text-red-600 hover:bg-white hover:shadow-md rounded-xl transition-all active:scale-90 border border-transparent hover:border-red-100 ${window.isTrimesterBlocked(a.trimester, a.academicYear) ? 'opacity-30 cursor-not-allowed' : ''}" title="${t.delete}">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         </button>
                     </div>

@@ -183,31 +183,33 @@
         
         if (!q.subQuestions || q.subQuestions.length === 0) {
             const val = qGrades['direct'] || '';
+            const isBlocked = window.isTrimesterBlocked(assignment?.trimester, assignment?.academicYear);
             qHtml += `
-            <div class="relative ${mode === 'global' ? 'opacity-40 grayscale pointer-events-none' : ''}">
+            <div class="relative ${(mode === 'global' || isBlocked) ? 'opacity-40 grayscale pointer-events-none' : ''}">
                 <input type="number" id="grade-direct-${q.id}" name="grade-direct-${q.id}" min="0" max="${q.maxPoints}" step="0.25" value="${val}"
-                    ${mode === 'global' ? 'disabled' : ''}
+                    ${(mode === 'global' || isBlocked) ? 'disabled' : ''}
                     onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','direct',this.value)"
                     onkeydown="if(event.key==='Enter'){ this.blur(); window.toggleAccordion('grade-ex-${exId}'); }"
-                    class="w-full p-2.5 ${inputPadding} bg-white border-2 border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:border-[color:var(--theme-color)] focus:ring-4 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all" 
+                    class="w-full p-2.5 ${inputPadding} bg-white border-2 border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:border-[color:var(--theme-color)] focus:ring-4 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all ${isBlocked ? 'cursor-not-allowed' : ''}" 
                     placeholder="0">
                 <div class="absolute ${suffixPos} top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">/ ${q.maxPoints}</div>
             </div>`;
         } else {
+            const isBlocked = window.isTrimesterBlocked(assignment?.trimester, assignment?.academicYear);
             qHtml += `<div class="grid grid-cols-2 gap-2">`;
             qHtml += q.subQuestions.map(sq => {
                 const val = qGrades[sq.id] || '';
                 return `
-                <div class="space-y-1 ${mode === 'global' ? 'opacity-40 grayscale pointer-events-none' : ''}">
+                <div class="space-y-1 ${(mode === 'global' || isBlocked) ? 'opacity-40 grayscale pointer-events-none' : ''}">
                     <div class="flex justify-between px-1">
                         <span class="text-[10px] font-bold text-slate-500 uppercase">${window.getSubQuestionLetter(q, sq.id)})</span>
                         <span class="text-[10px] font-bold text-slate-400">/${sq.maxPoints}</span>
                     </div>
                     <input type="number" id="grade-sq-${sq.id}" name="grade-sq-${sq.id}" min="0" max="${sq.maxPoints}" step="0.25" value="${val}"
-                        ${mode === 'global' ? 'disabled' : ''}
+                        ${(mode === 'global' || isBlocked) ? 'disabled' : ''}
                         onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','${sq.id}',this.value)"
                         onkeydown="if(event.key==='Enter'){ this.blur(); window.toggleAccordion('grade-ex-${exId}'); }"
-                        class="w-full p-2 bg-white border-2 border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:border-[color:var(--theme-color)] focus:ring-4 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all text-xs"
+                        class="w-full p-2 bg-white border-2 border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:border-[color:var(--theme-color)] focus:ring-4 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all text-xs ${isBlocked ? 'cursor-not-allowed' : ''}"
                         placeholder="0">
                 </div>`;
             }).join('');
@@ -419,9 +421,10 @@
                     <div class="flex items-center gap-4 w-full sm:w-auto">
                         <div class="relative flex-1 sm:w-56">
                             <input type="number" id="grade-simple-${qId}" name="grade-simple-${qId}" inputmode="decimal" min="0" max="${maxPts}" step="0.25" value="${val}"
+                                ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'disabled' : ''}
                                 onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','${partKey}','${qId}','direct',this.value)"
                                 onkeydown="if(event.key==='Enter'){ this.blur(); const sel = document.getElementById('select-student'); if(sel) sel.focus(); }"
-                                class="w-full p-3 sm:p-5 ${inputPaddingLarge} bg-[color:var(--theme-color)]/5 border-2 border-[color:var(--theme-color)]/20 rounded-2xl text-center font-black text-[color:var(--theme-color)] text-2xl sm:text-3xl focus:border-[color:var(--theme-color)] focus:bg-white focus:ring-8 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all shadow-inner" 
+                                class="w-full p-3 sm:p-5 ${inputPaddingLarge} bg-[color:var(--theme-color)]/5 border-2 border-[color:var(--theme-color)]/20 rounded-2xl text-center font-black text-[color:var(--theme-color)] text-2xl sm:text-3xl focus:border-[color:var(--theme-color)] focus:bg-white focus:ring-8 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all shadow-inner ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'cursor-not-allowed' : ''}" 
                                 placeholder="0">
                             <div class="absolute ${suffixPosLarge} top-1/2 -translate-y-1/2 text-xs sm:text-sm font-black text-[color:var(--theme-color)]/50">/ ${maxPts}</div>
                         </div>
@@ -527,11 +530,11 @@
                                 <div class="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto ${modeCur === 'detail' ? 'opacity-40 grayscale pointer-events-none' : ''}">
                                     <span class="text-xs font-bold text-slate-500 uppercase tracking-tight truncate mr-2 sm:mr-0">${t.globalGrade || 'Note globale'} :</span>
                                     <div class="relative shrink-0">
-                                        <input type="number" id="grade-global-${ex.id}" name="grade-global-${ex.id}" min="0" max="${maxExPoints}" step="0.25" value="${finalGradeCur}"
-                                            ${modeCur === 'detail' ? 'disabled' : ''}
+                                        <input type="number" id="grade-global-${ex.id}" name="grade-global-${ex.id}" min="0" max="${maxExExPoints}" step="0.25" value="${finalGradeCur}"
+                                            ${(modeCur === 'detail' || window.isTrimesterBlocked(assignment.trimester, assignment.academicYear)) ? 'disabled' : ''}
                                             onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
                                             onkeydown="if(event.key==='Enter'){ this.blur(); window.toggleAccordion('grade-ex-${ex.id}'); }"
-                                            class="w-20 p-1.5 ${inputPaddingSmall} bg-white border-2 border-amber-200 rounded-lg text-center font-black text-slate-700 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all text-sm" 
+                                            class="w-20 p-1.5 ${inputPaddingSmall} bg-white border-2 border-amber-200 rounded-lg text-center font-black text-slate-700 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all text-sm ${(modeCur === 'detail' || window.isTrimesterBlocked(assignment.trimester, assignment.academicYear)) ? 'cursor-not-allowed' : ''}" 
                                             placeholder="0" onclick="event.stopPropagation()">
                                         <div class="absolute ${suffixPos} top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-400">/ ${maxExPoints}</div>
                                     </div>
@@ -551,9 +554,10 @@
                                 <div class="flex items-center gap-3 w-full sm:w-auto">
                                     <div class="relative w-full sm:w-28">
                                         <input type="number" id="grade-single-simple-${ex.id}" name="grade-single-simple-${ex.id}" min="0" max="${maxExPoints}" step="0.25" value="${displayVal}"
+                                            ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'disabled' : ''}
                                             onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
                                             onkeydown="if(event.key==='Enter'){ this.blur(); window.toggleAccordion('grade-ex-${ex.id}'); }"
-                                            class="w-full p-2 ${inputPaddingMedium} bg-white border-2 border-blue-200 rounded-lg text-center font-black text-blue-900 focus:border-blue-500 outline-none transition-all shadow-sm text-sm" 
+                                            class="w-full p-2 ${inputPaddingMedium} bg-white border-2 border-blue-200 rounded-lg text-center font-black text-blue-900 focus:border-blue-500 outline-none transition-all shadow-sm text-sm ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'cursor-not-allowed' : ''}" 
                                             placeholder="0">
                                         <div class="absolute ${suffixPos2} top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-400">/ ${maxExPoints}</div>
                                     </div>
@@ -574,9 +578,10 @@
                                 <div class="flex items-center gap-3 w-full sm:w-auto">
                                     <div class="relative w-full sm:w-28">
                                         <input type="number" id="grade-no-q-${ex.id}" name="grade-no-q-${ex.id}" min="0" max="${ex.maxPoints}" step="0.25" value="${val}"
+                                            ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'disabled' : ''}
                                             onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','direct','direct','direct',this.value)"
                                             onkeydown="if(event.key==='Enter'){ this.blur(); window.toggleAccordion('grade-ex-${ex.id}'); }"
-                                            class="w-full p-2 ${inputPaddingMedium} bg-white border-2 border-blue-200 rounded-lg text-center font-black text-blue-900 focus:border-blue-500 outline-none transition-all shadow-sm text-sm" 
+                                            class="w-full p-2 ${inputPaddingMedium} bg-white border-2 border-blue-200 rounded-lg text-center font-black text-blue-900 focus:border-blue-500 outline-none transition-all shadow-sm text-sm ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'cursor-not-allowed' : ''}" 
                                             placeholder="0">
                                         <div class="absolute ${suffixPos2} top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-400">/ ${ex.maxPoints}</div>
                                     </div>
@@ -625,6 +630,14 @@
     window.undoLastGrade = async function(studentId, assignmentId) {
         if (!window.historyService) return;
         
+        const data = getData();
+        const assignment = data.assignments.find(a => a.id === assignmentId);
+        if (window.isTrimesterBlocked(assignment?.trimester, assignment?.academicYear)) {
+            const t = getTranslations()[getLang()];
+            if (window.showToast) window.showToast(t.trimesterLockedAlert, 'error');
+            return;
+        }
+
         const prevState = await window.historyService.popState(studentId, assignmentId);
         if (prevState) {
             const data = getData();
@@ -642,6 +655,14 @@
 
     window.updateGrade = function(studentId, assignmentId, exId, partKey, qId, sqId, value) {
         const data = getData();
+        const assignment = data.assignments.find(a => a.id === assignmentId);
+
+        // Security check
+        if (window.isTrimesterBlocked(assignment?.trimester, assignment?.academicYear)) {
+            const t = getTranslations()[getLang()];
+            if (window.showToast) window.showToast(t.trimesterLockedAlert, 'error');
+            return;
+        }
         
         // --- History Support ---
         if (window.historyService) {
@@ -666,7 +687,6 @@
         const val = data.grades[studentId][assignmentId][exId][partKey][qId][sqId];
         
         const exGrades = data.grades[studentId][assignmentId][exId];
-        const assignment = data.assignments.find(a => a.id === assignmentId);
         const ex = assignment?.exercises.find(e => e.id === exId);
         
         // Detect simple exercise (1 question OR 0 questions/global note)
@@ -722,6 +742,15 @@
 
     window.setExerciseMode = async function(studentId, assignmentId, exId, mode) {
         const data = getData();
+        const assignment = data.assignments.find(a => a.id === assignmentId);
+        
+        // Security check
+        if (window.isTrimesterBlocked(assignment?.trimester, assignment?.academicYear)) {
+            const t = getTranslations()[getLang()];
+            if (window.showToast) window.showToast(t.trimesterLockedAlert, 'error');
+            return;
+        }
+
         if (!data.grades[studentId]) data.grades[studentId] = {};
         if (!data.grades[studentId][assignmentId]) data.grades[studentId][assignmentId] = {};
         if (!data.grades[studentId][assignmentId][exId]) data.grades[studentId][assignmentId][exId] = {};

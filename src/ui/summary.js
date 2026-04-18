@@ -324,14 +324,17 @@ import * as gradesSvc from '../services/grades.service.js';
                     : pct >= 50 ? 'bg-amber-100 text-amber-700 border-amber-200'
                     : 'bg-rose-100 text-rose-700 border-rose-200';
 
+                const assignmentId = a.id;
+                const isBlocked = window.isTrimesterBlocked(a.trimester, a.academicYear);
+
                 gradesHtml += `
                     <div class="flex items-center justify-between gap-2 p-2 rounded-lg border border-slate-100">
                         <div class="min-w-0">
                             <div class="text-xs font-semibold text-slate-700 truncate">${a.name}</div>
                             <div class="text-[10px] text-slate-400">${a.className || ''}</div>
                         </div>
-                        <button class="px-2 py-1 rounded-md border text-xs font-bold ${badgeClass}"
-                                ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})"
+                        <button class="px-2 py-1 rounded-md border text-xs font-bold ${badgeClass} ${isBlocked ? 'cursor-default' : ''}"
+                                ${isBlocked ? '' : `ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})"`}
                                 id="sum-total-${s.id}-${a.id}">
                             ${hasGrade ? (Math.round(total * 10) / 10) : '-'}
                         </button>
@@ -644,9 +647,16 @@ import * as gradesSvc from '../services/grades.service.js';
                             const existingFinal = studentGrades[ex.id]?.['final']?.['final']?.['final'];
                             const hasEx = window.hasAnyGradeForExercise(studentGrades, ex);
                             const val = existingFinal !== undefined && existingFinal !== '' ? existingFinal : (hasEx ? exTotal.toFixed(2) : '');
-                            row += `<td class="px-2 py-1 text-center border-l border-slate-200">
-                                <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" value="${val}" oninput="sanitizeAndClamp(this, ${max})" onblur="commitSummaryInput('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" onkeydown="handleSummaryInputKey(event, '${s.id}','${a.id}','${ex.id}', ${max})" class="summary-grade-input">
-                            </td>`;
+                            const isBlocked = window.isTrimesterBlocked(a.trimester, a.academicYear);
+                            if (isBlocked) {
+                                row += `<td class="px-2 py-1 text-center border-l border-slate-200">
+                                    <input type="text" value="${val}" disabled class="summary-grade-input opacity-50 cursor-not-allowed">
+                                </td>`;
+                            } else {
+                                row += `<td class="px-2 py-1 text-center border-l border-slate-200">
+                                    <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" value="${val}" oninput="sanitizeAndClamp(this, ${max})" onblur="commitSummaryInput('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" onkeydown="handleSummaryInputKey(event, '${s.id}','${a.id}','${ex.id}', ${max})" class="summary-grade-input">
+                                </td>`;
+                            }
                         } else {
                             row += `<td class="px-2 py-1 text-center text-slate-300 bg-slate-50/70 border-l border-slate-200">-</td>`;
                         }
@@ -655,13 +665,18 @@ import * as gradesSvc from '../services/grades.service.js';
                 if (isStudentClass) {
                     const has = window.hasAnyGradeForAssignment(s.id, a.id);
                     const max = window.getAssignmentMaxPoints(a);
+                    const isBlocked = window.isTrimesterBlocked(a.trimester, a.academicYear);
                     if (has) {
                         const total = window.getStudentAssignmentTotal(s.id, a.id);
                         const pct = max > 0 ? (total / max * 100) : 0;
                         const bgColor = pct >= 70 ? 'bg-emerald-100' : pct >= 50 ? 'bg-amber-100' : 'bg-rose-100';
-                        row += `<td class="p-3 text-center font-bold ${bgColor} cursor-pointer select-none border-l border-slate-200" ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})" id="sum-total-${s.id}-${a.id}">${total.toFixed(2)}</td>`;
+                        row += `<td class="p-3 text-center font-bold ${bgColor} ${isBlocked ? 'cursor-default' : 'cursor-pointer select-none'} border-l border-slate-200" 
+                                    ${isBlocked ? '' : `ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})"`} 
+                                    id="sum-total-${s.id}-${a.id}">${total.toFixed(2)}</td>`;
                     } else {
-                        row += `<td class="p-3 text-center text-gray-400 bg-slate-50 cursor-pointer select-none border-l border-slate-200" ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})" id="sum-total-${s.id}-${a.id}"></td>`;
+                        row += `<td class="p-3 text-center text-gray-400 bg-slate-50 ${isBlocked ? 'cursor-default' : 'cursor-pointer select-none'} border-l border-slate-200" 
+                                    ${isBlocked ? '' : `ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})"`} 
+                                    id="sum-total-${s.id}-${a.id}"></td>`;
                     }
                 } else {
                     row += `<td class="p-3 text-center text-slate-300 bg-slate-50/70 border-l border-slate-200">-</td>`;
@@ -1317,30 +1332,40 @@ import * as gradesSvc from '../services/grades.service.js';
                             const existingFinal = studentGrades[ex.id]?.['final']?.['final']?.['final'];
                             const hasEx = window.hasAnyGradeForExercise(studentGrades, ex);
                             const val = existingFinal !== undefined && existingFinal !== '' ? existingFinal : (hasEx ? exTotal.toFixed(2) : '');
-                            row += `<td class="px-2 py-1 text-center border-l border-slate-200">
-                                <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" 
-                                    value="${val}" 
-                                    oninput="sanitizeAndClamp(this, ${max})" 
-                                    onblur="commitSummaryInput('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" 
-                                    onkeydown="handleSummaryInputKey(event, '${s.id}','${a.id}','${ex.id}', ${max})" 
-                                    onfocus="this.select()" 
-                                    id="sum-input-${s.id}-${a.id}-${ex.id}" 
-                                    name="sum-input-${s.id}-${a.id}-${ex.id}" 
-                                    aria-label="Note Ex${exIdx + 1} pour ${s.name} - ${a.name}" 
-                                    class="summary-grade-input">
-                            </td>`;
+                            const isBlocked = window.isTrimesterBlocked(a.trimester, a.academicYear);
+                            if (isBlocked) {
+                                row += `<td class="px-2 py-1 text-center border-l border-slate-200">
+                                    <input type="text" value="${val}" disabled class="summary-grade-input opacity-50 cursor-not-allowed">
+                                </td>`;
+                            } else {
+                                row += `<td class="px-2 py-1 text-center border-l border-slate-200">
+                                    <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" 
+                                        value="${val}" 
+                                        oninput="sanitizeAndClamp(this, ${max})" 
+                                        onblur="commitSummaryInput('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" 
+                                        onkeydown="handleSummaryInputKey(event, '${s.id}','${a.id}','${ex.id}', ${max})" 
+                                        onfocus="this.select()" 
+                                        id="sum-input-${s.id}-${a.id}-${ex.id}" 
+                                        name="sum-input-${s.id}-${a.id}-${ex.id}" 
+                                        aria-label="Note Ex${exIdx + 1} pour ${s.name} - ${a.name}" 
+                                        class="summary-grade-input">
+                                </td>`;
+                            }
                         });
                     }
 
-                    const has = window.hasAnyGradeForAssignment(s.id, a.id);
-                    const max = window.getAssignmentMaxPoints(a);
+                    const isBlocked = window.isTrimesterBlocked(a.trimester, a.academicYear);
                     if (has) {
                         const total = window.getStudentAssignmentTotal(s.id, a.id);
                         const pct = max > 0 ? (total / max * 100) : 0;
                         const bgColor = pct >= 70 ? 'bg-emerald-100' : pct >= 50 ? 'bg-amber-100' : 'bg-rose-100';
-                        row += `<td class="p-3 text-center font-bold ${bgColor} border-l border-slate-200 cursor-pointer select-none" ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})" id="sum-total-${s.id}-${a.id}">${total.toFixed(2)}</td>`;
+                        row += `<td class="p-3 text-center font-bold ${bgColor} border-l border-slate-200 ${isBlocked ? 'cursor-default' : 'cursor-pointer select-none'}" 
+                                    ${isBlocked ? '' : `ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})"`} 
+                                    id="sum-total-${s.id}-${a.id}">${total.toFixed(2)}</td>`;
                     } else {
-                        row += `<td class="p-3 text-center text-slate-300 border-l border-slate-200 cursor-pointer select-none" ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})" id="sum-total-${s.id}-${a.id}"></td>`;
+                        row += `<td class="p-3 text-center text-slate-300 border-l border-slate-200 ${isBlocked ? 'cursor-default' : 'cursor-pointer select-none'}" 
+                                    ${isBlocked ? '' : `ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})"`} 
+                                    id="sum-total-${s.id}-${a.id}"></td>`;
                     }
                 });
                 return `<tr class="border-b border-slate-100 hover:bg-slate-50">${row}</tr>`;
@@ -1692,32 +1717,42 @@ import * as gradesSvc from '../services/grades.service.js';
                             const existingFinal = studentGrades[ex.id]?.['final']?.['final']?.['final'];
                             const hasEx = window.hasAnyGradeForExercise(studentGrades, ex);
                             const val = existingFinal !== undefined && existingFinal !== '' ? existingFinal : (hasEx ? exTotal.toFixed(2) : '');
-                            html += `<td class="px-2 py-1 text-center border-l border-gray-100">
-                    <input type="text" 
-                        inputmode="decimal" 
-                        pattern="[0-9]*[.,]?[0-9]*" 
-                        value="${val}" 
-                        oninput="sanitizeAndClamp(this, ${max})" 
-                        onblur="commitSummaryInput('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" 
-                        onkeydown="handleSummaryInputKey(event, '${s.id}','${a.id}','${ex.id}', ${max})" 
-                        onfocus="this.select()" 
-                        id="sum-input-${s.id}-${a.id}-${ex.id}" 
-                        name="sum-input-${s.id}-${a.id}-${ex.id}" 
-                        aria-label="Note Ex${i + 1} pour ${s.name} - ${a.name}" 
-                        class="summary-grade-input">
-                </td>`;
+                            const isBlocked = window.isTrimesterBlocked(a.trimester, a.academicYear);
+                            if (isBlocked) {
+                                html += `<td class="px-2 py-1 text-center border-l border-gray-100">
+                                    <input type="text" value="${val}" disabled class="summary-grade-input opacity-50 cursor-not-allowed">
+                                </td>`;
+                            } else {
+                                html += `<td class="px-2 py-1 text-center border-l border-gray-100">
+                                    <input type="text" 
+                                        inputmode="decimal" 
+                                        pattern="[0-9]*[.,]?[0-9]*" 
+                                        value="${val}" 
+                                        oninput="sanitizeAndClamp(this, ${max})" 
+                                        onblur="commitSummaryInput('${s.id}','${a.id}','${ex.id}', ${max}, this.value)" 
+                                        onkeydown="handleSummaryInputKey(event, '${s.id}','${a.id}','${ex.id}', ${max})" 
+                                        onfocus="this.select()" 
+                                        id="sum-input-${s.id}-${a.id}-${ex.id}" 
+                                        name="sum-input-${s.id}-${a.id}-${ex.id}" 
+                                        aria-label="Note Ex${i + 1} pour ${s.name} - ${a.name}" 
+                                        class="summary-grade-input">
+                                </td>`;
+                            }
                         }
                     }
 
-                    const has = window.hasAnyGradeForAssignment(s.id, a.id);
-                    const max = window.getAssignmentMaxPoints(a);
+                    const isBlocked = window.isTrimesterBlocked(a.trimester, a.academicYear);
                     if (has) {
                         const total = window.getStudentAssignmentTotal(s.id, a.id);
                         const pct = max > 0 ? (total / max * 100) : 0;
                         const bgColor = pct >= 70 ? 'bg-green-100' : pct >= 50 ? 'bg-orange-100' : 'bg-red-100';
-                        html += `<td class="p-3 text-center font-bold ${bgColor} border-l border-gray-300 cursor-pointer select-none" ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})" id="sum-total-${s.id}-${a.id}">${total.toFixed(2)}</td>`;
+                        html += `<td class="p-3 text-center font-bold ${bgColor} border-l border-gray-300 ${isBlocked ? 'cursor-default' : 'cursor-pointer select-none'}" 
+                                    ${isBlocked ? '' : `ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})"`} 
+                                    id="sum-total-${s.id}-${a.id}">${total.toFixed(2)}</td>`;
                     } else {
-                        html += `<td class="p-3 text-center text-gray-300 border-l border-gray-300 cursor-pointer select-none" ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})" id="sum-total-${s.id}-${a.id}"></td>`;
+                        html += `<td class="p-3 text-center text-gray-300 border-l border-gray-300 ${isBlocked ? 'cursor-default' : 'cursor-pointer select-none'}" 
+                                    ${isBlocked ? '' : `ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})"`} 
+                                    id="sum-total-${s.id}-${a.id}"></td>`;
                     }
                 }
 
@@ -1802,6 +1837,11 @@ import * as gradesSvc from '../services/grades.service.js';
          // When setting a total grade directly, we clear all exercise details
          // and set the global grade for this assignment.
          const assignment = (data.assignments || []).find(a => a.id === assignmentId);
+         if (assignment && window.isTrimesterBlocked(assignment.trimester, assignment.academicYear)) {
+             alert(window.translations[window.currentLanguage].trimesterLockedAlert || "Ce trimestre est verrouillé.");
+             await window.renderSummary();
+             return;
+         }
          const exercises = assignment ? (assignment.exercises || []) : [];
          
          const newGrade = {
@@ -1818,6 +1858,11 @@ import * as gradesSvc from '../services/grades.service.js';
 
     window.makeTotalEditable = function(td, studentId, assignmentId, maxPoints) {
         if (td.querySelector('input')) return;
+        
+        const assignment = (window.data.assignments || []).find(a => a.id === assignmentId);
+        if (assignment && window.isTrimesterBlocked(assignment.trimester, assignment.academicYear)) {
+            return;
+        }
         
         // Get current value
         let currentVal = td.innerText.trim();
@@ -1849,6 +1894,12 @@ import * as gradesSvc from '../services/grades.service.js';
         if (!data.grades[studentId]) data.grades[studentId] = {};
         if (!data.grades[studentId][assignmentId]) data.grades[studentId][assignmentId] = {};
         if (!data.grades[studentId][assignmentId][exId]) data.grades[studentId][assignmentId][exId] = {};
+        
+        const assignment = (data.assignments || []).find(a => a.id === assignmentId);
+        if (assignment && window.isTrimesterBlocked(assignment.trimester, assignment.academicYear)) {
+            console.warn("Attempted to edit locked trimester grade");
+            return;
+        }
         
         // Force 'global' mode when modified from summary
         data.grades[studentId][assignmentId][exId].mode = 'global';

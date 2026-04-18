@@ -114,6 +114,13 @@ window.translations = {
         logout: "Déconnexion",
         preferences: "Préférences",
         langChangeNote: "Le changement de langue entraînera une déconnexion.",
+        allowPreviousTrimestersEdit: "Autoriser la modification des trimestres précédents",
+        allowPreviousTrimestersEditDesc: "Active temporairement la modification des notes des trimestres antérieurs (se réinitialise à chaque connexion).",
+        trimesterLockedAlert: "Modification impossible : ce trimestre est verrouillé. Activez l'option dans Configuration pour modifier.",
+        resetTrimesterPeak: "Réinitialiser le verrouillage au trimestre actuel",
+        resetTrimesterPeakDesc: "Si vous avez accidentellement sélectionné un trimestre futur, cela débloquera les trimestres précédents.",
+        resetSuccess: "Verrouillage réinitialisé !",
+        assignmentTrimesterLabel: "Trimestre du devoir",
 
         // Interface générale
         appTitle: "📝 Gestion des Corrections",
@@ -510,6 +517,13 @@ window.translations = {
         logout: "Logout",
         preferences: "Preferences",
         langChangeNote: "Changing the language will log you out.",
+        allowPreviousTrimestersEdit: "Allow editing of previous trimesters",
+        allowPreviousTrimestersEditDesc: "Temporarily enable editing for past trimesters (resets on reload).",
+        trimesterLockedAlert: "Modification prohibited: this trimester is locked. Enable the option in Configuration to edit.",
+        resetTrimesterPeak: "Reset lock to current trimester",
+        resetTrimesterPeakDesc: "If you accidentally selected a future trimester, this will unlock earlier ones.",
+        resetSuccess: "Lock reset successfully!",
+        assignmentTrimesterLabel: "Assignment trimester",
 
         // Interface générale
         appTitle: "📝 Grading Management",
@@ -914,6 +928,9 @@ window.translations = {
         resetEmailSent: "تم إرسال بريد إعادة التعيين! تحقق من صندوق البريد الخاص بك.",
         logout: "تسجيل الخروج",
         preferences: "التفضيلات",
+        allowPreviousTrimestersEdit: "السماح بتعديل الفصول السابقة",
+        allowPreviousTrimestersEditDesc: "يسمح مؤقتًا بتعديل علامات الفصول السابقة (يعاد تعيينه عند كل دخول).",
+        trimesterLockedAlert: "لا يمكن التعديل: هذا الفصل مقفل. قم بتفعيل الخيار في الإعدادات للتعديل.",
         langChangeNote: "تغيير اللغة سيؤدي إلى تسجيل الخروج.",
 
         // Interface générale

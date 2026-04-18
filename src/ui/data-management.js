@@ -112,6 +112,18 @@ import { relationalSyncService } from '../services/relational-sync.service.js';
 
     // Flag to prevent saving before loading is complete
     window.isDataLoaded = false;
+    
+    // Session-based authorization for editing previous trimesters (resets to false on load)
+    window.allowPreviousTrimestersEdit = false;
+    
+    window.handleAllowPreviousTrimestersChange = function(enabled) {
+        window.allowPreviousTrimestersEdit = enabled;
+        console.log('[DataManagement] allowPreviousTrimestersEdit set to:', enabled);
+        
+        // Refresh UIs that might need to show/hide move buttons or disable/enable inputs
+        if (window.renderAssignments) window.renderAssignments();
+        if (window.loadGradeEntry) window.loadGradeEntry();
+    };
 
     // Load from localStorage or Store
     window.loadData = async function() {
@@ -318,6 +330,11 @@ import { relationalSyncService } from '../services/relational-sync.service.js';
              langSelect.addEventListener('change', (e) => {
                  window.handleLanguageChange(e.target.value);
              });
+         }
+         
+         const allowEditCheck = document.getElementById('config-allow-prev-trimesters');
+         if (allowEditCheck) {
+             allowEditCheck.checked = !!window.allowPreviousTrimestersEdit;
          }
 
          const importInput = document.getElementById('json-import');

@@ -2124,6 +2124,15 @@
                                             </select>
                                             <p class="mt-2 text-[11px] text-gray-500 italic" data-translate="langChangeNote">Le changement de langue entraînera une déconnexion.</p>
                                         </div>
+                                        <div class="flex items-center justify-between py-2 border-t border-gray-100 mt-4 pt-4">
+                                            <div>
+                                                <label class="text-sm font-semibold text-gray-700" data-translate="allowPreviousTrimestersEdit">Autoriser la modification des trimestres précédents</label>
+                                                <p class="text-[11px] text-gray-500 max-w-[200px] leading-tight mt-1" data-translate="allowPreviousTrimestersEditDesc">Active temporairement la modification des notes des trimestres antérieurs (se réinitialise à chaque connexion).</p>
+                                            </div>
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" id="config-allow-prev-trimesters" class="sr-only peer" onchange="window.handleAllowPreviousTrimestersChange(this.checked)">
+                                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none ring-0 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                                            </label>
                                     </div>
                                 </div>
 

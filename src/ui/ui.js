@@ -686,6 +686,52 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
         return localStorage.getItem('corrections-global-trimester') || '';
     };
 
+    /**
+     * Checks if a trimester/year combination is blocked based on the CURRENT DATE.
+     * Returns true if the target is in the past AND modification is NOT authorized.
+     */
+    window.isTrimesterBlocked = function(trimester, year) {
+        // If user manually allowed edits for this session, nothing is blocked
+        if (window.allowPreviousTrimestersEdit) return false;
+
+        const now = new Date();
+        const curMonth = now.getMonth() + 1; // 1-12
+        const curYearNum = now.getFullYear();
+
+        // 1. Determine "Real" current trimester based on date
+        // 01/01 -> 31/03 : T2
+        // 01/04 -> 31/08 : T3
+        // Else (09 -> 12) : T1
+        let realTri = "1";
+        if (curMonth >= 1 && curMonth <= 3) realTri = "2";
+        else if (curMonth >= 4 && curMonth <= 8) realTri = "3";
+
+        // 2. Determine "Real" academic year
+        // If we are in Sept-Dec, the session is currentYear/nextYear
+        // If we are in Jan-Aug, the session is prevYear/currentYear
+        let realAcademicYear = "";
+        if (curMonth >= 9) {
+            realAcademicYear = `${curYearNum}/${curYearNum + 1}`;
+        } else {
+            realAcademicYear = `${curYearNum - 1}/${curYearNum}`;
+        }
+
+        if (!trimester || !year) return false;
+
+        // --- BLOCKING LOGIC ---
+        // Block if target year is older than real year
+        if (year < realAcademicYear) return true;
+        
+        // If future year, don't block
+        if (year > realAcademicYear) return false;
+
+        // Same year: Block if target trimester is older than real trimester
+        const tNum = parseInt(trimester);
+        const rtNum = parseInt(realTri);
+
+        return tNum < rtNum;
+    };
+
     // Auto-setup guard
     window.setupGlobalUiGuard();
 
