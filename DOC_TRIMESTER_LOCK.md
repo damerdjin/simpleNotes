@@ -6,7 +6,8 @@ Empêcher automatiquement la modification des notes et des devoirs appartenant �
 ## 🧠 Fonctionnement (La Logique Temporelle)
 Le système déduit le "trimestre actuel officiel" selon la date du jour :
 - **T2 :** du 01 Janvier au 31 Mars
-- **T3 :** du 01 Avril au 31 Août
+- **T3 :** du 01 Avril au 30 Juin
+- **Période de Vacances (01 Juillet - 31 Août) :** TOUS les trimestres sont bloqués par défaut.
 - **T1 :** du 01 Septembre au 31 Décembre
 
 Tout devoir (ou note liée à ce devoir) dont le trimestre est **inférieur** au trimestre déduit ci-dessus, ou dont l'année scolaire est **antérieure** à l'année scolaire actuelle, est considéré comme **Vérrouillé**.
@@ -77,7 +78,17 @@ Au cas où vous ayez besoin d'intervenir sur une partie spécifique, voici l'inv
 1. **Un bouton reste grisé alors qu'il ne devrait pas ?**
    C'est sûrement lié à la date du système ou à la déduction T1/T2/T3. Le Kill Switch (`ui.js -> isTrimesterBlocked return false`) résoudra le blocage immédiatement.
 
-2. **Les notes peuvent être modifiées dans le Récapitulatif ?**
+2. **Les notes peuvent-elles être modifiées dans le Récapitulatif ?**
+   - [x] Bloquer les modifications dans l'onglet Récapitulatif
+    - [x] Mettre à jour `renderSummary0`, `renderSummary1`, `renderSummary2`
+    - [x] Mettre à jour `renderSummaryMobile`
+    - [x] Sécuriser `makeTotalEditable` et les fonctions de sauvegarde
+   - [x] Ajouter des cadenas (🔒) sur les éléments bloqués
+    - [x] Sélecteur de session (Trimesters et Années)
+    - [x] En-têtes du Récapitulatif
+    - [x] Liste des devoirs
+   - [x] Mettre à jour la logique de dates (T3 finit le 30/06)
+   - [x] Vérifier le bon fonctionnement global
    Vérifiez `src/ui/summary.js`. Cherchez `isBlocked` dans les fonctions `renderSummary` pour voir si la logique d'injection du `disabled` sur l'input HTML n'a pas été effacée par mégarde.
 
 3. **L'override temporaire ("Autoriser...") ne marche plus ?**

@@ -1465,10 +1465,19 @@
             }
 
             // Update Trimester Button Visuals
+            const lang = window.getLang ? window.getLang() : (localStorage.getItem('corrections-language') || 'fr');
+            const trans = window.translations ? (window.translations[lang] || window.translations['fr']) : {};
+
             if (trimester) {
                 [1, 2, 3].forEach(t => {
                     const btn = document.getElementById(`btn-tri${t}`);
                     if (btn) {
+                        const isBlocked = window.isTrimesterBlocked && window.isTrimesterBlocked(t, year);
+                        // Get translated label for T1/T2/T3
+                        const tLabel = trans[`t${t}`] || `T${t}`;
+                        const label = isBlocked ? `🔒 ${tLabel}` : tLabel;
+                        btn.innerText = label;
+
                         if (t == trimester) {
                             btn.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
                             btn.classList.remove('text-gray-600', 'border-gray-100');
@@ -1479,6 +1488,19 @@
                     }
                 });
             }
+
+            // Update Year Options Visuals (Labels)
+            document.querySelectorAll('.year-option').forEach(option => {
+                const yearText = option.getAttribute('data-year') || '';
+                if (!yearText) return;
+                
+                const span = option.querySelector('span');
+                if (span) {
+                    const yearFormatted = yearText.includes('/') ? yearText.replace('/', ' / ') : yearText;
+                    const isYearBlocked = window.isTrimesterBlocked && window.isTrimesterBlocked(1, yearText);
+                    span.innerText = isYearBlocked ? `🔒 ${yearFormatted}` : yearFormatted;
+                }
+            });
         };
 
         // Called by UI interaction for Year
@@ -1663,9 +1685,9 @@
                             <div class="px-4 pb-3 border-b border-gray-50">
                                 <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3" data-translate="trimester">Trimestre</div>
                                 <div class="flex gap-2">
-                                    <button onclick="updateTrimester(1)" id="btn-tri1" class="flex-1 py-2 rounded-lg text-xs font-bold border transition-all hover:bg-blue-50 border-gray-100 text-gray-600" data-translate="t1">T1</button>
-                                    <button onclick="updateTrimester(2)" id="btn-tri2" class="flex-1 py-2 rounded-lg text-xs font-bold border transition-all hover:bg-blue-50 border-gray-100 text-gray-600" data-translate="t2">T2</button>
-                                    <button onclick="updateTrimester(3)" id="btn-tri3" class="flex-1 py-2 rounded-lg text-xs font-bold border transition-all hover:bg-blue-50 border-gray-100 text-gray-600" data-translate="t3">T3</button>
+                                    <button onclick="updateTrimester(1)" id="btn-tri1" class="flex-1 py-2 rounded-lg text-xs font-bold border transition-all hover:bg-blue-50 border-gray-100 text-gray-600">T1</button>
+                                    <button onclick="updateTrimester(2)" id="btn-tri2" class="flex-1 py-2 rounded-lg text-xs font-bold border transition-all hover:bg-blue-50 border-gray-100 text-gray-600">T2</button>
+                                    <button onclick="updateTrimester(3)" id="btn-tri3" class="flex-1 py-2 rounded-lg text-xs font-bold border transition-all hover:bg-blue-50 border-gray-100 text-gray-600">T3</button>
                                 </div>
                             </div>
                             
@@ -1673,11 +1695,13 @@
                             <div class="pt-3">
                                 <div class="px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2" data-translate="academicYear">Année Scolaire</div>
                                 <div class="max-h-48 overflow-y-auto">
-                                    <div class="year-option px-4 py-2.5 hover:bg-blue-50 text-sm font-bold text-gray-600 hover:text-blue-700 cursor-pointer transition-colors flex items-center justify-between" onclick="updateYear('2025/2026')">
+                                    <div class="year-option px-4 py-2.5 hover:bg-blue-50 text-sm font-bold text-gray-600 hover:text-blue-700 cursor-pointer transition-colors flex items-center justify-between" 
+                                         data-year="2025/2026" onclick="updateYear('2025/2026')">
                                         <span>2025 / 2026</span>
                                         <div class="w-1.5 h-1.5 rounded-full bg-blue-500 hidden" id="check-2025"></div>
                                     </div>
-                                    <div class="year-option px-4 py-2.5 hover:bg-blue-50 text-sm font-bold text-gray-600 hover:text-blue-700 cursor-pointer transition-colors flex items-center justify-between" onclick="updateYear('2024/2025')">
+                                    <div class="year-option px-4 py-2.5 hover:bg-blue-50 text-sm font-bold text-gray-600 hover:text-blue-700 cursor-pointer transition-colors flex items-center justify-between" 
+                                         data-year="2024/2025" onclick="updateYear('2024/2025')">
                                         <span>2024 / 2025</span>
                                         <div class="w-1.5 h-1.5 rounded-full bg-blue-500 hidden" id="check-2024"></div>
                                     </div>

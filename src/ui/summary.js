@@ -1318,7 +1318,9 @@ import * as gradesSvc from '../services/grades.service.js';
                         assignmentHeaderRow += `<th class="p-2 text-center bg-slate-50 text-xs font-semibold border-l border-slate-200">Ex${exIdx + 1}<br><span class="text-[10px] text-slate-500">/${window.getExerciseMaxPoints(ex)}</span></th>`;
                     });
                 }
-                assignmentHeaderRow += `<th class="p-3 text-center bg-slate-100 font-bold cursor-pointer select-none border-l border-slate-200" onclick="toggleSummarySort('assignment-${a.id}')">${a.name}<br><span class="text-xs text-slate-500">/${window.getAssignmentMaxPoints(a)}</span></th>`;
+                const isBlocked = window.isTrimesterBlocked && window.isTrimesterBlocked(a.trimester, a.academicYear);
+                const assignmentLabel = isBlocked ? `🔒 ${a.name}` : a.name;
+                assignmentHeaderRow += `<th class="p-3 text-center bg-slate-100 font-bold cursor-pointer select-none border-l border-slate-200" onclick="toggleSummarySort('assignment-${a.id}')">${assignmentLabel}<br><span class="text-xs text-slate-500">/${window.getAssignmentMaxPoints(a)}</span></th>`;
             });
 
             const rows = classStudents.map(s => {
@@ -1692,10 +1694,12 @@ import * as gradesSvc from '../services/grades.service.js';
             </th>`;
                     }
                 }
+                const isBlocked = window.isTrimesterBlocked && window.isTrimesterBlocked(a.trimester, a.academicYear);
+                const assignmentLabel = isBlocked ? `🔒 ${a.name}` : a.name;
                 const isSorted = summarySort.key === `assignment-${a.id}`;
                 html += `<th class="p-3 text-center bg-blue-100 font-bold cursor-pointer select-none hover:bg-blue-200 border-l border-gray-300" 
         onclick="toggleSummarySort('assignment-${a.id}')">
-        ${a.name} ${isSorted ? (summarySort.direction === 'asc' ? '↑' : '↓') : ''}
+        ${assignmentLabel} ${isSorted ? (summarySort.direction === 'asc' ? '↑' : '↓') : ''}
         <br><span class="text-xs font-normal">/${window.getAssignmentMaxPoints(a)}</span>
     </th>`;
             }

@@ -700,11 +700,13 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
 
         // 1. Determine "Real" current trimester based on date
         // 01/01 -> 31/03 : T2
-        // 01/04 -> 31/08 : T3
+        // 01/04 -> 30/06 : T3
+        // 01/07 -> 31/08 : Vacation (all locked)
         // Else (09 -> 12) : T1
         let realTri = "1";
         if (curMonth >= 1 && curMonth <= 3) realTri = "2";
-        else if (curMonth >= 4 && curMonth <= 8) realTri = "3";
+        else if (curMonth >= 4 && curMonth <= 6) realTri = "3";
+        else if (curMonth >= 7 && curMonth <= 8) realTri = "4"; // Special value: blocks T1, T2, T3
 
         // 2. Determine "Real" academic year
         // If we are in Sept-Dec, the session is currentYear/nextYear
