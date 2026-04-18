@@ -1411,11 +1411,7 @@
         };
 
         window.getCurrentAcademicYear = () => {
-            const now = new Date();
-            const month = now.getMonth() + 1; // 1-12
-            const year = now.getFullYear();
-            if (month >= 9) return `${year}/${year + 1}`;
-            return `${year - 1}/${year}`;
+            return window.getAutoAcademicYear ? window.getAutoAcademicYear() : "2025/2026";
         };
 
         // Visual update only - NO state changes, NO recursion
@@ -1535,8 +1531,11 @@
 
         // Sync visual UI with state (called on load or after state changes)
         window.syncGlobalUI = () => {
-            const currentTri = window.getGlobalTrimester ? window.getGlobalTrimester() : (localStorage.getItem('corrections-global-trimester') || "1");
-            const currentYear = window.getGlobalAcademicYear ? window.getGlobalAcademicYear() : (localStorage.getItem('corrections-global-academic-year') || "2025/2026");
+            const autoTri = window.getAutoTrimester ? window.getAutoTrimester() : "1";
+            const autoYear = window.getAutoAcademicYear ? window.getAutoAcademicYear() : "2025/2026";
+
+            const currentTri = window.getGlobalTrimester ? window.getGlobalTrimester() : (localStorage.getItem('corrections-global-trimester') || autoTri);
+            const currentYear = window.getGlobalAcademicYear ? window.getGlobalAcademicYear() : (localStorage.getItem('corrections-global-academic-year') || autoYear);
             const currentLang = localStorage.getItem('corrections-language') || 'fr';
             
             window.updateSessionVisual(currentYear, currentTri);
@@ -1562,6 +1561,16 @@
                     
                     // Sync user preferences (year, language...) before loading data
                     await settingsAdapter.sync();
+
+                    // FORCE AUTO-SESSION ON LOGIN (Requirement: session follows date on connect)
+                    if (window.getAutoTrimester && window.getAutoAcademicYear) {
+                        const autoTri = window.getAutoTrimester();
+                        const autoYear = window.getAutoAcademicYear();
+                        
+                        // Use update functions to ensure state, localStorage, and Supabase are all synced
+                        if (window.updateYear) window.updateYear(autoYear);
+                        if (window.updateTrimester) window.updateTrimester(autoTri);
+                    }
 
                     if (typeof window.loadData === 'function') {
                         await window.loadData();

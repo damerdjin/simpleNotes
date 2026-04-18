@@ -687,6 +687,34 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
     };
 
     /**
+     * Determines the recommended trimester based on current date.
+     * Rule: 01/01-31/03 (T2), 01/04-30/06 (T3), 01/07-31/08 (T3 - Summer), Else (T1)
+     */
+    window.getAutoTrimester = function() {
+        const now = new Date();
+        const month = now.getMonth() + 1;
+        if (month >= 1 && month <= 3) return "2";
+        if (month >= 4 && month <= 6) return "3";
+        if (month >= 7 && month <= 8) return "3"; // Vacation period: default to T3
+        return "1"; // September to December
+    };
+
+    /**
+     * Determines the recommended academic year based on current date.
+     * Cycle: Sept currentYear to Aug nextYear.
+     */
+    window.getAutoAcademicYear = function() {
+        const now = new Date();
+        const month = now.getMonth() + 1;
+        const yearNum = now.getFullYear();
+        if (month >= 9) {
+            return `${yearNum}/${yearNum + 1}`;
+        } else {
+            return `${yearNum - 1}/${yearNum}`;
+        }
+    };
+
+    /**
      * Checks if a trimester/year combination is blocked based on the CURRENT DATE.
      * Returns true if the target is in the past AND modification is NOT authorized.
      */
@@ -696,27 +724,14 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
 
         const now = new Date();
         const curMonth = now.getMonth() + 1; // 1-12
-        const curYearNum = now.getFullYear();
 
-        // 1. Determine "Real" current trimester based on date
-        // 01/01 -> 31/03 : T2
-        // 01/04 -> 30/06 : T3
-        // 01/07 -> 31/08 : Vacation (all locked)
-        // Else (09 -> 12) : T1
-        let realTri = "1";
-        if (curMonth >= 1 && curMonth <= 3) realTri = "2";
-        else if (curMonth >= 4 && curMonth <= 6) realTri = "3";
-        else if (curMonth >= 7 && curMonth <= 8) realTri = "4"; // Special value: blocks T1, T2, T3
+        // 1. Determine "Real" current trimester level for blocking
+        // (For blocking, we use 4 for July-August to block T1, T2, T3)
+        let rtNum = parseInt(window.getAutoTrimester());
+        if (curMonth >= 7 && curMonth <= 8) rtNum = 4;
 
         // 2. Determine "Real" academic year
-        // If we are in Sept-Dec, the session is currentYear/nextYear
-        // If we are in Jan-Aug, the session is prevYear/currentYear
-        let realAcademicYear = "";
-        if (curMonth >= 9) {
-            realAcademicYear = `${curYearNum}/${curYearNum + 1}`;
-        } else {
-            realAcademicYear = `${curYearNum - 1}/${curYearNum}`;
-        }
+        const realAcademicYear = window.getAutoAcademicYear();
 
         if (!trimester || !year) return false;
 
@@ -729,7 +744,6 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
 
         // Same year: Block if target trimester is older than real trimester
         const tNum = parseInt(trimester);
-        const rtNum = parseInt(realTri);
 
         return tNum < rtNum;
     };
