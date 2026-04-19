@@ -112,6 +112,8 @@ import * as gradesSvc from '../services/grades.service.js';
     window.renderSummaryMobile = async function() {
         if (!getTranslations() || !getLang() || !getTranslations()[getLang()]) return;
         const t = getTranslations()[getLang()];
+        const lang = getLang();
+        const isArabic = lang === 'ar';
         const container = document.getElementById('summary-table');
         if (!container) return;
 
@@ -296,6 +298,14 @@ import * as gradesSvc from '../services/grades.service.js';
         const completionPct = totalCells > 0 ? Math.round((gradedCells / totalCells) * 100) : 0;
 
         let html = `
+            <div class="glass-sticky-header flex items-center justify-between ${isArabic ? 'flex-row-reverse' : ''}">
+                <div class="flex items-center gap-2 ${isArabic ? 'flex-row-reverse' : ''}">
+                    <span class="text-xs text-slate-400 uppercase tracking-wider font-semibold">${t.class || t.className || 'Classe'}</span>
+                    <span class="text-lg font-bold text-slate-800">${selectedClass}</span>
+                </div>
+                <div class="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+            </div>
+
             <div class="grid grid-cols-3 gap-2 mb-3">
                 <div class="bg-white border border-slate-200 rounded-xl p-2 text-center">
                     <div class="text-[10px] text-slate-500">${t.students || 'Élèves'}</div>
@@ -335,10 +345,9 @@ import * as gradesSvc from '../services/grades.service.js';
                 const isBlocked = window.isTrimesterBlocked(a.trimester, a.academicYear);
 
                 gradesHtml += `
-                    <div class="flex items-center justify-between gap-2 p-2 rounded-lg border border-slate-100">
+                    <div class="flex items-center justify-between gap-2 p-2 rounded-lg border border-slate-100 ${isArabic ? 'flex-row-reverse' : ''}">
                         <div class="min-w-0">
-                            <div class="text-xs font-semibold text-slate-700 truncate">${a.name}</div>
-                            <div class="text-[10px] text-slate-400">${a.className || ''}</div>
+                            <div class="text-xs font-semibold text-slate-700 break-words">${a.name}</div>
                         </div>
                         <button class="px-2 py-1 rounded-md border text-xs font-bold ${badgeClass} ${isBlocked ? 'cursor-default' : ''}"
                                 ${isBlocked ? '' : `ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})"`}
@@ -350,10 +359,9 @@ import * as gradesSvc from '../services/grades.service.js';
             });
 
             html += `
-                <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm">
-                    <div class="flex items-center justify-between mb-2">
-                        <div class="font-bold text-slate-800 truncate">${displayName}</div>
-                        <div class="text-[10px] px-2 py-1 rounded-md bg-slate-100 text-slate-500">${studentClass || '-'}</div>
+                <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm ${isArabic ? 'text-right' : 'text-left'}" dir="${isArabic ? 'rtl' : 'ltr'}">
+                    <div class="flex items-center justify-between mb-2 ${isArabic ? 'flex-row-reverse' : ''}">
+                        <div class="font-bold text-slate-800 break-words">${displayName}</div>
                     </div>
                     <div class="space-y-2">${gradesHtml || `<div class="text-xs text-slate-400">${t.noResultForSearch || 'Aucun résultat'}</div>`}</div>
                 </div>
