@@ -170,9 +170,6 @@
         const mode = studentGrades.mode || ((studentGrades['final']?.['final']?.['final'] || '') !== '' ? 'global' : 'detail');
         const maxPts = getQuestionMaxPoints(q);
         const color = window.currentClassColor || '#3b82f6';
-        const isAr = getLang() === 'ar';
-        const suffixPos = isAr ? 'left-3' : 'right-3';
-        const inputPadding = isAr ? 'pl-8' : 'pr-8';
         
         let qHtml = `
         <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col gap-3 transition-all hover:border-[color:var(--theme-color)] hover:bg-[color:var(--theme-color)]/5 group" style="--theme-color: ${color}">
@@ -185,14 +182,14 @@
             const val = qGrades['direct'] || '';
             const isBlocked = window.isTrimesterBlocked(assignment?.trimester, assignment?.academicYear);
             qHtml += `
-            <div class="relative ${(mode === 'global' || isBlocked) ? 'opacity-40 grayscale pointer-events-none' : ''}">
+            <div class="relative ${(mode === 'global' || isBlocked) ? 'opacity-40 grayscale pointer-events-none' : ''}" dir="ltr">
                 <input type="number" id="grade-direct-${q.id}" name="grade-direct-${q.id}" min="0" max="${q.maxPoints}" step="0.25" value="${val}"
                     ${(mode === 'global' || isBlocked) ? 'disabled' : ''}
                     onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','direct',this.value)"
                     onkeydown="if(event.key==='Enter'){ this.blur(); window.toggleAccordion('grade-ex-${exId}'); }"
-                    class="w-full p-2.5 ${inputPadding} bg-white border-2 border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:border-[color:var(--theme-color)] focus:ring-4 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all ${isBlocked ? 'cursor-not-allowed' : ''}" 
+                    class="w-full p-2.5 pr-8 bg-white border-2 border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:border-[color:var(--theme-color)] focus:ring-4 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all ${isBlocked ? 'cursor-not-allowed' : ''}" 
                     placeholder="0">
-                <div class="absolute ${suffixPos} top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">/ ${q.maxPoints}</div>
+                <div class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">/ ${q.maxPoints}</div>
             </div>`;
         } else {
             const isBlocked = window.isTrimesterBlocked(assignment?.trimester, assignment?.academicYear);
@@ -308,49 +305,35 @@
         const maxAssignmentPoints = svc.getAssignmentMaxPoints(assignment);
         const color = window.currentClassColor || '#3b82f6';
         const isAr = getLang() === 'ar';
-        const suffixPos = isAr ? 'left-1.5' : 'right-1.5';
-        const suffixPos2 = isAr ? 'left-2' : 'right-2';
-        const suffixPosLarge = isAr ? 'left-4 sm:left-5' : 'right-4 sm:right-5';
         const bgIconPos = isAr ? 'left-0' : 'right-0';
-        const iconRotate = isAr ? 'rotate-180' : '';
-        
-        // Dynamic padding for inputs based on RTL/LTR
-        const inputPaddingLarge = isAr ? 'pl-10 sm:pl-12' : 'pr-10 sm:pr-12';
-        const inputPaddingMedium = isAr ? 'pl-8' : 'pr-8';
-        const inputPaddingSmall = isAr ? 'pl-6' : 'pr-6';
 
         // On vérifie l'historique pour afficher ou non le bouton Undo
         const hasHistory = await window.historyService?.hasHistory(studentId, assignmentId);
 
-        // Student Header Card (Reduced size & Responsive)
+        // Student Header Card (Optimized for Mobile & RTL)
         let html = `
-        <div class="rounded-xl p-4 mb-4 sm:mb-6 text-white shadow-md relative overflow-hidden" style="background-color: ${color}">
-            <div class="absolute top-0 ${bgIconPos} p-4 opacity-5">
+        <div class="rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6 text-white shadow-lg relative overflow-hidden" style="background-color: ${color}">
+            <div class="absolute top-0 ${bgIconPos} p-2 sm:p-4 opacity-10">
                 <svg class="w-16 h-16 sm:w-20 sm:h-20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
             </div>
-            <div class="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div class="flex items-center gap-3 w-full sm:w-auto">
-                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-lg sm:text-xl font-black border border-white/30 shrink-0">
-                        ${student.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div class="min-w-0 flex-1">
-                        <h3 class="text-base sm:text-lg font-black tracking-tight leading-tight truncate">${student.name}</h3>
-                        <div class="flex items-center gap-2 mt-0.5 opacity-90 overflow-hidden">
-                            <span class="text-xs font-medium opacity-80 truncate">${assignment.name}</span>
-                            ${hasHistory ? `
-                                <button onclick="undoLastGrade('${studentId}', '${assignmentId}')" class="mx-2 p-1 bg-white/20 hover:bg-white/40 rounded-lg transition-all flex items-center gap-1 text-[10px] font-bold" title="${t.undo || 'Annuler'}">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
-                                    ${t.undo || 'Annuler'}
-                                </button>
-                            ` : ''}
-                        </div>
+            <div class="relative z-10 flex flex-col gap-4">
+                <div class="flex flex-col gap-2 w-full text-center sm:text-start">
+                    <h3 class="text-xl sm:text-3xl font-black leading-tight break-words" title="${student.name}">${student.name}</h3>
+                    <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 opacity-90">
+                        <span class="text-xs sm:text-sm font-bold bg-black/10 px-3 py-1 rounded-full break-words max-w-full">${assignment.name}</span>
+                        ${hasHistory ? `
+                            <button onclick="undoLastGrade('${studentId}', '${assignmentId}')" class="p-1 px-3 bg-white/20 hover:bg-white/40 rounded-lg transition-all flex items-center gap-1.5 text-[10px] sm:text-xs font-bold shadow-sm" title="${t.undo || 'Annuler'}">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
+                                ${t.undo || 'Annuler'}
+                            </button>
+                        ` : ''}
                     </div>
                 </div>
-                <div class="bg-white/10 backdrop-blur-md rounded-xl px-3 py-1.5 sm:px-4 sm:py-2 border border-white/20 flex flex-row sm:flex-col items-center justify-between sm:justify-center w-full sm:w-auto min-w-[100px] gap-2">
-                    <span class="text-[9px] font-bold uppercase tracking-wider opacity-70 sm:mb-0.5 truncate">${t.total || 'Total'}</span>
-                    <div class="flex items-baseline gap-1 shrink-0">
-                        <span id="grade-total" class="text-xl sm:text-2xl font-black">0</span>
-                        <span class="text-[10px] sm:text-sm font-bold opacity-60">/ ${maxAssignmentPoints}</span>
+                <div class="bg-white/15 backdrop-blur-md rounded-xl px-4 py-3 border border-white/25 flex items-center justify-between w-full shadow-inner">
+                    <span class="text-[10px] sm:text-xs font-black uppercase tracking-widest opacity-80 whitespace-nowrap">${t.total || 'Total'}</span>
+                    <div class="flex items-baseline gap-1" dir="ltr">
+                        <span id="grade-total" class="text-3xl sm:text-4xl font-black text-white">0</span>
+                        <span class="text-sm sm:text-base font-bold text-white/70">/ ${maxAssignmentPoints}</span>
                     </div>
                 </div>
             </div>
@@ -407,26 +390,26 @@
 
             html += `
             <div class="col-span-full">
-                <div class="bg-white border-2 border-slate-100 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 transition-all hover:border-[color:var(--theme-color)] group" style="--theme-color: ${color}">
-                    <div class="flex items-center gap-4 w-full sm:w-auto">
-                        <div class="w-12 h-12 sm:w-14 sm:h-14 bg-[color:var(--theme-color)] text-white rounded-2xl flex items-center justify-center text-xl sm:text-2xl font-black shadow-lg shadow-[color:var(--theme-color)]/30 shrink-0">
-                            <svg class="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                <div class="bg-white border-2 border-slate-100 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 transition-all hover:border-[color:var(--theme-color)] group overflow-hidden" style="--theme-color: ${color}">
+                    <div class="flex items-center gap-4 w-full">
+                        <div class="w-12 h-12 sm:w-16 sm:h-16 bg-[color:var(--theme-color)] text-white rounded-xl sm:rounded-2xl flex items-center justify-center text-xl sm:text-3xl font-black shadow-md shrink-0">
+                            <svg class="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                         </div>
-                        <div class="min-w-0">
-                            <h3 class="text-lg sm:text-xl font-black text-slate-800 tracking-tight truncate">${displayName}</h3>
-                            <p class="text-[10px] sm:text-sm text-slate-500 font-bold uppercase tracking-wider truncate">${displaySubName}</p>
+                        <div class="min-w-0 flex-1">
+                            <h3 class="text-lg sm:text-2xl font-black text-slate-800 tracking-tight leading-tight truncate sm:whitespace-normal">${displayName}</h3>
+                            <p class="text-[10px] sm:text-sm text-slate-500 font-bold uppercase tracking-wide line-clamp-2">${displaySubName}</p>
                         </div>
                     </div>
                     
-                    <div class="flex items-center gap-4 w-full sm:w-auto">
-                        <div class="relative flex-1 sm:w-56">
+                    <div class="w-full md:w-64 shrink-0 mt-2 md:mt-0">
+                        <div class="relative w-full" dir="ltr">
                             <input type="number" id="grade-simple-${qId}" name="grade-simple-${qId}" inputmode="decimal" min="0" max="${maxPts}" step="0.25" value="${val}"
                                 ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'disabled' : ''}
                                 onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','${partKey}','${qId}','direct',this.value)"
                                 onkeydown="if(event.key==='Enter'){ this.blur(); const sel = document.getElementById('select-student'); if(sel) sel.focus(); }"
-                                class="w-full p-3 sm:p-5 ${inputPaddingLarge} bg-[color:var(--theme-color)]/5 border-2 border-[color:var(--theme-color)]/20 rounded-2xl text-center font-black text-[color:var(--theme-color)] text-2xl sm:text-3xl focus:border-[color:var(--theme-color)] focus:bg-white focus:ring-8 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all shadow-inner ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'cursor-not-allowed' : ''}" 
+                                class="w-full py-3 sm:py-5 pr-12 sm:pr-16 bg-slate-50 border-2 border-slate-200 rounded-xl sm:rounded-2xl text-center font-black text-slate-800 text-3xl sm:text-4xl focus:border-[color:var(--theme-color)] focus:bg-white focus:ring-4 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all shadow-inner ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'cursor-not-allowed' : ''}" 
                                 placeholder="0">
-                            <div class="absolute ${suffixPosLarge} top-1/2 -translate-y-1/2 text-xs sm:text-sm font-black text-[color:var(--theme-color)]/50">/ ${maxPts}</div>
+                            <div class="absolute right-4 sm:right-5 top-1/2 -translate-y-1/2 text-sm sm:text-lg font-black text-slate-400">/ ${maxPts}</div>
                         </div>
                     </div>
                 </div>
@@ -527,16 +510,16 @@
                                 </div>
 
                                 <!-- Global Grade Input -->
-                                <div class="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto ${modeCur === 'detail' ? 'opacity-40 grayscale pointer-events-none' : ''}">
-                                    <span class="text-xs font-bold text-slate-500 uppercase tracking-tight truncate mr-2 sm:mr-0">${t.globalGrade || 'Note globale'} :</span>
-                                    <div class="relative shrink-0">
+                                <div class="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto border-t border-slate-200 sm:border-0 pt-3 sm:pt-0 mt-1 sm:mt-0 ${modeCur === 'detail' ? 'opacity-40 grayscale pointer-events-none' : ''}">
+                                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-tight truncate mr-2 sm:mr-0">${t.globalGrade || 'Note globale'} :</span>
+                                    <div class="relative shrink-0" dir="ltr">
                                         <input type="number" id="grade-global-${ex.id}" name="grade-global-${ex.id}" min="0" max="${maxExExPoints}" step="0.25" value="${finalGradeCur}"
                                             ${(modeCur === 'detail' || window.isTrimesterBlocked(assignment.trimester, assignment.academicYear)) ? 'disabled' : ''}
                                             onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
                                             onkeydown="if(event.key==='Enter'){ this.blur(); window.toggleAccordion('grade-ex-${ex.id}'); }"
-                                            class="w-20 p-1.5 ${inputPaddingSmall} bg-white border-2 border-amber-200 rounded-lg text-center font-black text-slate-700 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all text-sm ${(modeCur === 'detail' || window.isTrimesterBlocked(assignment.trimester, assignment.academicYear)) ? 'cursor-not-allowed' : ''}" 
+                                            class="w-24 p-2 pr-10 bg-white border-2 border-amber-200 rounded-xl text-center font-black text-slate-700 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all text-sm ${(modeCur === 'detail' || window.isTrimesterBlocked(assignment.trimester, assignment.academicYear)) ? 'cursor-not-allowed' : ''}" 
                                             placeholder="0" onclick="event.stopPropagation()">
-                                        <div class="absolute ${suffixPos} top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-400">/ ${maxExPoints}</div>
+                                        <div class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">/ ${maxExPoints}</div>
                                     </div>
                                 </div>
                             </div>`;
@@ -552,14 +535,14 @@
                                     <span class="text-xs font-bold text-blue-900">${t.globalGrade || 'Note globale'}</span>
                                 </div>
                                 <div class="flex items-center gap-3 w-full sm:w-auto">
-                                    <div class="relative w-full sm:w-28">
+                                    <div class="relative w-full sm:w-32" dir="ltr">
                                         <input type="number" id="grade-single-simple-${ex.id}" name="grade-single-simple-${ex.id}" min="0" max="${maxExPoints}" step="0.25" value="${displayVal}"
                                             ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'disabled' : ''}
                                             onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
                                             onkeydown="if(event.key==='Enter'){ this.blur(); window.toggleAccordion('grade-ex-${ex.id}'); }"
-                                            class="w-full p-2 ${inputPaddingMedium} bg-white border-2 border-blue-200 rounded-lg text-center font-black text-blue-900 focus:border-blue-500 outline-none transition-all shadow-sm text-sm ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'cursor-not-allowed' : ''}" 
+                                            class="w-full p-2.5 pr-12 bg-white border-2 border-blue-200 rounded-xl text-center font-black text-blue-900 focus:border-blue-500 outline-none transition-all shadow-sm text-sm ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'cursor-not-allowed' : ''}" 
                                             placeholder="0">
-                                        <div class="absolute ${suffixPos2} top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-400">/ ${maxExPoints}</div>
+                                        <div class="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-blue-400">/ ${maxExPoints}</div>
                                     </div>
                                 </div>
                             </div>`;
@@ -576,14 +559,14 @@
                                     <span class="text-xs font-bold text-blue-900">${t.grade || 'Note'}</span>
                                 </div>
                                 <div class="flex items-center gap-3 w-full sm:w-auto">
-                                    <div class="relative w-full sm:w-28">
+                                    <div class="relative w-full sm:w-32" dir="ltr">
                                         <input type="number" id="grade-no-q-${ex.id}" name="grade-no-q-${ex.id}" min="0" max="${ex.maxPoints}" step="0.25" value="${val}"
                                             ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'disabled' : ''}
                                             onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','direct','direct','direct',this.value)"
                                             onkeydown="if(event.key==='Enter'){ this.blur(); window.toggleAccordion('grade-ex-${ex.id}'); }"
-                                            class="w-full p-2 ${inputPaddingMedium} bg-white border-2 border-blue-200 rounded-lg text-center font-black text-blue-900 focus:border-blue-500 outline-none transition-all shadow-sm text-sm ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'cursor-not-allowed' : ''}" 
+                                            class="w-full p-2.5 pr-12 bg-white border-2 border-blue-200 rounded-xl text-center font-black text-blue-900 focus:border-blue-500 outline-none transition-all shadow-sm text-sm ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'cursor-not-allowed' : ''}" 
                                             placeholder="0">
-                                        <div class="absolute ${suffixPos2} top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-400">/ ${ex.maxPoints}</div>
+                                        <div class="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-blue-400">/ ${ex.maxPoints}</div>
                                     </div>
                                 </div>
                             </div>`;
