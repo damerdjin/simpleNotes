@@ -321,6 +321,7 @@
         
         const viewClasses = document.getElementById('students-view-classes');
         const viewList = document.getElementById('students-view-list');
+        const fab = document.getElementById('students-fab');
         
         if (newClass) {
             // Gérer l'historique si ce n'est pas un retour en arrière
@@ -331,6 +332,7 @@
             // Show List View
             if (viewClasses) viewClasses.classList.add('hidden');
             if (viewList) viewList.classList.remove('hidden');
+            if (fab) fab.classList.add('hidden'); // Hide FAB when rendering students list
             
             // Update Header
             const titleEl = document.getElementById('selected-class-title');
@@ -405,6 +407,19 @@
             // Show Classes View
             if (viewList) viewList.classList.add('hidden');
             if (viewClasses) viewClasses.classList.remove('hidden');
+            if (fab) {
+                fab.classList.remove('hidden'); // Re-show FAB
+                // Ensure the FAB menu is closed
+                const btn = document.getElementById('students-fab-btn');
+                const options = document.getElementById('students-fab-options');
+                if (btn && btn.classList.contains('open')) {
+                    btn.classList.remove('open');
+                    if (options) {
+                        options.classList.add('hidden');
+                        options.classList.remove('flex');
+                    }
+                }
+            }
             await window.renderClassList();
         }
     };
@@ -1294,19 +1309,19 @@
                 <!-- Overlay subtil au hover -->
                 <div class="absolute inset-0 bg-slate-50/0 group-hover:bg-slate-50/30 transition-colors pointer-events-none"></div>
                 
-                <!-- Badge officiel (Icône seule pour gain de place) -->
-                ${s.isOfficial ? `<div class="absolute top-2 ${getLang() === 'ar' ? 'left-2' : 'right-2'} z-20 inline-flex items-center justify-center w-6 h-6 bg-blue-500 text-white rounded shadow-sm" title="${t.official || 'Officiel'}">
+                <!-- Badge officiel (Icône seule sans le fond) -->
+                ${s.isOfficial ? `<div class="absolute top-2 ${getLang() === 'ar' ? 'left-2' : 'right-2'} z-20 text-sm opacity-40 select-none" title="${t.official || 'Officiel'}">
                     🔒
                 </div>` : ''}
 
-                <!-- Ligne 1: Nom (Pleine largeur) -->
-                <div class="student-name ${nameSizeClass} font-bold text-slate-700 z-10 break-words" style="word-break: break-word;" title="${displayName}">
+                <!-- Ligne 1: Nom (Pleine largeur avec hauteur fixe pour alignement) -->
+                <div class="student-name ${nameSizeClass} font-bold text-slate-700 z-10 h-9 sm:h-10 flex items-center justify-center text-center break-words" style="word-break: break-word;" title="${displayName}">
                     ${displayName}
                 </div>
 
-                <!-- Ligne 2: Meta (NIN remplace Date de naissance) -->
-                <div class="student-meta flex items-center gap-1.5 z-10">
-                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-slate-50 text-slate-500 rounded text-[9px] font-bold border border-slate-100 tracking-tight">🆔 ${ninDisplay}</span>
+                <!-- Ligne 2: Meta (NIN centré et aligné) -->
+                <div class="student-meta flex items-center justify-center gap-1.5 z-10">
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-50 text-slate-500 rounded text-[10px] font-bold border border-slate-100 tracking-tight">${ninDisplay}</span>
                 </div>
 
                 <!-- Ligne 3: Actions (En bas) -->
@@ -1354,6 +1369,7 @@
                             ${t.to} <span class="font-bold text-slate-900">${Math.min(currentPage * pageSize, filteredStudents.length)}</span> 
                             ${t.of} <span class="font-bold text-slate-900">${filteredStudents.length}</span>
                         </div>
+                        ${filteredStudents.length > 12 ? `
                         <div class="h-4 w-px bg-slate-200"></div>
                         <div class="flex items-center gap-2">
                             <select id="students-page-size" onchange="setStudentsPageSize(this.value)"
@@ -1365,6 +1381,7 @@
                             </select>
                             <span class="text-xs text-slate-400 font-medium">${t.perPage || '/ page'}</span>
                         </div>
+                        ` : ''}
                     </div>
             `;
 
