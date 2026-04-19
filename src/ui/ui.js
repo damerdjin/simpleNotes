@@ -486,8 +486,8 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
         document.body.style.pointerEvents = '';
         document.body.style.overflow = '';
         
-        const tabs = Array.from(document.querySelectorAll('.tab-content'));
-        const active = tabs.find(t => !t.classList.contains('hidden'));
+        const tabs = Array.from(document.querySelectorAll('.tab-content, .view-section'));
+        const active = tabs.find(t => t.classList.contains('active'));
         if (active) {
             const id = active.id;
             if (id === 'content-summary') {
