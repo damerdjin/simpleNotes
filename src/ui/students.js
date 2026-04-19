@@ -283,12 +283,8 @@
                             </h3>
                         </div>
 
-                        <div class="mt-2 sm:mt-4 pt-2 sm:pt-5 border-t border-slate-50 flex items-center justify-between gap-1" style="${flexRowFix}">
-                            <div class="flex items-center gap-1 text-slate-400 font-bold text-[8px] sm:text-[10px] uppercase tracking-wider" style="${flexRowFix}">
-                                <svg class="hidden sm:block w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                ${globalAcademicYear}
-                            </div>
-                            <div class="flex items-center gap-1.5 sm:gap-2" style="${flexRowFix}">
+                        <div class="mt-2 sm:mt-4 pt-2 sm:pt-5 border-t border-slate-50 flex items-center justify-center gap-4 sm:gap-6" style="${flexRowFix}">
+                            <div class="flex items-center gap-1.5 sm:gap-3" style="${flexRowFix}">
                                 <span class="flex items-center gap-0.5 sm:gap-1.5 text-blue-500 font-black text-[9px] sm:text-[10px]" style="${flexRowFix}">
                                     <span class="text-[10px] sm:text-xs">♂️</span>${boys}
                                 </span>
