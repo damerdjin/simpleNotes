@@ -665,6 +665,19 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        /* État compact du bouton au scroll - Force le style sur mobile/PC */
+        #btn-add-student-header.is-scrolled {
+            padding: 0.75rem !important;
+            border-radius: 9999px !important;
+            gap: 0 !important;
+            width: 3rem !important;
+            height: 3rem !important;
+            justify-content: center !important;
+        }
+        #btn-add-student-header.is-scrolled .btn-label {
+            display: none !important;
+        }
+
         .student-item {
             position: relative;
             background: white;

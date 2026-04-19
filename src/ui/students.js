@@ -1771,36 +1771,24 @@
         const btnTop = document.getElementById('btn-scroll-top');
         const btnAdd = document.getElementById('btn-add-student-header');
         const btnBack = document.getElementById('btn-back-to-classes');
-        const scrollY = window.scrollY;
+        const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
 
         // Show/Hide Scroll to Top
         if (btnTop) {
             if (scrollY > 300) {
-                btnTop.classList.remove('translate-y-20', 'opacity-0');
+                btnTop.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
             } else {
-                btnTop.classList.add('translate-y-20', 'opacity-0');
+                btnTop.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
             }
         }
 
         // Show/Hide Back Arrow & Collapse/Expand Add Button
         if (scrollY > 100) {
             if (btnBack) btnBack.classList.remove('hidden');
-            if (btnAdd) {
-                const label = btnAdd.querySelector('.btn-label');
-                if (label) label.classList.add('hidden');
-                btnAdd.classList.add('p-3', 'rounded-full');
-                btnAdd.classList.remove('px-4', 'py-2.5', 'rounded-xl', 'gap-2');
-                btnAdd.title = label ? label.textContent : '';
-            }
+            if (btnAdd) btnAdd.classList.add('is-scrolled');
         } else {
             if (btnBack) btnBack.classList.add('hidden');
-            if (btnAdd) {
-                const label = btnAdd.querySelector('.btn-label');
-                if (label) label.classList.remove('hidden');
-                btnAdd.classList.remove('p-3', 'rounded-full');
-                btnAdd.classList.add('px-4', 'py-2.5', 'rounded-xl', 'gap-2');
-                btnAdd.title = '';
-            }
+            if (btnAdd) btnAdd.classList.remove('is-scrolled');
         }
     });
 
