@@ -221,22 +221,23 @@
             const levelIcon = levelFromClass(c);
 
             // Arabic Pluralization & Styling
-            let countLabel = `${count} ${t.studentsCountLabel || 'élèves'}`;
+            let countTextDesktop = `${count} ${t.studentsCountLabel || 'élèves'}`;
             if (isAr) {
-                if (count === 0) countLabel = 'لا يوجد طلاب';
-                else if (count === 1) countLabel = 'طالب واحد';
-                else if (count === 2) countLabel = 'طالبان';
-                else if (count <= 10) countLabel = `${count} طلاب`;
-                else countLabel = `${count} طالباً`;
+                if (count === 0) countTextDesktop = 'لا يوجد طلاب';
+                else if (count === 1) countTextDesktop = 'طالب واحد';
+                else if (count === 2) countTextDesktop = 'طالبان';
+                else if (count <= 10) countTextDesktop = `${count} طلاب`;
+                else countTextDesktop = `${count} طالباً`;
             }
+            const countLabel = `<span class="sm:hidden font-black text-xs">${count}</span><span class="hidden sm:inline">${countTextDesktop}</span>`;
 
             const originClass = isAr ? 'origin-right' : 'origin-left';
             
             // LOGIQUE DE TAILLE DE POLICE DYNAMIQUE
             const cleanedName = cleanClassName(c);
-            let fontSizeClass = isAr ? 'text-base sm:text-2xl' : 'text-base sm:text-2xl';
-            if (cleanedName.length > 25) fontSizeClass = 'text-xs sm:text-lg';
-            else if (cleanedName.length > 15) fontSizeClass = 'text-sm sm:text-xl';
+            let fontSizeClass = isAr ? 'text-[13px] sm:text-2xl' : 'text-sm sm:text-2xl';
+            if (cleanedName.length > 25) fontSizeClass = 'text-[10px] sm:text-lg leading-tight';
+            else if (cleanedName.length > 15) fontSizeClass = 'text-xs sm:text-xl leading-snug';
 
             const titleClass = isAr ? `${fontSizeClass} font-bold leading-normal` : `${fontSizeClass} font-black leading-tight tracking-tight`;
             
@@ -270,14 +271,14 @@
                                     title="${t.delete}">
                                     <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                 </button>
-                                <div class="level-badge w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center text-lg sm:text-2xl font-black text-white transform group-hover:rotate-6 transition-all duration-500">
+                                <div class="level-badge w-8 h-8 sm:w-14 sm:h-14 rounded-lg sm:rounded-2xl flex items-center justify-center text-sm sm:text-2xl font-black text-white transform group-hover:rotate-6 transition-all duration-500 shadow-sm sm:shadow-md">
                                     ${levelIcon}
                                 </div>
                             </div>
                         </div>
                         
                         <div class="flex-grow flex flex-col justify-center py-1 sm:py-4" style="${flexColFix}">
-                            <h3 class="card-title-hover ${titleClass} text-slate-800 transition-colors duration-300 line-clamp-2" title="${c}">
+                            <h3 class="card-title-hover ${titleClass} text-slate-800 transition-colors duration-300 line-clamp-3 sm:line-clamp-2 break-words" style="word-break: break-word;" title="${c}">
                                 ${cleanClassName(c)}
                             </h3>
                         </div>
