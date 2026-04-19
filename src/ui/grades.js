@@ -1085,41 +1085,60 @@
             const levelIcon = typeof window.levelFromClass === 'function' ? window.levelFromClass(c) : c.substring(0, 1).toUpperCase();
             const displayName = typeof window.cleanClassName === 'function' ? window.cleanClassName(c) : c;
 
-            const originClass = isAr ? 'origin-right' : 'origin-left';
-            const titleClass = isAr ? 'text-2xl font-bold leading-normal' : 'text-2xl font-black leading-tight tracking-tight';
+            // Arabic Pluralization
+            let countTextDesktop = `${count} ${t.studentsCountLabel || 'élèves'}`;
+            if (isAr) {
+                if (count === 0) countTextDesktop = 'لا يوجد طلاب';
+                else if (count === 1) countTextDesktop = 'طالب واحد';
+                else if (count === 2) countTextDesktop = 'طالبان';
+                else if (count <= 10) countTextDesktop = `${count} طلاب`;
+                else countTextDesktop = `${count} طالباً`;
+            }
+            const countLabel = `<span class="sm:hidden font-black text-xs">${count}</span><span class="hidden sm:inline">${countTextDesktop}</span>`;
+
+            // LOGIQUE DE TAILLE DE POLICE DYNAMIQUE
+            const cleanedName = typeof window.cleanClassName === 'function' ? window.cleanClassName(c) : c;
+            let fontSizeClass = isAr ? 'text-[13px] sm:text-2xl' : 'text-sm sm:text-2xl';
+            if (cleanedName.length > 25) fontSizeClass = 'text-[10px] sm:text-lg leading-tight';
+            else if (cleanedName.length > 15) fontSizeClass = 'text-xs sm:text-xl leading-snug';
+
+            const titleClass = isAr ? `${fontSizeClass} font-bold leading-normal` : `${fontSizeClass} font-black leading-tight tracking-tight`;
             const flexColFix = 'display: flex !important; flex-direction: column !important;';
             const flexRowFix = 'display: flex !important; flex-direction: row !important;';
 
             return `
                 <div onclick="selectGradeClass('${c}', '${color}')" 
-                    class="class-card-modern group relative bg-white p-6 rounded-[2rem] border-2 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col h-full hover:-translate-y-2 hover:shadow-xl hover:border-[color:var(--card-color)]"
+                    class="class-card-modern group relative bg-white p-3 sm:p-6 rounded-2xl sm:rounded-[2rem] border-2 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col h-full hover:-translate-y-2 hover:shadow-xl hover:border-[color:var(--card-color)]"
                     style="--card-color: ${color}; --card-color-alpha: ${colorAlpha};">
                     
+                    <!-- Decorative background blob -->
                     <div class="absolute -start-8 -top-8 w-32 h-32 rounded-full opacity-[0.03] group-hover:opacity-[0.08] transition-all duration-700 group-hover:scale-150" style="background: ${color}"></div>
                     
                     <div class="relative z-10 flex flex-col h-full" style="${flexColFix}">
-                        <div class="flex items-start justify-between mb-6" style="${flexRowFix}">
-                            <span class="inline-flex items-center px-3 py-1 bg-slate-50 text-slate-500 rounded-full text-[10px] font-bold border border-slate-100 group-hover:bg-[var(--card-color)] group-hover:text-white group-hover:border-transparent transition-all duration-300">
-                                ${count}
-                            </span>
-                            <div class="level-badge w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-black text-white transform group-hover:rotate-6 transition-all duration-500 bg-gradient-to-br from-[var(--card-color)] to-[var(--card-color)] opacity-90 shadow-lg">
-                                ${levelIcon}
+                        <div class="flex items-start justify-between mb-2 sm:mb-6" style="${flexRowFix}">
+                            <div class="flex flex-col gap-1.5">
+                                <span class="inline-flex items-center px-2 py-0.5 sm:px-3 sm:py-1 bg-slate-50 text-slate-500 rounded-full text-[9px] sm:text-[10px] font-bold border border-slate-100 group-hover:bg-[var(--card-color)] group-hover:text-white group-hover:border-transparent transition-all duration-300">
+                                    ${countLabel}
+                                </span>
+                                <!-- Année scolaire (PC uniquement) -->
+                                <span class="hidden sm:inline-flex items-center px-3 py-1 bg-blue-50/50 text-blue-600/70 rounded-full text-[10px] font-bold border border-blue-100/30 group-hover:bg-white/20 group-hover:text-white group-hover:border-transparent transition-all duration-300">
+                                    ${globalAcademicYear}
+                                </span>
+                            </div>
+                            
+                            <div class="flex items-center" style="${flexRowFix}">
+                                <div class="level-badge w-7 h-7 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center text-xs sm:text-lg font-black text-white transform group-hover:rotate-6 transition-all duration-500 shadow-sm">
+                                    ${levelIcon}
+                                </div>
                             </div>
                         </div>
                         
-                        <div class="flex-grow flex flex-col justify-center py-4" style="${flexColFix}">
-                            <h3 class="card-title-hover ${titleClass} text-slate-800 transition-colors duration-300 line-clamp-2" title="${c}">
-                                ${displayName}
+                        <div class="flex-grow flex flex-col justify-center py-1 sm:py-4" style="${flexColFix}">
+                            <h3 class="card-title-hover ${titleClass} text-slate-800 transition-colors duration-300 line-clamp-3 sm:line-clamp-2 break-words" style="word-break: break-word;" title="${c}">
+                                ${cleanedName}
                             </h3>
                         </div>
-
-                         <div class="mt-4 pt-5 border-t border-slate-50 flex items-center justify-between" style="${flexRowFix}">
-                            <div class="flex items-center gap-1.5 text-slate-400 font-bold text-[10px] uppercase tracking-wider bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100/50" style="${flexRowFix}">
-                                ${globalAcademicYear}
-                            </div>
-                        </div>
                     </div>
-                    <div class="bottom-bar absolute bottom-0 start-0 w-full h-1.5 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ${originClass}" style="background: ${color}"></div>
                 </div>
             `;
         }).join('');
@@ -1182,38 +1201,44 @@
         }
 
         container.innerHTML = assignments.map(a => {
-            const dateStr = new Date(a.date).toLocaleDateString(getLang() === 'ar' ? 'ar-SA' : 'fr-FR');
+            const dateStr = a.gradeDate ? new Date(a.gradeDate).toLocaleDateString(getLang() === 'ar' ? 'ar-u-nu-latn' : 'fr-FR') : '';
             const exerciseCount = a.exercises.length;
             const totalPoints = gradesSvc().getAssignmentMaxPoints(a);
 
+            // Dynamic font size based on name length to fit on one line
+            let nameFontClass = 'text-xl';
+            if (a.name.length > 20) nameFontClass = 'text-sm';
+            else if (a.name.length > 12) nameFontClass = 'text-base';
+
             return `
             <div onclick="selectGradeAssignment('${a.id}')" 
-                class="group relative bg-white p-6 rounded-[2rem] border-2 border-slate-100 hover:border-[color:var(--theme-color)] transition-all duration-300 cursor-pointer overflow-hidden hover:shadow-xl hover:-translate-y-1"
+                class="group relative bg-white p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border-2 border-slate-100 hover:border-[color:var(--theme-color)] transition-all duration-300 cursor-pointer overflow-hidden hover:shadow-xl hover:-translate-y-1 flex flex-col"
                 style="--theme-color: ${color}">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black group-hover:bg-[color:var(--theme-color)] group-hover:text-white transition-colors duration-300"
-                         style="background-color: ${colorLight}; color: ${color};">
-                        ${a.name.charAt(0).toUpperCase()}
-                    </div>
-                    <span class="px-3 py-1 bg-slate-50 text-slate-500 rounded-full text-xs font-bold border border-slate-100 group-hover:bg-[color:var(--theme-color)] group-hover:text-white transition-colors">
-                        ${dateStr}
+                
+                <!-- Assignment name - first line -->
+                <h3 class="${nameFontClass} font-black text-slate-800 mb-2 truncate group-hover:text-[color:var(--theme-color)] transition-colors" title="${a.name}">${a.name}</h3>
+                
+                <!-- Date - second line, always present -->
+                <div class="mb-3">
+                    <span class="px-2 sm:px-3 py-1 rounded-full text-[10px] font-bold border transition-colors ${dateStr
+                        ? 'bg-slate-50 text-slate-500 border-slate-100 group-hover:bg-[color:var(--theme-color)] group-hover:text-white group-hover:border-transparent'
+                        : 'bg-slate-50 text-slate-400 border-slate-100'}">
+                        ${dateStr || '&mdash;&mdash;&mdash;'}
                     </span>
                 </div>
                 
-                <h3 class="text-xl font-black text-slate-800 mb-2 line-clamp-2 group-hover:text-[color:var(--theme-color)] transition-colors">${a.name}</h3>
-                
-                <div class="flex items-center gap-4 text-sm text-slate-500 font-medium mb-4">
+                <div class="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-slate-500 font-medium mb-3 sm:mb-4">
                     <span class="flex items-center gap-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                        <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                         ${exerciseCount} ${t.exerciseAbbr || 'Ex'}
                     </span>
                     <span class="flex items-center gap-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                         ${totalPoints} ${t.pointsAbbr || 'pts'}
                     </span>
                 </div>
 
-                <div class="w-full py-2.5 rounded-xl bg-slate-50 text-slate-600 font-bold text-center text-sm group-hover:bg-[color:var(--theme-color)] group-hover:text-white transition-all duration-300">
+                <div class="mt-auto w-full py-2 sm:py-2.5 rounded-xl bg-slate-50 text-slate-600 font-bold text-center text-xs sm:text-sm group-hover:bg-[color:var(--theme-color)] group-hover:text-white transition-all duration-300">
                     ${t.gradeAction || 'Noter'}
                 </div>
             </div>`;

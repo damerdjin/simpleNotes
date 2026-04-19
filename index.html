@@ -1935,62 +1935,66 @@
 
                 <!-- Grades Tab -->
                 <div id="content-grades" class="view-section">
-                    <div class="max-w-7xl mx-auto space-y-8">
-                        <!-- Stepper -->
-                        <div class="relative py-4">
-                            <div class="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-100 rounded-full -z-10"></div>
-                            <div id="grades-stepper" class="grid grid-cols-[auto_1fr_auto_1fr_auto] items-center max-w-2xl mx-auto px-4 gap-2">
-                                <!-- Step 1 -->
-                                <div class="flex flex-col items-center gap-2 cursor-pointer relative z-10" onclick="goToGradeStep(1)">
-                                    <div id="step-indicator-1" class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold bg-blue-600 ring-4 ring-white shadow-lg transition-all duration-300 transform hover:scale-110">1</div>
-                                    <span id="step-label-1" class="text-sm font-bold text-slate-800 bg-white px-2 rounded-full" data-translate="stepClass">Classe</span>
-                                </div>
-                                <!-- Connector 1-2 -->
-                                <div class="h-1 bg-slate-100 relative overflow-hidden rounded-full -z-20">
-                                     <div id="step-connector-1" class="h-full bg-blue-600 transition-all duration-500" style="width: 0%"></div>
-                                </div>
-                                <!-- Step 2 -->
-                                <div class="flex flex-col items-center gap-2 cursor-pointer pointer-events-none opacity-50 relative z-10" id="step-btn-2" onclick="goToGradeStep(2)">
-                                    <div id="step-indicator-2" class="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 font-bold bg-white border-2 border-slate-200 ring-4 ring-white transition-all duration-300 transform hover:scale-110">2</div>
-                                    <span id="step-label-2" class="text-sm font-medium text-slate-400 bg-white px-2 rounded-full" data-translate="stepAssignment">Devoir</span>
-                                </div>
-                                <!-- Connector 2-3 -->
-                                <div class="h-1 bg-slate-100 relative overflow-hidden rounded-full -z-20">
-                                    <div id="step-connector-2" class="h-full bg-blue-600 transition-all duration-500" style="width: 0%"></div>
-                                </div>
-                                <!-- Step 3 -->
-                                <div class="flex flex-col items-center gap-2 cursor-pointer pointer-events-none opacity-50 relative z-10" id="step-btn-3" onclick="goToGradeStep(3)">
-                                    <div id="step-indicator-3" class="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 font-bold bg-white border-2 border-slate-200 ring-4 ring-white transition-all duration-300 transform hover:scale-110">3</div>
-                                    <span id="step-label-3" class="text-sm font-medium text-slate-400 bg-white px-2 rounded-full" data-translate="stepEntry">Saisie</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Step 1: Class Selection -->
-                        <div id="grade-step-1" class="step-content transition-all duration-500">
-                             <div class="text-center mb-10">
-                                <h2 class="text-3xl font-black text-slate-800 mb-3 tracking-tight" data-translate="selectClassTitle">Sélectionnez une classe</h2>                                
-                            </div>
-                            <div id="grades-class-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 px-4">
-                                <!-- Class cards will be injected here -->
-                            </div>
-                        </div>
-
-                        <!-- Step 2: Assignment Selection -->
-                        <div id="grade-step-2" class="step-content hidden transition-all duration-500">
-                             <div class="text-center mb-10 relative">
-                                <button id="btn-back-step-2" onclick="goToGradeStep(1)" class="absolute left-0 top-1/2 -translate-y-1/2 inline-flex items-center gap-2 text-slate-400 hover:text-blue-600 transition-colors group">
-                                    <div class="w-8 h-8 rounded-full bg-slate-50 group-hover:bg-blue-50 flex items-center justify-center transition-colors">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    <div class="max-w-7xl mx-auto">
+                        <div class="space-y-6 sm:space-y-8 bg-white sm:p-8 p-4 rounded-2xl sm:rounded-3xl sm:border border-slate-200 sm:shadow-sm">
+                            <!-- Stepper -->
+                            <div class="relative py-2 sm:py-4">
+                                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-100 rounded-full -z-10"></div>
+                                <div id="grades-stepper" class="grid grid-cols-[auto_1fr_auto_1fr_auto] items-center max-w-2xl mx-auto px-2 sm:px-4 gap-1 sm:gap-2">
+                                    <!-- Step 1 -->
+                                    <div class="flex flex-col items-center gap-1.5 sm:gap-2 cursor-pointer relative z-10" onclick="goToGradeStep(1)">
+                                        <div id="step-indicator-1" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white font-bold bg-blue-600 ring-4 ring-white shadow-lg transition-all duration-300 transform hover:scale-110 text-xs sm:text-base">1</div>
+                                        <span id="step-label-1" class="text-[10px] sm:text-sm font-bold text-slate-800 bg-white px-2 rounded-full" data-translate="stepClass">Classe</span>
                                     </div>
-                                    <span class="font-medium hidden sm:inline" data-translate="back">Retour</span>
-                                </button>
-                                <h2 class="text-3xl font-black text-slate-800 mb-3 tracking-tight" data-translate="selectAssignmentTitle">Sélectionnez un devoir</h2>
+                                    <!-- Connector 1-2 -->
+                                    <div class="h-1 bg-slate-100 relative overflow-hidden rounded-full -z-20">
+                                         <div id="step-connector-1" class="h-full bg-blue-600 transition-all duration-500" style="width: 0%"></div>
+                                    </div>
+                                    <!-- Step 2 -->
+                                    <div class="flex flex-col items-center gap-1.5 sm:gap-2 cursor-pointer pointer-events-none opacity-50 relative z-10" id="step-btn-2" onclick="goToGradeStep(2)">
+                                        <div id="step-indicator-2" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-slate-400 font-bold bg-white border-2 border-slate-200 ring-4 ring-white transition-all duration-300 transform hover:scale-110 text-xs sm:text-base">2</div>
+                                        <span id="step-label-2" class="text-[10px] sm:text-sm font-medium text-slate-400 bg-white px-2 rounded-full" data-translate="stepAssignment">Devoir</span>
+                                    </div>
+                                    <!-- Connector 2-3 -->
+                                    <div class="h-1 bg-slate-100 relative overflow-hidden rounded-full -z-20">
+                                        <div id="step-connector-2" class="h-full bg-blue-600 transition-all duration-500" style="width: 0%"></div>
+                                    </div>
+                                    <!-- Step 3 -->
+                                    <div class="flex flex-col items-center gap-1.5 sm:gap-2 cursor-pointer pointer-events-none opacity-50 relative z-10" id="step-btn-3" onclick="goToGradeStep(3)">
+                                        <div id="step-indicator-3" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-slate-400 font-bold bg-white border-2 border-slate-200 ring-4 ring-white transition-all duration-300 transform hover:scale-110 text-xs sm:text-base">3</div>
+                                        <span id="step-label-3" class="text-[10px] sm:text-sm font-medium text-slate-400 bg-white px-2 rounded-full" data-translate="stepEntry">Saisie</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div id="grades-assignment-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4">
-                                <!-- Assignment cards will be injected here -->
+
+                            <!-- Step 1: Class Selection -->
+                            <div id="grade-step-1" class="step-content transition-all duration-500">
+                                 <div class="text-center mb-6 sm:mb-10">
+                                    <h2 class="text-xl sm:text-3xl font-black text-slate-800 mb-2 sm:mb-3 tracking-tight" data-translate="selectClassTitle">Sélectionnez une classe</h2>                                
+                                </div>
+                                <div id="grades-class-list" class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-3 sm:gap-6 px-1 sm:px-4">
+                                    <!-- Class cards will be injected here -->
+                                </div>
+                            </div>
+
+                            <!-- Step 2: Assignment Selection -->
+                            <div id="grade-step-2" class="step-content hidden transition-all duration-500">
+                                 <div class="text-center mb-6 sm:mb-10 relative">
+                                    <button id="btn-back-step-2" onclick="goToGradeStep(1)" class="absolute left-0 top-1/2 -translate-y-1/2 inline-flex items-center gap-2 text-slate-400 hover:text-blue-600 transition-colors group">
+                                        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-50 group-hover:bg-blue-50 flex items-center justify-center transition-colors">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                                        </div>
+                                        <span class="font-medium hidden sm:inline" data-translate="back">Retour</span>
+                                    </button>
+                                    <h2 class="text-xl sm:text-3xl font-black text-slate-800 mb-2 sm:mb-3 tracking-tight" data-translate="selectAssignmentTitle">Sélectionnez un devoir</h2>
+                                </div>
+                                <div id="grades-assignment-list" class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 px-1 sm:px-4">
+                                    <!-- Assignment cards will be injected here -->
+                                </div>
                             </div>
                         </div>
+                    </div>
+                </div>
 
                         <!-- Step 3: Grade Entry -->
                         <div id="grade-step-3" class="step-content hidden transition-all duration-500">

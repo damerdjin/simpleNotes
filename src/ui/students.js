@@ -259,9 +259,13 @@
                     
                     <div class="relative z-10 flex flex-col h-full" style="${flexColFix}">
                         <div class="flex items-start justify-between mb-2 sm:mb-6" style="${flexRowFix}">
-                            <div class="flex flex-col gap-1">
+                            <div class="flex flex-col gap-1.5">
                                 <span class="inline-flex items-center px-2 py-0.5 sm:px-3 sm:py-1 bg-slate-50 text-slate-500 rounded-full text-[9px] sm:text-[10px] font-bold border border-slate-100 group-hover:bg-[var(--card-color)] group-hover:text-white group-hover:border-transparent transition-all duration-300">
                                     ${countLabel}
+                                </span>
+                                <!-- Année scolaire (PC uniquement) -->
+                                <span class="hidden sm:inline-flex items-center px-3 py-1 bg-blue-50/50 text-blue-600/70 rounded-full text-[10px] font-bold border border-blue-100/30 group-hover:bg-white/20 group-hover:text-white group-hover:border-transparent transition-all duration-300">
+                                    ${globalAcademicYear}
                                 </span>
                             </div>
                             
