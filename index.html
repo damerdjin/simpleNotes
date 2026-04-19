@@ -1797,18 +1797,18 @@
                             <div class="header-scroll-hide">
                                 <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
                                     <div class="min-w-0 w-full lg:w-auto">
-                                        <h2 class="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight rtl:text-right" data-translate="myClasses">Mes Classes</h2>
-                                        <p class="text-slate-500 mt-1 text-sm sm:text-base rtl:text-right" data-translate="classManagementSubtitle">Sélectionnez une classe pour gérer les élèves</p>
+                                        <h2 class="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight rtl:text-right" data-translate="myClasses">Mes Classes</h2>
+                                        <p class="text-slate-500 mt-0.5 text-xs sm:text-sm rtl:text-right" data-translate="classManagementSubtitle">Sélectionnez une classe pour gérer les élèves</p>
                                     </div>
-                                    <div class="hidden sm:flex flex-row items-center gap-3 w-full lg:w-auto">
+                                    <div class="hidden sm:flex flex-row items-center gap-2.5 w-full lg:w-auto">
                                         <button onclick="openJoinClassModal()" 
-                                            class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-blue-600 border-2 border-blue-100 px-3 py-3 rounded-xl font-bold transition-all active:scale-95 text-xs sm:text-base whitespace-nowrap">
+                                            class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-blue-600 border-2 border-blue-100 px-4 py-2 rounded-xl font-bold transition-all active:scale-95 text-xs sm:text-sm whitespace-nowrap">
                                             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                                             <span class="sm:hidden" data-translate="joinClassShort">+Classe</span>
                                             <span class="hidden sm:inline" data-translate="joinClass">Rejoindre une classe</span>
                                         </button>
                                         <button onclick="openStudentModal()" 
-                                            class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-3 rounded-xl font-bold shadow-lg shadow-blue-500/20 transition-all active:scale-95 text-xs sm:text-base whitespace-nowrap">
+                                            class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold shadow-lg shadow-blue-500/20 transition-all active:scale-95 text-xs sm:text-sm whitespace-nowrap">
                                             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                                             <span class="sm:hidden" data-translate="addStudentShort">+Élève</span>
                                             <span class="hidden sm:inline" data-translate="addStudent">Ajouter un élève</span>
@@ -1821,13 +1821,13 @@
                                     <input type="text" id="students-class-search" data-translate-placeholder="searchClassPlaceholder" placeholder="Rechercher une classe..." 
                                         aria-label="Rechercher une classe"
                                         oninput="renderClassList()"
-                                        class="w-full ps-12 pe-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-medium text-slate-600 placeholder:text-slate-400">
+                                        class="w-full ps-11 pe-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-medium text-slate-600 placeholder:text-slate-400 text-sm">
                                     <svg class="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                                 </div>
                             </div>
 
                             <!-- Classes Grid -->
-                            <div id="students-class-list" class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-3 sm:gap-6">
+                            <div id="students-class-list" class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
                                 <!-- Injected by JS -->
                             </div>
                         </div>
@@ -1844,7 +1844,7 @@
                                             <svg class="w-5 h-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                                         </button>
                                         <div class="min-w-0">
-                                            <h2 id="selected-class-title" class="text-xl sm:text-2xl font-bold text-slate-800 break-words leading-tight">--</h2>
+                                            <h2 id="selected-class-title" class="text-lg sm:text-xl font-bold text-slate-800 break-words leading-tight">--</h2>
                                             <p class="text-[10px] sm:text-xs font-bold text-blue-600 uppercase tracking-wider" id="selected-class-stats">--</p>
                                         </div>
                                     </div>
@@ -1859,12 +1859,12 @@
                                             <input type="text" id="student-search" data-translate-placeholder="searchStudentPlaceholder" placeholder="Rechercher..."
                                                 aria-label="Rechercher un élève"
                                                 oninput="renderStudents()" 
-                                                class="w-full ps-9 pe-4 py-2.5 bg-slate-50 border-slate-200 hover:border-blue-300 focus:border-blue-500 rounded-xl outline-none transition-all text-xs sm:text-sm border shadow-sm">
+                                                class="w-full ps-9 pe-4 py-2 bg-slate-50 border-slate-200 hover:border-blue-300 focus:border-blue-500 rounded-xl outline-none transition-all text-xs sm:text-sm border shadow-sm">
                                             <svg class="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                                         </div>
 
                                         <button id="btn-add-student-header" onclick="openStudentModal()" 
-                                            class="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-bold shadow-sm transition-all text-sm shrink-0">
+                                            class="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-xl font-bold shadow-sm transition-all text-xs shrink-0">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                                             <span class="btn-label hidden sm:inline" data-translate="add">Ajouter</span>
                                         </button>
@@ -1895,8 +1895,8 @@
                             </button>
                         </div>
                         <!-- Bouton principal -->
-                        <button id="students-fab-btn" onclick="toggleStudentsFab()" class="w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-[0_8px_16px_rgba(37,99,235,0.3)] flex items-center justify-center transition-all ms-auto transform active:scale-95">
-                            <svg class="w-5 h-5 transition-transform duration-300" id="students-fab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        <button id="students-fab-btn" onclick="toggleStudentsFab()" class="w-11 h-11 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-[0_8px_16px_rgba(37,99,235,0.3)] flex items-center justify-center transition-all ms-auto transform active:scale-95">
+                            <svg class="w-4 h-4 transition-transform duration-300" id="students-fab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                         </button>
                     </div>
 
