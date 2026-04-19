@@ -1310,6 +1310,12 @@
             // Use global helpers for date
             const birthDate = window.formatDate ? window.formatDate(window.parseDateMaybeExcel(s.birthDate || '')) : '';
 
+            // LOGIQUE DE TAILLE DE POLICE DYNAMIQUE (NIN)
+            const ninLen = ninDisplay.length;
+            let ninSizeClass = 'text-[10px]';
+            if (ninLen > 16) ninSizeClass = 'text-[8px] tracking-tighter';
+            else if (ninLen > 12) ninSizeClass = 'text-[9px] tracking-tight';
+
             // Template de la carte élève (Nom en haut, actions en bas pour éviter les coupures)
             return `
             <div class="student-item group ${levelClass} ${s.isOfficial ? 'official-student' : ''} bg-white p-3 sm:px-4 sm:py-5 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col gap-2 relative overflow-hidden h-full">
@@ -1329,8 +1335,8 @@
                 <!-- Ligne 2: Meta (NIN sur mobile, DOB + NIN sur PC) -->
                 <div class="student-meta flex flex-col items-center justify-center gap-1 z-10">
                     <!-- Mobile View: Just NIN (Centered) -->
-                    <div class="sm:hidden flex items-center justify-center">
-                        <span class="inline-flex items-center px-2 py-0.5 bg-slate-50 text-slate-500 rounded text-[10px] font-bold border border-slate-100 tracking-tight">${ninDisplay}</span>
+                    <div class="sm:hidden flex items-center justify-center w-full">
+                        <span class="inline-flex items-center px-2 py-0.5 bg-slate-50 text-slate-500 rounded ${ninSizeClass} font-bold border border-slate-100">${ninDisplay}</span>
                     </div>
                     
                     <!-- Desktop View: DOB + NIN (Two lines) -->
