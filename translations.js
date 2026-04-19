@@ -319,6 +319,7 @@ window.translations = {
         noStudentOrAssignmentForClass: "Aucun élève ou devoir pour la classe",
         noResultForSearch: "Aucun résultat ne correspond à votre recherche.",
         addStudentsAndAssignmentsToSeeSummary: "Ajoutez des élèves et des devoirs pour voir le récapitulatif.",
+        selectClassToSeeSummary: "Veuillez sélectionner une classe pour afficher le récapitulatif.",
 
         average: "Moyenne",
         median: "Médiane",
@@ -734,6 +735,7 @@ window.translations = {
         noStudentOrAssignmentForClass: "No students or assignments for class",
         noResultForSearch: "No results match your search.",
         addStudentsAndAssignmentsToSeeSummary: "Add students and assignments to see the summary.",
+        selectClassToSeeSummary: "Please select a class to view the summary.",
 
         // Messages d'erreur
         enterName: "Please enter at least a last name or first name",
@@ -1143,6 +1145,7 @@ window.translations = {
         noStudentOrAssignmentForClass: "لا توجد طلاب أو واجبات للفصل",
         noResultForSearch: "لا توجد نتائج تطابق بحثك.",
         addStudentsAndAssignmentsToSeeSummary: "أضف طلابا وواجبات لرؤية الملخص.",
+        selectClassToSeeSummary: "يرجى اختيار قسم لعرض الملخص.",
 
         // Messages d'erreur
         enterName: "الرجاء إدخال اسم العائلة أو الاسم الأول على الأقل",

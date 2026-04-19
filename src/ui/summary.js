@@ -259,6 +259,13 @@ import * as gradesSvc from '../services/grades.service.js';
             detailsCheckbox.disabled = true;
         }
 
+        if (!selectedClass) {
+            const tagContainer = document.getElementById('summary-assignment-tags');
+            if (tagContainer) tagContainer.innerHTML = '';
+            container.innerHTML = `<p class="text-gray-500 text-center py-12">${t.selectClassToSeeSummary || 'Veuillez sélectionner une classe pour afficher le récapitulatif.'}</p>`;
+            return;
+        }
+
         if (filteredStudents.length === 0 || filteredAssignments.length === 0) {
             let emptyMessage = searchTerm ? t.noResultForSearch : t.addStudentsAndAssignmentsToSeeSummary;
             container.innerHTML = `<p class="text-gray-500 text-center py-8">${emptyMessage}</p>`;
@@ -533,6 +540,13 @@ import * as gradesSvc from '../services/grades.service.js';
             showDetails = detailsCheckbox.checked;
         }
 
+        if (!selectedClass) {
+            const tagContainer = document.getElementById('summary-assignment-tags');
+            if (tagContainer) tagContainer.innerHTML = '';
+            container.innerHTML = `<p class="text-gray-500 text-center py-12">${t.selectClassToSeeSummary || 'Veuillez sélectionner une classe pour afficher le récapitulatif.'}</p>`;
+            return;
+        }
+
         if (filteredStudents.length === 0 || filteredAssignments.length === 0) {
             let emptyMessage = selectedClass ? `${t.noStudentOrAssignmentForClass} "${selectedClass}".` : (searchTerm ? t.noResultForSearch : t.addStudentsAndAssignmentsToSeeSummary);
             container.innerHTML = `<p class="text-gray-500 text-center py-8">${emptyMessage}</p>`;
@@ -589,7 +603,7 @@ import * as gradesSvc from '../services/grades.service.js';
                     </div>`;
             }).join('');
             tagContainer.innerHTML = tagHtml;
-            tagContainer.className = "flex flex-wrap gap-2 mb-4 p-2 bg-gray-50 rounded-lg assignment-tag-container";
+            tagContainer.className = "flex flex-wrap gap-2 mb-4 p-2 bg-gray-50 rounded-lg assignment-tag-container max-w-full overflow-x-auto";
         }
 
         const assignmentsByClass = {};
