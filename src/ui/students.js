@@ -266,7 +266,7 @@
                             </div>
                             
                             <div class="flex items-center" style="${flexRowFix}">
-                                <div class="level-badge w-8 h-8 sm:w-14 sm:h-14 rounded-lg sm:rounded-2xl flex items-center justify-center text-sm sm:text-2xl font-black text-white transform group-hover:rotate-6 transition-all duration-500 shadow-sm sm:shadow-md">
+                                <div class="level-badge w-7 h-7 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center text-xs sm:text-lg font-black text-white transform group-hover:rotate-6 transition-all duration-500 shadow-sm">
                                     ${levelIcon}
                                 </div>
                             </div>
