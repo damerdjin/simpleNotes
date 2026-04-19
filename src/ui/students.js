@@ -756,9 +756,9 @@
         if (errorZone) errorZone.classList.add('hidden');
         if (studentErrorTimeout) clearTimeout(studentErrorTimeout);
 
-        // Reset to single mode by default, and hide selector if editing
+        // Reset to single mode by default, and hide selector if editing or opened from a class
         const selector = document.getElementById('student-modal-mode-selector');
-        if (studentId) {
+        if (studentId || studentsUiState.selectedClass) {
             if (selector) selector.classList.add('hidden');
             window.setStudentModalMode('single');
         } else {
@@ -831,6 +831,10 @@
                             }
                         }
                     }
+                } else if (studentsUiState.selectedClass) {
+                    // AUTO-SELECT ACTIVE CLASS
+                    classSelect.value = studentsUiState.selectedClass;
+                    if (newClassContainer) newClassContainer.classList.add('hidden');
                 }
             });
         }
@@ -1303,25 +1307,37 @@
             // NIN instead of BirthDate
             const ninDisplay = s.nin || '---';
 
+            // Use global helpers for date
+            const birthDate = window.formatDate ? window.formatDate(window.parseDateMaybeExcel(s.birthDate || '')) : '';
+
             // Template de la carte élève (Nom en haut, actions en bas pour éviter les coupures)
             return `
-            <div class="student-item group ${levelClass} ${s.isOfficial ? 'official-student' : ''} bg-white p-3 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col gap-2 relative overflow-hidden h-full">
+            <div class="student-item group ${levelClass} ${s.isOfficial ? 'official-student' : ''} bg-white p-3 sm:px-4 sm:py-5 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col gap-2 relative overflow-hidden h-full">
                 <!-- Overlay subtil au hover -->
                 <div class="absolute inset-0 bg-slate-50/0 group-hover:bg-slate-50/30 transition-colors pointer-events-none"></div>
                 
                 <!-- Badge officiel (Icône seule sans le fond) -->
-                ${s.isOfficial ? `<div class="absolute top-2 ${getLang() === 'ar' ? 'left-2' : 'right-2'} z-20 text-sm opacity-40 select-none" title="${t.official || 'Officiel'}">
+                ${s.isOfficial ? `<div class="absolute top-2 ${getLang() === 'ar' ? 'left-2' : 'right-2'} z-20 text-sm opacity-40 select-none pb-1" title="${t.official || 'Officiel'}">
                     🔒
                 </div>` : ''}
 
-                <!-- Ligne 1: Nom (Pleine largeur avec hauteur fixe pour alignement) -->
+                <!-- Ligne 1: Nom -->
                 <div class="student-name ${nameSizeClass} font-bold text-slate-700 z-10 h-9 sm:h-10 flex items-center justify-center text-center break-words" style="word-break: break-word;" title="${displayName}">
                     ${displayName}
                 </div>
 
-                <!-- Ligne 2: Meta (NIN centré et aligné) -->
-                <div class="student-meta flex items-center justify-center gap-1.5 z-10">
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-50 text-slate-500 rounded text-[10px] font-bold border border-slate-100 tracking-tight">${ninDisplay}</span>
+                <!-- Ligne 2: Meta (NIN sur mobile, DOB + NIN sur PC) -->
+                <div class="student-meta flex flex-col items-center justify-center gap-1 z-10">
+                    <!-- Mobile View: Just NIN (Centered) -->
+                    <div class="sm:hidden flex items-center justify-center">
+                        <span class="inline-flex items-center px-2 py-0.5 bg-slate-50 text-slate-500 rounded text-[10px] font-bold border border-slate-100 tracking-tight">${ninDisplay}</span>
+                    </div>
+                    
+                    <!-- Desktop View: DOB + NIN (Two lines) -->
+                    <div class="hidden sm:flex flex-col items-center gap-1 w-full translate-y-1">
+                        ${birthDate ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50/30 text-blue-500 rounded text-[10px] font-bold border border-blue-100/30 tracking-tight">🎂 ${birthDate}</span>` : ''}
+                        <span class="inline-flex items-center px-2 py-0.5 bg-slate-50 text-slate-400 rounded text-[10px] font-bold border border-transparent tracking-tighter opacity-80">${ninDisplay}</span>
+                    </div>
                 </div>
 
                 <!-- Ligne 3: Actions (En bas) -->
@@ -1748,6 +1764,48 @@
         }
     };
         reader.readAsArrayBuffer(file);
+    };
+
+    // SCROLL EFFECTS & NAVIGATION
+    window.addEventListener('scroll', () => {
+        const btnTop = document.getElementById('btn-scroll-top');
+        const btnAdd = document.getElementById('btn-add-student-header');
+        const btnBack = document.getElementById('btn-back-to-classes');
+        const scrollY = window.scrollY;
+
+        // Show/Hide Scroll to Top
+        if (btnTop) {
+            if (scrollY > 300) {
+                btnTop.classList.remove('translate-y-20', 'opacity-0');
+            } else {
+                btnTop.classList.add('translate-y-20', 'opacity-0');
+            }
+        }
+
+        // Show/Hide Back Arrow & Collapse/Expand Add Button
+        if (scrollY > 100) {
+            if (btnBack) btnBack.classList.remove('hidden');
+            if (btnAdd) {
+                const label = btnAdd.querySelector('.btn-label');
+                if (label) label.classList.add('hidden');
+                btnAdd.classList.add('p-3', 'rounded-full');
+                btnAdd.classList.remove('px-4', 'py-2.5', 'rounded-xl', 'gap-2');
+                btnAdd.title = label ? label.textContent : '';
+            }
+        } else {
+            if (btnBack) btnBack.classList.add('hidden');
+            if (btnAdd) {
+                const label = btnAdd.querySelector('.btn-label');
+                if (label) label.classList.remove('hidden');
+                btnAdd.classList.remove('p-3', 'rounded-full');
+                btnAdd.classList.add('px-4', 'py-2.5', 'rounded-xl', 'gap-2');
+                btnAdd.title = '';
+            }
+        }
+    });
+
+    window.scrollToTop = function() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
 })();

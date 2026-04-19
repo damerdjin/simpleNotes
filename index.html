@@ -1850,6 +1850,11 @@
                                     </div>
 
                                     <div class="flex items-center gap-2 sm:gap-3">
+                                        <!-- Flèche retour (Masquée tant qu'on n'a pas scrollé) -->
+                                        <button id="btn-back-to-classes" onclick="setStudentsSelectedClass('')" class="hidden p-2.5 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-xl transition-all shrink-0" title="Retour aux classes">
+                                            <svg class="w-5 h-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                                        </button>
+
                                         <div class="relative group flex-1">
                                             <input type="text" id="student-search" data-translate-placeholder="searchStudentPlaceholder" placeholder="Rechercher..."
                                                 aria-label="Rechercher un élève"
@@ -1857,10 +1862,11 @@
                                                 class="w-full ps-9 pe-4 py-2.5 bg-slate-50 border-slate-200 hover:border-blue-300 focus:border-blue-500 rounded-xl outline-none transition-all text-xs sm:text-sm border shadow-sm">
                                             <svg class="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                                         </div>
-                                        <button onclick="openStudentModal()" 
+
+                                        <button id="btn-add-student-header" onclick="openStudentModal()" 
                                             class="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-bold shadow-sm transition-all text-sm shrink-0">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                                            <span class="hidden xs:inline" data-translate="add">Ajouter</span>
+                                            <span class="btn-label hidden xs:inline" data-translate="add">Ajouter</span>
                                         </button>
                                     </div>
                                 </div>
@@ -2469,6 +2475,11 @@
 
     <!-- Assignment Modal will be injected dynamically -->
     </div>
+
+    <!-- Scroll to Top Button -->
+    <button id="btn-scroll-top" onclick="scrollToTop()" class="fixed bottom-24 right-5 w-12 h-12 bg-white text-blue-600 rounded-full shadow-lg border border-slate-100 flex items-center justify-center translate-y-20 opacity-0 transition-all active:scale-95 z-[60]">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+    </button>
 
     <!-- Toast Container -->
     <div id="toast-container" class="fixed bottom-5 right-5 z-[9999] flex flex-col gap-3"></div>

@@ -635,17 +635,34 @@
         /* Liste d'élèves compacte en grille - Harmonisée AR/FR */
         #students-list.student-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.25rem;
             padding: 0.5rem;
+        }
+
+        /* Large screens (PC): 3 columns for better space usage */
+        @media (min-width: 1024px) {
+            #students-list.student-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 1.5rem;
+            }
         }
 
         @media (max-width: 640px) {
             #students-list.student-grid {
                 grid-template-columns: repeat(2, 1fr) !important;
-                gap: 0.5rem !important;
+                gap: 0.6rem !important;
                 padding: 0.25rem !important;
             }
+        }
+
+        /* Scroll effect styles */
+        #btn-scroll-top {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 100;
+        }
+        #btn-add-student-header {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .student-item {
