@@ -2093,7 +2093,7 @@
                         /* Sticky Header refined for mobile viewport */
                         .glass-sticky-header {
                             position: sticky;
-                            top: 70px; /* Anchors below the main app header (70px) */
+                            top: 70px; 
                             left: 0;
                             right: 0;
                             margin: -1.5rem -1.5rem 1rem -1.5rem;
@@ -2105,6 +2105,18 @@
                             padding: 0.85rem 1.5rem;
                             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
                             text-align: center;
+                            
+                            /* Initial state: hidden */
+                            opacity: 0;
+                            transform: translateY(-10px);
+                            pointer-events: none;
+                            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                        }
+
+                        .glass-sticky-header.is-sticky {
+                            opacity: 1;
+                            transform: translateY(0);
+                            pointer-events: auto;
                         }
                     }
 

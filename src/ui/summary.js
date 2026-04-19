@@ -298,12 +298,9 @@ import * as gradesSvc from '../services/grades.service.js';
         const completionPct = totalCells > 0 ? Math.round((gradedCells / totalCells) * 100) : 0;
 
         let html = `
-            <div class="glass-sticky-header flex items-center justify-between ${isArabic ? 'flex-row-reverse' : ''}">
-                <div class="flex items-center gap-2 ${isArabic ? 'flex-row-reverse' : ''}">
-                    <span class="text-xs text-slate-400 uppercase tracking-wider font-semibold">${t.class || t.className || 'Classe'}</span>
-                    <span class="text-lg font-bold text-slate-800">${selectedClass}</span>
-                </div>
-                <div class="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+            <div id="summary-sentinel" class="h-px w-full pointer-events-none"></div>
+            <div id="sticky-class-header" class="glass-sticky-header">
+                <span class="text-lg font-bold text-slate-800">${selectedClass}</span>
             </div>
 
             <div class="grid grid-cols-3 gap-2 mb-3">
@@ -345,7 +342,7 @@ import * as gradesSvc from '../services/grades.service.js';
                 const isBlocked = window.isTrimesterBlocked(a.trimester, a.academicYear);
 
                 gradesHtml += `
-                    <div class="flex items-center justify-between gap-2 p-2 rounded-lg border border-slate-100 ${isArabic ? 'flex-row-reverse' : ''}">
+                    <div class="flex items-center justify-between gap-2 p-2 rounded-lg border border-slate-100">
                         <div class="min-w-0">
                             <div class="text-xs font-semibold text-slate-700 break-words">${a.name}</div>
                         </div>
@@ -360,7 +357,7 @@ import * as gradesSvc from '../services/grades.service.js';
 
             html += `
                 <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm ${isArabic ? 'text-right' : 'text-left'}" dir="${isArabic ? 'rtl' : 'ltr'}">
-                    <div class="flex items-center justify-between mb-2 ${isArabic ? 'flex-row-reverse' : ''}">
+                    <div class="flex items-center justify-between mb-2">
                         <div class="font-bold text-slate-800 break-words">${displayName}</div>
                     </div>
                     <div class="space-y-2">${gradesHtml || `<div class="text-xs text-slate-400">${t.noResultForSearch || 'Aucun résultat'}</div>`}</div>
@@ -370,6 +367,25 @@ import * as gradesSvc from '../services/grades.service.js';
 
         html += '</div>';
         container.innerHTML = html;
+
+        // Initialize Observer for Sticky Header visibility
+        if (window.IntersectionObserver) {
+            const sentinel = document.getElementById('summary-sentinel');
+            const stickyHeader = document.getElementById('sticky-class-header');
+            if (sentinel && stickyHeader) {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        // If sentinel is NOT intersecting, it means we scrolled past it -> show sticky
+                        if (!entry.isIntersecting) {
+                            stickyHeader.classList.add('is-sticky');
+                        } else {
+                            stickyHeader.classList.remove('is-sticky');
+                        }
+                    });
+                }, { threshold: [0], rootMargin: '-70px 0px 0px 0px' }); // Offset by header height (70px)
+                observer.observe(sentinel);
+            }
+        }
         if (window.translatePage) window.translatePage();
     };
 
