@@ -265,12 +265,7 @@
                                 </span>
                             </div>
                             
-                            <div class="flex items-center gap-1 sm:gap-2" style="${flexRowFix}">
-                                <button onclick="event.stopPropagation(); deleteClassSafely('${c}')" 
-                                    class="p-1 sm:p-2 text-slate-200 hover:text-red-500 hover:bg-red-50 rounded-lg sm:rounded-xl transition-all duration-300 sm:opacity-0 sm:group-hover:opacity-100 transform ${translateClass} sm:group-hover:translate-x-0"
-                                    title="${t.delete}">
-                                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                </button>
+                            <div class="flex items-center" style="${flexRowFix}">
                                 <div class="level-badge w-8 h-8 sm:w-14 sm:h-14 rounded-lg sm:rounded-2xl flex items-center justify-center text-sm sm:text-2xl font-black text-white transform group-hover:rotate-6 transition-all duration-500 shadow-sm sm:shadow-md">
                                     ${levelIcon}
                                 </div>
@@ -283,8 +278,10 @@
                             </h3>
                         </div>
 
-                        <div class="mt-2 sm:mt-4 pt-2 sm:pt-5 border-t border-slate-50 flex items-center justify-center gap-4 sm:gap-6" style="${flexRowFix}">
-                            <div class="flex items-center gap-1.5 sm:gap-3" style="${flexRowFix}">
+                        <div class="mt-2 sm:mt-4 pt-2 sm:pt-5 border-t border-slate-50 flex items-center justify-between" style="${flexRowFix}">
+                            <div class="w-6 hidden sm:block"></div> <!-- Spacer to help center the stats -->
+                            
+                            <div class="flex items-center gap-2 sm:gap-3" style="${flexRowFix}">
                                 <span class="flex items-center gap-0.5 sm:gap-1.5 text-blue-500 font-black text-[9px] sm:text-[10px]" style="${flexRowFix}">
                                     <span class="text-[10px] sm:text-xs">♂️</span>${boys}
                                 </span>
@@ -292,6 +289,12 @@
                                     <span class="text-[10px] sm:text-xs">♀️</span>${girls}
                                 </span>
                             </div>
+
+                            <button onclick="event.stopPropagation(); deleteClassSafely('${c}')" 
+                                class="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-300 z-20"
+                                title="${t.delete}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
                         </div>
                     </div>
                     
