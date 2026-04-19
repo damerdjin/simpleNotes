@@ -1200,6 +1200,7 @@
             return;
         }
 
+
         container.innerHTML = assignments.map(a => {
             const dateStr = a.gradeDate ? new Date(a.gradeDate).toLocaleDateString(getLang() === 'ar' ? 'ar-u-nu-latn' : 'fr-FR') : '';
             const exerciseCount = a.exercises.length;
@@ -1212,28 +1213,29 @@
 
             return `
             <div onclick="selectGradeAssignment('${a.id}')" 
-                class="group relative bg-white p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border-2 border-slate-100 hover:border-[color:var(--theme-color)] transition-all duration-300 cursor-pointer overflow-hidden hover:shadow-xl hover:-translate-y-1 flex flex-col"
+                class="group relative bg-white p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border border-slate-200 hover:border-[color:var(--theme-color)] transition-all duration-300 cursor-pointer overflow-hidden hover:shadow-xl hover:-translate-y-1 flex flex-col"
                 style="--theme-color: ${color}">
                 
+                <!-- Accent top bar - always visible -->
+                <div class="absolute top-0 inset-x-0 h-1.5" style="background: ${color}"></div>
+
                 <!-- Assignment name - first line -->
                 <h3 class="${nameFontClass} font-black text-slate-800 mb-2 truncate group-hover:text-[color:var(--theme-color)] transition-colors" title="${a.name}">${a.name}</h3>
                 
-                <!-- Date - second line, always present -->
+                <!-- Date - second line -->
                 <div class="mb-3">
-                    <span class="px-2 sm:px-3 py-1 rounded-full text-[10px] font-bold border transition-colors ${dateStr
-                        ? 'bg-slate-50 text-slate-500 border-slate-100 group-hover:bg-[color:var(--theme-color)] group-hover:text-white group-hover:border-transparent'
-                        : 'bg-slate-50 text-slate-400 border-slate-100'}">
+                    <span class="px-2 sm:px-3 py-1 rounded-full text-[10px] font-bold border bg-slate-50 text-slate-500 border-slate-100 group-hover:bg-[color:var(--theme-color)] group-hover:text-white group-hover:border-transparent transition-colors">
                         ${dateStr || '&mdash;&mdash;&mdash;'}
                     </span>
                 </div>
                 
                 <div class="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-slate-500 font-medium mb-3 sm:mb-4">
                     <span class="flex items-center gap-1">
-                        <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                        <svg class="w-3 h-3 sm:w-4 sm:h-4 text-slate-400 group-hover:text-[color:var(--theme-color)] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                         ${exerciseCount} ${t.exerciseAbbr || 'Ex'}
                     </span>
                     <span class="flex items-center gap-1">
-                        <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        <svg class="w-3 h-3 sm:w-4 sm:h-4 text-slate-400 group-hover:text-[color:var(--theme-color)] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                         ${totalPoints} ${t.pointsAbbr || 'pts'}
                     </span>
                 </div>
