@@ -283,17 +283,17 @@
                             </h3>
                         </div>
 
-                        <div class="mt-2 sm:mt-4 pt-3 sm:pt-5 border-t border-slate-50 hidden sm:flex items-center justify-between" style="${flexRowFix}">
-                            <div class="flex items-center gap-1.5 text-slate-400 font-bold text-[10px] uppercase tracking-wider bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100/50" style="${flexRowFix}">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <div class="mt-2 sm:mt-4 pt-2 sm:pt-5 border-t border-slate-50 flex items-center justify-between gap-1" style="${flexRowFix}">
+                            <div class="flex items-center gap-1 text-slate-400 font-bold text-[8px] sm:text-[10px] uppercase tracking-wider" style="${flexRowFix}">
+                                <svg class="hidden sm:block w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                 ${globalAcademicYear}
                             </div>
-                            <div class="flex items-center gap-2" style="${flexRowFix}">
-                                <span class="flex items-center gap-1.5 text-blue-500 bg-blue-50/50 px-2 py-1 rounded-lg text-[10px] font-black border border-blue-100/20" style="${flexRowFix}">
-                                    <span class="text-xs">♂️</span> ${boys}
+                            <div class="flex items-center gap-1.5 sm:gap-2" style="${flexRowFix}">
+                                <span class="flex items-center gap-0.5 sm:gap-1.5 text-blue-500 font-black text-[9px] sm:text-[10px]" style="${flexRowFix}">
+                                    <span class="text-[10px] sm:text-xs">♂️</span>${boys}
                                 </span>
-                                <span class="flex items-center gap-1.5 text-pink-500 bg-pink-50/50 px-2 py-1 rounded-lg text-[10px] font-black border border-pink-100/20" style="${flexRowFix}">
-                                    <span class="text-xs">♀️</span> ${girls}
+                                <span class="flex items-center gap-0.5 sm:gap-1.5 text-pink-500 font-black text-[9px] sm:text-[10px]" style="${flexRowFix}">
+                                    <span class="text-[10px] sm:text-xs">♀️</span>${girls}
                                 </span>
                             </div>
                         </div>
