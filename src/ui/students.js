@@ -234,9 +234,9 @@
             
             // LOGIQUE DE TAILLE DE POLICE DYNAMIQUE
             const cleanedName = cleanClassName(c);
-            let fontSizeClass = isAr ? 'text-2xl' : 'text-2xl';
-            if (cleanedName.length > 25) fontSizeClass = 'text-lg';
-            else if (cleanedName.length > 15) fontSizeClass = 'text-xl';
+            let fontSizeClass = isAr ? 'text-base sm:text-2xl' : 'text-base sm:text-2xl';
+            if (cleanedName.length > 25) fontSizeClass = 'text-xs sm:text-lg';
+            else if (cleanedName.length > 15) fontSizeClass = 'text-sm sm:text-xl';
 
             const titleClass = isAr ? `${fontSizeClass} font-bold leading-normal` : `${fontSizeClass} font-black leading-tight tracking-tight`;
             
@@ -250,39 +250,39 @@
 
             return `
                 <div onclick="setStudentsSelectedClass('${c}')" 
-                    class="class-card-modern group relative bg-white p-6 rounded-[2rem] border-2 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col h-full hover:-translate-y-2"
+                    class="class-card-modern group relative bg-white p-3 sm:p-6 rounded-2xl sm:rounded-[2rem] border-2 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col h-full hover:-translate-y-2"
                     style="--card-color: ${color}; --card-color-alpha: ${colorAlpha};">
                     
                     <!-- Decorative background blob -->
                     <div class="absolute -start-8 -top-8 w-32 h-32 rounded-full opacity-[0.03] group-hover:opacity-[0.08] transition-all duration-700 group-hover:scale-150" style="background: ${color}"></div>
                     
                     <div class="relative z-10 flex flex-col h-full" style="${flexColFix}">
-                        <div class="flex items-start justify-between mb-6" style="${flexRowFix}">
+                        <div class="flex items-start justify-between mb-2 sm:mb-6" style="${flexRowFix}">
                             <div class="flex flex-col gap-1">
-                                <span class="inline-flex items-center px-3 py-1 bg-slate-50 text-slate-500 rounded-full text-[10px] font-bold border border-slate-100 group-hover:bg-[var(--card-color)] group-hover:text-white group-hover:border-transparent transition-all duration-300">
+                                <span class="inline-flex items-center px-2 py-0.5 sm:px-3 sm:py-1 bg-slate-50 text-slate-500 rounded-full text-[9px] sm:text-[10px] font-bold border border-slate-100 group-hover:bg-[var(--card-color)] group-hover:text-white group-hover:border-transparent transition-all duration-300">
                                     ${countLabel}
                                 </span>
                             </div>
                             
-                            <div class="flex items-center gap-2" style="${flexRowFix}">
+                            <div class="flex items-center gap-1 sm:gap-2" style="${flexRowFix}">
                                 <button onclick="event.stopPropagation(); deleteClassSafely('${c}')" 
-                                    class="p-2 text-slate-200 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all duration-300 sm:opacity-0 sm:group-hover:opacity-100 transform ${translateClass} sm:group-hover:translate-x-0"
+                                    class="p-1 sm:p-2 text-slate-200 hover:text-red-500 hover:bg-red-50 rounded-lg sm:rounded-xl transition-all duration-300 sm:opacity-0 sm:group-hover:opacity-100 transform ${translateClass} sm:group-hover:translate-x-0"
                                     title="${t.delete}">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                 </button>
-                                <div class="level-badge w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-black text-white transform group-hover:rotate-6 transition-all duration-500">
+                                <div class="level-badge w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center text-lg sm:text-2xl font-black text-white transform group-hover:rotate-6 transition-all duration-500">
                                     ${levelIcon}
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="flex-grow flex flex-col justify-center py-4" style="${flexColFix}">
+                        <div class="flex-grow flex flex-col justify-center py-1 sm:py-4" style="${flexColFix}">
                             <h3 class="card-title-hover ${titleClass} text-slate-800 transition-colors duration-300 line-clamp-2" title="${c}">
                                 ${cleanClassName(c)}
                             </h3>
                         </div>
 
-                        <div class="mt-4 pt-5 border-t border-slate-50 flex items-center justify-between" style="${flexRowFix}">
+                        <div class="mt-2 sm:mt-4 pt-3 sm:pt-5 border-t border-slate-50 hidden sm:flex items-center justify-between" style="${flexRowFix}">
                             <div class="flex items-center gap-1.5 text-slate-400 font-bold text-[10px] uppercase tracking-wider bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100/50" style="${flexRowFix}">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                 ${globalAcademicYear}
@@ -407,6 +407,16 @@
             if (viewClasses) viewClasses.classList.remove('hidden');
             await window.renderClassList();
         }
+    };
+
+    window.toggleStudentsFab = function() {
+        const btn = document.getElementById('students-fab-btn');
+        const options = document.getElementById('students-fab-options');
+        if (!btn || !options) return;
+        
+        btn.classList.toggle('open');
+        options.classList.toggle('hidden');
+        options.classList.toggle('flex');
     };
 
     window.clearStudentsFilters = async function() {

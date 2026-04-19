@@ -890,3 +890,29 @@
 .rtl-layout #mobile-bottom-nav {
     flex-direction: row-reverse !important;
 }
+
+/* ===== FAB ANIMATIONS ===== */
+#students-fab-options {
+    animation: fab-slide-up 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#students-fab-options.flex {
+    display: flex !important;
+}
+
+@keyframes fab-slide-up {
+    from { 
+        opacity: 0; 
+        transform: translateY(15px) scale(0.95); 
+        pointer-events: none;
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0) scale(1); 
+        pointer-events: auto;
+    }
+}
+
+#students-fab-btn.open #students-fab-icon {
+    transform: rotate(45deg);
+}
