@@ -1278,54 +1278,60 @@
                 : sex.startsWith('m') || sex.includes('ذكر') || sex.includes('garçon') ? 'boy'
                     : 'neutral';
             
-            // Use global helpers for date
-            const birth = window.formatDate ? window.formatDate(window.parseDateMaybeExcel(s.birthDate || '')) : '';
+            // LOGIQUE DE TAILLE DE POLICE DYNAMIQUE (Noms)
+            const nameLen = displayName.length;
+            let nameSizeClass = 'text-base';
+            if (nameLen > 25) nameSizeClass = 'text-[10px] leading-tight';
+            else if (nameLen > 18) nameSizeClass = 'text-xs leading-tight';
+            else if (nameLen > 12) nameSizeClass = 'text-sm leading-tight';
+
+            // NIN instead of BirthDate
+            const ninDisplay = s.nin || '---';
 
             // Template de la carte élève (Nom en haut, actions en bas pour éviter les coupures)
             return `
-            <div class="student-item group ${levelClass} ${s.isOfficial ? 'official-student' : ''} bg-white p-3 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col gap-2 relative overflow-hidden">
+            <div class="student-item group ${levelClass} ${s.isOfficial ? 'official-student' : ''} bg-white p-3 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col gap-2 relative overflow-hidden h-full">
                 <!-- Overlay subtil au hover -->
                 <div class="absolute inset-0 bg-slate-50/0 group-hover:bg-slate-50/30 transition-colors pointer-events-none"></div>
                 
-                <!-- Badge officiel (uniquement pour les élèves importés via Excel) -->
-                ${s.isOfficial ? `<div class="absolute top-2 ${getLang() === 'ar' ? 'left-2' : 'right-2'} z-20 inline-flex items-center gap-1 px-2 py-0.5 bg-blue-500 text-white rounded text-[10px] font-bold shadow-sm">
-                    🔒 ${t.official || 'Officiel'}
+                <!-- Badge officiel (Icône seule pour gain de place) -->
+                ${s.isOfficial ? `<div class="absolute top-2 ${getLang() === 'ar' ? 'left-2' : 'right-2'} z-20 inline-flex items-center justify-center w-6 h-6 bg-blue-500 text-white rounded shadow-sm" title="${t.official || 'Officiel'}">
+                    🔒
                 </div>` : ''}
 
                 <!-- Ligne 1: Nom (Pleine largeur) -->
-                <div class="student-name text-base font-bold text-slate-700 z-10 leading-tight" title="${displayName}">
+                <div class="student-name ${nameSizeClass} font-bold text-slate-700 z-10 break-words" style="word-break: break-word;" title="${displayName}">
                     ${displayName}
                 </div>
 
-                <!-- Ligne 2: Meta (Date de naissance) -->
+                <!-- Ligne 2: Meta (NIN remplace Date de naissance) -->
                 <div class="student-meta flex items-center gap-1.5 z-10">
-                    ${birth ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-50 text-slate-500 rounded text-[10px] font-bold border border-slate-100 tracking-tight">🎂 ${birth}</span>` : ''}
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-slate-50 text-slate-500 rounded text-[9px] font-bold border border-slate-100 tracking-tight">🆔 ${ninDisplay}</span>
                 </div>
 
                 <!-- Ligne 3: Actions (En bas) -->
-                <div class="flex items-center justify-between gap-2 mt-1 z-10">
-                    <div class="flex items-center gap-1.5">
-                        <!-- Bouton Notes (Discret) -->
-                        <button onclick="viewStudentGrades('${s.id}')" 
-                            class="inline-flex items-center justify-center gap-1.5 py-1.5 px-3 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg text-xs font-bold transition-all whitespace-nowrap border border-blue-100">
-                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                            <span class="leading-none">${t.viewGradesShort || 'Notes'}</span>
-                        </button>
-                    </div>
+                <div class="flex items-center justify-between gap-1 mt-auto pt-1 z-10 border-t border-slate-50/50">
+                    <!-- Bouton Notes (Compact) -->
+                    <button onclick="viewStudentGrades('${s.id}')" 
+                        class="inline-flex items-center justify-center p-1.5 sm:py-1.5 sm:px-3 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg text-xs font-bold transition-all border border-blue-100"
+                        title="${t.viewGradesShort || 'Notes'}">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                        <span class="hidden sm:inline ms-1.5 leading-none">${t.viewGradesShort || 'Notes'}</span>
+                    </button>
                     
-                    <div class="flex items-center gap-1.5">
+                    <div class="flex items-center gap-1">
                         <!-- Bouton Modifier -->
                         <button onclick="${s.isOfficial ? '': `openStudentModal('${s.id}')`}" 
-                            class="w-8 h-8 flex items-center justify-center bg-slate-50 ${s.isOfficial ? 'text-slate-300 cursor-not-allowed' : 'text-slate-400 hover:text-blue-600 hover:bg-white'} rounded-lg ${s.isOfficial ? '' : 'active:scale-90'} transition-all border border-slate-100"
+                            class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-slate-50 ${s.isOfficial ? 'text-slate-300 cursor-not-allowed' : 'text-slate-400 hover:text-blue-600 hover:bg-white'} rounded-lg ${s.isOfficial ? '' : 'active:scale-90'} transition-all border border-slate-100"
                             title="${t.edit}">
-                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                         </button>
 
                         <!-- Bouton Supprimer -->
                         <button onclick="${s.isOfficial ? '': `deleteStudent('${s.id}')`}" 
-                            class="w-8 h-8 flex items-center justify-center bg-slate-50 ${s.isOfficial ? 'text-slate-300 cursor-not-allowed' : 'text-slate-400 hover:text-red-600 hover:bg-white'} rounded-lg ${s.isOfficial ? '' : 'active:scale-90'} transition-all border border-slate-100"
+                            class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-slate-50 ${s.isOfficial ? 'text-slate-300 cursor-not-allowed' : 'text-slate-400 hover:text-red-600 hover:bg-white'} rounded-lg ${s.isOfficial ? '' : 'active:scale-90'} transition-all border border-slate-100"
                             title="${t.delete}">
-                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         </button>
                     </div>
                 </div>

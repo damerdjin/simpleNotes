@@ -635,14 +635,16 @@
         /* Liste d'élèves compacte en grille - Harmonisée AR/FR */
         #students-list.student-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
             padding: 0.5rem;
         }
 
         @media (max-width: 640px) {
             #students-list.student-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 0.5rem !important;
+                padding: 0.25rem !important;
             }
         }
 
