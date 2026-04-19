@@ -640,11 +640,16 @@
             padding: 0.5rem;
         }
 
-        /* Large screens (PC): 3 columns for better space usage */
+        /* Large screens (PC): 3 or 4 columns for better space usage */
         @media (min-width: 1024px) {
             #students-list.student-grid {
                 grid-template-columns: repeat(3, 1fr);
                 gap: 1.5rem;
+            }
+        }
+        @media (min-width: 1280px) {
+            #students-list.student-grid {
+                grid-template-columns: repeat(4, 1fr);
             }
         }
 
