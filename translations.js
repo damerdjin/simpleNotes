@@ -365,12 +365,13 @@ window.translations = {
         archivedCount: "(${count} archivés)",
 
         // RAKMANA
-        exportPrepTitle: "Préparation des notes (CC/Devoir/Composition)",
+        exportPrepTitle: "Préparation des notes",
         exportPrepHint: "Choisissez la classe, puis associez les devoirs existants aux 3 notes d'export.",
         exportPreview: "Aperçu (prêt pour export)",
         ccLabel: "Note Continue (CC)",
         compLabel: "Composition",
-        devoirLabel: "Devoir (moyenne Devoir 1 & Devoir 2)",
+        devoirLabel: "Moyenne Devoirs",
+        scaleOk: "Scale OK (/20)",
         devoir1Label: "Devoir 1",
         devoir2Label: "Devoir 2",
         ccShort: "CC",
@@ -784,12 +785,13 @@ window.translations = {
         archivedCount: "(${count} archived)", // Vide car déjà inclus dans importSuccess
 
         // RAKMANA
-        exportPrepTitle: "Grade Preparation (CC/Homework/Test)",
+        exportPrepTitle: "Grade Preparation",
         exportPrepHint: "Choose the class, then map existing assignments to the 3 exported grades.",
         exportPreview: "Preview (ready for export)",
         ccLabel: "Continuous Assessment (CA)",
         compLabel: "Exam",
-        devoirLabel: "Homework (avg of Homework 1 & Homework 2)",
+        devoirLabel: "Avg Homework",
+        scaleOk: "Scale OK (/20)",
         devoir1Label: "Homework 1",
         devoir2Label: "Homework 2",
         ccShort: "CA",
@@ -1194,7 +1196,7 @@ window.translations = {
         archivedCount: "(${count} مؤرشفين)", // Vide car déjà inclus dans importSuccess
 
         // RAKMANA
-        exportPrepTitle: "تحضير النقاط (مستمر/فرض/اختبار)",
+        exportPrepTitle: "تحضير النقاط",
         assignmentType: "نوع التقييم",
         assignmentTypePlaceholder: "-- اختر نوع التقييم --",
         typeDevoir: "واجب (كلاسيكي)",
@@ -1209,7 +1211,7 @@ window.translations = {
         exportPreview: "معاينة (جاهز للتصدير)",
         ccLabel: "التقويم المستمر (CC)",
         compLabel: "الاختبار",
-        devoirLabel: "الفرض",
+        devoirLabel: "معدل الفروض",
         scaleOk: "السلم 20",
         devoir1Label: "الفرض 1",
         devoir2Label: "الفرض 2",
