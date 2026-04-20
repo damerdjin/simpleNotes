@@ -472,7 +472,7 @@
                 assigns.map(a => {
                     const isUsedElsewhere = used.has(a.id) && a.id !== currentValue;
                     return `<option value="${a.id}" ${isUsedElsewhere ? 'disabled' : ''}>
-                        ${a.name} (${getAssignmentMaxPoints(a)} ${t.points})
+                        ${a.name} (/${getAssignmentMaxPoints(a)})
                     </option>`;
                 })
             ).join('');
@@ -488,13 +488,13 @@
                 const disabled = usedElsewhere ? 'disabled' : '';
                 const opacity = usedElsewhere ? 'opacity-50 cursor-not-allowed' : '';
                 return `
-                    <label class="flex items-center gap-2 p-2 border rounded-lg bg-white hover:bg-gray-50 ${opacity}">
+                    <label class="flex items-center gap-2 p-2 border rounded-lg bg-white hover:bg-slate-50 transition cursor-pointer ${opacity}">
                         <input type="checkbox" id="export-check-${groupKey}-${a.id}" name="export-check-${groupKey}-${a.id}" ${checked} ${disabled}
-                        onchange="toggleExportGroupAssignment('${groupKey}','${a.id}',this.checked)" class="w-4 h-4">
-                            <span class="flex-1 min-w-0 truncate font-medium">${a.name}</span>
-                            <span class="text-xs text-gray-500">/${getAssignmentMaxPoints(a)} ${t.points}</span>
-                            </label>
-                        `;
+                        onchange="toggleExportGroupAssignment('${groupKey}','${a.id}',this.checked)" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                        <span class="flex-1 min-w-0 truncate font-medium text-slate-800 text-sm sm:text-base">${a.name}</span>
+                        <span class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded shadow-sm">/${getAssignmentMaxPoints(a)}</span>
+                    </label>
+                `;
             }).join('');
 
             const chips = (g.assignmentIds || [])
@@ -518,7 +518,7 @@
                         <h3 class="font-bold text-gray-800" data-translate="ccLabel">Contrôle Continu (CC)</h3>
                         <span class="text-xs text-gray-500">${t.outputOn} / ${cfg.outMax}</span>
                     </div>
-                    <select class="w-full p-3 border rounded-lg bg-white" onchange="setExportSingle('ccAssignmentId', this.value)" id="export-cc-select">
+                    <select class="w-full p-2.5 sm:p-3 border rounded-lg bg-white text-sm sm:text-base" onchange="setExportSingle('ccAssignmentId', this.value)" id="export-cc-select">
                         ${buildSingleOptions(cfg.ccAssignmentId || '')}
                     </select>
                     <p class="text-xs text-gray-500 mt-2" data-translate="singleSelectHint">Sélectionnez un devoir existant pour alimenter cette note (conversion sur /20).</p>
@@ -528,7 +528,7 @@
                         <h3 class="font-bold text-gray-800" data-translate="tpLabel">${t.tpLabel || 'TP'}</h3>
                         <span class="text-xs text-gray-500">${t.outputOn} / ${cfg.outMax}</span>
                     </div>
-                    <select class="w-full p-3 border rounded-lg bg-white" onchange="setExportSingle('tpAssignmentId', this.value)" id="export-tp-select">
+                    <select class="w-full p-2.5 sm:p-3 border rounded-lg bg-white text-sm sm:text-base" onchange="setExportSingle('tpAssignmentId', this.value)" id="export-tp-select">
                         ${buildSingleOptions(cfg.tpAssignmentId || '')}
                     </select>
                     <p class="text-xs text-gray-500 mt-2" data-translate="singleSelectHint">${t.singleSelectHint}</p>
@@ -538,7 +538,7 @@
                         <h3 class="font-bold text-gray-800" data-translate="compLabel">Composition</h3>
                         <span class="text-xs text-gray-500">${t.outputOn} / ${cfg.outMax}</span>
                     </div>
-                    <select class="w-full p-3 border rounded-lg bg-white" onchange="setExportSingle('compAssignmentId', this.value)" id="export-comp-select">
+                    <select class="w-full p-2.5 sm:p-3 border rounded-lg bg-white text-sm sm:text-base" onchange="setExportSingle('compAssignmentId', this.value)" id="export-comp-select">
                         ${buildSingleOptions(cfg.compAssignmentId || '')}
                     </select>
                     <p class="text-xs text-gray-500 mt-2" data-translate="singleSelectHint">Sélectionnez un devoir existant pour alimenter cette note (conversion sur /20).</p>
