@@ -307,7 +307,7 @@ import * as gradesSvc from '../services/grades.service.js';
 
         let html = `
             <div id="summary-sentinel" class="h-px w-full pointer-events-none"></div>
-            <div id="sticky-class-header" class="glass-sticky-header ${isArabic ? 'rtl-layout' : ''}" style="display: flex; flex-direction: ${isArabic ? 'row-reverse' : 'row'} !important; justify-content: space-between; align-items: center;">
+            <div id="sticky-class-header" class="glass-sticky-header flex items-center justify-between">
                 <span class="text-lg font-bold text-slate-800">${selectedClass}</span>
             </div>
 
@@ -350,7 +350,7 @@ import * as gradesSvc from '../services/grades.service.js';
                 const isBlocked = window.isTrimesterBlocked(a.trimester, a.academicYear);
 
                 gradesHtml += `
-                    <div class="flex items-center justify-between gap-2 p-2 rounded-lg border border-slate-100" style="flex-direction: ${isArabic ? 'row-reverse' : 'row'} !important;">
+                    <div class="flex items-center justify-between gap-2 p-2 rounded-lg border border-slate-100">
                         <div class="min-w-0">
                             <div class="text-xs font-semibold text-slate-700 break-words">${a.name}</div>
                         </div>
@@ -364,8 +364,8 @@ import * as gradesSvc from '../services/grades.service.js';
             });
 
             html += `
-                <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm ${isArabic ? 'rtl-layout' : ''}" dir="${isArabic ? 'rtl' : 'ltr'}">
-                    <div class="flex items-center justify-between mb-2" style="flex-direction: ${isArabic ? 'row-reverse' : 'row'} !important;">
+                <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm transition hover:shadow-md">
+                    <div class="flex items-center justify-between mb-2">
                         <div class="font-bold text-slate-800 break-words">${displayName}</div>
                     </div>
                     <div class="space-y-2">${gradesHtml || `<div class="text-xs text-slate-400">${t.noResultForSearch || 'Aucun résultat'}</div>`}</div>
@@ -654,8 +654,8 @@ import * as gradesSvc from '../services/grades.service.js';
             return;
         }
 
-        let classHeaderRow = `<th class="p-2 bg-slate-100 sticky left-0 z-20 border-r border-slate-200"></th>`;
-        let assignmentHeaderRow = `<th class="p-3 text-left bg-slate-100 sticky left-0 z-20 cursor-pointer select-none border-r border-slate-200" onclick="toggleSummarySort('name')">${t.student}</th>`;
+        let classHeaderRow = `<th class="p-2 bg-slate-100 sticky start-0 z-20 border-e border-slate-200 whitespace-nowrap"></th>`;
+        let assignmentHeaderRow = `<th class="p-3 text-start bg-slate-100 sticky start-0 z-20 cursor-pointer select-none border-e border-slate-200 shadow-[1px_0_4px_rgba(0,0,0,0.02)] whitespace-nowrap" onclick="toggleSummarySort('name')">${t.student}</th>`;
 
         classOrder.forEach((className, idx) => {
             const classAssignments = assignmentsByClass[className] || [];
@@ -665,23 +665,23 @@ import * as gradesSvc from '../services/grades.service.js';
                 colspan += 1;
             });
             const bgClass = idx % 2 === 0 ? 'bg-blue-600' : 'bg-indigo-600';
-            classHeaderRow += `<th colspan="${colspan}" class="p-2 text-center text-white font-bold text-sm ${bgClass} border-l border-white/30">${className}</th>`;
+            classHeaderRow += `<th colspan="${colspan}" class="p-2 text-center text-white font-bold text-sm sm:text-base ${bgClass} border-s border-white/30 whitespace-nowrap">${className}</th>`;
         });
 
         orderedAssignments.forEach(a => {
             if (showDetails) {
                 (a.exercises || []).forEach((ex, i) => {
                     const exLabel = ex.name && ex.name !== 'Global' ? ex.name : `Ex${i + 1}`;
-                    assignmentHeaderRow += `<th class="p-2 text-center bg-slate-50 text-xs font-semibold border-l border-slate-200">${exLabel}<br><span class="text-[10px] text-slate-500">/${window.getExerciseMaxPoints(ex)}</span></th>`;
+                    assignmentHeaderRow += `<th class="p-2 text-center bg-slate-50 text-xs sm:text-sm font-semibold border-s border-slate-200 whitespace-nowrap">${exLabel}<br><span class="text-[10px] text-slate-500">/${window.getExerciseMaxPoints(ex)}</span></th>`;
                 });
             }
-            assignmentHeaderRow += `<th class="p-3 text-center bg-slate-100 font-bold cursor-pointer select-none border-l border-slate-200" onclick="toggleSummarySort('assignment-${a.id}')">${a.name}<br><span class="text-xs text-slate-500">/${window.getAssignmentMaxPoints(a)}</span></th>`;
+            assignmentHeaderRow += `<th class="p-3 text-center bg-slate-100 font-bold cursor-pointer select-none border-s border-slate-200 whitespace-nowrap" onclick="toggleSummarySort('assignment-${a.id}')">${a.name}<br><span class="text-xs text-slate-500">/${window.getAssignmentMaxPoints(a)}</span></th>`;
         });
 
         let rows = filteredStudents.map(s => {
             const displayName = truncateStudentName(s);
             const studentClassName = (s.className || '').trim();
-            let row = `<td class="p-3 font-medium bg-slate-50 sticky left-0 z-10 border-r border-slate-200" title="${s.name}">${displayName}</td>`;
+            let row = `<td class="p-2 sm:p-3 font-bold text-slate-800 bg-white/90 backdrop-blur-md sticky start-0 z-10 border-e border-slate-200 shadow-[1px_0_4px_rgba(0,0,0,0.02)] whitespace-nowrap" title="${s.name}">${displayName}</td>`;
             for (const a of orderedAssignments) {
                 const studentGrades = data.grades[s.id]?.[a.id] || {};
                 const isStudentClass = studentClassName === ((a.className || '').trim());
@@ -732,15 +732,11 @@ import * as gradesSvc from '../services/grades.service.js';
         }).join('');
 
         const colgroupHtml = (() => {
-            let cols = '<col style="width:240px">';
-            for (const a of orderedAssignments) {
-                if (showDetails) for (let i = 0; i < (a.exercises || []).length; i++) cols += '<col style="width:70px">';
-                cols += '<col style="width:96px">';
-            }
-            return `<colgroup>${cols}</colgroup>`;
+            // We omit fixed <col> widths to let whitespace-nowrap control size natively
+            return `<colgroup></colgroup>`;
         })();
 
-        container.innerHTML = `<div class="rounded-xl border border-slate-200 overflow-x-auto bg-white shadow-sm"><table class="w-full table-fixed border-collapse">${colgroupHtml}<thead><tr class="border-b border-slate-200">${classHeaderRow}</tr><tr class="border-b-2 border-slate-200">${assignmentHeaderRow}</tr></thead><tbody>${rows}</tbody></table></div>`;
+        container.innerHTML = `<div class="rounded-xl border border-slate-200 overflow-x-auto bg-white shadow-sm"><table class="w-full text-xs sm:text-sm border-collapse min-w-max">${colgroupHtml}<thead><tr class="border-b border-slate-200">${classHeaderRow}</tr><tr class="border-b-2 border-slate-200 bg-slate-50">${assignmentHeaderRow}</tr></thead><tbody>${rows}</tbody></table></div>`;
         if (window.translatePage) window.translatePage();
     };
 

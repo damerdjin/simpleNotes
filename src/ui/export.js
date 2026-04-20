@@ -553,40 +553,52 @@
                 </div>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div class="border rounded-xl p-4 ${d1Issue ? 'bg-amber-50 border-amber-300' : 'bg-white'}">
-                        <div class="flex items-center justify-between gap-2 mb-2">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
                             <div class="flex items-center gap-2">
                                 <h4 class="font-bold text-blue-800" data-translate="devoir1Label">Devoir 1</h4>
                                 <span class="text-xs font-bold px-2 py-1 rounded-full ${d1Issue ? 'bg-amber-200 text-amber-900' : 'bg-blue-100 text-blue-800'}">/ ${round2(d1MaxShown || 0)}</span>
                                 ${d1Issue ? `<span class="text-xs font-semibold text-amber-800" title="${t.exportNotOn20 || ''}">⚠️</span>` : ``}
                             </div>
-                            <div class="flex items-center gap-2">
-                                <select id="export-d1-combine" name="export-d1-combine" class="p-2 border rounded bg-white text-sm" onchange="setExportGroupField('devoir1','combine',this.value)">
+                            <div class="flex flex-wrap items-center gap-3">
+                                <select id="export-d1-combine" name="export-d1-combine" class="p-2 border rounded bg-white text-sm flex-1 sm:flex-none min-w-[100px]" onchange="setExportGroupField('devoir1','combine',this.value)">
                                     <option value="sum" ${cfg.devoir1.combine === 'sum' ? 'selected' : ''}>${t.sum}</option>
                                     <option value="avg" ${cfg.devoir1.combine === 'avg' ? 'selected' : ''}>${t.average}</option>
                                     <option value="max" ${cfg.devoir1.combine === 'max' ? 'selected' : ''}>${t.max}</option>
                                 </select>
-                                <label class="text-sm flex items-center gap-2"><input type="checkbox" id="export-d1-normalize" name="export-d1-normalize" class="w-4 h-4" ${cfg.devoir1.normalize ? 'checked' : ''} onchange="setExportGroupField('devoir1','normalize',this.checked)"> <span data-translate="normalize">${t.normalize}</span></label>
-                                <input type="number" id="export-d1-target" name="export-d1-target" min="1" step="1" value="${cfg.devoir1.targetMax ?? 20}" class="w-20 p-2 border rounded bg-white text-sm" title="${t.targetMax}" onchange="setExportGroupField('devoir1','targetMax',this.value)">
+                                <label class="text-sm flex items-center gap-2 whitespace-nowrap cursor-pointer">
+                                    <input type="checkbox" id="export-d1-normalize" name="export-d1-normalize" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" ${cfg.devoir1.normalize ? 'checked' : ''} onchange="setExportGroupField('devoir1','normalize',this.checked)"> 
+                                    <span data-translate="normalize">${t.normalize}</span>
+                                </label>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs text-gray-500">/</span>
+                                    <input type="number" id="export-d1-target" name="export-d1-target" min="1" step="1" value="${cfg.devoir1.targetMax ?? 20}" class="w-16 sm:w-20 p-2 border rounded bg-white text-sm" title="${t.targetMax}" onchange="setExportGroupField('devoir1','targetMax',this.value)">
+                                </div>
                             </div>
                         </div>
                         <div class="text-xs text-gray-500 mb-2" data-translate="groupHint">Sélectionnez un ou plusieurs devoirs de la classe, puis choisissez Somme ou Moyenne.</div>
                         ${renderMultiPick('devoir1')}
                     </div>
                     <div class="bg-white border rounded-xl p-4">
-                        <div class="flex items-center justify-between gap-2 mb-2">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
                             <div class="flex items-center gap-2">
                                 <h4 class="font-bold text-blue-800" data-translate="devoir2Label">Devoir 2</h4>
                                 <span class="text-xs font-bold px-2 py-1 rounded-full ${d2Issue ? 'bg-amber-200 text-amber-900' : 'bg-blue-100 text-blue-800'}">/ ${round2(d2MaxShown || 0)}</span>
                                 ${d2Issue ? `<span class="text-xs font-semibold text-amber-800" title="${t.exportNotOn20 || ''}">⚠️</span>` : ``}
                             </div>
-                            <div class="flex items-center gap-2">
-                                <select id="export-d2-combine" name="export-d2-combine" class="p-2 border rounded bg-white text-sm" onchange="setExportGroupField('devoir2','combine',this.value)">
+                            <div class="flex flex-wrap items-center gap-3">
+                                <select id="export-d2-combine" name="export-d2-combine" class="p-2 border rounded bg-white text-sm flex-1 sm:flex-none min-w-[100px]" onchange="setExportGroupField('devoir2','combine',this.value)">
                                     <option value="sum" ${cfg.devoir2.combine === 'sum' ? 'selected' : ''}>${t.sum}</option>
                                     <option value="avg" ${cfg.devoir2.combine === 'avg' ? 'selected' : ''}>${t.average}</option>
                                     <option value="max" ${cfg.devoir2.combine === 'max' ? 'selected' : ''}>${t.max}</option>
                                 </select>
-                                <label class="text-sm flex items-center gap-2"><input type="checkbox" id="export-d2-normalize" name="export-d2-normalize" class="w-4 h-4" ${cfg.devoir2.normalize ? 'checked' : ''} onchange="setExportGroupField('devoir2','normalize',this.checked)"> <span data-translate="normalize">${t.normalize}</span></label>
-                                <input type="number" id="export-d2-target" name="export-d2-target" min="1" step="1" value="${cfg.devoir2.targetMax ?? 20}" class="w-20 p-2 border rounded bg-white text-sm" title="${t.targetMax}" onchange="setExportGroupField('devoir2','targetMax',this.value)">
+                                <label class="text-sm flex items-center gap-2 whitespace-nowrap cursor-pointer">
+                                    <input type="checkbox" id="export-d2-normalize" name="export-d2-normalize" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" ${cfg.devoir2.normalize ? 'checked' : ''} onchange="setExportGroupField('devoir2','normalize',this.checked)"> 
+                                    <span data-translate="normalize">${t.normalize}</span>
+                                </label>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs text-gray-500">/</span>
+                                    <input type="number" id="export-d2-target" name="export-d2-target" min="1" step="1" value="${cfg.devoir2.targetMax ?? 20}" class="w-16 sm:w-20 p-2 border rounded bg-white text-sm" title="${t.targetMax}" onchange="setExportGroupField('devoir2','targetMax',this.value)">
+                                </div>
                             </div>
                         </div>
                         <div class="text-xs text-gray-500 mb-2" data-translate="groupHint">Sélectionnez un ou plusieurs devoirs de la classe, puis choisissez Somme ou Moyenne.</div>
@@ -966,8 +978,8 @@
             const consCandidates = window.getConsCandidatesForRow(moyenne) || [];
 
             return `
-                <tr class="border-b hover:bg-gray-50">
-                    <td class="p-3 bg-gray-50 sticky left-0 z-10 font-medium">${s.name}</td>
+                <tr class="border-b hover:bg-slate-50 transition-colors">
+                    <td class="p-2 sm:p-3 bg-white/90 backdrop-blur-md sticky start-0 z-10 font-bold text-slate-800 border-e border-slate-200 shadow-[1px_0_4px_rgba(0,0,0,0.02)] whitespace-nowrap">${s.name}</td>
                     <td class="p-3 text-center ${ccClass}" title="${cc === null && ccExpected ? (t.missingGrade || '') : (cc === 0 ? (t.zeroGrade || '') : '')}">${fmt(cc)}</td>
                     <td class="p-3 text-center font-bold ${devoirClass}" title="${devoir === null ? (t.missingGrade || '') : (devoir === 0 ? (t.zeroGrade || '') : '')}">${fmt(devoir)}</td>
                     ${hasTP ? `<td class="p-3 text-center ${tpClass}" title="${tp === null && tpExpected ? (t.missingGrade || '') : (tp === 0 ? (t.zeroGrade || '') : '')}">${fmt(tp)}</td>` : ``}
@@ -1019,32 +1031,29 @@
                 </tr>`;
         }).join('');
 
-        const cols = ['<col style="width:240px">', '<col style="width:110px">', '<col style="width:120px">'];
-        if (hasTP) cols.push('<col style="width:110px">');
-        cols.push('<col style="width:130px">');
-        if (hasAnyMoyenne) { cols.push('<col style="width:130px">'); cols.push('<col style="width:220px">'); cols.push('<col style="width:220px">'); }
         let colCount = 3 + (hasTP ? 1 : 0) + (hasAnyMoyenne ? 3 : 0);
 
         preview.innerHTML = `
-            <table class="w-full table-fixed border-collapse">
-            <colgroup>${cols.join('')}</colgroup>
-            <thead>
-                <tr class="bg-gray-200 border-b-2 border-gray-300"><th colspan="${colCount}" class="p-4 text-center text-xl font-bold uppercase tracking-wide text-gray-800">${className}</th></tr>
-                <tr class="border-b-2">
-                    <th class="p-3 text-left bg-gray-100 sticky left-0 z-10">${t.student}</th>
-                    <th class="p-3 text-center bg-gray-100" data-translate="ccShort">${t.ccShort || 'CC'}</th>
-                    <th class="p-3 text-center ${devoirScaleIssue ? 'bg-amber-200 text-amber-900' : 'bg-blue-100 text-blue-900'}" title="${devoirScaleIssue ? (t.exportDevoirWarning || '') : (t.exportDevoirOk || '')}"><span data-translate="devoirShort">${t.devoirShort || 'Devoir'}</span><span class="ml-1">${devoirScaleIssue ? '⚠️' : '⚠️'}</span></th>
-                    ${hasTP ? `<th class="p-3 text-center bg-gray-100" data-translate="tpShort">${t.tpShort || 'TP'}</th>` : ``}
-                    <th class="p-3 text-center bg-gray-100" data-translate="compositionShort">${t.compositionShort || 'Composition'}</th>
-                    ${hasAnyMoyenne ? `
-                    <th class="p-3 text-center bg-green-100" data-translate="avgShort">${t.avgShort || 'Moyenne'}</th>
-                    <th class="p-3 text-center bg-gray-100" data-translate="observationShort">${t.observationShort || 'Observation'}</th>
-                    <th class="p-3 text-center bg-gray-100" data-translate="adviceShort">${t.adviceShort || 'Conseil'}</th>
-                    ` : ``}
-                </tr>
-            </thead>
-            <tbody>${rows}</tbody>
-            </table>
+            <div class="rounded-xl border border-slate-200 overflow-x-auto bg-white shadow-sm">
+                <table class="w-full text-xs sm:text-sm border-collapse min-w-max">
+                <thead>
+                    <tr class="bg-slate-100 border-b border-slate-200"><th colspan="${colCount}" class="p-3 sm:p-4 text-center text-sm sm:text-lg font-bold uppercase tracking-wide text-slate-700">${className}</th></tr>
+                    <tr class="border-b-2 border-slate-200 bg-white">
+                        <th class="p-2 sm:p-3 text-start bg-slate-50/90 backdrop-blur-md sticky start-0 z-10 font-bold tracking-tight text-slate-800 border-e border-slate-200 shadow-[1px_0_4px_rgba(0,0,0,0.02)] whitespace-nowrap">${t.student}</th>
+                        <th class="p-2 sm:p-3 text-center bg-slate-50 whitespace-nowrap text-slate-600 font-semibold" data-translate="ccShort">${t.ccShort || 'CC'}</th>
+                        <th class="p-2 sm:p-3 text-center whitespace-nowrap font-bold ${devoirScaleIssue ? 'bg-amber-100 text-amber-900 border-x border-amber-200' : 'bg-blue-50 text-blue-900 border-x border-blue-100'}" title="${devoirScaleIssue ? (t.exportDevoirWarning || '') : (t.exportDevoirOk || '')}"><span data-translate="devoirShort">${t.devoirShort || 'Devoir'}</span><span class="ms-1">${devoirScaleIssue ? '⚠️' : ''}</span></th>
+                        ${hasTP ? `<th class="p-2 sm:p-3 text-center bg-slate-50 whitespace-nowrap text-slate-600 font-semibold" data-translate="tpShort">${t.tpShort || 'TP'}</th>` : ``}
+                        <th class="p-2 sm:p-3 text-center bg-slate-50 whitespace-nowrap text-slate-600 font-semibold" data-translate="compositionShort">${t.compositionShort || 'Composition'}</th>
+                        ${hasAnyMoyenne ? `
+                        <th class="p-2 sm:p-3 text-center bg-emerald-50 whitespace-nowrap text-emerald-800 font-bold border-s border-emerald-100" data-translate="avgShort">${t.avgShort || 'Moyenne'}</th>
+                        <th class="p-2 sm:p-3 text-center bg-slate-50 whitespace-nowrap border-s border-slate-200" data-translate="observationShort">${t.observationShort || 'Observation'}</th>
+                        <th class="p-2 sm:p-3 text-center bg-slate-50 whitespace-nowrap border-s border-slate-200" data-translate="adviceShort">${t.adviceShort || 'Conseil'}</th>
+                        ` : ``}
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+                </table>
+            </div>
         `;
 
         preview.querySelectorAll(".remark-cell").forEach(cell => {
