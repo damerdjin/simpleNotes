@@ -511,7 +511,7 @@
                         <input type="checkbox" id="export-check-${groupKey}-${a.id}" name="export-check-${groupKey}-${a.id}" ${checked} ${disabled}
                         onchange="toggleExportGroupAssignment('${groupKey}','${a.id}',this.checked)" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
                         <span class="flex-1 min-w-0 truncate font-medium text-slate-800 text-sm sm:text-base">${a.name}</span>
-                        <span class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded shadow-sm">/${getAssignmentMaxPoints(a)}</span>
+                        <span class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded shadow-sm" dir="ltr">/${getAssignmentMaxPoints(a)}</span>
                     </label>
                 `;
             }).join('');
@@ -546,7 +546,7 @@
                                 <h3 class="font-bold text-gray-800 text-sm sm:text-base">${title}</h3>
                                 <div class="flex items-center gap-2 mt-0.5">
                                     <p class="text-xs font-bold text-emerald-700 truncate">${found.name}</p>
-                                    <span class="text-[10px] font-bold px-1.5 py-0.5 bg-emerald-200 text-emerald-800 rounded">/${getAssignmentMaxPoints(found)}</span>
+                                    <span class="text-[10px] font-bold px-1.5 py-0.5 bg-emerald-200 text-emerald-800 rounded" dir="ltr">/${getAssignmentMaxPoints(found)}</span>
                                 </div>
                             </div>
                         </div>
@@ -560,20 +560,20 @@
                         </div>
                         <div class="min-w-0">
                             <h3 class="font-bold text-gray-700 text-sm sm:text-base">${title}</h3>
-                            <p class="text-xs font-semibold text-rose-600 mt-0.5">${t.notCreated || 'Non créé'}</p>
                         </div>
                     </div>
                 `;
             }
         };
 
+        const outMaxVal = parseFloat(cfg.outMax || 20);
         const d1Assignments = (cfg.devoir1.assignmentIds || []).map(id => assigns.find(a => a.id === id)).filter(Boolean);
         const d1Count = d1Assignments.length;
-        const d1IsOn20 = d1Count === 1 && getAssignmentMaxPoints(d1Assignments[0]) === 20;
+        const d1IsOn20 = d1Count === 1 && getAssignmentMaxPoints(d1Assignments[0]) === outMaxVal;
 
         const d2Assignments = (cfg.devoir2.assignmentIds || []).map(id => assigns.find(a => a.id === id)).filter(Boolean);
         const d2Count = d2Assignments.length;
-        const d2IsOn20 = d2Count === 1 && getAssignmentMaxPoints(d2Assignments[0]) === 20;
+        const d2IsOn20 = d2Count === 1 && getAssignmentMaxPoints(d2Assignments[0]) === outMaxVal;
 
         container.innerHTML = `
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -585,14 +585,16 @@
             <div class="mt-6 p-4 md:p-6 border-2 border-blue-100/50 rounded-2xl bg-blue-50/30">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 pb-4 border-b border-blue-100">
                     <h3 class="font-bold text-gray-800 text-lg flex items-center gap-2">
-                        <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                        <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 font-bold shrink-0">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                         </div>
-                        <span data-translate="devoirLabel">${t.devoirLabel || 'Devoir'}</span> ${assigns.length > 1 ? `<span class="text-xs font-normal text-gray-500 ml-1">(${t.average || 'Moyenne'} ${t.devoirShort || 'Dev'} 1 & ${t.devoirShort || 'Dev'} 2)</span>` : ''}
+                        <span data-translate="devoirLabel">${t.devoirLabel || 'Devoir'}</span> 
+                        ${assigns.length > 1 ? `<span class="hidden sm:inline text-xs font-normal text-gray-500 ml-1 rtl:mr-1">(${t.average || 'Moyenne'} ${t.devoirShort || 'Dev'} 1 & ${t.devoirShort || 'Dev'} 2)</span>` : ''}
                     </h3>
-                    <div class="flex items-center gap-3 bg-white px-3 py-2 rounded-xl shadow-sm border border-blue-100">
-                        <span class="text-xs sm:text-sm font-bold text-gray-500 uppercase tracking-wide" data-translate="gradeGeneratedOn">${t.gradeGeneratedOn || 'Note générée sur'}</span>
-                        <input type="number" id="export-out-max" name="export-out-max" min="1" step="1" value="${cfg.outMax}" class="w-16 p-1.5 border-2 border-blue-200 rounded-lg bg-white font-bold text-blue-700 text-center outline-none focus:border-blue-500" onchange="setExportOutMax(this.value)">
+                    <div class="flex items-center gap-2 bg-white px-3 py-2 rounded-xl shadow-sm border border-blue-100 ml-auto sm:ml-0 rtl:mr-auto rtl:sm:mr-0">
+                        <span class="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider leading-tight text-center sm:text-left rtl:sm:text-right" data-translate="gradeGeneratedOn">${t.gradeGeneratedOn || 'Note générée sur'}</span>
+                        <div class="w-px h-6 bg-blue-100 mx-1"></div>
+                        <input type="number" id="export-out-max" name="export-out-max" min="1" step="1" value="${cfg.outMax}" class="w-14 sm:w-16 p-1 border-0 rounded bg-transparent font-bold text-blue-700 text-center outline-none focus:ring-0" onchange="setExportOutMax(this.value)">
                     </div>
                 </div>
                 
@@ -601,7 +603,7 @@
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                             <div class="flex items-center gap-2">
                                 <h4 class="font-bold text-blue-800 text-base" data-translate="devoir1Label">Devoir 1</h4>
-                                <span class="text-xs font-bold px-2.5 py-1 rounded-full ${d1Issue ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800 border border-blue-200'}">/ ${round2(d1MaxShown || 0)}</span>
+                                <span class="text-xs font-bold px-2.5 py-1 rounded-full ${d1Issue ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800 border border-blue-200'}" dir="ltr">/ ${round2(d1MaxShown || 0)}</span>
                                 ${d1Issue ? `<span class="bg-white rounded-full p-1 shadow-sm text-sm" title="${t.exportNotOn20 || ''}">⚠️</span>` : ``}
                             </div>
                             <div class="flex flex-wrap items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
@@ -623,7 +625,7 @@
                                         <input type="number" id="export-d1-target" name="export-d1-target" min="1" step="1" value="${cfg.devoir1.targetMax ?? 20}" class="w-14 p-1 border-b-2 border-transparent bg-transparent outline-none text-sm font-bold text-center appearance-none focus:border-blue-500" title="${t.targetMax}" onchange="setExportGroupField('devoir1','targetMax',this.value)">
                                     </div>
                                 </div>
-                                ${ (d1Count <= 1 && d1IsOn20) ? `<div class="px-3 py-1.5 text-xs font-bold text-emerald-600 flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg> <span data-translate="scaleOk">${t.scaleOk || 'Scale OK'}</span></div>` : '' }
+                                ${ (d1Count <= 1 && d1IsOn20) ? `<div class="px-2.5 py-1 text-[10px] sm:text-xs font-bold text-emerald-600 flex items-center gap-1 bg-emerald-50 rounded-lg border border-emerald-100 shadow-sm"><svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg> <span data-translate="scaleOk" class="whitespace-nowrap">${t.scaleOk || 'Scale OK'}</span></div>` : '' }
                             </div>
                         </div>
                         ${renderMultiPick('devoir1')}
@@ -634,7 +636,7 @@
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                             <div class="flex items-center gap-2">
                                 <h4 class="font-bold text-blue-800 text-base" data-translate="devoir2Label">Devoir 2</h4>
-                                <span class="text-xs font-bold px-2.5 py-1 rounded-full ${d2Issue ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800 border border-blue-200'}">/ ${round2(d2MaxShown || 0)}</span>
+                                <span class="text-xs font-bold px-2.5 py-1 rounded-full ${d2Issue ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800 border border-blue-200'}" dir="ltr">/ ${round2(d2MaxShown || 0)}</span>
                                 ${d2Issue ? `<span class="bg-white rounded-full p-1 shadow-sm text-sm" title="${t.exportNotOn20 || ''}">⚠️</span>` : ``}
                             </div>
                             <div class="flex flex-wrap items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
@@ -656,7 +658,7 @@
                                         <input type="number" id="export-d2-target" name="export-d2-target" min="1" step="1" value="${cfg.devoir2.targetMax ?? 20}" class="w-14 p-1 border-b-2 border-transparent bg-transparent outline-none text-sm font-bold text-center appearance-none focus:border-blue-500" title="${t.targetMax}" onchange="setExportGroupField('devoir2','targetMax',this.value)">
                                     </div>
                                 </div>
-                                ${ (d2Count <= 1 && d2IsOn20) ? `<div class="px-3 py-1.5 text-xs font-bold text-emerald-600 flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg> <span data-translate="scaleOk">${t.scaleOk || 'Scale OK'}</span></div>` : '' }
+                                ${ (d2Count <= 1 && d2IsOn20) ? `<div class="px-2.5 py-1 text-[10px] sm:text-xs font-bold text-emerald-600 flex items-center gap-1 bg-emerald-50 rounded-lg border border-emerald-100 shadow-sm"><svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg> <span data-translate="scaleOk" class="whitespace-nowrap">${t.scaleOk || 'Scale OK'}</span></div>` : '' }
                             </div>
                         </div>
                         ${renderMultiPick('devoir2')}
