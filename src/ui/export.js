@@ -524,7 +524,7 @@
 
             return `
                 <div class="space-y-2">
-                    <div class="flex flex-wrap gap-2 items-center">${chips}</div>
+                    ${assigns.length > 1 ? `<div class="flex flex-wrap gap-2 items-center">${chips}</div>` : ''}
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-2">${rows}</div>
                 </div>
             `;
