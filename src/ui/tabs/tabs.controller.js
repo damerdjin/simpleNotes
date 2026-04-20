@@ -39,7 +39,8 @@ export class TabsController {
       dataLoaded: false,
       onLoad: config.onLoad,
       onShow: config.onShow,
-      onHide: config.onHide
+      onHide: config.onHide,
+      hideNav: !!config.hideNav
     });
     
     this.renderButtons();
@@ -106,6 +107,7 @@ export class TabsController {
     if (!this.buttonsContainer) return;
     
     this.buttonsContainer.innerHTML = Array.from(this.tabs.values())
+      .filter(tab => !tab.hideNav)
       .map(tab => this.createButtonHTML(tab))
       .join('');
 

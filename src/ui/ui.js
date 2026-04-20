@@ -206,6 +206,7 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
         window.tabs.registerTab('config', {
             label: t.configTitle || 'Configuration',
             icon: '⚙️',
+            hideNav: true,
             onShow: () => {
                 // Future config logic
             }
