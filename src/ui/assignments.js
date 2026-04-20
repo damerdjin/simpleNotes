@@ -130,6 +130,25 @@
                     </div>
                 </div>
 
+                <!-- Assignment Type -->
+                <div class="relative group">
+                    <label class="absolute -top-2 ${labelPos} px-1.5 bg-white text-[11px] font-bold text-rose-600 z-10 transition-all group-focus-within:text-rose-700" for="assignment-type">${t.assignmentType || "Type d'évaluation"}</label>
+                    <div class="relative flex items-center">
+                        <div class="absolute ${iconPos} text-gray-400 group-focus-within:text-rose-500 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                        </div>
+                        <select id="assignment-type" class="w-full ${inputPadding} py-3 bg-gray-50/50 border-2 border-gray-100 rounded-xl focus:bg-white focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 outline-none transition-all font-medium text-gray-700 appearance-none cursor-pointer">
+                            <option value="devoir">${t.typeDevoir || 'Devoir (Classique)'}</option>
+                            <option value="cc">${t.typeCC || 'Contrôle Continu'}</option>
+                            <option value="tp">${t.typeTP || 'TP / Projet'}</option>
+                            <option value="comp">${t.typeComp || 'Composition'}</option>
+                        </select>
+                        <div class="absolute ${chevronPos} pointer-events-none text-gray-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Class Selection -->
                 <div class="relative group">
                     <label class="absolute -top-2 ${labelPos} px-1.5 bg-white text-[11px] font-bold text-emerald-600 z-10 transition-all group-focus-within:text-emerald-700" for="assignment-class">${t.selectClass || 'Classe'}</label>
@@ -406,6 +425,68 @@
                 }
 
             }
+
+            // --- Assignment Type Availability Logic ---
+            const applyAssignmentTypeAvailability = () => {
+                const typeSelect = document.getElementById('assignment-type');
+                const classSelect = document.getElementById('assignment-class');
+                const triSelect = document.getElementById('assignment-trimester');
+                if (!typeSelect || !classSelect || !triSelect) return;
+                
+                const currentYear = window.getGlobalAcademicYear ? window.getGlobalAcademicYear() : '';
+                const userEmail = window.currentUser?.email || null;
+                const userUuid = window.currentUser?.id || null;
+                const className = classSelect.value;
+                const trimester = triSelect.value;
+                
+                if (!className || !trimester) return;
+
+                const myAssignments = getData().assignments.filter(a => {
+                    const owner = a.createdBy || 'unknown';
+                    const sameOwner = (userEmail && owner === userEmail) || (userUuid && owner === userUuid);
+                    const sameYear = !currentYear || (a.academicYear || '') === currentYear;
+                    const sameClass = !className || (a.className || '') === className;
+                    const sameTrimester = !trimester || (a.trimester || '') === trimester;
+                    const notEditing = a.id !== editingAssignmentId; // Ignore the one we are editing
+                    return sameOwner && sameYear && sameClass && sameTrimester && notEditing;
+                });
+                
+                const usedTypes = myAssignments.map(a => a.type || 'devoir').filter(Boolean);
+                
+                // Reset disabled state
+                for (let i = 0; i < typeSelect.options.length; i++) {
+                    const opt = typeSelect.options[i];
+                    if (opt.value !== 'devoir') {
+                        if (usedTypes.includes(opt.value)) {
+                            opt.disabled = true;
+                            if (!opt.textContent.includes('(Déjà créé)')) {
+                                opt.textContent = opt.textContent + ' (Déjà créé)';
+                            }
+                            if (typeSelect.value === opt.value) {
+                                typeSelect.value = 'devoir'; // Fallback
+                            }
+                        } else {
+                            opt.disabled = false;
+                            opt.textContent = opt.textContent.replace(' (Déjà créé)', '');
+                        }
+                    }
+                }
+            };
+
+            const typeSelectObj = document.getElementById('assignment-type');
+            const classSelectObj = document.getElementById('assignment-class');
+            const triSelectObj = document.getElementById('assignment-trimester');
+            
+            if (assignmentId && assignment) {
+                if (typeSelectObj) typeSelectObj.value = assignment.type || 'devoir';
+            }
+
+            if (classSelectObj) classSelectObj.addEventListener('change', applyAssignmentTypeAvailability);
+            if (triSelectObj) triSelectObj.addEventListener('change', applyAssignmentTypeAvailability);
+            
+            // Initial call
+            applyAssignmentTypeAvailability();
+            // ------------------------------------------
 
 
 
@@ -830,6 +911,7 @@
         const subject = document.getElementById('assignment-subject')?.value.trim() || '';
         const isVisible = document.getElementById('assignment-visible')?.checked || false;
         const trimester = document.getElementById('assignment-trimester')?.value || window.getGlobalTrimester();
+        const assignmentType = document.getElementById('assignment-type')?.value || 'devoir';
         const globalMax = parseFloat(document.getElementById('assignment-global-maxpoints').value) || 20;
         const copyFromId = document.getElementById('copy-grades-source')?.value || '';
         const globalDefaultGrade = document.getElementById('assignment-global-defaultgrade')?.value; // peut être vide
@@ -913,6 +995,7 @@
                 assignment.className = className;
                 assignment.subject = subject;
                 assignment.gradeDate = gradeDate; // Mise à jour de la date
+                assignment.type = assignmentType; // Sauvegarde du type
                 assignment.isVisible = isVisible;
                 assignment.trimester = trimester;
                 assignment.academicYear = assignment.academicYear || currentYear;
@@ -966,6 +1049,7 @@
                 className,
                 subject,
                 gradeDate, // Ajout de la date à la création
+                type: assignmentType, // Sauvegarde du type à la création
                 isVisible,
                 trimester,
                 exercises: finalExercises,
