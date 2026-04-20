@@ -418,6 +418,7 @@
             document.getElementById('export-config').innerHTML = '';
             document.getElementById('export-preview-table').innerHTML = '';
             document.getElementById('export-preview-meta').textContent = '';
+            document.getElementById('export-preview-section')?.classList.add('hidden');
             return;
         }
         getExportClassConfig(className);
@@ -454,6 +455,7 @@
             container.innerHTML = '';
             preview.innerHTML = '';
             meta.textContent = '';
+            document.getElementById('export-preview-section')?.classList.add('hidden');
             return;
         }
 
@@ -632,6 +634,13 @@
         meta.textContent = `${students.length} ${t.students}`;
 
         await renderExportPreviewTable(className, cfg);
+
+        // Show the preview section if there are students
+        const section = document.getElementById('export-preview-section');
+        if (section) {
+            section.classList.remove('hidden');
+        }
+
         window.translatePage();
     };
 
@@ -914,6 +923,13 @@
         });
 
         const hasAnyMoyenne = studentsWithAverages.some(item => item.moyenne !== null);
+        
+        // Show/Hide Rakamna button based on non-null averages
+        const btnRakamna = document.getElementById('btn-rakamna');
+        if (btnRakamna) {
+            if (hasAnyMoyenne) btnRakamna.classList.remove('hidden');
+            else btnRakamna.classList.add('hidden');
+        }
         const fmt = (v) => (v === null ? '' : round2(v).toFixed(2));
 
         const rows = studentsWithAverages.map(item => {

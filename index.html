@@ -2152,7 +2152,7 @@
                                 </label>
                                 <select id="select-class-export"
                                     onchange="onExportClassChange(); updateExportClassCardColor();"
-                                    class="w-full sm:w-auto p-2.5 sm:p-3 bg-white border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-medium text-slate-700 text-sm sm:text-base min-w-0 sm:min-w-[250px]">
+                                    class="w-full sm:w-auto p-2.5 sm:p-3 bg-white border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-medium text-slate-700 text-xs sm:text-base min-w-0 sm:min-w-[250px]">
                                     <option value="">-- Sélectionner une classe --</option>
                                 </select>
                                 <p class="text-xs text-gray-500 mt-2" data-translate="exportPrepHint">
@@ -2164,28 +2164,40 @@
                             <div id="export-config" class="space-y-4"></div>
 
                             <!-- Aperçu table -->
-                            <div class="mt-6">
+                            <div id="export-preview-section" class="mt-6 hidden">
                                 <div class="flex items-center justify-between flex-wrap gap-3 mb-3">
-                                    <h3 class="text-lg font-bold text-gray-800" data-translate="exportPreview">
+                                    <h3 class="text-sm sm:text-lg font-bold text-gray-800" data-translate="exportPreview">
                                         Aperçu (prêt pour export)
                                     </h3>
 
                                     <!-- BOUTONS -->
-                                    <div class="flex items-center gap-3">
+                                    <div class="flex items-center gap-2 sm:gap-3">
                                         <button onclick="printExportTable()"
-                                            class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold shadow-sm transition"
-                                            data-translate="print">Imprimer</button>
+                                            class="flex items-center justify-center p-2 sm:px-4 sm:py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold shadow-sm transition active:scale-95"
+                                            title="Imprimer"
+                                            data-translate-title="print">
+                                            <svg class="w-5 h-5 sm:w-4 sm:h-4 sm:me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                                            <span class="hidden sm:inline" data-translate="print">Imprimer</span>
+                                        </button>
 
                                         <button onclick="exportExportTableXLSX()"
-                                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow-sm transition"
-                                            data-translate="exportXlsx">Exporter XLSX</button>
+                                            class="flex items-center justify-center p-2 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-sm transition active:scale-95"
+                                            title="Exporter XLSX"
+                                            data-translate-title="exportXlsx">
+                                            <svg class="w-5 h-5 sm:w-4 sm:h-4 sm:me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                            <span class="hidden sm:inline" data-translate="exportXlsx">Exporter XLSX</span>
+                                        </button>
 
-                                        <button onclick="doRakamna()"
-                                            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold shadow-sm transition"
-                                            data-translate="rakamna">Rakamna</button>
+                                        <button id="btn-rakamna" onclick="doRakamna()"
+                                            class="hidden flex items-center justify-center p-2 sm:px-4 sm:py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold shadow-sm transition active:scale-95"
+                                            title="Rakamna"
+                                            data-translate-title="rakamna">
+                                            <svg class="w-5 h-5 sm:w-4 sm:h-4 sm:me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                            <span class="hidden sm:inline" data-translate="rakamna">Rakamna</span>
+                                        </button>
                                     </div>
 
-                                    <div class="text-sm text-gray-500" id="export-preview-meta"></div>
+                                    <div class="text-xs sm:text-sm text-gray-500" id="export-preview-meta"></div>
                                 </div>
 
                                 <div id="export-preview-table" class="overflow-x-auto"></div>
