@@ -1,4 +1,4 @@
-// translations.js
+// translations.js 
 window.subjects = [
     { id: "AR", fr: "Langue Arabe", en: "Arabic Language", ar: "اللغة العربية" },
     { id: "MATH", fr: "Mathématiques", en: "Mathematics", ar: "الرياضيات" },
