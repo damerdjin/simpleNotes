@@ -20,6 +20,14 @@ import * as gradesSvc from '../services/grades.service.js';
         return `${s.lastName || ''} ${s.firstName || ''}`.trim() || s.name || '';
     };
 
+    const formatGrade = (val) => {
+        if (val === null || val === undefined || val === '') return '';
+        const num = parseFloat(val);
+        if (isNaN(num)) return val;
+        // Padded for aesthetics: 09.50 format
+        return num.toFixed(2).padStart(5, '0');
+    };
+
     const calculateMedian = (values) => {
         if (!values || values.length === 0) return null;
         const sorted = [...values].sort((a, b) => a - b);
@@ -349,7 +357,7 @@ import * as gradesSvc from '../services/grades.service.js';
                         <button class="px-2 py-1 rounded-md border text-xs font-bold ${badgeClass} ${isBlocked ? 'cursor-default' : ''}"
                                 ${isBlocked ? '' : `ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})"`}
                                 id="sum-total-${s.id}-${a.id}">
-                            ${hasGrade ? total.toFixed(2) : '-'}
+                            ${hasGrade ? formatGrade(total) : '-'}
                         </button>
                     </div>
                 `;
@@ -684,7 +692,7 @@ import * as gradesSvc from '../services/grades.service.js';
                             const max = window.getExerciseMaxPoints(ex);
                             const existingFinal = studentGrades[ex.id]?.['final']?.['final']?.['final'];
                             const hasEx = window.hasAnyGradeForExercise(studentGrades, ex);
-                            const val = existingFinal !== undefined && existingFinal !== '' ? existingFinal : (hasEx ? exTotal.toFixed(2) : '');
+                            const val = existingFinal !== undefined && existingFinal !== '' ? existingFinal : (hasEx ? formatGrade(exTotal) : '');
                             const isBlocked = window.isTrimesterBlocked(a.trimester, a.academicYear);
                             if (isBlocked) {
                                 row += `<td class="px-2 py-1 text-center border-l border-slate-200">
@@ -710,7 +718,7 @@ import * as gradesSvc from '../services/grades.service.js';
                         const bgColor = pct >= 70 ? 'bg-emerald-100' : pct >= 50 ? 'bg-amber-100' : 'bg-rose-100';
                         row += `<td class="p-3 text-center font-bold ${bgColor} ${isBlocked ? 'cursor-default' : 'cursor-pointer select-none'} border-l border-slate-200" 
                                     ${isBlocked ? '' : `ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})"`} 
-                                    id="sum-total-${s.id}-${a.id}">${total.toFixed(2)}</td>`;
+                                    id="sum-total-${s.id}-${a.id}">${formatGrade(total)}</td>`;
                     } else {
                         row += `<td class="p-3 text-center text-gray-400 bg-slate-50 ${isBlocked ? 'cursor-default' : 'cursor-pointer select-none'} border-l border-slate-200" 
                                     ${isBlocked ? '' : `ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})"`} 
@@ -1758,7 +1766,7 @@ import * as gradesSvc from '../services/grades.service.js';
                             const max = window.getExerciseMaxPoints(ex);
                             const existingFinal = studentGrades[ex.id]?.['final']?.['final']?.['final'];
                             const hasEx = window.hasAnyGradeForExercise(studentGrades, ex);
-                            const val = existingFinal !== undefined && existingFinal !== '' ? existingFinal : (hasEx ? exTotal.toFixed(2) : '');
+                            const val = existingFinal !== undefined && existingFinal !== '' ? existingFinal : (hasEx ? formatGrade(exTotal) : '');
                             const isBlocked = window.isTrimesterBlocked(a.trimester, a.academicYear);
                             if (isBlocked) {
                                 html += `<td class="px-2 py-1 text-center border-l border-gray-100">
@@ -1790,7 +1798,7 @@ import * as gradesSvc from '../services/grades.service.js';
                         const bgColor = pct >= 70 ? 'bg-green-100' : pct >= 50 ? 'bg-orange-100' : 'bg-red-100';
                         html += `<td class="p-3 text-center font-bold ${bgColor} border-l border-gray-300 ${isBlocked ? 'cursor-default' : 'cursor-pointer select-none'}" 
                                     ${isBlocked ? '' : `ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})"`} 
-                                    id="sum-total-${s.id}-${a.id}">${total.toFixed(2)}</td>`;
+                                    id="sum-total-${s.id}-${a.id}">${formatGrade(total)}</td>`;
                     } else {
                         html += `<td class="p-3 text-center text-gray-300 border-l border-gray-300 ${isBlocked ? 'cursor-default' : 'cursor-pointer select-none'}" 
                                     ${isBlocked ? '' : `ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})"`} 
@@ -1822,7 +1830,7 @@ import * as gradesSvc from '../services/grades.service.js';
                 const max = window.getAssignmentMaxPoints(a);
                 const pct = avgTotal !== null && max > 0 ? (avgTotal / max * 100) : 0;
                 const bgColor = avgTotal === null ? 'bg-gray-100' : (pct >= 70 ? 'bg-green-200' : pct >= 50 ? 'bg-orange-200' : 'bg-red-200');
-                html += `<td class="p-3 text-center font-bold ${bgColor} border-l border-gray-300">${avgTotal === null ? '' : avgTotal.toFixed(2)}</td>`;
+                html += `<td class="p-3 text-center font-bold ${bgColor} border-l border-gray-300">${avgTotal === null ? '' : formatGrade(avgTotal)}</td>`;
             }
             html += `</tr>`;
 
@@ -1845,7 +1853,7 @@ import * as gradesSvc from '../services/grades.service.js';
                 const max = window.getAssignmentMaxPoints(a);
                 const pct = medTotal !== null && max > 0 ? (medTotal / max * 100) : 0;
                 const bgColor = medTotal === null ? 'bg-gray-100' : (pct >= 70 ? 'bg-green-200' : pct >= 50 ? 'bg-orange-200' : 'bg-red-200');
-                html += `<td class="p-3 text-center font-bold ${bgColor} border-l border-gray-300">${medTotal === null ? '' : medTotal.toFixed(2)}</td>`;
+                html += `<td class="p-3 text-center font-bold ${bgColor} border-l border-gray-300">${medTotal === null ? '' : formatGrade(medTotal)}</td>`;
             }
             html += `</tr>`;
 
@@ -2014,7 +2022,7 @@ import * as gradesSvc from '../services/grades.service.js';
             v = e.key === 'ArrowUp' ? v + step : v - step;
             if (v < 0) v = 0;
             if (v > max) v = max;
-            e.target.value = v.toFixed(2);
+            e.target.value = formatGrade(v);
             window.commitSummaryInput(studentId, assignmentId, exId, max, e.target.value);
         }
     };
@@ -2034,7 +2042,7 @@ import * as gradesSvc from '../services/grades.service.js';
         const pct = max > 0 ? (total / max * 100) : 0;
         let bgColor = 'bg-red-100';
         if (pct >= 70) bgColor = 'bg-green-100'; else if (pct >= 50) bgColor = 'bg-orange-100';
-        totalCell.textContent = total.toFixed(2);
+        totalCell.textContent = formatGrade(total);
         totalCell.className = `p-3 text-center font-bold ${bgColor}`;
     };
 
