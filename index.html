@@ -2054,39 +2054,53 @@
                 <!-- Summary Tab -->
                 <div id="content-summary" class="tab-content view-section min-w-0">
                     <div class="bg-white rounded-2xl sm:rounded-xl shadow-sm sm:shadow-lg border sm:border-0 border-slate-200 p-4 sm:p-6 min-w-0">
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 flex-wrap gap-4">
-                            <h2 class="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight rtl:text-right" data-translate="summaryTitle">Récapitulatif des Notes</h2>
-                            <div class="flex items-center gap-2 mb-4">
-                                <label class="flex items-center gap-2" for="summaryMode-default">
-                                    <input type="radio" id="summaryMode-default" name="summaryMode" value="default" checked
-                                        onchange="setSummaryMode('default')">
-                                    <span data-translate="defaultView">Vue par défaut</span>
-                                </label>
-                                <label class="flex items-center gap-2" for="summaryMode-view1">
-                                    <input type="radio" id="summaryMode-view1" name="summaryMode" value="view1" onchange="setSummaryMode('view1')">
-                                    <span data-translate="view1">Vue 1</span>
-                                </label>
-                                <label class="flex items-center gap-2" for="summaryMode-grouped">
-                                    <input type="radio" id="summaryMode-grouped" name="summaryMode" value="grouped"
-                                        onchange="setSummaryMode('grouped')">
-                                    <span data-translate="view2">Vue 2</span>
-                                </label>
+                        <div class="flex flex-col gap-4 mb-6">
+                            <!-- Ligne Titre et Radios -->
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <h2 class="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight" data-translate="summaryTitle">Récapitulatif des Notes</h2>
+                                <div class="flex flex-wrap items-center gap-4">
+                                    <label class="flex items-center gap-2 cursor-pointer" for="summaryMode-default">
+                                        <input type="radio" id="summaryMode-default" name="summaryMode" value="default" checked onchange="setSummaryMode('default')" class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                                        <span class="text-sm font-medium text-slate-700" data-translate="defaultView">Vue par défaut</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer" for="summaryMode-view1">
+                                        <input type="radio" id="summaryMode-view1" name="summaryMode" value="view1" onchange="setSummaryMode('view1')" class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                                        <span class="text-sm font-medium text-slate-700" data-translate="view1">Vue 1</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer" for="summaryMode-grouped">
+                                        <input type="radio" id="summaryMode-grouped" name="summaryMode" value="grouped" onchange="setSummaryMode('grouped')" class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                                        <span class="text-sm font-medium text-slate-700" data-translate="view2">Vue 2</span>
+                                    </label>
+                                </div>
                             </div>
-                            <div class="flex sm:items-center gap-3 sm:gap-4 flex-col sm:flex-row w-full sm:w-auto mt-2 sm:mt-0">
-                                <input type="text" id="summary-search" placeholder="Rechercher (nom, prénom, classe)" data-translate-placeholder="searchPlaceholderSummary"
-                                    aria-label="Rechercher un élève dans le récapitulatif"
-                                    oninput="renderSummary()" class="w-full sm:w-auto p-2.5 sm:p-3 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-medium text-sm sm:text-base text-slate-600 placeholder:text-slate-400 min-w-0 sm:min-w-[240px]">
-                                <select id="select-class-summary" onchange="renderSummary()" class="w-full sm:w-auto p-2.5 sm:p-3 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-medium text-sm sm:text-base text-slate-600" aria-label="Filtrer par classe dans le récapitulatif">
-                                    <option value="">-- Sélectionner une classe --</option>
-                                </select>
-                                <label class="flex items-center gap-2 text-sm sm:text-base cursor-pointer" for="show-details">
-                                    <input type="checkbox" id="show-details" onchange="renderSummary()" class="w-4 h-4 sm:w-5 sm:h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
-                                    <span class="text-slate-600 font-medium select-none text-sm sm:text-base" data-translate="showDetailsExercises">Afficher les détails (exercices)</span>
-                                </label>
-                                <div id="summary-assignment-tags" class="flex flex-wrap gap-2 w-full sm:w-auto"></div>
-                                <button id="btn-export-excel" onclick="exportSummaryToExcel()"
-                                    class="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white px-4 py-2 sm:py-2.5 rounded-xl text-sm sm:text-base font-bold shadow-lg shadow-green-500/20 active:scale-95 transition-all text-center" data-translate="exportExcel">Exporter
-                                    Excel</button>
+                            
+                            <!-- Ligne Contrôles (Recherche, Classe, Checkbox, Export) -->
+                            <div class="grid grid-cols-1 md:flex md:flex-row md:items-center md:flex-wrap gap-3 sm:gap-4 w-full">
+                                <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto md:flex-1">
+                                    <input type="text" id="summary-search" placeholder="Rechercher (nom, prénom, classe)" data-translate-placeholder="searchPlaceholderSummary"
+                                        aria-label="Rechercher un élève dans le récapitulatif" oninput="renderSummary()" 
+                                        class="w-full sm:flex-1 p-2.5 sm:p-3 bg-white border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-medium text-sm sm:text-base text-slate-700 placeholder:text-slate-400">
+                                    
+                                    <select id="select-class-summary" onchange="renderSummary()" 
+                                        class="w-full sm:w-auto sm:min-w-[200px] p-2.5 sm:p-3 bg-white border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-medium text-sm sm:text-base text-slate-700">
+                                        <option value="">-- Sélectionner une classe --</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
+                                    <label class="flex items-center gap-2 text-sm sm:text-base cursor-pointer px-1 w-fit" for="show-details">
+                                        <input type="checkbox" id="show-details" onchange="renderSummary()" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                                        <span class="text-slate-700 font-medium select-none" data-translate="showDetailsExercises">Afficher les détails (exercices)</span>
+                                    </label>
+                                    
+                                    <div id="summary-assignment-tags" class="w-full sm:w-auto empty:hidden"></div>
+                                    
+                                    <button id="btn-export-excel" onclick="exportSummaryToExcel()"
+                                        class="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-bold shadow-lg shadow-emerald-500/20 active:scale-95 transition-all text-center">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                        <span data-translate="exportExcel">Exporter Excel</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <div id="summary-table" class="relative"></div>
