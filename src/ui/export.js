@@ -560,12 +560,20 @@
                         </div>
                         <div class="min-w-0">
                             <h3 class="font-bold text-gray-700 text-sm sm:text-base">${title}</h3>
-                            <p class="text-xs font-semibold text-rose-600 mt-0.5">Non créé</p>
+                            <p class="text-xs font-semibold text-rose-600 mt-0.5">${t.notCreated || 'Non créé'}</p>
                         </div>
                     </div>
                 `;
             }
         };
+
+        const d1Assignments = (cfg.devoir1.assignmentIds || []).map(id => assigns.find(a => a.id === id)).filter(Boolean);
+        const d1Count = d1Assignments.length;
+        const d1IsOn20 = d1Count === 1 && getAssignmentMaxPoints(d1Assignments[0]) === 20;
+
+        const d2Assignments = (cfg.devoir2.assignmentIds || []).map(id => assigns.find(a => a.id === id)).filter(Boolean);
+        const d2Count = d2Assignments.length;
+        const d2IsOn20 = d2Count === 1 && getAssignmentMaxPoints(d2Assignments[0]) === 20;
 
         container.innerHTML = `
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -576,14 +584,14 @@
             
             <div class="mt-6 p-4 md:p-6 border-2 border-blue-100/50 rounded-2xl bg-blue-50/30">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 pb-4 border-b border-blue-100">
-                    <h3 class="font-bold text-gray-800 text-lg flex items-center gap-2" data-translate="devoirLabel">
-                        <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
+                    <h3 class="font-bold text-gray-800 text-lg flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                         </div>
-                        Devoir ${assigns.length > 1 ? '(Moyenne Dev 1 & Dev 2)' : ''}
+                        <span data-translate="devoirLabel">${t.devoirLabel || 'Devoir'}</span> ${assigns.length > 1 ? `<span class="text-xs font-normal text-gray-500 ml-1">(${t.average || 'Moyenne'} ${t.devoirShort || 'Dev'} 1 & ${t.devoirShort || 'Dev'} 2)</span>` : ''}
                     </h3>
                     <div class="flex items-center gap-3 bg-white px-3 py-2 rounded-xl shadow-sm border border-blue-100">
-                        <span class="text-sm font-bold text-gray-500 uppercase tracking-wide">Note générée sur</span>
+                        <span class="text-xs sm:text-sm font-bold text-gray-500 uppercase tracking-wide" data-translate="gradeGeneratedOn">${t.gradeGeneratedOn || 'Note générée sur'}</span>
                         <input type="number" id="export-out-max" name="export-out-max" min="1" step="1" value="${cfg.outMax}" class="w-16 p-1.5 border-2 border-blue-200 rounded-lg bg-white font-bold text-blue-700 text-center outline-none focus:border-blue-500" onchange="setExportOutMax(this.value)">
                     </div>
                 </div>
@@ -597,20 +605,25 @@
                                 ${d1Issue ? `<span class="bg-white rounded-full p-1 shadow-sm text-sm" title="${t.exportNotOn20 || ''}">⚠️</span>` : ``}
                             </div>
                             <div class="flex flex-wrap items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
-                                <select id="export-d1-combine" name="export-d1-combine" class="px-2 py-1.5 border-0 bg-transparent text-sm font-semibold text-slate-700 focus:ring-0 cursor-pointer" onchange="setExportGroupField('devoir1','combine',this.value)">
-                                    <option value="sum" ${cfg.devoir1.combine === 'sum' ? 'selected' : ''}>${t.sum}</option>
-                                    <option value="avg" ${cfg.devoir1.combine === 'avg' ? 'selected' : ''}>${t.average}</option>
-                                    <option value="max" ${cfg.devoir1.combine === 'max' ? 'selected' : ''}>${t.max}</option>
-                                </select>
-                                <div class="w-px h-5 bg-slate-300"></div>
-                                <label class="px-2 py-1.5 text-sm flex items-center gap-2 cursor-pointer font-medium text-slate-700 hover:text-blue-600 transition-colors">
-                                    <input type="checkbox" id="export-d1-normalize" name="export-d1-normalize" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" ${cfg.devoir1.normalize ? 'checked' : ''} onchange="setExportGroupField('devoir1','normalize',this.checked)"> 
-                                    <span data-translate="normalize">${t.normalize}</span>
-                                </label>
-                                <div class="flex items-center gap-1.5 pl-2 border-s border-slate-300">
-                                    <span class="text-xs font-bold text-slate-400">/</span>
-                                    <input type="number" id="export-d1-target" name="export-d1-target" min="1" step="1" value="${cfg.devoir1.targetMax ?? 20}" class="w-14 p-1 border-b-2 border-transparent bg-transparent outline-none text-sm font-bold text-center appearance-none focus:border-blue-500" title="${t.targetMax}" onchange="setExportGroupField('devoir1','targetMax',this.value)">
+                                <div class="${d1Count <= 1 ? 'hidden' : 'contents'}">
+                                    <select id="export-d1-combine" name="export-d1-combine" class="px-2 py-1.5 border-0 bg-transparent text-sm font-semibold text-slate-700 focus:ring-0 cursor-pointer" onchange="setExportGroupField('devoir1','combine',this.value)">
+                                        <option value="sum" ${cfg.devoir1.combine === 'sum' ? 'selected' : ''}>${t.sum}</option>
+                                        <option value="avg" ${cfg.devoir1.combine === 'avg' ? 'selected' : ''}>${t.average}</option>
+                                        <option value="max" ${cfg.devoir1.combine === 'max' ? 'selected' : ''}>${t.max}</option>
+                                    </select>
+                                    <div class="w-px h-5 bg-slate-300"></div>
                                 </div>
+                                <div class="${d1IsOn20 ? 'hidden' : 'contents'}">
+                                    <label class="px-2 py-1.5 text-sm flex items-center gap-2 cursor-pointer font-medium text-slate-700 hover:text-blue-600 transition-colors">
+                                        <input type="checkbox" id="export-d1-normalize" name="export-d1-normalize" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" ${cfg.devoir1.normalize ? 'checked' : ''} onchange="setExportGroupField('devoir1','normalize',this.checked)"> 
+                                        <span data-translate="normalize">${t.normalize}</span>
+                                    </label>
+                                    <div class="flex items-center gap-1.5 pl-2 border-s border-slate-300">
+                                        <span class="text-xs font-bold text-slate-400">/</span>
+                                        <input type="number" id="export-d1-target" name="export-d1-target" min="1" step="1" value="${cfg.devoir1.targetMax ?? 20}" class="w-14 p-1 border-b-2 border-transparent bg-transparent outline-none text-sm font-bold text-center appearance-none focus:border-blue-500" title="${t.targetMax}" onchange="setExportGroupField('devoir1','targetMax',this.value)">
+                                    </div>
+                                </div>
+                                ${ (d1Count <= 1 && d1IsOn20) ? `<div class="px-3 py-1.5 text-xs font-bold text-emerald-600 flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg> <span data-translate="scaleOk">${t.scaleOk || 'Scale OK'}</span></div>` : '' }
                             </div>
                         </div>
                         ${renderMultiPick('devoir1')}
@@ -625,27 +638,32 @@
                                 ${d2Issue ? `<span class="bg-white rounded-full p-1 shadow-sm text-sm" title="${t.exportNotOn20 || ''}">⚠️</span>` : ``}
                             </div>
                             <div class="flex flex-wrap items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
-                                <select id="export-d2-combine" name="export-d2-combine" class="px-2 py-1.5 border-0 bg-transparent text-sm font-semibold text-slate-700 focus:ring-0 cursor-pointer" onchange="setExportGroupField('devoir2','combine',this.value)">
-                                    <option value="sum" ${cfg.devoir2.combine === 'sum' ? 'selected' : ''}>${t.sum}</option>
-                                    <option value="avg" ${cfg.devoir2.combine === 'avg' ? 'selected' : ''}>${t.average}</option>
-                                    <option value="max" ${cfg.devoir2.combine === 'max' ? 'selected' : ''}>${t.max}</option>
-                                </select>
-                                <div class="w-px h-5 bg-slate-300"></div>
-                                <label class="px-2 py-1.5 text-sm flex items-center gap-2 cursor-pointer font-medium text-slate-700 hover:text-blue-600 transition-colors">
-                                    <input type="checkbox" id="export-d2-normalize" name="export-d2-normalize" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" ${cfg.devoir2.normalize ? 'checked' : ''} onchange="setExportGroupField('devoir2','normalize',this.checked)"> 
-                                    <span data-translate="normalize">${t.normalize}</span>
-                                </label>
-                                <div class="flex items-center gap-1.5 pl-2 border-s border-slate-300">
-                                    <span class="text-xs font-bold text-slate-400">/</span>
-                                    <input type="number" id="export-d2-target" name="export-d2-target" min="1" step="1" value="${cfg.devoir2.targetMax ?? 20}" class="w-14 p-1 border-b-2 border-transparent bg-transparent outline-none text-sm font-bold text-center appearance-none focus:border-blue-500" title="${t.targetMax}" onchange="setExportGroupField('devoir2','targetMax',this.value)">
+                                <div class="${d2Count <= 1 ? 'hidden' : 'contents'}">
+                                    <select id="export-d2-combine" name="export-d2-combine" class="px-2 py-1.5 border-0 bg-transparent text-sm font-semibold text-slate-700 focus:ring-0 cursor-pointer" onchange="setExportGroupField('devoir2','combine',this.value)">
+                                        <option value="sum" ${cfg.devoir2.combine === 'sum' ? 'selected' : ''}>${t.sum}</option>
+                                        <option value="avg" ${cfg.devoir2.combine === 'avg' ? 'selected' : ''}>${t.average}</option>
+                                        <option value="max" ${cfg.devoir2.combine === 'max' ? 'selected' : ''}>${t.max}</option>
+                                    </select>
+                                    <div class="w-px h-5 bg-slate-300"></div>
                                 </div>
+                                <div class="${d2IsOn20 ? 'hidden' : 'contents'}">
+                                    <label class="px-2 py-1.5 text-sm flex items-center gap-2 cursor-pointer font-medium text-slate-700 hover:text-blue-600 transition-colors">
+                                        <input type="checkbox" id="export-d2-normalize" name="export-d2-normalize" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" ${cfg.devoir2.normalize ? 'checked' : ''} onchange="setExportGroupField('devoir2','normalize',this.checked)"> 
+                                        <span data-translate="normalize">${t.normalize}</span>
+                                    </label>
+                                    <div class="flex items-center gap-1.5 pl-2 border-s border-slate-300">
+                                        <span class="text-xs font-bold text-slate-400">/</span>
+                                        <input type="number" id="export-d2-target" name="export-d2-target" min="1" step="1" value="${cfg.devoir2.targetMax ?? 20}" class="w-14 p-1 border-b-2 border-transparent bg-transparent outline-none text-sm font-bold text-center appearance-none focus:border-blue-500" title="${t.targetMax}" onchange="setExportGroupField('devoir2','targetMax',this.value)">
+                                    </div>
+                                </div>
+                                ${ (d2Count <= 1 && d2IsOn20) ? `<div class="px-3 py-1.5 text-xs font-bold text-emerald-600 flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg> <span data-translate="scaleOk">${t.scaleOk || 'Scale OK'}</span></div>` : '' }
                             </div>
                         </div>
                         ${renderMultiPick('devoir2')}
                     </div>
                     `}
                 </div>
-                ${assigns.length > 1 ? `<div class="mt-4 text-xs font-semibold text-blue-600/70" data-translate="devoirRule"><span class="mr-1">💡</span> Information: La note Devoir globale est la moyenne du Devoir 1 et Devoir 2. Si l'un des deux manque, l'autre note sera utilisée.</div>` : ''}
+                ${assigns.length > 1 ? '<div class="mt-4 text-xs font-semibold text-blue-600/70"><span class="mr-1">\ud83d\udca1</span> <span class="font-bold uppercase" data-translate="informationLabel">' + (t.informationLabel || 'Information') + ':</span> <span data-translate="devoirRule">' + (t.devoirRule || 'La note Devoir globale est la moyenne du Devoir 1 et Devoir 2. Si l\'un des deux manque, l\'autre note sera utilisée.') + '</span></div>' : ''}
             </div>
         `;
 
@@ -688,13 +706,6 @@
 
         window.translatePage();
     };
-
-    // ... (More code for Remarks Modal, Teacher Library, Rakmana, etc.) ...
-    // Since the content is very large, I will split the write operation or assume I can write it all. 
-    // For safety, I will write the rest of the file content in the same Write call if possible, or append.
-    // The previous prompt showed a limit of tool output, but Write input can be large.
-    
-    // I will include the rest of the functions here.
 
     window.openRemarksModal = function() {
         const t = getTranslations()[getLang()];
