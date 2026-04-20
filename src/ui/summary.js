@@ -299,7 +299,7 @@ import * as gradesSvc from '../services/grades.service.js';
 
         let html = `
             <div id="summary-sentinel" class="h-px w-full pointer-events-none"></div>
-            <div id="sticky-class-header" class="glass-sticky-header">
+            <div id="sticky-class-header" class="glass-sticky-header ${isArabic ? 'rtl-layout' : ''}" style="display: flex; flex-direction: ${isArabic ? 'row-reverse' : 'row'} !important; justify-content: space-between; align-items: center;">
                 <span class="text-lg font-bold text-slate-800">${selectedClass}</span>
             </div>
 
@@ -342,7 +342,7 @@ import * as gradesSvc from '../services/grades.service.js';
                 const isBlocked = window.isTrimesterBlocked(a.trimester, a.academicYear);
 
                 gradesHtml += `
-                    <div class="flex items-center justify-between gap-2 p-2 rounded-lg border border-slate-100">
+                    <div class="flex items-center justify-between gap-2 p-2 rounded-lg border border-slate-100" style="flex-direction: ${isArabic ? 'row-reverse' : 'row'} !important;">
                         <div class="min-w-0">
                             <div class="text-xs font-semibold text-slate-700 break-words">${a.name}</div>
                         </div>
@@ -356,8 +356,8 @@ import * as gradesSvc from '../services/grades.service.js';
             });
 
             html += `
-                <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm ${isArabic ? 'text-right' : 'text-left'}" dir="${isArabic ? 'rtl' : 'ltr'}">
-                    <div class="flex items-center justify-between mb-2">
+                <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm ${isArabic ? 'rtl-layout' : ''}" dir="${isArabic ? 'rtl' : 'ltr'}">
+                    <div class="flex items-center justify-between mb-2" style="flex-direction: ${isArabic ? 'row-reverse' : 'row'} !important;">
                         <div class="font-bold text-slate-800 break-words">${displayName}</div>
                     </div>
                     <div class="space-y-2">${gradesHtml || `<div class="text-xs text-slate-400">${t.noResultForSearch || 'Aucun résultat'}</div>`}</div>
