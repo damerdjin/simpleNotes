@@ -211,20 +211,18 @@
 
         return cfg;
     }
-    window.getExportClassConfig = getExportClassConfig; // Needed globally for some calls
+    window.getExportClassConfig = getExportClassConfig;
 
     window.deleteClassDataFromExport = function(className) {
         if (!className) return;
         const trimester = window.getGlobalTrimester() || 'T1';
         const key = `${trimester}|${className}`;
         
-        // 1. Clean exportPrepConfig
         if (exportPrepConfig && exportPrepConfig.byClass && exportPrepConfig.byClass[key]) {
             delete exportPrepConfig.byClass[key];
             window.saveExportPrepConfig();
         }
 
-        // 2. Clean remarksOverrides
         if (remarksOverrides && remarksOverrides[className]) {
             delete remarksOverrides[className];
             saveRemarksOverrides(remarksOverrides);
@@ -411,7 +409,7 @@
         if (d1 !== null && d2 !== null) return (d1 + d2) / 2;
         return (d1 !== null) ? d1 : d2;
     }
-    window.computeDevoirFinal = computeDevoirFinal; // Exposed for Rakmana
+    window.computeDevoirFinal = computeDevoirFinal;
 
     function calcScaledScore(studentId, assignment) {
         if (!assignment) return null;
@@ -423,7 +421,7 @@
         if (!max || max <= 0) return null;
         return (total / max) * outMax;
     }
-    window.calcScaledScore = calcScaledScore; // Exposed for Rakmana
+    window.calcScaledScore = calcScaledScore;
 
     window.loadClassSelectorsForExport = async function() {
         const classes = window.getClasses ? await window.getClasses() : [];
@@ -487,70 +485,14 @@
 
         const cfg = getExportClassConfig(className);
         const allAssigns = getAssignmentsForClass(className);
-        
-        // Filter assignments for Devoir 1 and Devoir 2 (Classic assignments only)
         const assigns = allAssigns.filter(a => !a.type || a.type === 'devoir');
 
-        // Auto-assign if only 1 Devoir exists
         if (assigns.length === 1 && (!cfg.devoir1.assignmentIds || cfg.devoir1.assignmentIds.length === 0) && (!cfg.devoir2.assignmentIds || cfg.devoir2.assignmentIds.length === 0)) {
             cfg.devoir1.assignmentIds = [assigns[0].id];
             window.saveExportPrepConfig();
         }
-        const d1MaxShown = getGroupDisplayedMax(className, cfg, 'devoir1');
-        const d2MaxShown = getGroupDisplayedMax(className, cfg, 'devoir2');
-        const d1Issue = groupHasExportScaleIssue(className, cfg, 'devoir1');
-        const d2Issue = groupHasExportScaleIssue(className, cfg, 'devoir2');
 
-        const buildSingleOptions = (currentValue) => {
-            const used = collectUsedAssignmentIds(cfg);
-            return [`<option value="">-- ${t.selectAssignment} --</option>`].concat(
-                assigns.map(a => {
-                    const isUsedElsewhere = used.has(a.id) && a.id !== currentValue;
-                    return `<option value="${a.id}" ${isUsedElsewhere ? 'disabled' : ''}>
-                        ${a.name} (/${getAssignmentMaxPoints(a)})
-                    </option>`;
-                })
-            ).join('');
-        };
-
-        const renderMultiPick = (groupKey) => {
-            const g = cfg[groupKey];
-            const selected = new Set(g.assignmentIds || []);
-            const rows = assigns.map(a => {
-                const checked = selected.has(a.id) ? 'checked' : '';
-                const used = collectUsedAssignmentIds(cfg);
-                const usedElsewhere = used.has(a.id) && !checked;
-                const disabled = usedElsewhere ? 'disabled' : '';
-                const opacity = usedElsewhere ? 'opacity-50 cursor-not-allowed' : '';
-                return `
-                    <label class="flex items-center gap-2 p-2 border rounded-lg bg-white hover:bg-slate-50 transition cursor-pointer ${opacity}">
-                        <input type="checkbox" id="export-check-${groupKey}-${a.id}" name="export-check-${groupKey}-${a.id}" ${checked} ${disabled}
-                        onchange="toggleExportGroupAssignment('${groupKey}','${a.id}',this.checked)" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
-                        <span class="flex-1 min-w-0 truncate font-medium text-slate-800 text-sm sm:text-base">${a.name}</span>
-                        <span class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded shadow-sm" dir="ltr">/${getAssignmentMaxPoints(a)}</span>
-                    </label>
-                `;
-            }).join('');
-
-            const chips = (g.assignmentIds || [])
-                .map(id => assigns.find(a => a.id === id))
-                .filter(Boolean)
-                .map(a => `<span class="px-2 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-semibold border border-blue-200">${a.name}</span>`)
-                .join('') || `<span class="text-xs text-gray-400">${t.noneSelected}</span>`;
-
-            return `
-                <div class="space-y-2">
-                    ${assigns.length > 1 ? `<div class="flex flex-wrap gap-2 items-center">${chips}</div>` : ''}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">${rows}</div>
-                </div>
-            `;
-        };
-
-        const foundCc = allAssigns.find(a => a.type === 'cc');
-        const foundTp = allAssigns.find(a => a.type === 'tp');
-        const foundComp = allAssigns.find(a => a.type === 'comp');
-
-        const renderStatusBadge = (found, title, scoreMax) => {
+        const renderStatusBadge = (found, title) => {
             if (found) {
                 return `
                     <div class="p-4 border-2 border-emerald-200 rounded-2xl bg-emerald-50/50 flex flex-col justify-center">
@@ -582,26 +524,67 @@
             }
         };
 
+        const renderMultiPick = (groupKey) => {
+            const g = cfg[groupKey];
+            const selected = new Set((g.assignmentIds || []).map(id => String(id)));
+            const used = collectUsedAssignmentIds(cfg);
+            const rows = assigns.map(a => {
+                const aId = String(a.id);
+                const isSelected = selected.has(aId);
+                const isUsedElsewhere = used.has(aId) && !isSelected;
+                const disabledAttr = isUsedElsewhere ? 'disabled' : '';
+                const opacityClass = isUsedElsewhere ? 'opacity-50 cursor-not-allowed' : '';
+                return `
+                    <label class="flex items-center gap-2 p-2 border rounded-lg bg-white hover:bg-slate-50 transition cursor-pointer ${opacityClass}">
+                        <input type="checkbox" ${isSelected ? 'checked' : ''} ${disabledAttr}
+                        onchange="toggleExportGroupAssignment('${groupKey}','${aId}',this.checked)" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                        <span class="flex-1 min-w-0 truncate font-medium text-slate-800 text-sm sm:text-base">${a.name}</span>
+                        <span class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded shadow-sm" dir="ltr">/${getAssignmentMaxPoints(a)}</span>
+                    </label>
+                `;
+            }).join('');
+            const chips = (g.assignmentIds || [])
+                .map(id => assigns.find(a => a.id === id))
+                .filter(Boolean)
+                .map(a => `<span class="px-2 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-semibold border border-blue-200">${a.name}</span>`)
+                .join('') || `<span class="text-xs text-gray-400">${t.noneSelected}</span>`;
+
+            return `
+                <div class="space-y-2">
+                    ${assigns.length > 1 ? `<div class="flex flex-wrap gap-2 items-center">${chips}</div>` : ''}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">${rows}</div>
+                </div>
+            `;
+        };
+
         const outMaxVal = parseFloat(cfg.outMax || 20);
-        const d1Assignments = (cfg.devoir1.assignmentIds || []).map(id => assigns.find(a => a.id === id)).filter(Boolean);
+        const d1Group = cfg.devoir1;
+        const d1Assignments = (d1Group.assignmentIds || []).map(id => assigns.find(a => a.id === id)).filter(Boolean);
         const d1Count = d1Assignments.length;
         const d1IsOn20 = d1Count === 1 && getAssignmentMaxPoints(d1Assignments[0]) === outMaxVal;
 
-        const d2Assignments = (cfg.devoir2.assignmentIds || []).map(id => assigns.find(a => a.id === id)).filter(Boolean);
+        const d2Group = cfg.devoir2;
+        const d2Assignments = (d2Group.assignmentIds || []).map(id => assigns.find(a => a.id === id)).filter(Boolean);
         const d2Count = d2Assignments.length;
         const d2IsOn20 = d2Count === 1 && getAssignmentMaxPoints(d2Assignments[0]) === outMaxVal;
 
+        const d1MaxShown = getGroupDisplayedMax(className, cfg, 'devoir1');
+        const d2MaxShown = getGroupDisplayedMax(className, cfg, 'devoir2');
+        const d1Issue = groupHasExportScaleIssue(className, cfg, 'devoir1');
+        const d2Issue = groupHasExportScaleIssue(className, cfg, 'devoir2');
+
         container.innerHTML = `
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                ${renderStatusBadge(foundCc, t.ccLabel || 'Contrôle Continu (CC)', cfg.outMax)}
-                ${renderStatusBadge(foundTp, t.tpLabel || 'TP / Projet', cfg.outMax)}
-                ${renderStatusBadge(foundComp, t.compLabel || 'Composition', cfg.outMax)}
+            <div class="grid grid-cols-1 ${assigns.length === 0 ? 'sm:grid-cols-2 lg:grid-cols-4' : 'md:grid-cols-3'} gap-4 mb-6">
+                ${renderStatusBadge(allAssigns.find(a => a.type === 'cc'), t.ccLabel || 'CC')}
+                ${renderStatusBadge(allAssigns.find(a => a.type === 'tp'), t.tpLabel || 'TP')}
+                ${renderStatusBadge(allAssigns.find(a => a.type === 'comp'), t.compLabel || 'Composition')}
+                ${assigns.length === 0 ? renderStatusBadge(null, t.devoirLabel || 'Devoir') : ''}
             </div>
             
+            ${assigns.length === 0 ? '' : `
             <div class="mt-6 p-4 md:p-6 border-2 border-blue-100/50 rounded-2xl bg-blue-50/30">
-                <div class="mb-4 pb-4 border-b border-blue-100">
-                    <!-- Title row — always on top -->
-                    <div class="flex items-center gap-3 mb-3 min-w-0">
+                <div class="mb-6 pb-4 border-b border-blue-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="flex items-center gap-3 min-w-0">
                         <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 font-bold shrink-0 shadow-sm">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                         </div>
@@ -610,22 +593,23 @@
                             ${assigns.length > 1 ? `<p class="text-xs font-normal text-gray-500 mt-0.5">(${t.average || 'Moyenne'} ${t.devoirShort || 'Dev'} 1 &amp; 2)</p>` : ''}
                         </div>
                     </div>
-                    <!-- Note générée sur — always below on mobile, inline on lg -->
-                    <div class="flex items-center justify-between gap-3 bg-white px-4 py-2.5 rounded-2xl shadow-sm border border-blue-100">
-                        <span class="text-xs font-bold text-gray-500 uppercase tracking-widest leading-tight" data-translate="gradeGeneratedOn">${t.gradeGeneratedOn || 'Note générée sur'}</span>
-                        <input type="number" id="export-out-max" name="export-out-max" min="1" step="1" value="${cfg.outMax}" class="w-16 p-2 border-2 border-blue-100 rounded-xl bg-blue-50/50 font-bold text-blue-700 text-center outline-none focus:border-blue-400 focus:bg-white transition-all" onchange="setExportOutMax(this.value)">
+                    
+                    <div class="flex items-center justify-between gap-3 bg-white px-4 py-2 rounded-xl shadow-sm border border-blue-100 self-start sm:self-center">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-tight" data-translate="gradeGeneratedOn">${t.gradeGeneratedOn || 'Note générée sur'}</span>
+                        <div class="flex items-center gap-2">
+                            <div class="w-px h-4 bg-slate-200 mx-1"></div>
+                            <input type="number" id="export-out-max" name="export-out-max" min="1" step="1" value="${cfg.outMax}" class="w-12 p-1 border-0 bg-transparent font-bold text-blue-700 text-center outline-none focus:ring-0" onchange="setExportOutMax(this.value)">
+                        </div>
                     </div>
                 </div>
-                
+
                 <div class="grid grid-cols-1 ${assigns.length === 1 ? '' : 'lg:grid-cols-2'} gap-4 md:gap-6">
                     <div class="border-2 rounded-xl p-4 md:p-5 ${d1Issue ? 'bg-amber-50 border-amber-200' : 'bg-white border-gray-200 shadow-sm'}">
-                        <!-- Row 1: title + score badge -->
                         <div class="flex items-center gap-2 mb-3">
                             <h4 class="font-bold text-blue-800 text-base" data-translate="devoir1Label">Devoir 1</h4>
                             <span class="text-xs font-bold px-2 py-1 rounded-full shrink-0 ${d1Issue ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800 border border-blue-200'}" dir="ltr">/ ${round2(d1MaxShown || 0)}</span>
                             ${d1Issue ? `<span class="bg-white rounded-full p-1 shadow-sm text-sm shrink-0" title="${t.exportNotOn20 || ''}">⚠️</span>` : ''}
                         </div>
-                        <!-- Row 2: controls (normalize / scaleOk) -->
                         <div class="flex flex-wrap items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200 mb-3">
                             <div class="${d1Count <= 1 ? 'hidden' : 'contents'}">
                                 <select id="export-d1-combine" name="export-d1-combine" class="px-2 py-1.5 border-0 bg-transparent text-sm font-semibold text-slate-700 focus:ring-0 cursor-pointer" onchange="setExportGroupField('devoir1','combine',this.value)">
@@ -652,13 +636,11 @@
                 
                     ${assigns.length === 1 ? '' : `
                     <div class="border-2 rounded-xl p-4 md:p-5 ${d2Issue ? 'bg-amber-50 border-amber-200' : 'bg-white border-gray-200 shadow-sm'}">
-                        <!-- Row 1: title + score badge -->
                         <div class="flex items-center gap-2 mb-3">
                             <h4 class="font-bold text-blue-800 text-base" data-translate="devoir2Label">Devoir 2</h4>
                             <span class="text-xs font-bold px-2 py-1 rounded-full shrink-0 ${d2Issue ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800 border border-blue-200'}" dir="ltr">/ ${round2(d2MaxShown || 0)}</span>
                             ${d2Issue ? `<span class="bg-white rounded-full p-1 shadow-sm text-sm shrink-0" title="${t.exportNotOn20 || ''}">⚠️</span>` : ''}
                         </div>
-                        <!-- Row 2: controls (normalize / scaleOk) -->
                         <div class="flex flex-wrap items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200 mb-3">
                             <div class="${d2Count <= 1 ? 'hidden' : 'contents'}">
                                 <select id="export-d2-combine" name="export-d2-combine" class="px-2 py-1.5 border-0 bg-transparent text-sm font-semibold text-slate-700 focus:ring-0 cursor-pointer" onchange="setExportGroupField('devoir2','combine',this.value)">
@@ -686,9 +668,9 @@
                 </div>
                 ${assigns.length > 1 ? '<div class="mt-4 text-xs font-semibold text-blue-600/70"><span class="mr-1">\ud83d\udca1</span> <span class="font-bold uppercase" data-translate="informationLabel">' + (t.informationLabel || 'Information') + ':</span> <span data-translate="devoirRule">' + (t.devoirRule || 'La note Devoir globale est la moyenne du Devoir 1 et Devoir 2. Si l\'un des deux manque, l\'autre note sera utilisée.') + '</span></div>' : ''}
             </div>
+            `}
         `;
 
-        // --- COLLABORATIVE MODEL: Fetch and merge students ---
         const globalUserId = window.currentUser?.email || window.currentUser?.id || 'unknown';
         const globalAcademicYear = window.getGlobalAcademicYear();
         
@@ -710,21 +692,10 @@
             if (!existing) studentMap.set(s.id, s);
         });
         
-        let students = Array.from(studentMap.values());
-        
-        // --- FILTRE ARCHIVÉS ---
-        students = students.filter(s => s.status !== 'archived');
-        
+        let students = Array.from(studentMap.values()).filter(s => s.status !== 'archived');
         meta.textContent = `${students.length} ${t.students}`;
 
         await renderExportPreviewTable(className, cfg);
-
-        // Show the preview section if there are students
-        const section = document.getElementById('export-preview-section');
-        if (section) {
-            section.classList.remove('hidden');
-        }
-
         window.translatePage();
     };
 
@@ -842,16 +813,6 @@
             const n = parseFloat(inp.value);
             gr.bands[i][field] = Number.isFinite(n) ? n : gr.bands[i][field];
         });
-        // ... (Logic to save custom global remarks if modal was editing them) ...
-        // Note: The original code for saveRemarksModal seemed to handle editing Global Remarks in a modal?
-        // Ah, yes, there was a modal for editing global remarks ranges/texts. I should include that logic.
-        // But the previous read didn't show the "Global Remarks Editor" HTML generation. 
-        // It was likely in `resetRemarksCurrentLanguage` or similar? No, I see `openRemarksModal` for teacher library.
-        // Wait, `saveRemarksModal` logic I pasted handles `data-band` inputs. Where are they generated?
-        // They must be generated in another function I missed, or `openRemarksModal` does double duty?
-        // `openRemarksModal` above generates the Library.
-        // There must be another modal for "Global Config".
-        // I'll leave `saveRemarksModal` as is, but it might not be used if I missed the generator.
         window.saveExportPrepConfig();
         window.closeRemarksModal();
         window.renderExportPrep();
@@ -952,7 +913,6 @@
         const globalUserId = window.currentUser?.email || window.currentUser?.id || 'unknown';
         const globalAcademicYear = window.getGlobalAcademicYear();
 
-        // --- COLLABORATIVE MODEL: Fetch and merge students ---
         let localStudents = getData().students.filter(s => 
             (s.className || '').trim() === (className || '').trim() &&
             (s.importedBy || 'unknown') === globalUserId &&
@@ -971,17 +931,25 @@
             if (!existing) studentMap.set(s.id, s);
         });
 
-        let students = Array.from(studentMap.values());
-        
-        // --- FILTRE ARCHIVÉS ---
-        students = students.filter(s => s.status !== 'archived');
-        
+        let students = Array.from(studentMap.values()).filter(s => s.status !== 'archived');
         students.sort((a, b) => (a.name || '').localeCompare((b.name || ''), 'fr', { sensitivity: 'base' }));
 
         const ccA = cfg.ccAssignmentId ? getData().assignments.find(a => a.id === cfg.ccAssignmentId) : null;
         const tpA = cfg.tpAssignmentId ? getData().assignments.find(a => a.id === cfg.tpAssignmentId) : null;
         const compA = cfg.compAssignmentId ? getData().assignments.find(a => a.id === cfg.compAssignmentId) : null;
         const hasTP = !!tpA;
+
+        const hasAnyDevoirIds = (cfg.devoir1.assignmentIds?.length > 0) || (cfg.devoir2.assignmentIds?.length > 0);
+        const hasAnyConfig = ccA || tpA || compA || hasAnyDevoirIds;
+        
+        if (!hasAnyConfig) {
+            preview.innerHTML = '';
+            document.getElementById('export-preview-section')?.classList.add('hidden');
+            return;
+        }
+
+        document.getElementById('export-preview-section')?.classList.remove('hidden');
+
         const d1Issue = groupHasExportScaleIssue(className, cfg, 'devoir1');
         const d2Issue = groupHasExportScaleIssue(className, cfg, 'devoir2');
         const devoirScaleIssue = d1Issue || d2Issue;
@@ -1000,8 +968,6 @@
         });
 
         const hasAnyMoyenne = studentsWithAverages.some(item => item.moyenne !== null);
-        
-        // Show/Hide Rakamna button based on non-null averages
         const btnRakamna = document.getElementById('btn-rakamna');
         if (btnRakamna) {
             if (hasAnyMoyenne) btnRakamna.classList.remove('hidden');
@@ -1045,10 +1011,10 @@
             return `
                 <tr class="border-b hover:bg-slate-50 transition-colors">
                     <td class="p-2 sm:p-3 bg-white/90 backdrop-blur-md sticky start-0 z-10 font-bold text-slate-800 border-e border-slate-200 shadow-[1px_0_4px_rgba(0,0,0,0.02)] whitespace-nowrap">${s.name}</td>
-                    <td class="p-3 text-center ${ccClass}" title="${cc === null && ccExpected ? (t.missingGrade || '') : (cc === 0 ? (t.zeroGrade || '') : '')}">${fmt(cc)}</td>
-                    <td class="p-3 text-center font-bold ${devoirClass}" title="${devoir === null ? (t.missingGrade || '') : (devoir === 0 ? (t.zeroGrade || '') : '')}">${fmt(devoir)}</td>
-                    ${hasTP ? `<td class="p-3 text-center ${tpClass}" title="${tp === null && tpExpected ? (t.missingGrade || '') : (tp === 0 ? (t.zeroGrade || '') : '')}">${fmt(tp)}</td>` : ``}
-                    <td class="p-3 text-center ${compClass}" title="${comp === null && compExpected ? (t.missingGrade || '') : (comp === 0 ? (t.zeroGrade || '') : '')}">${fmt(comp)}</td>
+                    <td class="p-3 text-center ${ccClass}">${fmt(cc)}</td>
+                    <td class="p-3 text-center font-bold ${devoirClass}">${fmt(devoir)}</td>
+                    ${hasTP ? `<td class="p-3 text-center ${tpClass}">${fmt(tp)}</td>` : ``}
+                    <td class="p-3 text-center ${compClass}">${fmt(comp)}</td>
                     ${hasAnyMoyenne ? `
                     <td class="p-3 text-center font-bold ${avgClass}">${fmt(moyenne)}</td>
                     <td class="p-3 text-left">
@@ -1199,11 +1165,8 @@
 
         const teacherObsBand = window.getTeacherMessages(`obs@${bandIdx}`) || [];
         const teacherConsBand = window.getTeacherMessages(`cons@${bandIdx}`) || [];
-        
-        let obsCandidates = [];
-        try { if (typeof window.getObsCandidatesForRow === "function") obsCandidates = (window.getObsCandidatesForRow(avgNum) || []); } catch (e) { }
-        let consCandidates = [];
-        try { if (typeof window.getConsCandidatesForRow === "function") consCandidates = window.getConsCandidatesForRow(avgNum) || []; } catch (e) { }
+        const obsCandidates = (typeof window.getObsCandidatesForRow === "function") ? (window.getObsCandidatesForRow(avgNum) || []) : [];
+        const consCandidates = (typeof window.getConsCandidatesForRow === "function") ? (window.getConsCandidatesForRow(avgNum) || []) : [];
 
         const obsPool = [...teacherObsBand, ...obsCandidates];
         if (rm.obs) obsPool.push(rm.obs);
@@ -1346,16 +1309,6 @@
         return (cc + dev + 2 * compo) / 4;
     }
 
-    function observationAndAdviceFromAverage(avg) {
-        if (avg == null) return { obs: '', cons: '' };
-        if (avg >= 18) return { obs: 'ممتاز', cons: 'حافظ على هذا المستوى.' };
-        if (avg >= 16) return { obs: 'جيد جدا', cons: 'واصل العمل الجيد.' };
-        if (avg >= 14) return { obs: 'جيد', cons: 'يمكنك تحسين الأداء بالمزيد من المراجعة.' };
-        if (avg >= 12) return { obs: 'متوسط', cons: 'نحتاج إلى تركيز أكبر وتنظيم الوقت.' };
-        if (avg >= 10) return { obs: 'مقبول', cons: 'راجع الدروس بانتظام واطلب المساعدة عند الحاجة.' };
-        return { obs: 'ضعيف', cons: 'تحتاج إلى بذل مجهود أكبر والمتابعة المستمرة.' };
-    }
-
     window.processRakmanaWorkbookExcelJS_AllClasses = async function(arrayBuffer, originalFileName) {
         const t = getTranslations()[getLang()] || {};
         const select = document.getElementById('select-class-export');
@@ -1410,8 +1363,6 @@
             if (colIndices.cc === -1 || colIndices.devoir === -1 || colIndices.comp === -1) { issues.push(`- ${className}: en-têtes manquants.`); continue; }
             
             const gradesByNIN = {}; let studentsWithNIN = 0;
-            
-            // --- COLLABORATIVE MODEL: Fetch and merge students for this class ---
             const globalUserId = window.currentUser?.email || window.currentUser?.id || 'unknown';
             const globalAcademicYear = window.getGlobalAcademicYear();
             
@@ -1433,9 +1384,7 @@
                 if (!existing) studentMap.set(s.id, s);
             });
             
-            let studentsForClass = Array.from(studentMap.values());
-            // --- FILTRE ARCHIVÉS POUR L'EXPORT RAKMANA ---
-            studentsForClass = studentsForClass.filter(s => s.status !== 'archived');
+            let studentsForClass = Array.from(studentMap.values()).filter(s => s.status !== 'archived');
 
             studentsForClass.forEach(s => {
                 const nin = String(s.nin || '').replace(/\s/g, '').trim();
@@ -1494,14 +1443,13 @@
         const correctedZip = await JSZip.loadAsync(correctedBuffer);
         const workbookXml = await originalZip.file("xl/workbook.xml")?.async("string");
         const workbookRelsXml = await originalZip.file("xl/_rels/workbook.xml.rels")?.async("string");
-        if (!workbookXml || !workbookRelsXml) { /* fallback without protection */ }
         
         const parser = new DOMParser();
-        const wbDoc = parser.parseFromString(workbookXml, "text/xml");
-        const relsDoc = parser.parseFromString(workbookRelsXml, "text/xml");
-        const sheets = Array.from(wbDoc.getElementsByTagName("sheet"));
+        const wbDoc = parser.parseFromString(workbookXml || "", "text/xml");
+        const relsDoc = parser.parseFromString(workbookRelsXml || "", "text/xml");
+        const sheetsNodes = Array.from(wbDoc.getElementsByTagName("sheet"));
         
-        for (const sheetNode of sheets) {
+        for (const sheetNode of sheetsNodes) {
             const rId = sheetNode.getAttribute("r:id");
             const relNode = Array.from(relsDoc.getElementsByTagName("Relationship")).find(n => n.getAttribute("Id") === rId);
             const target = relNode?.getAttribute("Target");
