@@ -458,8 +458,8 @@
         delete exportPrepConfig.byClass[key];
         window.saveExportPrepConfig();
         const scopeKey = getRemarksScopeKey(className);
-        if (remarksOverrides[scopeKey]) {
-            delete remarksOverrides[scopeKey];
+        if (remarksOverrides[className]) {
+            delete remarksOverrides[className];
             saveRemarksOverrides(remarksOverrides);
         }
         window.renderExportPrep();
@@ -595,13 +595,21 @@
                         </div>
                     </div>
                     
-                    <!-- Bloc 2: Réglage d'échelle (Garanti en bas) -->
+                    <!-- Bloc 2: Réglage d'échelle (Garanti en bas, Order Swapped for AR) -->
                     <div class="flex items-center justify-between gap-3 bg-white px-4 py-2 rounded-xl shadow-sm border border-blue-100">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-tight" data-translate="gradeGeneratedOn">${t.gradeGeneratedOn || 'Note générée sur'}</span>
-                        <div class="flex items-center gap-2">
-                            <div class="w-px h-4 bg-slate-200 mx-1"></div>
-                            <input type="number" id="export-out-max" name="export-out-max" min="1" step="1" value="${cfg.outMax}" class="w-12 p-1 border-0 bg-transparent font-bold text-blue-700 text-center outline-none focus:ring-0" onchange="setExportOutMax(this.value)">
-                        </div>
+                        ${getLang() === 'ar' ? `
+                            <div class="flex items-center gap-2">
+                                <input type="number" id="export-out-max" name="export-out-max" min="1" step="1" value="${cfg.outMax}" class="w-12 p-1 border-0 bg-transparent font-bold text-blue-700 text-center outline-none focus:ring-0" onchange="setExportOutMax(this.value)">
+                                <div class="w-px h-4 bg-slate-200 mx-1"></div>
+                            </div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-tight" data-translate="gradeGeneratedOn">${t.gradeGeneratedOn || 'Note générée sur'}</span>
+                        ` : `
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-tight" data-translate="gradeGeneratedOn">${t.gradeGeneratedOn || 'Note générée sur'}</span>
+                            <div class="flex items-center gap-2">
+                                <div class="w-px h-4 bg-slate-200 mx-1"></div>
+                                <input type="number" id="export-out-max" name="export-out-max" min="1" step="1" value="${cfg.outMax}" class="w-12 p-1 border-0 bg-transparent font-bold text-blue-700 text-center outline-none focus:ring-0" onchange="setExportOutMax(this.value)">
+                            </div>
+                        `}
                     </div>
                 </div>
 
