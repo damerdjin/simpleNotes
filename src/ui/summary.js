@@ -349,7 +349,7 @@ import * as gradesSvc from '../services/grades.service.js';
                         <button class="px-2 py-1 rounded-md border text-xs font-bold ${badgeClass} ${isBlocked ? 'cursor-default' : ''}"
                                 ${isBlocked ? '' : `ondblclick="window.makeTotalEditable(this, '${s.id}', '${a.id}', ${max})"`}
                                 id="sum-total-${s.id}-${a.id}">
-                            ${hasGrade ? (Math.round(total * 10) / 10) : '-'}
+                            ${hasGrade ? total.toFixed(2) : '-'}
                         </button>
                     </div>
                 `;
@@ -2014,7 +2014,7 @@ import * as gradesSvc from '../services/grades.service.js';
             v = e.key === 'ArrowUp' ? v + step : v - step;
             if (v < 0) v = 0;
             if (v > max) v = max;
-            e.target.value = v.toFixed(2).replace(/\.00$/, '.0');
+            e.target.value = v.toFixed(2);
             window.commitSummaryInput(studentId, assignmentId, exId, max, e.target.value);
         }
     };
