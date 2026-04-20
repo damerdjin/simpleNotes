@@ -186,8 +186,11 @@
 
     function getExportClassConfig(className) {
         if (!className) return null;
-        if (!exportPrepConfig.byClass[className]) {
-            exportPrepConfig.byClass[className] = {
+        const trimester = window.getGlobalTrimester() || 'T1';
+        const key = `${trimester}|${className}`;
+
+        if (!exportPrepConfig.byClass[key]) {
+            exportPrepConfig.byClass[key] = {
                 ccAssignmentId: '',
                 compAssignmentId: '',
                 tpAssignmentId: '',
@@ -196,7 +199,7 @@
                 outMax: 20
             };
         }
-        const cfg = exportPrepConfig.byClass[className];
+        const cfg = exportPrepConfig.byClass[key];
 
         // --- TYPE AUTO-MAPPING ---
         if (typeof getAssignmentsForClass === 'function') {
@@ -212,10 +215,12 @@
 
     window.deleteClassDataFromExport = function(className) {
         if (!className) return;
+        const trimester = window.getGlobalTrimester() || 'T1';
+        const key = `${trimester}|${className}`;
         
         // 1. Clean exportPrepConfig
-        if (exportPrepConfig && exportPrepConfig.byClass && exportPrepConfig.byClass[className]) {
-            delete exportPrepConfig.byClass[className];
+        if (exportPrepConfig && exportPrepConfig.byClass && exportPrepConfig.byClass[key]) {
+            delete exportPrepConfig.byClass[key];
             window.saveExportPrepConfig();
         }
 
@@ -339,9 +344,17 @@
         const ids = (groupCfg.assignmentIds || []).filter(Boolean);
         if (ids.length === 0) return null;
 
+        const assignmentsGlob = getData().assignments;
+        const currentTrimester = window.getGlobalTrimester();
+
         const assigns = ids
-            .map(id => getData().assignments.find(a => a.id === id))
-            .filter(a => a && (a.className || '').trim() === (className || '').trim());
+            .map(id => assignmentsGlob.find(a => a.id === id))
+            .filter(a => {
+                if (!a) return false;
+                const matchClass = (a.className || '').trim() === (className || '').trim();
+                const matchTrimester = (a.trimester || '') === currentTrimester;
+                return matchClass && matchTrimester;
+            });
 
         if (assigns.length === 0) return null;
 
@@ -441,7 +454,10 @@
     window.resetExportConfig = function() {
         const className = document.getElementById('select-class-export')?.value || '';
         if (!className) return;
-        delete exportPrepConfig.byClass[className];
+        const trimester = window.getGlobalTrimester() || 'T1';
+        const key = `${trimester}|${className}`;
+
+        delete exportPrepConfig.byClass[key];
         window.saveExportPrepConfig();
         const scopeKey = getRemarksScopeKey(className);
         if (remarksOverrides[scopeKey]) {
