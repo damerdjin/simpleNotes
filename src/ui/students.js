@@ -609,25 +609,60 @@
                 return;
             }
 
+            // TRI DES CLASSES
+            filteredClasses.sort((a, b) => {
+                const aJoined = myClassesSet.has(a) ? 1 : 0;
+                const bJoined = myClassesSet.has(b) ? 1 : 0;
+                if (aJoined !== bJoined) {
+                    return bJoined - aJoined; // Joined first (1 before 0)
+                }
+                
+                const levelA = typeof window.levelFromClass === 'function' ? window.levelFromClass(a) : 99;
+                const levelB = typeof window.levelFromClass === 'function' ? window.levelFromClass(b) : 99;
+                
+                // Si l'un est un nombre et l'autre non, le nombre passe en premier
+                const numA = parseInt(levelA);
+                const numB = parseInt(levelB);
+                
+                if (!isNaN(numA) && !isNaN(numB)) {
+                    if (numA !== numB) return numA - numB;
+                } else if (!isNaN(numA)) {
+                    return -1;
+                } else if (!isNaN(numB)) {
+                    return 1;
+                }
+                
+                return a.localeCompare(b);
+            });
+
             container.innerHTML = filteredClasses.map(className => {
                 const isJoined = myClassesSet.has(className);
                 const color = typeof window.getClassColor === 'function' ? window.getClassColor(className) : '#3b82f6';
+                const levelIcon = typeof window.levelFromClass === 'function' ? window.levelFromClass(className) : className.substring(0, 2).toUpperCase();
+                const cleanedName = typeof window.cleanClassName === 'function' ? window.cleanClassName(className) : className;
+                const isAr = getLang() === 'ar';
                 
+                let fontSizeClass = isAr ? 'text-[13px] sm:text-base' : 'text-sm sm:text-base';
+                if (cleanedName.length > 25) fontSizeClass = 'text-[10px] sm:text-sm leading-tight';
+                else if (cleanedName.length > 15) fontSizeClass = 'text-xs sm:text-[15px] leading-snug';
+
                 return `
                     <div class="p-4 rounded-2xl border-2 ${isJoined ? 'border-slate-100 bg-slate-50 opacity-75' : 'border-slate-100 hover:border-blue-200 hover:bg-blue-50/30'} transition-all group flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-xs shadow-sm" style="background-color: ${color}">
-                                ${className.substring(0, 2).toUpperCase()}
+                        <div class="flex items-center gap-3 w-full pr-2">
+                            <div class="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-sm" style="background-color: ${color}">
+                                ${levelIcon}
                             </div>
-                            <span class="font-bold text-slate-700">${className}</span>
+                            <span class="font-bold text-slate-700 ${fontSizeClass} truncate block w-full" title="${className}">${cleanedName}</span>
                         </div>
-                        ${isJoined ? `
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-200 px-2 py-1 rounded-lg">${t.alreadyJoined}</span>
-                        ` : `
-                            <button onclick="joinClass('${className}')" class="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md shadow-blue-500/20 transition-all hover:scale-110 active:scale-90">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                            </button>
-                        `}
+                        <div class="shrink-0 flex items-center">
+                            ${isJoined ? `
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-200 px-2 py-1 rounded-lg">${t.alreadyJoined}</span>
+                            ` : `
+                                <button onclick="joinClass('${className}')" class="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md shadow-blue-500/20 transition-all hover:scale-110 active:scale-90">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                </button>
+                            `}
+                        </div>
                     </div>
                 `;
             }).join('');
