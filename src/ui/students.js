@@ -646,15 +646,17 @@
                 if (cleanedName.length > 25) fontSizeClass = 'text-[10px] sm:text-sm leading-tight';
                 else if (cleanedName.length > 15) fontSizeClass = 'text-xs sm:text-[15px] leading-snug';
 
+                const flexRowFix = 'display: flex !important; flex-direction: row !important;';
+
                 return `
-                    <div class="p-4 rounded-2xl border-2 ${isJoined ? 'border-slate-100 bg-slate-50 opacity-75' : 'border-slate-100 hover:border-blue-200 hover:bg-blue-50/30'} transition-all group flex items-center justify-between">
-                        <div class="flex items-center gap-3 w-full pr-2">
+                    <div class="p-4 rounded-2xl border-2 ${isJoined ? 'border-slate-100 bg-slate-50 opacity-75' : 'border-slate-100 hover:border-blue-200 hover:bg-blue-50/30'} transition-all group flex items-center justify-between" style="${flexRowFix}">
+                        <div class="flex items-center gap-3 flex-1 min-w-0 pr-2" style="${flexRowFix}">
                             <div class="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-sm" style="background-color: ${color}">
                                 ${levelIcon}
                             </div>
                             <span class="font-bold text-slate-700 ${fontSizeClass} truncate block w-full" title="${className}">${cleanedName}</span>
                         </div>
-                        <div class="shrink-0 flex items-center">
+                        <div class="shrink-0 flex items-center" style="${flexRowFix}">
                             ${isJoined ? `
                                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-200 px-2 py-1 rounded-lg">${t.alreadyJoined}</span>
                             ` : `
