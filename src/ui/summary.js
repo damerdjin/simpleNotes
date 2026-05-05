@@ -572,7 +572,7 @@ import * as gradesSvc from '../services/grades.service.js';
             showDetails = detailsCheckbox.checked;
         }
 
-        if (!selectedClass) {
+        if (!selectedClass && !searchTerm) {
             const tagContainer = document.getElementById('summary-assignment-tags');
             if (tagContainer) tagContainer.innerHTML = '';
             container.innerHTML = `<p class="text-gray-500 text-center py-12">${t.selectClassToSeeSummary || 'Veuillez sélectionner une classe pour afficher le récapitulatif.'}</p>`;
