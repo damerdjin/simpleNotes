@@ -1399,6 +1399,8 @@ import * as gradesSvc from '../services/grades.service.js';
                     }
 
                     const isBlocked = window.isTrimesterBlocked(a.trimester, a.academicYear);
+                    const max = window.getAssignmentMaxPoints(a);
+                    const has = window.hasAnyGradeForAssignment(s.id, a.id);
                     if (has) {
                         const total = window.getStudentAssignmentTotal(s.id, a.id);
                         const pct = max > 0 ? (total / max * 100) : 0;
@@ -1788,6 +1790,8 @@ import * as gradesSvc from '../services/grades.service.js';
                     }
 
                     const isBlocked = window.isTrimesterBlocked(a.trimester, a.academicYear);
+                    const max = window.getAssignmentMaxPoints(a);
+                    const has = window.hasAnyGradeForAssignment(s.id, a.id);
                     if (has) {
                         const total = window.getStudentAssignmentTotal(s.id, a.id);
                         const pct = max > 0 ? (total / max * 100) : 0;
