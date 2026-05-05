@@ -10,7 +10,6 @@ async function handler(req, res) {
     }
 
     try {
-        // 1. Vérifier le token (soit via header Authorization, soit via cookie)
         const authHeader = req.headers.authorization;
         let token = '';
 
@@ -32,46 +31,15 @@ async function handler(req, res) {
 
         const studentId = decoded.id;
 
-        console.log(`[Student Grades] Récupération des notes via RPC pour studentId: ${studentId}`);
+        // Check if we need final grades or regular grades
+        const url = new URL(req.url, `http://${req.headers.host}`);
+        const isFinalGrades = url.searchParams.get('type') === 'final';
 
-        // On utilise la fonction RPC sécurisée (SECURITY DEFINER)
-        // Pas besoin de Service Role Key, la clé publique (anon) suffit
-        const { data: rawGrades, error } = await supabase
-            .rpc('get_student_visible_grades', { p_student_id: studentId });
-
-        if (error) {
-            console.error('[Student Grades] RPC query error:', error);
-            return res.status(500).json({ error: 'Erreur lors de la récupération des notes.' });
+        if (isFinalGrades) {
+            return await handleFinalGrades(studentId, res);
         }
 
-        // On reformate les données pour qu'elles correspondent à ce que le front-end attendait
-        // (Le front-end attendait un objet 'assignments' imbriqué)
-        const formattedGrades = (rawGrades || []).map(g => ({
-            id: g.id,
-            score_final: g.score_final,
-            score_max: g.score_max,
-            updated_at: g.updated_at,
-            grade_date: g.grade_date,
-            comments: g.comments,
-            class_avg: g.class_avg,
-            class_max: g.class_max,
-            class_min: g.class_min,
-            assignments: {
-                id: g.assignment_id,
-                name: g.assignment_name,
-                subject: g.assignment_subject,
-                trimester: g.assignment_trimester,
-                academic_year: g.academic_year,
-                is_visible: true // C'est forcé par la requête RPC
-            }
-        }));
-
-        console.log(`[Student Grades] Trouvé ${formattedGrades.length} notes VISIBLES pour cet élève.`);
-
-        return res.status(200).json({
-            success: true,
-            grades: formattedGrades
-        });
+        return await handleRegularGrades(studentId, res);
 
     } catch (err) {
         console.error('Student grades fetch error:', err);
@@ -80,6 +48,62 @@ async function handler(req, res) {
         }
         return res.status(500).json({ error: 'Erreur interne du serveur.' });
     }
+}
+
+async function handleRegularGrades(studentId, res) {
+    console.log(`[Student Grades] Récupération des notes via RPC pour studentId: ${studentId}`);
+
+    const { data: rawGrades, error } = await supabase
+        .rpc('get_student_visible_grades', { p_student_id: studentId });
+
+    if (error) {
+        console.error('[Student Grades] RPC query error:', error);
+        return res.status(500).json({ error: 'Erreur lors de la récupération des notes.' });
+    }
+
+    const formattedGrades = (rawGrades || []).map(g => ({
+        id: g.id,
+        score_final: g.score_final,
+        score_max: g.score_max,
+        updated_at: g.updated_at,
+        grade_date: g.grade_date,
+        comments: g.comments,
+        class_avg: g.class_avg,
+        class_max: g.class_max,
+        class_min: g.class_min,
+        assignments: {
+            id: g.assignment_id,
+            name: g.assignment_name,
+            subject: g.assignment_subject,
+            trimester: g.assignment_trimester,
+            academic_year: g.academic_year,
+            is_visible: true
+        }
+    }));
+
+    console.log(`[Student Grades] Trouvé ${formattedGrades.length} notes VISIBLES pour cet élève.`);
+
+    return res.status(200).json({
+        success: true,
+        grades: formattedGrades
+    });
+}
+
+async function handleFinalGrades(studentId, res) {
+    console.log(`[Student Final Grades] Récupération des moyennes pour studentId: ${studentId}`);
+
+    const { data: finalGrades, error } = await supabase
+        .rpc('get_student_final_grades_for_dashboard', { p_student_id: studentId });
+
+    if (error) {
+        console.error('[Student Final Grades] RPC error:', error);
+        return res.status(500).json({ error: 'Erreur lors de la récupération des notes finales.' });
+    }
+
+    return res.status(200).json({
+        success: true,
+        finalGrades: finalGrades || []
+    });
 }
 
 export default allowCors(handler);

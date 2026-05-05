@@ -434,7 +434,7 @@
 
                 // Also fetch final grades (moyennes) from Supabase
                 try {
-                    const finalRes = await fetch('/api/student/final-grades', {
+                    const finalRes = await fetch('/api/student/grades?type=final', {
                         headers: {
                             'Authorization': `Bearer ${token}`
                         }
