@@ -1,5 +1,6 @@
 {
   "outputDirectory": "dist",
+  "devCommand": "vite --port 5173 --strictPort",
   "headers": [
     {
       "source": "/(.*)",

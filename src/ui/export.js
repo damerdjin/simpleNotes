@@ -1,3 +1,5 @@
+import { supabase } from './supabase-client.js';
+
 (function() {
     // Access global data and helpers
     const getData = () => window.data;
@@ -486,6 +488,49 @@
         const cfg = getExportClassConfig(className);
         const allAssigns = getAssignmentsForClass(className);
         const assigns = allAssigns.filter(a => !a.type || a.type === 'devoir');
+
+        // Try to load saved config from Supabase (if available)
+        try {
+            const savedConfig = await window.loadExportPrepFromSupabase();
+            if (savedConfig) {
+                let changed = false;
+                if (savedConfig.cc_assignment_id && savedConfig.cc_assignment_id !== cfg.ccAssignmentId) {
+                    cfg.ccAssignmentId = savedConfig.cc_assignment_id;
+                    changed = true;
+                }
+                if (savedConfig.comp_assignment_id && savedConfig.comp_assignment_id !== cfg.compAssignmentId) {
+                    cfg.compAssignmentId = savedConfig.comp_assignment_id;
+                    changed = true;
+                }
+                if (savedConfig.tp_assignment_id && savedConfig.tp_assignment_id !== cfg.tpAssignmentId) {
+                    cfg.tpAssignmentId = savedConfig.tp_assignment_id;
+                    changed = true;
+                }
+                if (savedConfig.devoir1_config) {
+                    const d1 = typeof savedConfig.devoir1_config === 'string' ? JSON.parse(savedConfig.devoir1_config) : savedConfig.devoir1_config;
+                    if (JSON.stringify(d1) !== JSON.stringify(cfg.devoir1)) {
+                        cfg.devoir1 = d1;
+                        changed = true;
+                    }
+                }
+                if (savedConfig.devoir2_config) {
+                    const d2 = typeof savedConfig.devoir2_config === 'string' ? JSON.parse(savedConfig.devoir2_config) : savedConfig.devoir2_config;
+                    if (JSON.stringify(d2) !== JSON.stringify(cfg.devoir2)) {
+                        cfg.devoir2 = d2;
+                        changed = true;
+                    }
+                }
+                if (savedConfig.out_max && savedConfig.out_max !== cfg.outMax) {
+                    cfg.outMax = savedConfig.out_max;
+                    changed = true;
+                }
+                if (changed) {
+                    window.saveExportPrepConfig();
+                }
+            }
+        } catch (e) {
+            // Silently fail - Supabase might not be available
+        }
 
         if (assigns.length === 1 && (!cfg.devoir1.assignmentIds || cfg.devoir1.assignmentIds.length === 0) && (!cfg.devoir2.assignmentIds || cfg.devoir2.assignmentIds.length === 0)) {
             cfg.devoir1.assignmentIds = [assigns[0].id];
@@ -983,6 +1028,11 @@
             if (hasAnyMoyenne) btnRakamna.classList.remove('hidden');
             else btnRakamna.classList.add('hidden');
         }
+        const btnSaveDb = document.getElementById('btn-save-export-db');
+        if (btnSaveDb) {
+            if (hasAnyMoyenne) btnSaveDb.classList.remove('hidden');
+            else btnSaveDb.classList.add('hidden');
+        }
         const fmt = (v) => (v === null ? '' : round2(v).toFixed(2));
 
         const rows = studentsWithAverages.map(item => {
@@ -1019,7 +1069,7 @@
             const consCandidates = window.getConsCandidatesForRow(moyenne) || [];
 
             return `
-                <tr class="border-b hover:bg-slate-50 transition-colors">
+                <tr class="border-b hover:bg-slate-50 transition-colors" data-student-id="${s.id}">
                     <td class="p-2 sm:p-3 bg-white/90 backdrop-blur-md sticky start-0 z-10 font-bold text-slate-800 border-e border-slate-200 shadow-[1px_0_4px_rgba(0,0,0,0.02)] whitespace-nowrap">${s.name}</td>
                     <td class="p-3 text-center ${ccClass}">${fmt(cc)}</td>
                     <td class="p-3 text-center font-bold ${devoirClass}">${fmt(devoir)}</td>
@@ -1482,6 +1532,172 @@
         const finalBlob = await correctedZip.generateAsync({ type: "blob" });
         const link = document.createElement('a'); link.href = URL.createObjectURL(finalBlob); link.download = originalFileName; document.body.appendChild(link); link.click(); URL.revokeObjectURL(link.href); document.body.removeChild(link);
         alert(`✅ ${totalMatches} élève(s) mis à jour.\n🔐 Protection préservée si possible.`);
+    };
+
+    // --- SUPABASE PERSISTENCE ---
+
+    /**
+     * Sauvegarde la configuration ET les notes finales calculées dans Supabase
+     */
+    window.saveExportPrepToSupabase = async function() {
+        const className = document.getElementById('select-class-export')?.value;
+        if (!className) {
+            alert('Veuillez d\'abord sélectionner une classe.');
+            return;
+        }
+
+        const trimester = (window.getGlobalTrimester && window.getGlobalTrimester()) || 'T1';
+        const academicYear = (window.getGlobalAcademicYear && window.getGlobalAcademicYear()) || '';
+
+        if (!academicYear) {
+            alert('Année académique manquante.');
+            return;
+        }
+
+        const cfg = getExportClassConfig(className);
+        if (!cfg) {
+            alert('Configuration manquante pour cette classe.');
+            return;
+        }
+
+        try {
+            // 1. Save configuration
+            const { data: configId, error: configError } = await supabase.rpc('save_grade_calculation_config', {
+                p_class_name: className,
+                p_trimester: trimester,
+                p_academic_year: academicYear,
+                p_cc_assignment_id: cfg.ccAssignmentId || '',
+                p_comp_assignment_id: cfg.compAssignmentId || '',
+                p_tp_assignment_id: cfg.tpAssignmentId || '',
+                p_devoir1_config: cfg.devoir1 || { assignmentIds: [], combine: 'sum', normalize: true, targetMax: 20 },
+                p_devoir2_config: cfg.devoir2 || { assignmentIds: [], combine: 'sum', normalize: true, targetMax: 20 },
+                p_out_max: cfg.outMax || 20
+            });
+            if (configError) throw configError;
+
+            // 2. Check if the preview table exists and has rows with data-student-id
+            const table = document.getElementById('export-preview-table');
+            if (!table) {
+                alert('Aucun tableau de prévisualisation. Veuillez d\'abord calculer les moyennes.');
+                return;
+            }
+
+            const rows = table.querySelectorAll('tr[data-student-id]');
+            if (!rows || rows.length === 0) {
+                alert('Aucune donnée élève dans le tableau. Veuillez d\'abord calculer les moyennes.');
+                return;
+            }
+
+            const hasTP = !!cfg.tpAssignmentId;
+            const gradesData = [];
+
+            rows.forEach(row => {
+                const studentId = row.getAttribute('data-student-id');
+                const cells = row.querySelectorAll('td');
+
+                // cells[0] = name, cells[1] = CC, cells[2] = Devoir
+                // if hasTP: cells[3] = TP, cells[4] = Comp, cells[5] = Moy, cells[6] = Obs, cells[7] = Cons
+                // if !hasTP: cells[3] = Comp, cells[4] = Moy, cells[5] = Obs, cells[6] = Cons
+                const ccVal = parseFloat(cells[1]?.textContent?.trim()) || null;
+                const devoirVal = parseFloat(cells[2]?.textContent?.trim()) || null;
+
+                let tpVal = null, compVal = null, moyVal = null;
+                if (hasTP) {
+                    tpVal = parseFloat(cells[3]?.textContent?.trim()) || null;
+                    compVal = parseFloat(cells[4]?.textContent?.trim()) || null;
+                    moyVal = parseFloat(cells[5]?.textContent?.trim()) || null;
+                } else {
+                    compVal = parseFloat(cells[3]?.textContent?.trim()) || null;
+                    moyVal = parseFloat(cells[4]?.textContent?.trim()) || null;
+                }
+
+                // Extract observation & advice from remark cells
+                const obsEl = row.querySelector('[data-kind="obs"] .remark-text');
+                const consEl = row.querySelector('[data-kind="cons"] .remark-text');
+
+                gradesData.push({
+                    student_id: studentId,
+                    cc_score: ccVal,
+                    tp_score: tpVal,
+                    comp_score: compVal,
+                    devoir_score: devoirVal,
+                    moyenne: moyVal,
+                    observation: obsEl?.textContent?.trim() || '',
+                    advice: consEl?.textContent?.trim() || ''
+                });
+            });
+
+            if (gradesData.length === 0) {
+                alert('Aucune donnée à sauvegarder.');
+                return;
+            }
+
+            // 3. Save final grades
+            const { error: gradesError } = await supabase.rpc('save_student_final_grades', {
+                p_class_name: className,
+                p_trimester: trimester,
+                p_academic_year: academicYear,
+                p_grades: gradesData
+            });
+            if (gradesError) throw gradesError;
+
+            alert(`✅ Configuration et notes de ${gradesData.length} élève(s) sauvegardées avec succès !`);
+        } catch (err) {
+            console.error('❌ Erreur lors de la sauvegarde Supabase:', err);
+            alert('❌ Erreur lors de la sauvegarde : ' + (err.message || 'Erreur inconnue'));
+        }
+    };
+
+    /**
+     * Charge la configuration depuis Supabase pour la classe/trimestre actuel
+     * Retourne l'objet config ou null si aucune config sauvegardée
+     */
+    window.loadExportPrepFromSupabase = async function() {
+        const className = document.getElementById('select-class-export')?.value;
+        if (!className) return null;
+
+        const trimester = (window.getGlobalTrimester && window.getGlobalTrimester()) || 'T1';
+        const academicYear = (window.getGlobalAcademicYear && window.getGlobalAcademicYear()) || '';
+        if (!academicYear) return null;
+
+        try {
+            const { data, error } = await supabase.rpc('get_grade_calculation_config', {
+                p_class_name: className,
+                p_trimester: trimester,
+                p_academic_year: academicYear
+            });
+
+            if (error) throw error;
+            return data && data.length > 0 ? data[0] : null;
+        } catch (err) {
+            console.warn('⚠️ Impossible de charger la configuration depuis Supabase:', err);
+            return null;
+        }
+    };
+
+    /**
+     * Vérifie si des notes finales existent déjà en base pour cette classe
+     */
+    window.hasExportPrepSavedData = async function() {
+        const className = document.getElementById('select-class-export')?.value;
+        if (!className) return false;
+
+        const trimester = (window.getGlobalTrimester && window.getGlobalTrimester()) || 'T1';
+        const academicYear = (window.getGlobalAcademicYear && window.getGlobalAcademicYear()) || '';
+        if (!academicYear) return false;
+
+        try {
+            const { data, error } = await supabase.rpc('get_teacher_student_final_grades', {
+                p_class_name: className,
+                p_trimester: trimester,
+                p_academic_year: academicYear
+            });
+
+            if (error) throw error;
+            return data && data.length > 0;
+        } catch (err) {
+            return false;
+        }
     };
 
 })();
