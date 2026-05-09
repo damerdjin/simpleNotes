@@ -270,6 +270,10 @@ import { supabase } from './supabase-client.js';
         return Math.round((n + Number.EPSILON) * 100) / 100;
     }
 
+    function fmt(v) {
+        return (v === null || v === undefined || v === '') ? '' : round2(v).toFixed(2);
+    }
+
     function getGroupRawMaxForDisplay(className, groupCfg) {
         const ids = (groupCfg.assignmentIds || []).filter(Boolean);
         const assigns = ids
@@ -1059,7 +1063,11 @@ import { supabase } from './supabase-client.js';
             else btnRakamna.classList.add('hidden');
         }
         // (boutons Sauvegarder/Annuler supprimés — calcul à la volée)
-        const fmt = (v) => (v === null ? '' : round2(v).toFixed(2));
+        const isMobile = window.innerWidth < 768;
+        if (isMobile) {
+            await renderExportPreviewMobile(className, studentsWithAverages, hasTP, hasAnyMoyenne, devoirScaleIssue, t);
+            return;
+        }
 
         const rows = studentsWithAverages.map(item => {
             const { s, cc, tp, comp, devoir, moyenne } = item;
@@ -1728,6 +1736,121 @@ import { supabase } from './supabase-client.js';
             if (error) throw error;
         } catch (err) {
             // Silently fail to not interrupt user flow
+        }
+    };
+
+
+    async function renderExportPreviewMobile(className, studentsWithAverages, hasTP, hasAnyMoyenne, devoirScaleIssue, t) {
+        const preview = document.getElementById('export-preview-table');
+        if (!preview) return;
+
+        const cards = studentsWithAverages.map(item => {
+            const { s, cc, tp, comp, devoir, moyenne } = item;
+            
+            const res = window.computeFinalObsCons({
+                className,
+                studentId: s.id,
+                devoir,
+                comp,
+                avg: moyenne,
+                currentLanguage: getLang()
+            });
+
+            const displayObs = res.obs;
+            const displayCons = res.cons;
+
+            const avgPct = moyenne !== null ? (moyenne / 20 * 100) : 0;
+            const avgColorClass = moyenne === null ? 'bg-slate-100 text-slate-400'
+                : avgPct >= 70 ? 'bg-emerald-100 text-emerald-700'
+                : avgPct >= 50 ? 'bg-amber-100 text-amber-700'
+                : 'bg-rose-100 text-rose-700';
+
+            return `
+                <div class="bg-white border-2 border-slate-100 rounded-2xl p-4 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="min-w-0 flex-1">
+                            <h4 class="font-bold text-slate-800 text-base truncate">${s.name}</h4>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">${className}</p>
+                        </div>
+                        ${hasAnyMoyenne ? `
+                        <div class="shrink-0 flex flex-col items-center">
+                            <div class="text-[9px] font-black text-slate-400 uppercase mb-0.5">${t.avgShort || 'Moy'}</div>
+                            <div class="px-3 py-1.5 rounded-xl font-black text-sm shadow-sm ${avgColorClass}">${fmt(moyenne)}</div>
+                        </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- Grille des notes -->
+                    <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                        <div class="bg-slate-50 p-2 rounded-xl border border-slate-100 text-center">
+                            <div class="text-[9px] font-bold text-slate-400 uppercase mb-1">${t.ccShort || 'CC'}</div>
+                            <div class="font-bold text-slate-700">${fmt(cc) || '-'}</div>
+                        </div>
+                        <div class="p-2 rounded-xl border border-blue-100 bg-blue-50/50 text-center">
+                            <div class="text-[9px] font-bold text-blue-400 uppercase mb-1">${t.devoirShort || 'Dev'}</div>
+                            <div class="font-black text-blue-700">${fmt(devoir) || '-'}</div>
+                        </div>
+                        ${hasTP ? `
+                        <div class="bg-slate-50 p-2 rounded-xl border border-slate-100 text-center">
+                            <div class="text-[9px] font-bold text-slate-400 uppercase mb-1">${t.tpShort || 'TP'}</div>
+                            <div class="font-bold text-slate-700">${fmt(tp) || '-'}</div>
+                        </div>
+                        ` : ''}
+                        <div class="bg-slate-50 p-2 rounded-xl border border-slate-100 text-center">
+                            <div class="text-[9px] font-bold text-slate-400 uppercase mb-1">${t.compositionShort || 'Comp'}</div>
+                            <div class="font-bold text-slate-700">${fmt(comp) || '-'}</div>
+                        </div>
+                    </div>
+
+                    <!-- Remarques Accordéon -->
+                    ${hasAnyMoyenne ? `
+                    <div class="space-y-2 border-t border-slate-50 pt-3">
+                        <button onclick="window.toggleExportMobileRemark('${s.id}')" class="w-full flex items-center justify-between text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors">
+                            <span class="flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path></svg>
+                                ${t.observationShort || 'Remarques'}
+                            </span>
+                            <svg id="remark-chevron-${s.id}" class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div id="remark-content-${s.id}" class="hidden space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                            <div class="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100">
+                                <div class="text-[9px] font-black text-indigo-400 uppercase mb-1">${t.observationShort || 'Obs'}</div>
+                                <div class="text-xs text-indigo-900 leading-relaxed italic line-clamp-3">${escapeHtml(displayObs) || '-'}</div>
+                            </div>
+                            <div class="bg-purple-50/50 p-3 rounded-xl border border-purple-100">
+                                <div class="text-[9px] font-black text-purple-400 uppercase mb-1">${t.adviceShort || 'Cons'}</div>
+                                <div class="text-xs text-purple-900 leading-relaxed italic line-clamp-3">${escapeHtml(displayCons) || '-'}</div>
+                            </div>
+                            <p class="text-[10px] text-slate-400 text-center italic" data-translate="readOnlyOnMobile">${t.readOnlyOnMobile || 'Consultation uniquement sur mobile'}</p>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+        }).join('');
+
+        preview.innerHTML = `
+            <div class="space-y-4">
+                <div class="bg-indigo-600 rounded-2xl p-4 text-center shadow-lg shadow-indigo-200">
+                    <h3 class="text-white font-black text-lg uppercase tracking-wider">${className}</h3>
+                    <p class="text-indigo-100 text-xs font-bold mt-1">${studentsWithAverages.length} ${t.students}</p>
+                </div>
+                <div class="grid grid-cols-1 gap-4 pb-20">
+                    ${cards}
+                </div>
+            </div>
+        `;
+    }
+
+    window.toggleExportMobileRemark = function(studentId) {
+        const content = document.getElementById(`remark-content-${studentId}`);
+        const chevron = document.getElementById(`remark-chevron-${studentId}`);
+        if (content) {
+            const isHidden = content.classList.contains('hidden');
+            content.classList.toggle('hidden');
+            if (chevron) {
+                chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+            }
         }
     };
 

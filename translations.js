@@ -293,6 +293,7 @@ window.translations = {
         showAdvancedOptions: "Plus d'options (Barème, exercices...)",
         hideAdvancedOptions: "Masquer les options avancées",
         gradeDate: "Date du devoir",
+        readOnlyOnMobile: "Consultation uniquement sur mobile",
         searchClassPlaceholder: "Rechercher une classe...",
 
         // Exercices et questions
@@ -746,6 +747,7 @@ window.translations = {
         showAdvancedOptions: "More options (Scale, exercises...)",
         hideAdvancedOptions: "Hide advanced options",
         gradeDate: "Grade date",
+        readOnlyOnMobile: "Read-only on mobile",
         searchClassPlaceholder: "Search a class...",
 
         // Exercices et questions
