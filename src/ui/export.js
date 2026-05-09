@@ -448,9 +448,19 @@ import { supabase } from './supabase-client.js';
         const select = document.getElementById('select-class-export');
         const t = getTranslations()[getLang()];
         if (!select) return;
-        const currentValue = select.value;
+        
+        // Reset selections
         select.innerHTML = `<option value="">-- ${t.selectClass} --</option>` +
-            classes.map(c => `<option value="${c}" ${c === currentValue ? 'selected' : ''}>${c}</option>`).join('');
+            classes.map(c => `<option value="${c}">${c}</option>`).join('');
+            
+        const subjectSelect = document.getElementById('select-subject-export');
+        if (subjectSelect) subjectSelect.innerHTML = `<option value="">-- Matière --</option>`;
+        
+        const configArea = document.getElementById('export-config');
+        if (configArea) configArea.innerHTML = '';
+        
+        const previewSection = document.getElementById('export-preview-section');
+        if (previewSection) previewSection.classList.add('hidden');
     };
 
     window.onExportClassChange = async function() {
@@ -1664,14 +1674,22 @@ import { supabase } from './supabase-client.js';
         const cfg = getExportClassConfig(className, subject);
         if (!cfg) return;
 
-        // OPTIMISATION : On ne synchronise avec Supabase que si la configuration est prête
-        // (il faut au moins CC + Composition + un Devoir pour calculer une moyenne valide)
+        // OPTIMISATION & SÉCURITÉ :
         const hasCC = !!cfg.ccAssignmentId;
         const hasComp = !!cfg.compAssignmentId;
         const hasDevoir = (cfg.devoir1?.assignmentIds?.length > 0) || (cfg.devoir2?.assignmentIds?.length > 0);
         
-        // Si incomplet, on reste en local (localStorage) sans appeler l'API
-        if (!hasCC || !hasComp || !hasDevoir) return;
+        // Si la config devient incomplète ALORS qu'elle était publiée :
+        // On force le retrait de la publication pour l'élève.
+        if (!hasCC || !hasComp || !hasDevoir) {
+            if (cfg.isPublished) {
+                cfg.isPublished = false;
+                // On continue pour enregistrer le passage à FALSE
+            } else {
+                // Sinon, on ignore l'appel API pour économiser des ressources
+                return;
+            }
+        }
 
         try {
             const { error } = await supabase.rpc('save_grade_calculation_config', {
