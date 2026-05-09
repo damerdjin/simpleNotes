@@ -1664,10 +1664,13 @@ import { supabase } from './supabase-client.js';
         const cfg = getExportClassConfig(className, subject);
         if (!cfg) return;
 
-        // Ne sauvegarder que si au moins CC + Comp + 1 devoir sont configurés
+        // OPTIMISATION : On ne synchronise avec Supabase que si la configuration est prête
+        // (il faut au moins CC + Composition + un Devoir pour calculer une moyenne valide)
         const hasCC = !!cfg.ccAssignmentId;
         const hasComp = !!cfg.compAssignmentId;
         const hasDevoir = (cfg.devoir1?.assignmentIds?.length > 0) || (cfg.devoir2?.assignmentIds?.length > 0);
+        
+        // Si incomplet, on reste en local (localStorage) sans appeler l'API
         if (!hasCC || !hasComp || !hasDevoir) return;
 
         try {
@@ -1687,7 +1690,7 @@ import { supabase } from './supabase-client.js';
 
             if (error) throw error;
         } catch (err) {
-            console.warn('⚠️ Impossible de sauvegarder la configuration dans Supabase:', err);
+            // Silently fail to not interrupt user flow
         }
     };
 
