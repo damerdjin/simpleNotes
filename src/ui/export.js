@@ -453,13 +453,15 @@ import { supabase } from './supabase-client.js';
             classes.map(c => `<option value="${c}" ${c === currentValue ? 'selected' : ''}>${c}</option>`).join('');
     };
 
-    window.onExportClassChange = function() {
+    window.onExportClassChange = async function() {
+        await window.loadExportConfigFromSupabase();
         window.renderExportPrep();
         window.installRakmanaColorAutoUpdate();
         window.updateExportClassCardColor();
     };
 
-    window.onExportSubjectChange = function() {
+    window.onExportSubjectChange = async function() {
+        await window.loadExportConfigFromSupabase();
         window.renderExportPrep();
     };
 
@@ -528,46 +530,7 @@ import { supabase } from './supabase-client.js';
         const allAssigns = allAssignsForClass.filter(a => !currentSubject || (a.subject || a.assignment_subject) === currentSubject);
         const assigns = allAssigns.filter(a => !a.type || a.type === 'devoir');
 
-        // Try to load saved config from Supabase (if available)
-        try {
-            const savedConfig = await window.loadExportPrepFromSupabase();
-            if (savedConfig) {
-                let changed = false;
-                if (savedConfig.cc_assignment_id && savedConfig.cc_assignment_id !== cfg.ccAssignmentId) {
-                    cfg.ccAssignmentId = savedConfig.cc_assignment_id;
-                    changed = true;
-                }
-                if (savedConfig.comp_assignment_id && savedConfig.comp_assignment_id !== cfg.compAssignmentId) {
-                    cfg.compAssignmentId = savedConfig.comp_assignment_id;
-                    changed = true;
-                }
-                if (savedConfig.tp_assignment_id && savedConfig.tp_assignment_id !== cfg.tpAssignmentId) {
-                    cfg.tpAssignmentId = savedConfig.tp_assignment_id;
-                    changed = true;
-                }
-                if (savedConfig.devoir1_config) {
-                    const d1 = typeof savedConfig.devoir1_config === 'string' ? JSON.parse(savedConfig.devoir1_config) : savedConfig.devoir1_config;
-                    if (JSON.stringify(d1) !== JSON.stringify(cfg.devoir1)) {
-                        cfg.devoir1 = d1;
-                        changed = true;
-                    }
-                }
-                if (savedConfig.devoir2_config) {
-                    const d2 = typeof savedConfig.devoir2_config === 'string' ? JSON.parse(savedConfig.devoir2_config) : savedConfig.devoir2_config;
-                    if (JSON.stringify(d2) !== JSON.stringify(cfg.devoir2)) {
-                        cfg.devoir2 = d2;
-                        changed = true;
-                    }
-                }
-                if (savedConfig.is_published !== undefined && savedConfig.is_published !== cfg.isPublished) {
-                    cfg.isPublished = savedConfig.is_published;
-                    changed = true;
-                }
-                if (changed) {
-                    window.saveExportPrepConfig();
-                }
-            }
-        } catch (e) {}
+        // --- Suppression du chargement automatique ici pour éviter les resets ---
 
         if (assigns.length === 1 && (!cfg.devoir1.assignmentIds || cfg.devoir1.assignmentIds.length === 0) && (!cfg.devoir2.assignmentIds || cfg.devoir2.assignmentIds.length === 0)) {
             cfg.devoir1.assignmentIds = [assigns[0].id];
@@ -1620,6 +1583,55 @@ import { supabase } from './supabase-client.js';
         } catch (err) {
             return null;
         }
+    };
+
+    window.loadExportConfigFromSupabase = async function() {
+        const className = document.getElementById('select-class-export')?.value;
+        const subjectSelector = document.getElementById('select-subject-export');
+        const subject = subjectSelector?.value || '';
+        if (!className) return;
+
+        const cfg = getExportClassConfig(className, subject);
+
+        try {
+            const savedConfig = await window.loadExportPrepFromSupabase();
+            if (savedConfig) {
+                let changed = false;
+                if (savedConfig.cc_assignment_id && savedConfig.cc_assignment_id !== cfg.ccAssignmentId) {
+                    cfg.ccAssignmentId = savedConfig.cc_assignment_id;
+                    changed = true;
+                }
+                if (savedConfig.comp_assignment_id && savedConfig.comp_assignment_id !== cfg.compAssignmentId) {
+                    cfg.compAssignmentId = savedConfig.comp_assignment_id;
+                    changed = true;
+                }
+                if (savedConfig.tp_assignment_id && savedConfig.tp_assignment_id !== cfg.tpAssignmentId) {
+                    cfg.tpAssignmentId = savedConfig.tp_assignment_id;
+                    changed = true;
+                }
+                if (savedConfig.devoir1_config) {
+                    const d1 = typeof savedConfig.devoir1_config === 'string' ? JSON.parse(savedConfig.devoir1_config) : savedConfig.devoir1_config;
+                    if (JSON.stringify(d1) !== JSON.stringify(cfg.devoir1)) {
+                        cfg.devoir1 = d1;
+                        changed = true;
+                    }
+                }
+                if (savedConfig.devoir2_config) {
+                    const d2 = typeof savedConfig.devoir2_config === 'string' ? JSON.parse(savedConfig.devoir2_config) : savedConfig.devoir2_config;
+                    if (JSON.stringify(d2) !== JSON.stringify(cfg.devoir2)) {
+                        cfg.devoir2 = d2;
+                        changed = true;
+                    }
+                }
+                if (savedConfig.is_published !== undefined && savedConfig.is_published !== cfg.isPublished) {
+                    cfg.isPublished = savedConfig.is_published;
+                    changed = true;
+                }
+                if (changed) {
+                    window.saveExportPrepConfig();
+                }
+            }
+        } catch (e) {}
     };
 
     window.toggleExportPublish = function() {
