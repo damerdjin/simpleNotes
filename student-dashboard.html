@@ -17,14 +17,6 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        .grade-card {
-            transition: transform 0.2s;
-        }
-
-        .grade-card:active {
-            transform: scale(0.98);
-        }
-
         /* Spinner */
         .loader {
             border: 3px solid #f3f3f3;
@@ -37,13 +29,72 @@
         }
 
         @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
 
-            100% {
-                transform: rotate(360deg);
-            }
+        /* Styles pour les Chips (Filtres de matières) */
+        .subjects-carousel {
+            display: flex;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            gap: 8px;
+            padding: 4px 0;
+        }
+        .subjects-carousel::-webkit-scrollbar {
+            display: none;
+        }
+        .subject-chip {
+            flex: 0 0 auto;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            background: white;
+            color: #6b7280;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .subject-chip.active {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+            transform: translateY(-1px);
+        }
+
+        /* Amélioration des cartes de stats */
+        .stat-card {
+            background: white;
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f3f4f6;
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+        }
+        .stat-card.best::before { background: #10b981; }
+        .stat-card.last::before { background: #f97316; }
+
+        /* Animation des listes */
+        .fade-in-list {
+            animation: fadeInUp 0.4s ease-out forwards;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
@@ -88,81 +139,27 @@
     <!-- Main Content -->
     <main class="p-4 max-w-lg mx-auto pb-24">
 
-        <!-- Filters -->
-        <div class="bg-white rounded-2xl shadow-sm p-4 mb-6 space-y-3">
-            <div class="flex justify-between items-center mb-2">
-                <h2 class="text-sm font-bold text-gray-700 flex items-center gap-2">
-                    <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
-                        </path>
-                    </svg>
-                    <span data-translate="filters">Filtres</span>
-                </h2>
-                <span id="grades-count-badge"
-                    class="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded-full">0 note</span>
+        <!-- 1. FILTERS & NAVIGATION -->
+        <div class="mb-6 space-y-4">
+            <!-- Trimesters -->
+            <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar" id="trimester-chips">
+                <button class="subject-chip active" data-tri="all" data-translate="trimesterAll">Tous</button>
+                <button class="subject-chip" data-tri="1">T1</button>
+                <button class="subject-chip" data-tri="2">T2</button>
+                <button class="subject-chip" data-tri="3">T3</button>
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
-                <select id="filter-year"
-                    class="w-full bg-gray-100 border border-gray-200 text-gray-500 text-sm rounded-xl block p-2.5 outline-none cursor-not-allowed"
-                    disabled>
-                    <option value="current" data-translate="yearCurrent">Année en cours</option>
-                </select>
-                <select id="filter-trimester"
-                    class="w-full bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block p-2.5 outline-none">
-                    <option value="all" data-translate="trimesterAll">Tous les trimestres</option>
-                    <option value="1" data-translate="trimester1">1er Trimestre</option>
-                    <option value="2" data-translate="trimester2">2ème Trimestre</option>
-                    <option value="3" data-translate="trimester3">3ème Trimestre</option>
-                </select>
-            </div>
-            <select id="filter-subject"
-                class="w-full bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block p-2.5 outline-none">
-                <option value="all" data-translate="subjectAll">Toutes les matières</option>
-            </select>
-        </div>
-
-        <!-- Graphique d'évolution -->
-        <div class="bg-white rounded-2xl shadow-sm p-4 mb-6">
-            <h2 class="text-sm font-bold text-gray-700 mb-3" data-translate="progression">Progression</h2>
-            <div class="relative h-48 w-full">
-                <canvas id="progressionChart"></canvas>
+            <!-- Subjects Carousel -->
+            <div class="subjects-carousel no-scrollbar" id="subjects-list-chips">
+                <button class="subject-chip active" data-subj="all" data-translate="subjectAll">Toutes les matières</button>
             </div>
         </div>
 
-        <!-- Stats (Max, Min) -->
-        <div class="grid grid-cols-2 gap-4 mb-6">
-            <div class="bg-white rounded-2xl p-4 shadow-sm border-l-4 border-green-500">
-                <p class="text-xs text-gray-500 font-medium mb-1" data-translate="bestGrade">Meilleure Note</p>
-                <p class="text-xl font-bold text-gray-800" id="stat-max">--/20</p>
-            </div>
-            <div class="bg-white rounded-2xl p-4 shadow-sm border-l-4 border-orange-400">
-                <p class="text-xs text-gray-500 font-medium mb-1" data-translate="lastGrade">Dernière Note</p>
-                <p class="text-xl font-bold text-gray-800" id="stat-last">--/20</p>
-            </div>
-        </div>
-
-        <!-- ============================================================ -->
-        <!-- SECTION MOYENNES FINALES -->
-        <!-- ============================================================ -->
+        <!-- 2. SECTION MOYENNES FINALES -->
         <div id="final-grades-section" class="hidden mb-8">
-            <div class="flex items-center gap-2 mb-4 px-1">
-                <div
-                    class="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-sm">
-                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
-                        </path>
-                    </svg>
-                </div>
-                <div>
-                    <h2 class="text-lg font-bold text-gray-800" data-translate="finalGradesTitle">Moyennes</h2>
-                    <p class="text-xs text-gray-400" data-translate="finalGradesSubtitle">Notes validées par vos
-                        professeurs</p>
-                </div>
-            </div>
-            <!-- Disclaimer Box (Locked State) -->
+            <!-- Header removed to save space, integrated into cards -->
+
+            <!-- Disclaimer Box -->
             <div id="disclaimer-container" class="mt-4 p-5 bg-amber-50 border border-amber-100 rounded-2xl shadow-sm transition-all duration-300">
                 <div class="flex gap-4 mb-4">
                     <div class="flex-shrink-0 w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center text-amber-600 shadow-inner">
@@ -177,17 +174,85 @@
                         </p>
                     </div>
                 </div>
-                <button id="btn-accept-disclaimer" 
-                    class="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl transition shadow-md hover:shadow-lg flex items-center justify-center gap-2 group">
+                <button id="btn-accept-disclaimer" class="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl transition shadow-md hover:shadow-lg flex items-center justify-center gap-2 group">
                     <span data-translate="acceptAndView">J'ai compris, voir mes moyennes</span>
                     <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path>
                     </svg>
                 </button>
             </div>
-
-            <!-- List (Hidden initially) -->
             <div id="final-grades-list" class="space-y-3 hidden opacity-0 transition-opacity duration-500 mt-6"></div>
+        </div>
+
+        <!-- 3. GRAPHIQUE D'ÉVOLUTION -->
+        <div id="chart-section" class="bg-white rounded-3xl shadow-sm p-6 mb-6 border border-gray-100 hidden">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h2 id="chart-main-title" class="text-sm font-bold text-gray-700 uppercase tracking-wider">Évolution notes</h2>
+                    <p id="chart-subject-label" class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mt-1"></p>
+                </div>
+                <span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-600 text-[10px] font-bold" data-translate="subjectAll">Toutes les matières</span>
+            </div>
+            <div class="relative h-48 w-full">
+                <canvas id="progressionChart"></canvas>
+            </div>
+        </div>
+
+        <!-- 4. STATS GRID -->
+        <div class="grid grid-cols-2 gap-4 mb-8">
+            <div class="stat-card best">
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1" data-translate="bestGrade">Meilleure Note</p>
+                <p class="text-2xl font-black text-gray-800" id="stat-max">--/20</p>
+                <p id="stat-max-subject" class="text-[9px] text-gray-400 font-medium truncate mt-1"></p>
+            </div>
+            <div class="stat-card last">
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1" data-translate="lastGrade">Dernière Note</p>
+                <p class="text-2xl font-black text-gray-800" id="stat-last">--/20</p>
+                <p id="stat-last-subject" class="text-[9px] text-gray-400 font-medium truncate mt-1"></p>
+            </div>
+        </div>
+
+        <!-- 5. HISTORIQUE DES NOTES -->
+        <div class="mb-8">
+            <div class="flex items-center gap-2 mb-4 px-1">
+                <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-sm">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <h2 class="text-lg font-bold text-gray-800" data-translate="historyTitle">Historique des notes</h2>
+                    <p class="text-xs text-gray-400" data-translate="historySubtitle">Du plus récent au plus ancien</p>
+                </div>
+                <span id="grades-count-badge" class="text-xs font-bold text-gray-500 bg-gray-100 px-3 py-1 rounded-full">0</span>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loading-state" class="flex flex-col items-center justify-center py-10">
+                <div class="loader mb-3"></div>
+                <p class="text-gray-500 text-sm" data-translate="loadingGrades">Récupération de vos notes...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="error-state" class="hidden flex flex-col items-center justify-center py-10">
+                <div class="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mb-3">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <p class="text-gray-800 font-bold" data-translate="errorTitle">Oups !</p>
+                <p class="text-gray-400 text-xs text-center px-6 mt-1" id="error-message">Une erreur est survenue lors de la récupération des notes.</p>
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="hidden flex flex-col items-center justify-center py-12">
+                <div class="w-20 h-20 bg-gray-50 rounded-3xl flex items-center justify-center mb-4">
+                    <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012-2"></path></svg>
+                </div>
+                <p class="text-gray-800 font-bold" data-translate="emptyTitle">Aucune note trouvée</p>
+                <p class="text-gray-400 text-xs mt-1" data-translate="emptySubtitle">Sélectionnez un autre trimestre ou matière.</p>
+            </div>
+
+            <!-- List -->
+            <div id="grades-list" class="space-y-3"></div>
         </div>
 
         <!-- ============================================================ -->
@@ -370,30 +435,21 @@
 
         let allGrades = [];
         let allFinalGrades = [];
-        let chartInstance = null;
+        let currentTrimester = 'all';
+        let currentSubject = 'all';
+        let progressionChart = null; // Renamed for clarity
         let sessionData = null;
 
-        // Initialize language on page load
         document.addEventListener('DOMContentLoaded', () => {
-            // Load session
             const sessionStr = localStorage.getItem('student_session');
             if (!sessionStr) {
                 window.location.href = '/login.html';
                 return;
             }
 
-            // Initialize language system from localStorage (corrections-language)
-            // This matches the key used in index.html
             const savedLang = localStorage.getItem('corrections-language') || 'fr';
             initLanguage();
             changeLanguage(savedLang);
-
-            // Set language selector to current language
-            const languageSelectorCtrl = document.getElementById('language-selector');
-            if (languageSelectorCtrl) {
-                languageSelectorCtrl.value = savedLang;
-                document.documentElement.lang = savedLang;
-            }
 
             try {
                 sessionData = JSON.parse(sessionStr);
@@ -402,112 +458,17 @@
                 return;
             }
 
-            document.getElementById('student-name').textContent = sessionData.info.name + (sessionData.info.className ? ` - ${sessionData.info.className}` : '');
+            // Display Student Name + Class
+            const studentName = document.getElementById('student-name');
+            if (sessionData.info) {
+                studentName.textContent = sessionData.info.name + (sessionData.info.className ? ` - ${sessionData.info.className}` : '');
+            }
 
             document.getElementById('logout-btn').addEventListener('click', async () => {
-                // Appeler l'API pour nettoyer le cookie sécurisé
-                try {
-                    await fetch('/api/student/logout', { method: 'POST' });
-                } catch (e) {
-                    console.error('Logout error', e);
-                }
-                // Nettoyer le stockage local
+                try { await fetch('/api/student/logout', { method: 'POST' }); } catch (e) {}
                 localStorage.removeItem('student_session');
                 window.location.href = '/login.html';
             });
-
-            // Listeners pour les filtres
-            // filter-year is disabled, no listener needed
-            document.getElementById('filter-trimester').addEventListener('change', renderFilteredView);
-            document.getElementById('filter-subject').addEventListener('change', renderFilteredView);
-
-            // Language selector listener
-            const languageSelector = document.getElementById('language-selector');
-            if (languageSelector) {
-                languageSelector.addEventListener('change', (e) => {
-                    const newLang = e.target.value;
-                    changeLanguage(newLang);
-
-                    // Persist the language choice using the same key as index.html
-                    // Note: changeLanguage already saves to localStorage, but we ensure consistency
-                    // localStorage.setItem('corrections-language', newLang);
-
-                    // Change html lang attribute
-                    document.documentElement.lang = newLang;
-                });
-            }
-
-            // Modal Password
-            const pwdModal = document.getElementById('password-modal');
-            const btnChangePwd = document.getElementById('btn-change-password');
-            const btnCloseModal = document.getElementById('close-password-modal');
-            const pwdForm = document.getElementById('password-form');
-            const pwdError = document.getElementById('password-error');
-            const pwdSuccess = document.getElementById('password-success');
-
-            btnChangePwd.addEventListener('click', () => {
-                pwdModal.classList.remove('hidden');
-                pwdError.classList.add('hidden');
-                pwdSuccess.classList.add('hidden');
-                pwdForm.reset();
-            });
-
-            btnCloseModal.addEventListener('click', () => {
-                pwdModal.classList.add('hidden');
-            });
-
-            pwdForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                pwdError.classList.add('hidden');
-                pwdSuccess.classList.add('hidden');
-
-                const oldPassword = document.getElementById('old-password').value;
-                const newPassword = document.getElementById('new-password').value;
-                const confirmPassword = document.getElementById('confirm-password').value;
-
-                if (newPassword !== confirmPassword) {
-                    pwdError.textContent = "Les nouveaux mots de passe ne correspondent pas.";
-                    pwdError.classList.remove('hidden');
-                    return;
-                }
-
-                const submitBtn = document.getElementById('submit-password');
-                const originalText = submitBtn.textContent;
-                submitBtn.innerHTML = '<div class="loader" style="width: 20px; height: 20px; border-width: 2px;"></div>';
-                submitBtn.disabled = true;
-
-                try {
-                    const res = await fetch('/api/student/change-password', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${sessionData.token}`
-                        },
-                        body: JSON.stringify({ oldPassword, newPassword })
-                    });
-
-                    const data = await res.json();
-
-                    if (!res.ok) {
-                        throw new Error(data.error || 'Erreur lors du changement de mot de passe');
-                    }
-
-                    pwdSuccess.classList.remove('hidden');
-                    setTimeout(() => {
-                        pwdModal.classList.add('hidden');
-                    }, 2000);
-
-                } catch (err) {
-                    pwdError.textContent = err.message;
-                    pwdError.classList.remove('hidden');
-                } finally {
-                    submitBtn.textContent = originalText;
-                    submitBtn.disabled = false;
-                }
-            });
-
-            // Init Pull-to-refresh
-            initPullToRefresh();
 
             // Init Bottom Sheet Modal Events
             initBottomSheet();
@@ -519,19 +480,107 @@
 
             if (btnAccept) {
                 btnAccept.addEventListener('click', () => {
-                    // Transition effect
                     disclaimerContainer.classList.add('opacity-50', 'scale-95', 'pointer-events-none');
                     btnAccept.classList.add('hidden');
-                    
-                    // Show grades
                     finalGradesList.classList.remove('hidden');
                     setTimeout(() => {
                         finalGradesList.classList.add('opacity-100');
-                        disclaimerContainer.classList.add('hidden'); // Hide disclaimer completely after view
+                        disclaimerContainer.classList.add('hidden');
+                        updateChart(); // Affichage immédiat du graphique (Point 1)
                     }, 50);
                 });
             }
 
+            // Gestion des clics sur les chips de trimestre
+            document.querySelectorAll('#trimester-chips .subject-chip').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('#trimester-chips .subject-chip').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentTrimester = btn.dataset.tri;
+                    renderFilteredView();
+                });
+            });
+
+            // Language selector listener
+            const languageSelector = document.getElementById('language-selector');
+            if (languageSelector) {
+                languageSelector.addEventListener('change', (e) => {
+                    const newLang = e.target.value;
+                    changeLanguage(newLang);
+                    document.documentElement.lang = newLang;
+                });
+            }
+
+            // Modal Password Logic
+            const pwdModal = document.getElementById('password-modal');
+            const btnChangePwd = document.getElementById('btn-change-password');
+            const btnCloseModal = document.getElementById('close-password-modal');
+            const pwdForm = document.getElementById('password-form');
+            const pwdError = document.getElementById('password-error');
+            const pwdSuccess = document.getElementById('password-success');
+
+            if (btnChangePwd) {
+                btnChangePwd.addEventListener('click', () => {
+                    pwdModal.classList.remove('hidden');
+                    pwdError.classList.add('hidden');
+                    pwdSuccess.classList.add('hidden');
+                    pwdForm.reset();
+                });
+            }
+
+            if (btnCloseModal) {
+                btnCloseModal.addEventListener('click', () => {
+                    pwdModal.classList.add('hidden');
+                });
+            }
+
+            if (pwdForm) {
+                pwdForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    pwdError.classList.add('hidden');
+                    pwdSuccess.classList.add('hidden');
+
+                    const oldPassword = document.getElementById('old-password').value;
+                    const newPassword = document.getElementById('new-password').value;
+                    const confirmPassword = document.getElementById('confirm-password').value;
+
+                    if (newPassword !== confirmPassword) {
+                        pwdError.textContent = "Les nouveaux mots de passe ne correspondent pas.";
+                        pwdError.classList.remove('hidden');
+                        return;
+                    }
+
+                    const submitBtn = document.getElementById('submit-password');
+                    const originalText = submitBtn.textContent;
+                    submitBtn.innerHTML = '<div class="loader" style="width: 20px; height: 20px; border-width: 2px;"></div>';
+                    submitBtn.disabled = true;
+
+                    try {
+                        const res = await fetch('/api/student/change-password', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${sessionData.token}`
+                            },
+                            body: JSON.stringify({ oldPassword, newPassword })
+                        });
+
+                        const data = await res.json();
+                        if (!res.ok) throw new Error(data.error || 'Erreur');
+
+                        pwdSuccess.classList.remove('hidden');
+                        setTimeout(() => { pwdModal.classList.add('hidden'); }, 2000);
+                    } catch (err) {
+                        pwdError.textContent = err.message;
+                        pwdError.classList.remove('hidden');
+                    } finally {
+                        submitBtn.textContent = originalText;
+                        submitBtn.disabled = false;
+                    }
+                });
+            }
+
+            initPullToRefresh();
             fetchGrades(sessionData.token);
         });
 
@@ -541,16 +590,9 @@
             const emptyState = document.getElementById('empty-state');
 
             try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 10000);
-
                 const res = await fetch('/api/student/grades', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    },
-                    signal: controller.signal
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
-                clearTimeout(timeoutId);
 
                 if (res.status === 401 || res.status === 403) {
                     localStorage.removeItem('student_session');
@@ -559,118 +601,131 @@
                 }
 
                 const data = await res.json();
-
                 if (!res.ok) throw new Error(data.error);
 
                 loadingState.classList.add('hidden');
-
                 if (!data.grades || data.grades.length === 0) {
                     emptyState.classList.remove('hidden');
                     return;
                 }
 
-                // Sort by updated_at descending (newest first)
                 allGrades = data.grades.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
 
                 populateFilters();
-                renderFilteredView();
 
-                // Also fetch final grades (moyennes) from Supabase
+                // Sélection automatique du trimestre actuel
+                const now = new Date();
+                const month = now.getMonth() + 1;
+                let defaultTri = 'all';
+                if (month >= 9 && month <= 12) defaultTri = '1';
+                else if (month >= 1 && month <= 3) defaultTri = '2';
+                else if (month >= 4 && month <= 6) defaultTri = '3';
+
+                const targetChip = document.querySelector(`#trimester-chips .subject-chip[data-tri="${defaultTri}"]`);
+                if (targetChip) {
+                    targetChip.click();
+                } else {
+                    renderFilteredView();
+                }
+
+                // Fetch final grades
                 try {
-                    console.log('[Student Dashboard] sessionData.info:', sessionData?.info);
                     const academicYear = (sessionData?.info?.academicYear) || '';
-                    console.log('[Student Dashboard] academicYear from session:', academicYear);
-                    console.log('[Student Dashboard] Envoi de la requête pour les moyennes finales...');
                     const finalRes = await fetch(`/api/student/grades?type=final&academicYear=${encodeURIComponent(academicYear)}`, {
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
+                        headers: { 'Authorization': `Bearer ${token}` }
                     });
-                    console.log('[Student Dashboard] Réponse reçue status:', finalRes.status);
 
                     if (finalRes.ok) {
                         const finalData = await finalRes.json();
-                        console.log('[Student Dashboard] Données reçues:', finalData);
                         if (finalData.finalGrades && finalData.finalGrades.length > 0) {
                             allFinalGrades = finalData.finalGrades;
                             renderFinalGrades();
-                        } else {
-                            console.log('[Student Dashboard] Aucune moyenne finale retournée par l\'API.');
-                            if (finalData.debug && finalData.debug.availableInDB) {
-                                console.log('[Student Dashboard] CLASSES TROUVÉES DANS LA BASE :');
-                                console.table(finalData.debug.availableInDB);
-                                console.log('[Student Dashboard] VOTRE CLASSE RECHERCHÉE :', finalData.debug.requestedClass);
-                            }
                         }
-                    } else {
-                        const errData = await finalRes.json().catch(() => ({}));
-                        console.error('[Student Dashboard] Erreur API moyennes:', finalRes.status, errData);
                     }
-                } catch (finalErr) {
-                    console.error('[Student Dashboard] Exception lors du chargement des moyennes:', finalErr);
-                }
-
+                } catch (finalErr) {}
             } catch (err) {
                 loadingState.classList.add('hidden');
                 errorState.classList.remove('hidden');
-                console.error(err);
             }
         }
 
         function populateFilters() {
-            const subjects = new Map(); // id -> label
-
+            const subjects = new Map();
             allGrades.forEach(g => {
                 if (g.assignments.subject) {
                     const subjId = g.assignments.subject;
-                    let displaySubject = subjId;
+                    let label = subjId;
                     if (window.subjects) {
                         const sObj = window.subjects.find(s => s.id === subjId);
                         if (sObj) {
                             const currentLang = localStorage.getItem('corrections-language') || 'fr';
-                            displaySubject = sObj[currentLang] || sObj.fr;
+                            label = sObj[currentLang] || sObj.fr;
                         }
                     }
-                    subjects.set(subjId, displaySubject);
+                    subjects.set(subjId, label);
                 }
             });
 
-            // Year dropdown is static, no population needed
+            const chipsContainer = document.getElementById('subjects-list-chips');
+            // Keep only the "All Subjects" button and clear others
+            const allBtn = chipsContainer.querySelector('[data-subj="all"]');
+            chipsContainer.innerHTML = '';
+            chipsContainer.appendChild(allBtn);
 
-            // Populate Subject Dropdown
-            const subjSelect = document.getElementById('filter-subject');
+            // Sort subjects and create chips
             Array.from(subjects.entries()).sort((a, b) => a[1].localeCompare(b[1])).forEach(([id, label]) => {
-                subjSelect.add(new Option(label, id));
+                const btn = document.createElement('button');
+                btn.className = 'subject-chip';
+                btn.dataset.subj = id;
+                btn.textContent = label;
+                btn.onclick = () => {
+                    document.querySelectorAll('#subjects-list-chips .subject-chip').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentSubject = id;
+                    renderFilteredView();
+                };
+                chipsContainer.appendChild(btn);
             });
 
-            // Sélection automatique du trimestre en fonction du mois actuel
-            const currentMonth = new Date().getMonth() + 1; // getMonth() commence à 0 (Janvier = 1)
-            let defaultTri = 'all';
-
-            if (currentMonth >= 9 && currentMonth <= 12) {
-                defaultTri = '1'; // Septembre à Décembre
-            } else if (currentMonth >= 1 && currentMonth <= 3) {
-                defaultTri = '2'; // Janvier à Mars
-            } else if (currentMonth >= 4 && currentMonth <= 5) {
-                defaultTri = '3'; // Avril à Mai
-            } // Juin à Août => 'all'
-
-            document.getElementById('filter-trimester').value = defaultTri;
+            // Re-attach listener for "All" button
+            allBtn.onclick = () => {
+                document.querySelectorAll('#subjects-list-chips .subject-chip').forEach(b => b.classList.remove('active'));
+                allBtn.classList.add('active');
+                currentSubject = 'all';
+                renderFilteredView();
+            };
         }
 
         function renderFilteredView() {
-            const triFilter = document.getElementById('filter-trimester').value;
-            const subjFilter = document.getElementById('filter-subject').value;
-
-            // Appliquer les filtres
             const filteredGrades = allGrades.filter(g => {
-                const matchTri = triFilter === 'all' || g.assignments.trimester === triFilter;
-                const matchSubj = subjFilter === 'all' || g.assignments.subject === subjFilter;
+                const matchTri = currentTrimester === 'all' || g.assignments.trimester == currentTrimester;
+                const matchSubj = currentSubject === 'all' || g.assignments.subject === currentSubject;
                 return matchTri && matchSubj;
             });
 
-            const countText = filteredGrades.length === 1 ? t('gradesCount') : t('gradesCountPlural');
-            document.getElementById('grades-count-badge').textContent = `${filteredGrades.length} ${countText}`;
+            // Point 1: Gestion de la visibilité des sections Moyennes et Évolution
+            const filteredFinals = allFinalGrades.filter(f => currentTrimester === 'all' || f.trimester == currentTrimester);
+            const finalGradesSection = document.getElementById('final-grades-section');
+            const chartSection = document.getElementById('chart-section');
+            
+            if (filteredFinals.length === 0) {
+                if (finalGradesSection) finalGradesSection.classList.add('hidden');
+                if (chartSection) chartSection.classList.add('hidden');
+            } else {
+                if (finalGradesSection) finalGradesSection.classList.remove('hidden');
+                // updateChart décidera lui-même s'il doit s'afficher (ex: si une matière est sélectionnée)
+            }
+
+            // Mettre à jour les vues
+            renderFinalGrades(filteredFinals);
+            updateChart();
+
+            // Update badge (optional but nice)
+            const countBadge = document.getElementById('grades-count-badge');
+            if (countBadge) {
+                const countText = filteredGrades.length === 1 ? t('gradesCount') : t('gradesCountPlural');
+                countBadge.textContent = `${filteredGrades.length} ${countText}`;
+            }
 
             const gradesList = document.getElementById('grades-list');
             const emptyState = document.getElementById('empty-state');
@@ -679,62 +734,48 @@
                 gradesList.innerHTML = '';
                 emptyState.classList.remove('hidden');
                 updateStats([]);
-                updateChart([]);
                 return;
             }
 
             emptyState.classList.add('hidden');
+            updateStats(filteredGrades);
 
-            // Render list
-            gradesList.innerHTML = filteredGrades.map(grade => {
+            gradesList.innerHTML = filteredGrades.map((grade, index) => {
                 const assignment = grade.assignments;
                 const score = grade.score_final;
                 const max = grade.score_max || 20;
 
-                // Get Subject Translation
                 const subjId = assignment.subject;
                 let displaySubject = subjId;
                 if (subjId && window.subjects) {
                     const sObj = window.subjects.find(s => s.id === subjId);
-                    if (sObj) {
-                        const currentLang = localStorage.getItem('corrections-language') || 'fr';
-                        displaySubject = sObj[currentLang] || sObj.fr;
-                    }
+                    if (sObj) displaySubject = sObj[localStorage.getItem('corrections-language') || 'fr'] || sObj.fr;
                 }
 
                 const date = new Date(grade.updated_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
-
-                // Color coding
                 const percentage = (score / max) * 100;
-                let colorClass = 'text-gray-800';
-                let bgClass = 'bg-gray-100';
-                if (percentage >= 50) {
-                    colorClass = 'text-emerald-700';
-                    bgClass = 'bg-emerald-100';
-                } else if (percentage < 50 && score !== null) {
-                    colorClass = 'text-red-600';
-                    bgClass = 'bg-red-100';
-                }
+                let colorClass = percentage >= 50 ? 'text-emerald-700' : 'text-red-600';
+                let bgClass = percentage >= 50 ? 'bg-emerald-100' : 'bg-red-100';
+                if (score === null) { colorClass = 'text-gray-400'; bgClass = 'bg-gray-100'; }
 
-                const scoreDisplay = score !== null ? `<span class="text-xl font-bold ${colorClass}">${score}</span><span class="text-xs text-gray-500">/${max}</span>` : `<span class="text-sm text-gray-500 italic">${t('notGraded')}</span>`;
-
-                // Red Dot pour les notes < 24h
                 const isNew = (Date.now() - new Date(grade.updated_at).getTime()) < 24 * 60 * 60 * 1000;
 
                 return `
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between grade-card relative overflow-hidden active:scale-95 transition-transform" onclick="window.openGradeDetails('${grade.id}')">
-                        ${isNew ? `<div class="absolute top-3 left-3 w-2.5 h-2.5 bg-red-500 rounded-full border border-white" title="${t('newBadge')}"></div>` : ''}
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between grade-card relative overflow-hidden active:scale-95 transition-transform fade-in-list" 
+                         style="animation-delay: ${index * 50}ms"
+                         onclick="window.openGradeDetails('${grade.id}')">
+                        ${isNew ? `<div class="absolute top-3 left-3 w-2 h-2 bg-red-500 rounded-full border border-white"></div>` : ''}
                         
-                        <div class="flex-1 min-w-0 pr-4 py-4 pl-${isNew ? '7' : '4'}">
-                            <div class="flex items-center gap-2 mb-1.5 flex-wrap">
-                                ${displaySubject ? `<span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-600 uppercase tracking-wide border border-purple-100">${displaySubject}</span>` : ''}
-                                ${assignment.trimester ? `<span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-600 uppercase tracking-wide border border-blue-100">T${assignment.trimester}</span>` : ''}
+                        <div class="flex-1 min-w-0 pr-4 py-4 pl-4">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-50 text-emerald-600 uppercase tracking-wider">${displaySubject}</span>
+                                <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-teal-50 text-teal-600 uppercase tracking-wider">T${assignment.trimester}</span>
                             </div>
-                            <h3 class="font-bold text-gray-800 truncate text-sm leading-tight">${assignment.name}</h3>
-                            <p class="text-[11px] text-gray-400 mt-1">${date} • ${assignment.academic_year || t('unknownYear')}</p>
+                            <h3 class="font-bold text-gray-800 truncate text-sm">${assignment.name}</h3>
+                            <p class="text-[10px] text-gray-400 mt-1">${date}</p>
                         </div>
-                        <div class="text-right ${bgClass} px-3 py-4 rounded-r-2xl min-w-[75px] h-full flex flex-col items-center justify-center border-l border-gray-50 flex-shrink-0">
-                            ${scoreDisplay}
+                        <div class="text-right ${bgClass} px-4 py-4 min-w-[80px] h-full flex flex-col items-center justify-center border-l border-gray-50">
+                            ${score !== null ? `<span class="text-lg font-black ${colorClass}">${score}</span><span class="text-[10px] text-gray-500">/${max}</span>` : `<span class="text-xs text-gray-400 italic">${t('notGraded')}</span>`}
                         </div>
                     </div>
                 `;
@@ -744,18 +785,20 @@
             updateChart(filteredGrades);
         }
 
-        function renderFinalGrades() {
+        function renderFinalGrades(dataToRender) {
             const section = document.getElementById('final-grades-section');
             const list = document.getElementById('final-grades-list');
-            if (!allFinalGrades || allFinalGrades.length === 0) {
-                section.classList.add('hidden');
+            const targetData = dataToRender || allFinalGrades;
+
+            if (!targetData || targetData.length === 0) {
+                if (section) section.classList.add('hidden');
                 return;
             }
-            section.classList.remove('hidden');
+            if (section) section.classList.remove('hidden');
 
             // Group final grades by trimester
             const byTrimester = {};
-            allFinalGrades.forEach(fg => {
+            targetData.forEach(fg => {
                 const tri = fg.trimester || 'T1';
                 if (!byTrimester[tri]) byTrimester[tri] = [];
                 byTrimester[tri].push(fg);
@@ -770,12 +813,26 @@
                 const grades = byTrimester[tri];
                 return `
                      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                         <div class="bg-gradient-to-r from-violet-50 to-purple-50 px-4 py-2 border-b border-gray-100">
-                             <span class="text-xs font-bold text-violet-700">Trimestre ${tri.replace('T', '')}</span>
+                         <div class="bg-gradient-to-r from-emerald-600 to-teal-700 px-4 py-3 flex items-center gap-3">
+                             <div class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center">
+                                 <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                 </svg>
+                             </div>
+                             <div>
+                                 <h2 class="text-xs font-black text-white uppercase tracking-wider">${t('finalGradesTitle') || 'Moyennes'} — Trimestre ${tri.replace('T', '')}</h2>
+                             </div>
                          </div>
                          <div class="divide-y divide-gray-50">
                              ${grades.map(fg => {
-                    const subject = fg.subject || 'Matière';
+                    let subject = fg.subject || fg.subject_id || 'Matière';
+                    if (window.subjects) {
+                        const sObj = window.subjects.find(s => s.id === (fg.subject_id || fg.subject));
+                        if (sObj) {
+                            const currentLang = localStorage.getItem('corrections-language') || 'fr';
+                            subject = sObj[currentLang] || sObj.fr;
+                        }
+                    }
                     const cc = fg.cc_score !== null ? fg.cc_score.toFixed(2) : '--';
                     const devoir = fg.devoir_score !== null ? fg.devoir_score.toFixed(2) : '--';
                     const comp = fg.comp_score !== null ? fg.comp_score.toFixed(2) : '--';
@@ -787,11 +844,10 @@
                     return `
                                      <div class="p-4">
                                          <div class="flex items-center justify-between mb-3">
-                                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-violet-50 text-violet-700">
+                                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700">
                                                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                                                  ${subject}
                                              </span>
-                                             <span class="text-xs text-gray-400">${fg.class_name || ''}</span>
                                          </div>
 
                                          <div class="grid grid-cols-5 gap-1.5 mb-3">
@@ -852,103 +908,197 @@
 
         function updateStats(grades) {
             const statMax = document.getElementById('stat-max');
+            const statMaxSubj = document.getElementById('stat-max-subject');
             const statLast = document.getElementById('stat-last');
+            const statLastSubj = document.getElementById('stat-last-subject');
 
             const validGrades = grades.filter(g => g.score_final !== null && g.score_final !== undefined);
 
             if (validGrades.length === 0) {
                 statMax.textContent = '--/20';
+                statMaxSubj.textContent = '';
                 statLast.textContent = '--/20';
+                statLastSubj.textContent = '';
                 return;
             }
 
-            // Normaliser sur 20 pour comparer
-            let maxScore = -1;
+            // Find Max Grade (normalized to 20)
+            let bestGrade = null;
+            let maxNormalized = -1;
+            
             validGrades.forEach(g => {
                 const normalized = (g.score_final / (g.score_max || 20)) * 20;
-                if (normalized > maxScore) maxScore = normalized;
+                if (normalized > maxNormalized) {
+                    maxNormalized = normalized;
+                    bestGrade = g;
+                }
             });
 
-            // Last grade is the first in the sorted array
-            const lastG = validGrades[0];
-            const lastScoreStr = `${lastG.score_final}/${lastG.score_max || 20}`;
+            // Last grade
+            const lastGrade = validGrades[0];
 
-            statMax.textContent = `${maxScore.toFixed(2).replace('.00', '')}/20`;
-            statLast.textContent = lastScoreStr;
+            // Helper to get subject label
+            const getSubj = (g) => {
+                const sid = g.assignments.subject;
+                if (sid && window.subjects) {
+                    const s = window.subjects.find(x => x.id === sid);
+                    if (s) return s[localStorage.getItem('corrections-language') || 'fr'] || s.fr;
+                }
+                return sid;
+            };
+
+            statMax.textContent = `${bestGrade.score_final}/${bestGrade.score_max || 20}`;
+            statMaxSubj.textContent = getSubj(bestGrade);
+            
+            statLast.textContent = `${lastGrade.score_final}/${lastGrade.score_max || 20}`;
+            statLastSubj.textContent = getSubj(lastGrade);
         }
+        function updateChart() {
+            const chartSection = document.getElementById('chart-section');
+            const chartSubjectLabel = document.getElementById('chart-subject-label');
+            const chartMainTitle = document.getElementById('chart-main-title');
 
-        function updateChart(grades) {
-            const validGrades = grades.filter(g => g.score_final !== null && g.score_final !== undefined)
-                .reverse(); // Chronological order for chart
-
-            if (chartInstance) {
-                chartInstance.destroy();
+            if (progressionChart) {
+                progressionChart.destroy();
             }
 
-            if (validGrades.length < 2) {
-                // Not enough data for a chart line
-                document.getElementById('progressionChart').parentElement.style.display = 'none';
+            // Mise à jour du titre dynamique (Point 2)
+            if (chartMainTitle) {
+                const triLabel = currentTrimester === 'all' ? '' : `T${currentTrimester}`;
+                chartMainTitle.textContent = `ÉVOLUTION NOTES ${triLabel}`.toUpperCase();
+            }
+
+            if (!allFinalGrades || allFinalGrades.length === 0) {
+                chartSection.classList.add('hidden');
                 return;
             }
 
-            document.getElementById('progressionChart').parentElement.style.display = 'block';
+            // Filtrer les données globales
+            let filteredFinals = allFinalGrades.filter(f => currentTrimester === 'all' || f.trimester == currentTrimester);
+            
+            // Point 1: Si pas de moyennes pour ce trimestre, on cache
+            if (filteredFinals.length === 0) {
+                chartSection.classList.add('hidden');
+                return;
+            }
 
+            chartSection.classList.remove('hidden');
             const ctx = document.getElementById('progressionChart').getContext('2d');
+            const palette = ['#10b981', '#6366f1', '#f59e0b', '#ef4444', '#ec4899', '#8b5cf6', '#06b6d4'];
+            let displayLabels = [];
+            let datasets = [];
 
-            const labels = validGrades.map(g => {
-                const d = new Date(g.updated_at);
-                return `${d.getDate()}/${d.getMonth() + 1}`;
-            });
+            // POINT 3: Logique différente si une matière est sélectionnée
+            if (currentSubject !== 'all') {
+                // Mode DETAIL : Notes par date pour une seule matière
+                let grades = allGrades.filter(g => 
+                    g.assignments?.subject === currentSubject && 
+                    (currentTrimester === 'all' || g.assignments?.trimester == currentTrimester)
+                );
 
-            const dataPoints = validGrades.map(g => {
-                return (g.score_final / (g.score_max || 20)) * 20; // normalize to 20
-            });
+                // Trier par date
+                grades.sort((a, b) => new Date(a.updated_at) - new Date(b.updated_at));
 
-            chartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: t('noteLabel'),
-                        data: dataPoints,
-                        borderColor: '#10b981', // emerald-500
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                displayLabels = grades.map(g => {
+                    const d = new Date(g.updated_at);
+                    return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+                });
+
+                datasets.push({
+                    label: t('progression') || 'Progression',
+                    data: grades.map(g => g.score_final),
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 3,
+                    pointRadius: 6,
+                    fill: true,
+                    tension: 0.3,
+                    // Store full info for tooltips
+                    assignmentNames: grades.map(g => g.assignments?.name),
+                    assignmentTypes: grades.map(g => g.assignments?.type)
+                });
+
+                if (window.subjects) {
+                    const s = window.subjects.find(x => x.id === currentSubject);
+                    chartSubjectLabel.textContent = s ? (s[localStorage.getItem('corrections-language') || 'fr'] || s.fr) : currentSubject;
+                }
+            } else {
+                // Mode SYNTHESE : Moyennes par type pour toutes les matières
+                displayLabels = ['TP', 'CC', 'Devoir', 'Compo', 'Moyenne'];
+                chartSubjectLabel.textContent = t('subjectAll');
+
+                filteredFinals.forEach((final, idx) => {
+                    const data = [
+                        final.tp_score,
+                        final.cc_score,
+                        final.devoir_score,
+                        final.comp_score,
+                        final.moyenne
+                    ].map(v => (v !== null && v !== undefined) ? v : null);
+
+                    let label = final.subject || final.subject_id;
+                    if (!label && window.subjects) {
+                        const s = window.subjects.find(x => x.id === final.subject_id);
+                        if (s) label = s[localStorage.getItem('corrections-language') || 'fr'] || s.fr;
+                    }
+
+                    datasets.push({
+                        label: label,
+                        data: data,
+                        borderColor: palette[idx % palette.length],
+                        backgroundColor: 'transparent',
                         borderWidth: 3,
-                        pointBackgroundColor: '#fff',
-                        pointBorderColor: '#10b981',
+                        pointRadius: 6,
+                        pointBackgroundColor: palette[idx % palette.length],
+                        pointBorderColor: '#fff',
                         pointBorderWidth: 2,
-                        pointRadius: 4,
-                        fill: true,
-                        tension: 0.3
-                    }]
-                },
+                        fill: false,
+                        spanGaps: true,
+                        tension: 0.2
+                    });
+                });
+            }
+
+            progressionChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels: displayLabels, datasets: datasets },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
                     plugins: {
-                        legend: { display: false },
+                        legend: { 
+                            display: currentSubject === 'all', 
+                            position: 'bottom', 
+                            labels: { boxWidth: 8, font: { size: 10, weight: 'bold' }, usePointStyle: true, padding: 15 } 
+                        },
                         tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            titleColor: '#1f2937',
+                            bodyColor: '#4b5563',
+                            borderColor: '#e5e7eb',
+                            borderWidth: 1,
+                            padding: 10,
                             callbacks: {
-                                label: function (context) {
-                                    const g = validGrades[context.dataIndex];
-                                    return `${g.assignments.name}: ${g.score_final}/${g.score_max || 20}`;
+                                label: function(context) {
+                                    const val = context.parsed.y;
+                                    if (val === null) return null;
+                                    
+                                    // Tooltip personnalisé pour le mode détail
+                                    if (currentSubject !== 'all' && context.dataset.assignmentNames) {
+                                        const type = context.dataset.assignmentTypes[context.dataIndex] || '';
+                                        const name = context.dataset.assignmentNames[context.dataIndex] || '';
+                                        return [`${type} - ${name}`, `Note: ${val.toFixed(2)}/20`];
+                                    }
+                                    
+                                    return `${context.dataset.label}: ${val.toFixed(2)}/20`;
                                 }
                             }
                         }
                     },
                     scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 20,
-                            ticks: { stepSize: 5, color: '#9ca3af', font: { size: 10 } },
-                            grid: { color: '#f3f4f6' },
-                            border: { display: false }
-                        },
-                        x: {
-                            ticks: { color: '#9ca3af', font: { size: 10 } },
-                            grid: { display: false },
-                            border: { display: false }
-                        }
+                        y: { beginAtZero: true, max: 20, ticks: { stepSize: 5, font: { size: 10 } }, grid: { color: '#f3f4f6' }, border: { display: false } },
+                        x: { ticks: { font: { size: 10, weight: 'bold' } }, grid: { display: false }, border: { display: false } }
                     }
                 }
             });

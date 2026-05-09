@@ -52,6 +52,7 @@ window.translations = {
         trimester3: "3ème Trimestre",
         subjectAll: "Toutes les matières",
         progression: "Progression",
+        progressionTitle: "Évolution notes",
         bestGrade: "Meilleure Note",
         lastGrade: "Dernière Note",
         historyTitle: "Historique des notes",
