@@ -68,25 +68,35 @@ async function handleRegularGrades(studentId, res) {
         console.log(`[Student Grades] IDs des notes de l'élève:`, rawGrades.map(g => `${g.assignment_subject}: ${g.assignment_id}`).join(', '));
     }
 
-    const formattedGrades = (rawGrades || []).map(g => ({
-        id: g.id,
-        score_final: g.score_final,
-        score_max: g.score_max,
-        updated_at: g.updated_at,
-        grade_date: g.grade_date,
-        comments: g.comments,
-        class_avg: g.class_avg,
-        class_max: g.class_max,
-        class_min: g.class_min,
-        assignments: {
-            id: g.assignment_id,
-            name: g.assignment_name,
-            subject: g.assignment_subject,
-            trimester: g.assignment_trimester,
-            academic_year: g.academic_year,
-            is_visible: true
-        }
-    }));
+    const formattedGrades = (rawGrades || []).map(g => {
+        // Inferrer le type depuis le nom si nécessaire
+        let type = 'Devoir';
+        const name = (g.assignment_name || '').toLowerCase();
+        if (name.includes('cc') || name.includes('continu')) type = 'CC';
+        else if (name.includes('tp') || name.includes('travaux')) type = 'TP';
+        else if (name.includes('comp') || name.includes('compo')) type = 'Composition';
+
+        return {
+            id: g.id,
+            score_final: g.score_final,
+            score_max: g.score_max,
+            updated_at: g.updated_at,
+            grade_date: g.grade_date,
+            comments: g.comments,
+            class_avg: g.class_avg,
+            class_max: g.class_max,
+            class_min: g.class_min,
+            assignments: {
+                id: g.assignment_id,
+                name: g.assignment_name,
+                subject: g.assignment_subject,
+                trimester: g.assignment_trimester,
+                academic_year: g.academic_year,
+                type: type,
+                is_visible: true
+            }
+        };
+    });
 
     console.log(`[Student Grades] Trouvé ${formattedGrades.length} notes VISIBLES pour cet élève.`);
 
