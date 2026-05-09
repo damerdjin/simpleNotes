@@ -1057,10 +1057,16 @@ import { supabase } from './supabase-client.js';
         });
 
         const hasAnyMoyenne = studentsWithAverages.some(item => item.moyenne !== null);
+        
+        if (!hasAnyMoyenne) {
+            preview.innerHTML = '';
+            document.getElementById('export-preview-section')?.classList.add('hidden');
+            return;
+        }
+
         const btnRakamna = document.getElementById('btn-rakamna');
         if (btnRakamna) {
-            if (hasAnyMoyenne) btnRakamna.classList.remove('hidden');
-            else btnRakamna.classList.add('hidden');
+            btnRakamna.classList.remove('hidden');
         }
         // (boutons Sauvegarder/Annuler supprimés — calcul à la volée)
         const isMobile = window.innerWidth < 768;
