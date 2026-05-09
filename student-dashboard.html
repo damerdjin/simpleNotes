@@ -579,12 +579,17 @@
                 // Fetch final grades
                 try {
                     const academicYear = (sessionData?.info?.academicYear) || '';
+                    console.log('[Debug] Session info:', sessionData?.info);
+                    console.log('[Debug] Fetching final grades for year:', academicYear);
+
                     const finalRes = await fetch(`/api/student/grades?type=final&academicYear=${encodeURIComponent(academicYear)}`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
+                    console.log('[Debug] Final grades API status:', finalRes.status);
 
                     if (finalRes.ok) {
                         const finalData = await finalRes.json();
+                        console.log('[Debug] Final grades received:', finalData.finalGrades?.length || 0);
                         if (finalData.finalGrades && finalData.finalGrades.length > 0) {
                             allFinalGrades = finalData.finalGrades;
                             renderFilteredView(); // Re-render everything with new data
@@ -657,6 +662,7 @@
                 const tri = (f.trimester || '').toString().replace('T', '');
                 return currentTrimester === 'all' || tri == currentTrimester;
             });
+            console.log(`[Debug] Filtered finals for T${currentTrimester}:`, filteredFinals.length);
             const finalGradesSection = document.getElementById('final-grades-section');
             const chartSection = document.getElementById('chart-section');
             
