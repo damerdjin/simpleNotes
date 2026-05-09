@@ -162,7 +162,32 @@
                         professeurs</p>
                 </div>
             </div>
-            <div id="final-grades-list" class="space-y-3"></div>
+            <!-- Disclaimer Box (Locked State) -->
+            <div id="disclaimer-container" class="mt-4 p-5 bg-amber-50 border border-amber-100 rounded-2xl shadow-sm transition-all duration-300">
+                <div class="flex gap-4 mb-4">
+                    <div class="flex-shrink-0 w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center text-amber-600 shadow-inner">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-amber-900 uppercase tracking-tight" data-translate="disclaimerTitle">Note d'information</h4>
+                        <p class="text-[12px] leading-relaxed text-amber-800 mt-1" data-translate="disclaimerText">
+                            Ces notes sont affichées à titre informatif. Seules les notes portées sur le bulletin trimestriel officiel font foi. L'enseignant se réserve le droit de rectifier toute erreur de saisie à tout moment.
+                        </p>
+                    </div>
+                </div>
+                <button id="btn-accept-disclaimer" 
+                    class="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl transition shadow-md hover:shadow-lg flex items-center justify-center gap-2 group">
+                    <span data-translate="acceptAndView">J'ai compris, voir mes moyennes</span>
+                    <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- List (Hidden initially) -->
+            <div id="final-grades-list" class="space-y-3 hidden opacity-0 transition-opacity duration-500 mt-6"></div>
         </div>
 
         <!-- ============================================================ -->
@@ -486,6 +511,26 @@
 
             // Init Bottom Sheet Modal Events
             initBottomSheet();
+
+            // Disclaimer acceptance logic
+            const btnAccept = document.getElementById('btn-accept-disclaimer');
+            const disclaimerContainer = document.getElementById('disclaimer-container');
+            const finalGradesList = document.getElementById('final-grades-list');
+
+            if (btnAccept) {
+                btnAccept.addEventListener('click', () => {
+                    // Transition effect
+                    disclaimerContainer.classList.add('opacity-50', 'scale-95', 'pointer-events-none');
+                    btnAccept.classList.add('hidden');
+                    
+                    // Show grades
+                    finalGradesList.classList.remove('hidden');
+                    setTimeout(() => {
+                        finalGradesList.classList.add('opacity-100');
+                        disclaimerContainer.classList.add('hidden'); // Hide disclaimer completely after view
+                    }, 50);
+                });
+            }
 
             fetchGrades(sessionData.token);
         });
