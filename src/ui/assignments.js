@@ -22,6 +22,7 @@
     let globalMaxPoints = 20;
     let activeClassFilters = []; // État pour les filtres multiples
     let collapsedExercises = {}; // State for exercise accordions
+    let showAdvancedOptions = false;
 
     // Expose functions
     window.toggleExerciseCollapse = function(index) {
@@ -47,10 +48,71 @@
         window.renderAssignments();
     };
 
+    window.toggleAdvancedOptions = function() {
+        showAdvancedOptions = !showAdvancedOptions;
+        const container = document.getElementById('advanced-options-container');
+        const toggleBtn = document.getElementById('toggle-advanced-btn');
+        const t = getTranslations()[getLang()];
+        if (container) {
+            container.classList.toggle('hidden', !showAdvancedOptions);
+        }
+        if (toggleBtn) {
+            toggleBtn.innerHTML = showAdvancedOptions 
+                ? `<svg class="w-4 h-4 rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg> ${t.hideAdvancedOptions || 'Masquer les options avancées'}`
+                : `<svg class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg> ${t.showAdvancedOptions || 'Plus d\'options (Barème, exercices...)'}`;
+        }
+    };
+
+    window.autoSuggestAssignmentName = function() {
+        const nameInput = document.getElementById('assignment-name');
+        const typeSelect = document.getElementById('assignment-type');
+        const classSelect = document.getElementById('assignment-class');
+        const triSelect = document.getElementById('assignment-trimester');
+        const subjectSelect = document.getElementById('assignment-subject');
+        
+        if (!nameInput || !typeSelect || !classSelect || !triSelect || editingAssignmentId) return;
+
+        const type = typeSelect.value;
+        const trimester = triSelect.value;
+        const className = classSelect.value;
+        const subject = subjectSelect?.value || '';
+        const t = getTranslations()[getLang()];
+        const isAr = getLang() === 'ar';
+        const triSuffix = isAr ? `ث${trimester}` : `T${trimester}`;
+
+        if (!className || !type) return;
+
+        let suggestedName = "";
+        if (type === 'comp') {
+            suggestedName = isAr ? `اختبار ${triSuffix}` : `Composition ${triSuffix}`;
+        } else if (type === 'cc') {
+            suggestedName = isAr ? `تقويم ${triSuffix}` : `CC ${triSuffix}`;
+        } else if (type === 'tp') {
+            suggestedName = isAr ? `أعمال تطبيقية ${triSuffix}` : `TP ${triSuffix}`;
+        } else {
+            // Devoir: increment based on existing ones
+            const currentYear = window.getGlobalAcademicYear();
+            const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
+            const existing = getData().assignments.filter(a => 
+                a.className === className && 
+                (a.subject === subject || !subject) && 
+                a.trimester === trimester && 
+                (a.academicYear || '') === currentYear &&
+                (a.createdBy || 'unknown') === userId &&
+                (a.type === 'devoir' || !a.type)
+            );
+            const nextIndex = existing.length + 1;
+            suggestedName = isAr ? `فرض ${nextIndex} ${triSuffix}` : `Devoir ${nextIndex} ${triSuffix}`;
+        }
+
+        nameInput.value = suggestedName;
+    };
+
     window.openAssignmentModal = async function (assignmentId = null) {
         const t = getTranslations()[getLang()];
         const isAr = getLang() === 'ar';
         editingAssignmentId = assignmentId;
+        showAdvancedOptions = !!assignmentId; // Show advanced by default when editing
         collapsedExercises = {}; // Reset accordions when opening modal
         const overlay = document.createElement('div');
         overlay.id = 'assignment-modal';
@@ -108,56 +170,37 @@
             </div>
           </div>
 
-          <!-- Basic Info Section -->
-          <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-4">
-            <div class="flex items-center gap-2 mb-2">
-                <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </div>
-                <h4 class="font-bold text-gray-800 text-sm uppercase ${trackingClass}">${t.generalInfo || 'Informations Générales'}</h4>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <!-- Assignment Name -->
-                <div class="relative group">
-                    <label class="absolute -top-2 ${labelPos} px-1.5 bg-white text-[11px] font-bold text-blue-600 z-10 transition-all group-focus-within:text-blue-700" for="assignment-name">${t.assignmentName || 'Nom du devoir'}</label>
-                    <div class="relative flex items-center">
-                        <div class="absolute ${iconPos} text-gray-400 group-focus-within:text-blue-500 transition-colors">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                        </div>
-                        <input type="text" id="assignment-name" placeholder="${t.assignmentNamePlaceholder || 'Ex: Devoir 1'}" 
-                            class="w-full ${inputPadding} py-3 bg-gray-50/50 border-2 border-gray-100 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all font-medium text-gray-700">
+          <!-- EXPRESS SECTION: Main Info -->
+          <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-5">
+            <!-- Step 1: Class Selection (Always Required First) -->
+            <div class="relative group">
+                <label class="absolute -top-2 ${labelPos} px-1.5 bg-white text-[11px] font-bold text-emerald-600 z-10 transition-all group-focus-within:text-emerald-700" for="assignment-class">${t.selectClass || 'Classe'}</label>
+                <div class="relative flex items-center">
+                    <div class="absolute ${iconPos} text-gray-400 group-focus-within:text-emerald-500 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    </div>
+                    <select id="assignment-class" onchange="window.autoSuggestAssignmentName()" class="w-full ${inputPadding} py-3 bg-emerald-50/30 border-2 border-emerald-100 rounded-xl focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all font-bold text-gray-800 appearance-none cursor-pointer">
+                        <option value="" data-translate="selectClass">${t.selectClass || '-- Sélectionner une classe --'}</option>
+                    </select>
+                    <div class="absolute ${chevronPos} pointer-events-none text-emerald-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </div>
                 </div>
+            </div>
 
-                <!-- Assignment Type -->
+            <div id="express-secondary-fields" class="grid grid-cols-1 md:grid-cols-2 gap-5 opacity-50 pointer-events-none transition-opacity duration-300">
+                <!-- Step 2: Assignment Type -->
                 <div class="relative group">
                     <label class="absolute -top-2 ${labelPos} px-1.5 bg-white text-[11px] font-bold text-rose-600 z-10 transition-all group-focus-within:text-rose-700" for="assignment-type">${t.assignmentType || "Type d'évaluation"}</label>
                     <div class="relative flex items-center">
                         <div class="absolute ${iconPos} text-gray-400 group-focus-within:text-rose-500 transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
                         </div>
-                        <select id="assignment-type" class="w-full ${inputPadding} py-3 bg-gray-50/50 border-2 border-gray-100 rounded-xl focus:bg-white focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 outline-none transition-all font-medium text-gray-700 appearance-none cursor-pointer">
+                        <select id="assignment-type" onchange="window.autoSuggestAssignmentName()" class="w-full ${inputPadding} py-3 bg-gray-50/50 border-2 border-gray-100 rounded-xl focus:bg-white focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 outline-none transition-all font-medium text-gray-700 appearance-none cursor-pointer">
                             <option value="devoir">${t.typeDevoir || 'Devoir'}</option>
                             <option value="cc">${t.typeCC || 'CC'}</option>
                             <option value="tp">${t.typeTP || 'TP'}</option>
                             <option value="comp">${t.typeComp || 'Composition'}</option>
-                        </select>
-                        <div class="absolute ${chevronPos} pointer-events-none text-gray-400">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Class Selection -->
-                <div class="relative group">
-                    <label class="absolute -top-2 ${labelPos} px-1.5 bg-white text-[11px] font-bold text-emerald-600 z-10 transition-all group-focus-within:text-emerald-700" for="assignment-class">${t.selectClass || 'Classe'}</label>
-                    <div class="relative flex items-center">
-                        <div class="absolute ${iconPos} text-gray-400 group-focus-within:text-emerald-500 transition-colors">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                        </div>
-                        <select id="assignment-class" class="w-full ${inputPadding} py-3 bg-gray-50/50 border-2 border-gray-100 rounded-xl focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all font-medium text-gray-700 appearance-none cursor-pointer">
-                            <option value="" data-translate="selectClass">${t.selectClass || '-- Sélectionner une classe --'}</option>
                         </select>
                         <div class="absolute ${chevronPos} pointer-events-none text-gray-400">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -172,7 +215,7 @@
                         <div class="absolute ${iconPos} text-gray-400 group-focus-within:text-purple-500 transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
                         </div>
-                        <select id="assignment-subject" class="w-full ${inputPadding} py-3 bg-gray-50/50 border-2 border-gray-100 rounded-xl focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 outline-none transition-all font-medium text-gray-700 appearance-none cursor-pointer">
+                        <select id="assignment-subject" onchange="window.autoSuggestAssignmentName()" class="w-full ${inputPadding} py-3 bg-gray-50/50 border-2 border-gray-100 rounded-xl focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 outline-none transition-all font-medium text-gray-700 appearance-none cursor-pointer">
                             <option value="">${t.subjectPlaceholder || '-- Sélectionner une matière --'}</option>
                             ${(window.subjects || []).map(s => `<option value="${s.id}">${s[getLang()] || s.fr}</option>`).join('')}
                         </select>
@@ -184,12 +227,12 @@
 
                 <!-- Trimester Selection -->
                 <div class="relative group">
-                    <label class="absolute -top-2 ${labelPos} px-1.5 bg-white text-[11px] font-bold text-amber-600 z-10 transition-all group-focus-within:text-amber-700" for="assignment-trimester">${t.assignmentTrimesterLabel || 'Trimestre du devoir'}</label>
+                    <label class="absolute -top-2 ${labelPos} px-1.5 bg-white text-[11px] font-bold text-amber-600 z-10 transition-all group-focus-within:text-amber-700" for="assignment-trimester">${t.assignmentTrimesterLabel || 'Trimestre'}</label>
                     <div class="relative flex items-center">
                         <div class="absolute ${iconPos} text-gray-400 group-focus-within:text-amber-500 transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                         </div>
-                        <select id="assignment-trimester" class="w-full ${inputPadding} py-3 bg-gray-50/50 border-2 border-gray-100 rounded-xl focus:bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all font-medium text-gray-700 appearance-none cursor-pointer">
+                        <select id="assignment-trimester" onchange="window.autoSuggestAssignmentName()" class="w-full ${inputPadding} py-3 bg-gray-50/50 border-2 border-gray-100 rounded-xl focus:bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all font-medium text-gray-700 appearance-none cursor-pointer">
                             <option value="1">T1</option>
                             <option value="2">T2</option>
                             <option value="3">T3</option>
@@ -199,96 +242,121 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Grade Date Section -->
-            <div class="relative group">
-                <label class="absolute -top-2 ${labelPos} px-1.5 bg-white text-[11px] font-bold text-blue-600 z-10 transition-all group-focus-within:text-blue-700" for="assignment-grade-date">${t.gradeDate || 'Date du devoir'}</label>
-                <div class="relative flex items-center">
-                    <div class="absolute ${iconPos} text-gray-400 group-focus-within:text-blue-500 transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v3m8 4v-3M8 11h.01M8 15h.01M11 8h.01M11 12h.01M11 16h.01"></path></svg>
+                <!-- Step 3: Assignment Name -->
+                <div class="relative group">
+                    <label class="absolute -top-2 ${labelPos} px-1.5 bg-white text-[11px] font-bold text-blue-600 z-10 transition-all group-focus-within:text-blue-700" for="assignment-name">${t.assignmentName || 'Nom du devoir'}</label>
+                    <div class="relative flex items-center">
+                        <div class="absolute ${iconPos} text-gray-400 group-focus-within:text-blue-500 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        </div>
+                        <input type="text" id="assignment-name" placeholder="${t.assignmentNamePlaceholder || 'Ex: Devoir 1'}" 
+                            class="w-full ${inputPadding} py-3 bg-gray-50/50 border-2 border-gray-100 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all font-bold text-blue-800">
                     </div>
-                    <input type="date" id="assignment-grade-date" class="w-full ${inputPadding} py-3 bg-gray-50/50 border-2 border-gray-100 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all font-medium text-gray-700" placeholder="YYYY-MM-DD">
                 </div>
-            </div>
-
-            <!-- Visibility Toggle Section -->
-            <div class="bg-purple-50/50 p-4 rounded-xl border border-purple-100 flex items-center justify-between gap-4 mt-4">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                </div>
-                <div>
-                  <label for="assignment-visible" class="font-semibold text-gray-800 block">${t.visibleToStudents || 'Visible par les élèves'}</label>
-                  <p class="text-xs text-gray-500">${t.visibleToStudentsDesc || 'Autoriser les élèves à voir les notes'}</p>
-                </div>
-              </div>
-              <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" id="assignment-visible" class="sr-only peer">
-                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-              </label>
             </div>
           </div>
 
-          <!-- Mode Toggle Section -->
-          <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100 flex items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-              </div>
-              <div>
-                <label for="assignment-global-only" class="font-semibold text-gray-800 block">${t.globalOnlyLabel || 'Note globale uniquement'}</label>
-                <p class="text-xs text-gray-500">${t.globalOnlyDesc || 'Saisie rapide sans détails par exercice'}</p>
-              </div>
-            </div>
-            <label class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" id="assignment-global-only" class="sr-only peer" onchange="toggleGlobalAssignmentMode(this.checked)">
-              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-            </label>
-          </div>
-
-          <!-- Global Options -->
-          <div id="global-maxpoints-container" class="hidden animate-in slide-in-from-top-2 duration-200">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-amber-50/50 rounded-xl border border-amber-100">
-              <div class="space-y-1">
-                <label class="text-sm font-semibold text-amber-900 ml-1" for="assignment-global-maxpoints">${t.globalMaxLabel || 'Note maximale'}</label>
-                <input type="number" id="assignment-global-maxpoints" class="w-full p-2.5 border-2 border-amber-100 rounded-lg focus:border-amber-500 outline-none" min="0" step="0.25" value="20">
-              </div>
-              <div id="global-default-grade-container" class="${editingAssignmentId ? 'hidden' : ''} space-y-1">
-                <label class="text-sm font-semibold text-amber-900 ml-1" for="assignment-global-defaultgrade">${t.defaultGrade || 'Note par défaut'}</label>
-                <input type="number" id="assignment-global-defaultgrade" class="w-full p-2.5 border-2 border-amber-100 rounded-lg focus:border-amber-500 outline-none" min="0" step="0.25" value="">
-              </div>
-            </div>
-          </div>
-
-          <!-- Exercises Builder -->
-          <div id="exercises-builder-container" class="space-y-4">
-            <div id="exercises-builder" class="space-y-4"></div>
-            
-            <button id="add-exercise-btn" onclick="addExercise()" 
-              class="w-full py-4 border-2 border-dashed border-blue-200 text-blue-600 rounded-xl hover:bg-blue-50 hover:border-blue-400 transition-all flex items-center justify-center gap-2 font-semibold">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-              <span data-translate="addExercise">${t.addExercise || 'Ajouter un exercice'}</span>
+          <!-- ADVANCED OPTIONS TOGGLE -->
+          <div class="flex justify-center">
+            <button id="toggle-advanced-btn" onclick="window.toggleAdvancedOptions()" class="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-blue-600 transition-all px-4 py-2 rounded-xl hover:bg-blue-50">
+                <svg class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                ${t.showAdvancedOptions || 'Plus d\'options (Barème, exercices...)'}
             </button>
           </div>
-          
-          <!-- Copy Grades Container -->
-          <div id="copy-grades-container" class="p-4 bg-indigo-50 border border-indigo-100 rounded-xl hidden animate-in fade-in duration-300">
-              <div class="flex items-start gap-3">
-                <div class="p-2 bg-indigo-100 rounded-lg text-indigo-600 mt-1">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path></svg>
+
+          <!-- ADVANCED SECTION: Collapsible -->
+          <div id="advanced-options-container" class="${showAdvancedOptions ? '' : 'hidden'} space-y-6 animate-in slide-in-from-top-4 duration-300">
+            <!-- Grade Date Section -->
+            <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+                <div class="relative group">
+                    <label class="absolute -top-2 ${labelPos} px-1.5 bg-white text-[11px] font-bold text-blue-600 z-10 transition-all group-focus-within:text-blue-700" for="assignment-grade-date">${t.gradeDate || 'Date du devoir'}</label>
+                    <div class="relative flex items-center">
+                        <div class="absolute ${iconPos} text-gray-400 group-focus-within:text-blue-500 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v3m8 4v-3M8 11h.01M8 15h.01M11 8h.01M11 12h.01M11 16h.01"></path></svg>
+                        </div>
+                        <input type="date" id="assignment-grade-date" class="w-full ${inputPadding} py-3 bg-gray-50/50 border-2 border-gray-100 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all font-medium text-gray-700">
+                    </div>
                 </div>
-                <div class="flex-1">
-                  <label class="block font-semibold text-indigo-900 mb-1" for="copy-grades-source">${t.copyGrades || 'Copier les notes d\'un autre devoir'}</label>
-                  <select id="copy-grades-source" class="w-full p-2.5 border-2 border-indigo-100 rounded-lg bg-white focus:border-indigo-500 outline-none text-sm transition-all">
-                      <option value="">${t.noCopyGrades || '-- Ne pas copier --'}</option>
-                  </select>
-                  <p class="text-xs text-indigo-600 mt-2 italic flex items-center gap-1">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    ${t.copyGradesWarning || 'Les notes existantes seront écrasées.'}
-                  </p>
+
+                <!-- Visibility Toggle -->
+                <div class="bg-purple-50/50 p-4 rounded-xl border border-purple-100 flex items-center justify-between gap-4 mt-4">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600">
+                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                    </div>
+                    <div>
+                      <label for="assignment-visible" class="font-semibold text-gray-800 block text-xs sm:text-sm">${t.visibleToStudents || 'Visible par les élèves'}</label>
+                      <p class="text-[10px] text-gray-500">${t.visibleToStudentsDesc || 'Autoriser les élèves à voir les notes'}</p>
+                    </div>
+                  </div>
+                  <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                    <input type="checkbox" id="assignment-visible" class="sr-only peer" checked>
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                  </label>
+                </div>
+            </div>
+
+            <!-- Mode Toggle Section -->
+            <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100 flex items-center justify-between gap-4">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                </div>
+                <div>
+                  <label for="assignment-global-only" class="font-semibold text-gray-800 block text-xs sm:text-sm">${t.globalOnlyLabel || 'Note globale uniquement'}</label>
+                  <p class="text-[10px] text-gray-500">${t.globalOnlyDesc || 'Saisie rapide sans détails par exercice'}</p>
                 </div>
               </div>
+              <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                <input type="checkbox" id="assignment-global-only" class="sr-only peer" onchange="toggleGlobalAssignmentMode(this.checked)" checked>
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              </label>
+            </div>
+
+            <!-- Global Options -->
+            <div id="global-maxpoints-container" class="animate-in slide-in-from-top-2 duration-200">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-amber-50/50 rounded-xl border border-amber-100">
+                <div class="space-y-1">
+                  <label class="text-sm font-semibold text-amber-900 ml-1" for="assignment-global-maxpoints">${t.globalMaxLabel || 'Note maximale'}</label>
+                  <input type="number" id="assignment-global-maxpoints" class="w-full p-2.5 border-2 border-amber-100 rounded-lg focus:border-amber-500 outline-none font-bold" min="0" step="0.25" value="20">
+                </div>
+                <div id="global-default-grade-container" class="${editingAssignmentId ? 'hidden' : ''} space-y-1">
+                  <label class="text-sm font-semibold text-amber-900 ml-1" for="assignment-global-defaultgrade">${t.defaultGrade || 'Note par défaut'}</label>
+                  <input type="number" id="assignment-global-defaultgrade" class="w-full p-2.5 border-2 border-amber-100 rounded-lg focus:border-amber-500 outline-none" min="0" step="0.25" value="">
+                </div>
+              </div>
+            </div>
+
+            <!-- Exercises Builder -->
+            <div id="exercises-builder-container" class="hidden space-y-4">
+              <div id="exercises-builder" class="space-y-4"></div>
+              
+              <button id="add-exercise-btn" onclick="addExercise()" 
+                class="w-full py-4 border-2 border-dashed border-blue-200 text-blue-600 rounded-xl hover:bg-blue-50 hover:border-blue-400 transition-all flex items-center justify-center gap-2 font-semibold">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                <span data-translate="addExercise">${t.addExercise || 'Ajouter un exercice'}</span>
+              </button>
+            </div>
+            
+            <!-- Copy Grades Container -->
+            <div id="copy-grades-container" class="p-4 bg-indigo-50 border border-indigo-100 rounded-xl hidden animate-in fade-in duration-300">
+                <div class="flex items-start gap-3">
+                  <div class="p-2 bg-indigo-100 rounded-lg text-indigo-600 mt-1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path></svg>
+                  </div>
+                  <div class="flex-1">
+                    <label class="block font-semibold text-indigo-900 mb-1" for="copy-grades-source">${t.copyGrades || 'Copier les notes d\'un autre devoir'}</label>
+                    <select id="copy-grades-source" class="w-full p-2.5 border-2 border-indigo-100 rounded-lg bg-white focus:border-indigo-500 outline-none text-sm transition-all">
+                        <option value="">${t.noCopyGrades || '-- Ne pas copier --'}</option>
+                    </select>
+                    <p class="text-xs text-indigo-600 mt-2 italic flex items-center gap-1">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                      ${t.copyGradesWarning || 'Les notes existantes seront écrasées.'}
+                    </p>
+                  </div>
+                </div>
+            </div>
           </div>
         </div>
 
@@ -392,38 +460,47 @@
                 if (dateInput) {
                     dateInput.value = new Date().toISOString().split('T')[0];
                 }
+            }
 
-                const subjectSelect = document.getElementById('assignment-subject');
-                const classSelect = document.getElementById('assignment-class');
-                const applyAutoSubject = (className = '') => {
-                    if (!subjectSelect) return;
-                    const currentYear = window.getGlobalAcademicYear ? window.getGlobalAcademicYear() : '';
-                    const userEmail = window.currentUser?.email || null;
-                    const userUuid = window.currentUser?.id || null;
-                    const myAssignments = getData().assignments.filter(a => {
-                        const owner = a.createdBy || 'unknown';
-                        const sameOwner = (userEmail && owner === userEmail) || (userUuid && owner === userUuid);
-                        const sameYear = !currentYear || (a.academicYear || '') === currentYear;
-                        const sameClass = !className || (a.className || '') === className;
-                        return sameOwner && sameYear && sameClass;
-                    });
-                    const uniqueSubjects = [...new Set(myAssignments.map(a => (a.subject || '').trim()).filter(Boolean))];
-                    if (uniqueSubjects.length === 1) {
-                        subjectSelect.value = uniqueSubjects[0];
-                    } else if (uniqueSubjects.length > 1) {
-                        subjectSelect.value = '';
-                    }
-                };
-
-                if (subjectSelect) {
-                    applyAutoSubject(classSelect?.value || '');
-                    if (classSelect) {
-                        classSelect.addEventListener('change', () => {
-                            applyAutoSubject(classSelect.value || '');
-                        });
-                    }
+            const subjectSelect = document.getElementById('assignment-subject');
+            const classSelect = document.getElementById('assignment-class');
+            
+            const applyAutoSubject = (className = '') => {
+                if (!subjectSelect) return;
+                
+                // Handle forced sequence: Enable fields if class is selected
+                const secondaryFields = document.getElementById('express-secondary-fields');
+                if (secondaryFields) {
+                    const hasClass = !!className;
+                    secondaryFields.classList.toggle('opacity-50', !hasClass);
+                    secondaryFields.classList.toggle('pointer-events-none', !hasClass);
                 }
 
+                const currentYear = window.getGlobalAcademicYear ? window.getGlobalAcademicYear() : '';
+                const userEmail = window.currentUser?.email || null;
+                const userUuid = window.currentUser?.id || null;
+                const myAssignments = getData().assignments.filter(a => {
+                    const owner = a.createdBy || 'unknown';
+                    const sameOwner = (userEmail && owner === userEmail) || (userUuid && owner === userUuid);
+                    const sameYear = !currentYear || (a.academicYear || '') === currentYear;
+                    const sameClass = !className || (a.className || '') === className;
+                    return sameOwner && sameYear && sameClass;
+                });
+                const uniqueSubjects = [...new Set(myAssignments.map(a => (a.subject || '').trim()).filter(Boolean))];
+                if (uniqueSubjects.length === 1) {
+                    subjectSelect.value = uniqueSubjects[0];
+                } else if (uniqueSubjects.length > 1) {
+                    subjectSelect.value = '';
+                }
+            };
+
+            if (subjectSelect) {
+                applyAutoSubject(classSelect?.value || '');
+                if (classSelect) {
+                    classSelect.addEventListener('change', () => {
+                        applyAutoSubject(classSelect.value || '');
+                    });
+                }
             }
 
             // --- Assignment Type Availability Logic ---
@@ -483,8 +560,14 @@
                 if (typeSelectObj) typeSelectObj.value = assignment.type || 'devoir';
             }
 
-            if (classSelectObj) classSelectObj.addEventListener('change', applyAssignmentTypeAvailability);
-            if (triSelectObj) triSelectObj.addEventListener('change', applyAssignmentTypeAvailability);
+            if (classSelectObj) classSelectObj.addEventListener('change', () => {
+                applyAssignmentTypeAvailability();
+                window.autoSuggestAssignmentName();
+            });
+            if (triSelectObj) triSelectObj.addEventListener('change', () => {
+                applyAssignmentTypeAvailability();
+                window.autoSuggestAssignmentName();
+            });
             
             // Initial call
             applyAssignmentTypeAvailability();
@@ -996,7 +1079,7 @@
                 assignment.name = name;
                 assignment.className = className;
                 assignment.subject = subject;
-                assignment.gradeDate = gradeDate; // Mise à jour de la date
+                assignment.gradeDate = gradeDate || new Date().toISOString().split('T')[0]; // Default to today
                 assignment.type = assignmentType; // Sauvegarde du type
                 assignment.isVisible = isVisible;
                 assignment.trimester = trimester;
@@ -1050,7 +1133,7 @@
                 name,
                 className,
                 subject,
-                gradeDate, // Ajout de la date à la création
+                gradeDate: gradeDate || new Date().toISOString().split('T')[0], // Default to today
                 type: assignmentType, // Sauvegarde du type à la création
                 isVisible,
                 trimester,
