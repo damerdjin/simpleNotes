@@ -505,18 +505,24 @@ import { supabase } from './supabase-client.js';
 
         if (!container || !preview || !meta) return;
 
+        // 1. Si aucune classe n'est choisie, on vide tout
         if (!className) {
             container.innerHTML = '';
             preview.innerHTML = '';
             meta.textContent = '';
             document.getElementById('export-preview-section')?.classList.add('hidden');
-            if (subjectSelector) subjectSelector.innerHTML = '<option value="">-- Matière --</option>';
+            if (subjectSelector) {
+                subjectSelector.innerHTML = '<option value="">-- Matière --</option>';
+                subjectSelector.dataset.lastClass = '';
+            }
             return;
         }
 
+        // 2. Récupération des matières pour la classe choisie
         const allAssignsForClass = getAssignmentsForClass(className);
         const subjectsList = [...new Set(allAssignsForClass.map(a => a.subject || a.assignment_subject).filter(Boolean))];
         
+        // Mise à jour de la liste des matières si la classe a changé
         if (subjectSelector && (subjectSelector.dataset.lastClass !== className)) {
             subjectSelector.dataset.lastClass = className;
             subjectSelector.innerHTML = `<option value="">-- ${t.selectSubject || 'Matière'} --</option>` + 
@@ -525,7 +531,8 @@ import { supabase } from './supabase-client.js';
                     const label = sObj ? (sObj[getLang()] || sObj.fr || sid) : sid;
                     return `<option value="${sid}">${label}</option>`;
                 }).join('');
-            // If there's only one subject, select it automatically
+            
+            // Auto-sélection si une seule matière
             if (subjectsList.length === 1) {
                 subjectSelector.value = subjectsList[0];
             } else {
@@ -533,11 +540,19 @@ import { supabase } from './supabase-client.js';
             }
         }
         
-        // Refresh subject value after possible auto-select
         const currentSubject = subjectSelector?.value || '';
 
+        // 3. SÉCURITÉ : Si aucune matière n'est sélectionnée, on n'affiche pas les notes
+        if (!currentSubject) {
+            container.innerHTML = '';
+            preview.innerHTML = '';
+            meta.textContent = '';
+            document.getElementById('export-preview-section')?.classList.add('hidden');
+            return;
+        }
+
         const cfg = getExportClassConfig(className, currentSubject);
-        const allAssigns = allAssignsForClass.filter(a => !currentSubject || (a.subject || a.assignment_subject) === currentSubject);
+        const allAssigns = allAssignsForClass.filter(a => (a.subject || a.assignment_subject) === currentSubject);
         const assigns = allAssigns.filter(a => !a.type || a.type === 'devoir');
 
         // --- Suppression du chargement automatique ici pour éviter les resets ---
@@ -1670,7 +1685,11 @@ import { supabase } from './supabase-client.js';
         const academicYear = (window.getGlobalAcademicYear && window.getGlobalAcademicYear()) || '';
         if (!academicYear) return;
 
-        const subject = document.getElementById('select-subject-export')?.value || '';
+        const subjectSelector = document.getElementById('select-subject-export');
+        const subject = subjectSelector?.value || '';
+        
+        if (!className || !subject) return;
+
         const cfg = getExportClassConfig(className, subject);
         if (!cfg) return;
 
