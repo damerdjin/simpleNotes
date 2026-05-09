@@ -194,9 +194,9 @@ async function handleFinalGrades(studentId, className, academicYear, res) {
     const simplify = (str) => str ? str.replace(/\s+/g, '').trim() : '';
     const targetSimple = simplify(className);
     const targetYear = normalizedYear;
-    
-    let configs = (allConfigs || []).filter(c => 
-        simplify(c.class_name) === targetSimple && 
+
+    let configs = (allConfigs || []).filter(c =>
+        simplify(c.class_name) === targetSimple &&
         simplify(c.academic_year) === simplify(targetYear) &&
         c.is_published === true
     );
@@ -255,7 +255,7 @@ async function handleFinalGrades(studentId, className, academicYear, res) {
 
     if (gradesErr) console.error('[Student Final Grades] Error fetching grades:', gradesErr);
     console.log(`[Student Final Grades] Student grades found in DB: ${grades?.length || 0} (StudentId: ${studentId})`);
-    
+
     const gradeMap = {};
     (grades || []).forEach(g => {
         gradeMap[g.assignment_id] = g;
