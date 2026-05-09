@@ -343,10 +343,10 @@
                     </button>
                     <div class="custom-dropdown-menu !max-h-48" id="type-dropdown-menu">
                         <div class="custom-dropdown-item selected" data-type="all"><span class="flex-1 truncate text-xs" data-translate="typeAll">Tous les types</span></div>
-                        <div class="custom-dropdown-item" data-type="Devoir"><span class="flex-1 truncate text-xs">Devoir</span></div>
-                        <div class="custom-dropdown-item" data-type="Composition"><span class="flex-1 truncate text-xs">Composition</span></div>
-                        <div class="custom-dropdown-item" data-type="CC"><span class="flex-1 truncate text-xs">Contrôle Continu (CC)</span></div>
-                        <div class="custom-dropdown-item" data-type="TP"><span class="flex-1 truncate text-xs">Travaux Pratiques (TP)</span></div>
+                        <div class="custom-dropdown-item" data-type="devoir"><span class="flex-1 truncate text-xs">Devoir</span></div>
+                        <div class="custom-dropdown-item" data-type="comp"><span class="flex-1 truncate text-xs">Composition</span></div>
+                        <div class="custom-dropdown-item" data-type="cc"><span class="flex-1 truncate text-xs">Contrôle Continu (CC)</span></div>
+                        <div class="custom-dropdown-item" data-type="tp"><span class="flex-1 truncate text-xs">Travaux Pratiques (TP)</span></div>
                     </div>
                 </div>
             </div>
@@ -913,8 +913,8 @@
                 // Le filtre de type ne s'applique que dans la vue historique
                 let matchType = true;
                 if (currentView === 'history' && currentType !== 'all') {
-                    const typeValue = g.assignments.type || g.assignments.assignment_type || '';
-                    matchType = typeValue.toLowerCase().includes(currentType.toLowerCase());
+                    const typeValue = (g.assignments.type || g.assignments.assignment_type || 'devoir').toLowerCase();
+                    matchType = typeValue === currentType.toLowerCase();
                 }
                 
                 return matchTri && matchSubj && matchType;

@@ -104,6 +104,7 @@ create table if not exists public.assignments (
   class_name text not null,
   trimester text,
   subject text,
+  type text default 'devoir',
   grade_date timestamptz, -- Ajout de la date au niveau du devoir
   is_visible boolean default false,
   
@@ -230,6 +231,7 @@ RETURNS TABLE(
    assignment_name TEXT,
    assignment_subject TEXT,
    assignment_trimester TEXT,
+   assignment_type TEXT,
    academic_year TEXT,
    class_avg NUMERIC,
    class_max NUMERIC,
@@ -260,6 +262,7 @@ BEGIN
     a.name as assignment_name,
     a.subject as assignment_subject,
     a.trimester as assignment_trimester,
+    a.type as assignment_type,
     a.academic_year as academic_year,
     cs.class_avg,
     cs.class_max,

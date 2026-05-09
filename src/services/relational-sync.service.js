@@ -131,6 +131,7 @@ export const relationalSyncService = {
                 grade_date: a.gradeDate || null, // Synchroniser la date du devoir
                 trimester: a.trimester || null,
                 subject: a.subject || null,
+                type: a.type || 'devoir',
                 is_visible: a.isVisible || false,
                 config: {
                     exercises: a.exercises || []
