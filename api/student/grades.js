@@ -225,12 +225,20 @@ async function handleFinalGrades(studentId, className, academicYear, res) {
     if (assignmentIds.length === 0) {
         return res.status(200).json({ success: true, finalGrades: [] });
     }
+    console.log('[Student Final Grades] Searching for assignmentIds:', JSON.stringify(assignmentIds));
+
+    // Sample check: what's in the assignments table?
+    const { data: sampleAssigns } = await supabase.from('assignments').select('id').limit(3);
+    console.log('[Student Final Grades] Sample assignments IDs from DB:', JSON.stringify(sampleAssigns?.map(a => a.id)));
 
     // 3. Get assignments details (subject)
-    const { data: assignments } = await supabase
+    const { data: assignments, error: assignErr } = await supabase
         .from('assignments')
         .select('id, subject')
         .in('id', assignmentIds);
+
+    if (assignErr) console.error('[Student Final Grades] Error fetching assignments:', assignErr);
+    console.log(`[Student Final Grades] Assignments found in DB: ${assignments?.length || 0} for ${assignmentIds.length} requested IDs`);
 
     const assignMap = {};
     (assignments || []).forEach(a => {
@@ -238,16 +246,20 @@ async function handleFinalGrades(studentId, className, academicYear, res) {
     });
 
     // 4. Get the student's grades for these assignments
-    const { data: grades } = await supabase
+    const { data: grades, error: gradesErr } = await supabase
         .from('grades')
         .select('assignment_id, score_final, score_max')
         .eq('student_id', studentId)
         .in('assignment_id', assignmentIds);
 
+    if (gradesErr) console.error('[Student Final Grades] Error fetching grades:', gradesErr);
+    console.log(`[Student Final Grades] Student grades found in DB: ${grades?.length || 0} (StudentId: ${studentId})`);
+    
     const gradeMap = {};
     (grades || []).forEach(g => {
         gradeMap[g.assignment_id] = g;
     });
+    console.log(`[Student Final Grades] GradeMap keys:`, Object.keys(gradeMap).join(', '));
 
     // 5. Calculate averages for each config (one per subject per teacher)
     const results = configs.map(cfg => {
