@@ -671,20 +671,9 @@ import { supabase } from './supabase-client.js';
                         <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 font-bold shrink-0 shadow-sm">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                         </div>
-                        <div class="min-w-0 flex-1">
+                        <div class="min-w-0">
                             <h3 class="font-bold text-gray-800 text-lg" data-translate="devoirLabel">${t.devoirLabel || 'Devoir'}</h3>
                             ${assigns.length > 1 ? `<p class="text-xs font-normal text-gray-500 mt-0.5">(${t.average || 'Moyenne'} ${t.devoirShort || 'Dev'} 1 &amp; 2)</p>` : ''}
-                        </div>
-                        <!-- Bouton de Publication -->
-                        <div class="shrink-0 flex items-center gap-2">
-                            <button onclick="toggleExportPublish()" 
-                                class="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all shadow-sm ${cfg.isPublished ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200' : 'bg-blue-600 text-white hover:bg-blue-700'}">
-                                ${cfg.isPublished ? 
-                                    `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> <span>Retirer la publication</span>` : 
-                                    `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg> <span>Publier les moyennes</span>`
-                                }
-                            </button>
-                            ${cfg.isPublished ? '<span class="flex h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>' : ''}
                         </div>
                     </div>
                     
@@ -1195,6 +1184,27 @@ import { supabase } from './supabase-client.js';
                 </table>
             </div>
         `;
+        
+        // --- GESTION DU BOUTON PUBLIER (Près de Rakmana) ---
+        const btnPublish = document.getElementById('btn-publish');
+        if (btnPublish) {
+            if (hasAnyMoyenne) {
+                btnPublish.classList.remove('hidden');
+                btnPublish.classList.add('flex');
+                
+                // Style et contenu
+                if (cfg.isPublished) {
+                    btnPublish.className = "flex items-center justify-center p-2 sm:px-4 sm:py-2 bg-red-50 text-red-600 border border-red-200 rounded-xl font-bold shadow-sm transition active:scale-95";
+                    btnPublish.innerHTML = `<svg class="w-4 h-4 sm:me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> <span class="hidden sm:inline">Retirer la publication</span>`;
+                } else {
+                    btnPublish.className = "flex items-center justify-center p-2 sm:px-4 sm:py-2 bg-indigo-600 text-white rounded-xl font-bold shadow-sm transition active:scale-95";
+                    btnPublish.innerHTML = `<svg class="w-4 h-4 sm:me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg> <span class="hidden sm:inline">Publier les moyennes</span>`;
+                }
+            } else {
+                btnPublish.classList.add('hidden');
+                btnPublish.classList.remove('flex');
+            }
+        }
 
         preview.querySelectorAll(".remark-cell").forEach(cell => {
             const scopeKey = cell.dataset.scope;
