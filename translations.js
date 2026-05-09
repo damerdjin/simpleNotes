@@ -535,7 +535,7 @@ window.translations = {
         resetEmailSent: "Reset email sent! Check your inbox.",
         logout: "Logout",
         preferences: "Preferences",
-        langChangeNote: "Changing the language will log you out.",
+        langChangeNote: "Changing the language will log you out .",
         allowPreviousTrimestersEdit: "Allow editing of previous trimesters",
         allowPreviousTrimestersEditDesc: "Temporarily enable editing for past trimesters (resets on reload).",
         trimesterLockedAlert: "Modification prohibited: this trimester is locked. Enable the option in Configuration to edit.",
