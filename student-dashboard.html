@@ -646,13 +646,17 @@
 
         function renderFilteredView() {
             const filteredGrades = allGrades.filter(g => {
-                const matchTri = currentTrimester === 'all' || g.assignments.trimester == currentTrimester;
+                const tri = (g.assignments.trimester || '').toString().replace('T', '');
+                const matchTri = currentTrimester === 'all' || tri == currentTrimester;
                 const matchSubj = currentSubject === 'all' || g.assignments.subject === currentSubject;
                 return matchTri && matchSubj;
             });
 
             // Point 1: Gestion de la visibilité des sections Moyennes et Évolution
-            const filteredFinals = allFinalGrades.filter(f => currentTrimester === 'all' || f.trimester == currentTrimester);
+            const filteredFinals = allFinalGrades.filter(f => {
+                const tri = (f.trimester || '').toString().replace('T', '');
+                return currentTrimester === 'all' || tri == currentTrimester;
+            });
             const finalGradesSection = document.getElementById('final-grades-section');
             const chartSection = document.getElementById('chart-section');
             
@@ -939,10 +943,11 @@
             // POINT 3: Logique différente si une matière est sélectionnée
             if (currentSubject !== 'all') {
                 // Mode DETAIL : Notes par date pour une seule matière
-                let grades = allGrades.filter(g => 
-                    g.assignments?.subject === currentSubject && 
-                    (currentTrimester === 'all' || g.assignments?.trimester == currentTrimester)
-                );
+                let grades = allGrades.filter(g => {
+                    const tri = (g.assignments?.trimester || '').toString().replace('T', '');
+                    return g.assignments?.subject === currentSubject && 
+                           (currentTrimester === 'all' || tri == currentTrimester);
+                });
 
                 // Trier par date
                 grades.sort((a, b) => new Date(a.updated_at) - new Date(b.updated_at));
