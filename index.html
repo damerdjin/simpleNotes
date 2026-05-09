@@ -1912,32 +1912,70 @@
 
                 <!-- Assignments Tab -->
                 <div id="content-assignments" class="tab-content view-section">
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                            <h2 class="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight rtl:text-right" data-translate="assignmentsManagement">Gestion des Devoirs</h2>
-                            <button onclick="openAssignmentModal()"
-                                class="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl font-bold shadow-lg shadow-green-500/20 transition-all active:scale-95 flex items-center justify-center gap-2 text-sm"
-                                data-translate="createAssignment">
-                                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                                <span>Créer un devoir</span>
-                            </button>
-                        </div>
-                        <!-- Filters -->
-                        <div class="mb-8 space-y-4">
-                            <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                <p class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3" data-translate="filterByClass">Filtrer par classe</p>
-                                <div id="assignment-class-chips" class="flex flex-wrap gap-2"></div>
+                    
+                    <!-- VIEW 1: Class Selection Grid -->
+                    <div id="assignments-view-classes" class="container mx-auto max-w-7xl animate-in fade-in duration-300">
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-8">
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+                                <div class="min-w-0">
+                                    <h2 class="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight rtl:text-right" data-translate="assignmentsManagement">Gestion des Devoirs</h2>
+                                    <p class="text-slate-500 mt-1 text-xs sm:text-sm rtl:text-right" data-translate="selectClassToManageAssignments">Sélectionnez une classe pour gérer ses devoirs</p>
+                                </div>
+                                <button onclick="openAssignmentModal()"
+                                    class="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-green-500/20 transition-all active:scale-95 flex items-center justify-center gap-2 text-sm">
+                                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                    <span data-translate="createAssignment">Créer un devoir</span>
+                                </button>
                             </div>
-                            <div class="relative group">
-                                <input type="text" id="filter-name-assignments" placeholder="Rechercher un devoir..."
-                                    data-translate-placeholder="searchAssignment"
-                                    aria-label="Rechercher un devoir"
-                                    onkeyup="renderAssignments()"
-                                    class="w-full ps-11 pe-4 py-2.5 sm:py-3 bg-white border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-medium text-sm sm:text-base text-slate-600 placeholder:text-slate-400">
+
+                            <!-- Search Classes -->
+                            <div class="relative group mb-8">
+                                <input type="text" id="assignments-class-search" placeholder="Rechercher une classe..." 
+                                    data-translate-placeholder="searchClassPlaceholder"
+                                    oninput="renderAssignmentsClassList()"
+                                    class="w-full ps-11 pe-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-medium text-slate-600 placeholder:text-slate-400 text-sm">
                                 <svg class="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                             </div>
+
+                            <div id="assignments-class-grid" class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
+                                <!-- Injected by JS -->
+                            </div>
                         </div>
-                        <div id="assignments-list" class="space-y-8"></div>
+                    </div>
+
+                    <!-- VIEW 2: Assignment List for Selected Class -->
+                    <div id="assignments-view-list" class="hidden container mx-auto max-w-7xl animate-in slide-in-from-right duration-300">
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-8">
+                            <!-- Header with Back navigation -->
+                            <div class="flex flex-col gap-6 mb-8">
+                                <div class="flex items-center gap-4">
+                                    <button onclick="setAssignmentsSelectedClass('')" class="p-2.5 rounded-xl bg-white text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-all border border-slate-200 shadow-sm shrink-0">
+                                        <svg class="w-5 h-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                                    </button>
+                                    <div class="min-w-0">
+                                        <h2 id="assignment-selected-class-title" class="text-lg sm:text-xl font-bold text-slate-800 break-words leading-tight">--</h2>
+                                        <p class="text-[10px] sm:text-xs font-bold text-blue-600 uppercase tracking-wider" id="assignment-selected-class-stats">--</p>
+                                    </div>
+                                    <button onclick="openAssignmentModal()"
+                                        class="ms-auto bg-green-500 hover:bg-green-600 text-white p-2.5 rounded-xl font-bold shadow-lg shadow-green-500/20 transition-all active:scale-95 flex items-center justify-center gap-2 text-sm">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                        <span class="hidden sm:inline" data-translate="createAssignment">Créer un devoir</span>
+                                    </button>
+                                </div>
+
+                                <!-- Search assignments in this class -->
+                                <div class="relative group">
+                                    <input type="text" id="filter-name-assignments" placeholder="Rechercher un devoir..."
+                                        data-translate-placeholder="searchAssignment"
+                                        aria-label="Rechercher un devoir"
+                                        onkeyup="renderAssignments()"
+                                        class="w-full ps-11 pe-4 py-2.5 sm:py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-medium text-sm sm:text-base text-slate-600 placeholder:text-slate-400">
+                                    <svg class="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                </div>
+                            </div>
+
+                            <div id="assignments-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6"></div>
+                        </div>
                     </div>
                 </div>
 

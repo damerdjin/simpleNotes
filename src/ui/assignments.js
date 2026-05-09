@@ -20,7 +20,8 @@
     window.tempExercises = [];
     let isGlobalAssignment = false;
     let globalMaxPoints = 20;
-    let activeClassFilters = []; // État pour les filtres multiples
+    const assignmentsUiState = { selectedClass: '' };
+    window.assignmentsUiState = assignmentsUiState;
     let collapsedExercises = {}; // State for exercise accordions
     let showAdvancedOptions = false;
 
@@ -70,17 +71,24 @@
         const triSelect = document.getElementById('assignment-trimester');
         const subjectSelect = document.getElementById('assignment-subject');
         
-        if (!nameInput || !typeSelect || !classSelect || !triSelect || editingAssignmentId) return;
-
         const type = typeSelect.value;
         const trimester = triSelect.value;
         const className = classSelect.value;
+
+        // Progressive Locking Logic (Step 3)
+        const step3 = document.getElementById('express-step-3');
+        if (step3) {
+            const hasType = !!type;
+            step3.classList.toggle('opacity-50', !hasType);
+            step3.classList.toggle('pointer-events-none', !hasType);
+        }
+
+        if (!nameInput || !typeSelect || !classSelect || !triSelect || editingAssignmentId) return;
+
         const subject = subjectSelect?.value || '';
         const t = getTranslations()[getLang()];
         const isAr = getLang() === 'ar';
         const triSuffix = isAr ? `ث${trimester}` : `T${trimester}`;
-
-        if (!className || !type) return;
 
         let suggestedName = "";
         if (type === 'comp') {
@@ -188,7 +196,7 @@
                 </div>
             </div>
 
-            <div id="express-secondary-fields" class="grid grid-cols-1 md:grid-cols-2 gap-5 opacity-50 pointer-events-none transition-opacity duration-300">
+            <div id="express-step-2" class="grid grid-cols-1 md:grid-cols-2 gap-5 opacity-50 pointer-events-none transition-opacity duration-300">
                 <!-- Step 2: Assignment Type -->
                 <div class="relative group">
                     <label class="absolute -top-2 ${labelPos} px-1.5 bg-white text-[11px] font-bold text-rose-600 z-10 transition-all group-focus-within:text-rose-700" for="assignment-type">${t.assignmentType || "Type d'évaluation"}</label>
@@ -196,7 +204,8 @@
                         <div class="absolute ${iconPos} text-gray-400 group-focus-within:text-rose-500 transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
                         </div>
-                        <select id="assignment-type" onchange="window.autoSuggestAssignmentName()" class="w-full ${inputPadding} py-3 bg-gray-50/50 border-2 border-gray-100 rounded-xl focus:bg-white focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 outline-none transition-all font-medium text-gray-700 appearance-none cursor-pointer">
+                        <select id="assignment-type" onchange="window.autoSuggestAssignmentName()" class="w-full ${inputPadding} py-3 bg-gray-50/50 border-2 border-gray-100 rounded-xl focus:bg-white focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 outline-none transition-all font-bold text-gray-800 appearance-none cursor-pointer">
+                            <option value="">${t.typePlaceholder || '-- Choisir un type --'}</option>
                             <option value="devoir">${t.typeDevoir || 'Devoir'}</option>
                             <option value="cc">${t.typeCC || 'CC'}</option>
                             <option value="tp">${t.typeTP || 'TP'}</option>
@@ -232,17 +241,19 @@
                         <div class="absolute ${iconPos} text-gray-400 group-focus-within:text-amber-500 transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                         </div>
-                        <select id="assignment-trimester" onchange="window.autoSuggestAssignmentName()" class="w-full ${inputPadding} py-3 bg-gray-50/50 border-2 border-gray-100 rounded-xl focus:bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all font-medium text-gray-700 appearance-none cursor-pointer">
-                            <option value="1">T1</option>
-                            <option value="2">T2</option>
-                            <option value="3">T3</option>
+                        <select id="assignment-trimester" onchange="window.autoSuggestAssignmentName()" class="w-full ${inputPadding} py-3 bg-gray-50/50 border-2 border-gray-100 rounded-xl focus:bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all font-bold text-gray-800 appearance-none cursor-pointer">
+                            <option value="1">${t.trimesterShort || 'T'}1</option>
+                            <option value="2">${t.trimesterShort || 'T'}2</option>
+                            <option value="3">${t.trimesterShort || 'T'}3</option>
                         </select>
                         <div class="absolute ${chevronPos} pointer-events-none text-gray-400">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </div>
                     </div>
                 </div>
+            </div>
 
+            <div id="express-step-3" class="grid grid-cols-1 md:grid-cols-2 gap-5 opacity-50 pointer-events-none transition-opacity duration-300">
                 <!-- Step 3: Assignment Name -->
                 <div class="relative group">
                     <label class="absolute -top-2 ${labelPos} px-1.5 bg-white text-[11px] font-bold text-blue-600 z-10 transition-all group-focus-within:text-blue-700" for="assignment-name">${t.assignmentName || 'Nom du devoir'}</label>
@@ -260,7 +271,7 @@
           <!-- ADVANCED OPTIONS TOGGLE -->
           <div class="flex justify-center">
             <button id="toggle-advanced-btn" onclick="window.toggleAdvancedOptions()" class="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-blue-600 transition-all px-4 py-2 rounded-xl hover:bg-blue-50">
-                <svg class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                <svg class="w-4 h-4 transition-transform ${showAdvancedOptions ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                 ${t.showAdvancedOptions || 'Plus d\'options (Barème, exercices...)'}
             </button>
           </div>
@@ -400,6 +411,14 @@
             const globalMaxInput = document.getElementById('assignment-global-maxpoints');
             if (assignmentId) {
                 if (!assignment) return;
+                
+                // Unlock all steps immediately when editing
+                ['express-step-2', 'express-step-3'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.classList.remove('opacity-50', 'pointer-events-none');
+                    }
+                });
                 document.getElementById('assignment-modal-title').textContent = t.editAssignment || 'Modifier le devoir';
                 document.getElementById('assignment-name').value = assignment.name;
                 document.getElementById('assignment-class').value = assignment.className;
@@ -460,20 +479,32 @@
                 if (dateInput) {
                     dateInput.value = new Date().toISOString().split('T')[0];
                 }
+                
+                const modalTitle = document.getElementById('assignment-modal-title');
+                if (modalTitle) modalTitle.textContent = t.createAssignmentTitle || 'Créer un Devoir';
             }
 
             const subjectSelect = document.getElementById('assignment-subject');
             const classSelect = document.getElementById('assignment-class');
+
+            // --- AUTO-SELECT CLASS IF ONE IS SELECTED IN THE UI ---
+            if (!assignmentId && classSelect && assignmentsUiState.selectedClass) {
+                classSelect.value = assignmentsUiState.selectedClass;
+                // Trigger any side effects like auto-suggesting subject
+                setTimeout(() => {
+                    if (typeof window.autoSuggestAssignmentName === 'function') window.autoSuggestAssignmentName();
+                }, 100);
+            }
             
             const applyAutoSubject = (className = '') => {
                 if (!subjectSelect) return;
                 
                 // Handle forced sequence: Enable fields if class is selected
-                const secondaryFields = document.getElementById('express-secondary-fields');
-                if (secondaryFields) {
+                const step2 = document.getElementById('express-step-2');
+                if (step2) {
                     const hasClass = !!className;
-                    secondaryFields.classList.toggle('opacity-50', !hasClass);
-                    secondaryFields.classList.toggle('pointer-events-none', !hasClass);
+                    step2.classList.toggle('opacity-50', !hasClass);
+                    step2.classList.toggle('pointer-events-none', !hasClass);
                 }
 
                 const currentYear = window.getGlobalAcademicYear ? window.getGlobalAcademicYear() : '';
@@ -771,7 +802,7 @@
                     
                     ${!editingAssignmentId ? `
                         <div class="flex items-center gap-2 px-2 py-1.5 bg-amber-50 rounded-lg border border-amber-100 shadow-sm shrink-0" onclick="event.stopPropagation()">
-                            <span class="text-[10px] font-bold text-amber-600 uppercase tracking-tighter">${t.defaultGrade || 'Def'}</span>
+                            <span class="text-[10px] font-bold text-amber-600 uppercase tracking-tighter">${t.defaultGradeAbbr || 'Def'}</span>
                             <input type="number" placeholder="-" value="${ex.defaultGrade || ''}" min="0" step="0.25"
                                 onchange="window.tempExercises[${i}].defaultGrade = this.value === '' ? '' : parseFloat(this.value)"
                                 aria-label="${t.defaultGrade || 'Note par défaut'}"
@@ -1173,6 +1204,26 @@
             return;
         }
 
+        // --- PROTECTION CONTRE LA SUPPRESSION AVEC NOTES ---
+        let hasGrades = false;
+        const hasGradeFunc = window.hasAnyGradeForAssignment || ((sid, aid) => gradesSvc()?.hasAnyGradeForAssignment?.(data, sid, aid));
+        
+        // On vérifie tous les élèves pour voir si l'un d'eux a une note pour ce devoir
+        for (const student of data.students) {
+            try {
+                if (hasGradeFunc(student.id, id)) {
+                    hasGrades = true;
+                    break;
+                }
+            } catch (e) {}
+        }
+
+        if (hasGrades) {
+            const msg = t.cannotDeleteAssignmentWithGrades || "Impossible de supprimer un devoir qui a déjà des notes saisies. Supprimez d'abord les notes si vous voulez vraiment l'effacer.";
+            if (window.showToast) window.showToast(msg, 'error');
+            return;
+        }
+
         if (!confirm(t.deleteAssignment)) return;
 
         data.assignments = data.assignments.filter(a => a.id !== id);
@@ -1240,7 +1291,6 @@
             content.classList.toggle('open');
             content.style.display = willOpen ? 'block' : 'none';
         }
-        
         if (icon) {
             icon.classList.toggle('open');
             // Force rotate logic
@@ -1252,86 +1302,191 @@
         }
     };
 
+    window.setAssignmentsSelectedClass = async function(className = '') {
+        assignmentsUiState.selectedClass = className;
+        
+        // On scroll vers le haut
+        const contentArea = document.querySelector('#content-assignments');
+        if (contentArea) contentArea.scrollTo({ top: 0, behavior: 'smooth' });
+
+        await window.renderAssignments();
+    };
+
+    window.renderAssignmentsClassList = async function() {
+        const t = getTranslations()[getLang()];
+        const isAr = getLang() === 'ar';
+        const container = document.getElementById('assignments-class-grid');
+        if (!container) return;
+
+        const globalAcademicYear = window.getGlobalAcademicYear();
+        const globalTrimester = window.getGlobalTrimester();
+        if (!globalAcademicYear || !globalTrimester) {
+            container.innerHTML = `<div class="col-span-full text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                <p class="text-slate-500 font-medium">${t.selectAcademicYear}</p>
+            </div>`;
+            return;
+        }
+
+        const search = (document.getElementById('assignments-class-search')?.value || '').toLowerCase();
+        const allClasses = await window.getClasses();
+        const classes = allClasses.filter(c => c.toLowerCase().includes(search));
+        
+        if (classes.length === 0) {
+            container.innerHTML = `<div class="col-span-full text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                <p class="text-slate-500 font-medium">${t.noClassesFound || 'Aucune classe trouvée'}</p>
+            </div>`;
+            return;
+        }
+
+        const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
+        const data = getData();
+        
+        const rows = classes.map(c => {
+            // Count assignments for this class
+            const classAssignments = data.assignments.filter(a => 
+                a.className === c && 
+                (a.academicYear || '') === globalAcademicYear && 
+                (a.trimester || '') === globalTrimester &&
+                (a.createdBy || 'unknown') === userId
+            );
+            
+            const count = classAssignments.length;
+            const color = getClassColor(c);
+            const colorAlpha = color + '44';
+            const levelIcon = window.levelFromClass ? window.levelFromClass(c) : '?';
+
+            let countText = `${count} ${t.assignmentsTab || 'Devoirs'}`;
+            if (isAr) {
+                if (count === 0) countText = 'لا يوجد فروض';
+                else if (count === 1) countText = 'فرض واحد';
+                else if (count === 2) countText = 'فرضان';
+                else if (count <= 10) countText = `${count} فروض`;
+                else countText = `${count} فرضاً`;
+            }
+
+            const cleanedName = window.cleanClassName ? window.cleanClassName(c) : c;
+            let fontSizeClass = isAr ? 'text-[13px] sm:text-2xl' : 'text-sm sm:text-2xl';
+            if (cleanedName.length > 25) fontSizeClass = 'text-[10px] sm:text-lg leading-tight';
+            else if (cleanedName.length > 15) fontSizeClass = 'text-xs sm:text-xl leading-snug';
+
+            const titleClass = isAr ? `${fontSizeClass} font-bold leading-normal` : `${fontSizeClass} font-black leading-tight tracking-tight`;
+            const originClass = isAr ? 'origin-right' : 'origin-left';
+            const flexColFix = 'display: flex !important; flex-direction: column !important;';
+            const flexRowFix = 'display: flex !important; flex-direction: row !important;';
+
+            return `
+                <div onclick="setAssignmentsSelectedClass('${c}')" 
+                    class="class-card-modern group relative bg-white p-3 sm:p-6 rounded-2xl sm:rounded-[2rem] border-2 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col h-full hover:-translate-y-2"
+                    style="--card-color: ${color}; --card-color-alpha: ${colorAlpha};">
+                    
+                    <div class="absolute -start-8 -top-8 w-32 h-32 rounded-full opacity-[0.03] group-hover:opacity-[0.08] transition-all duration-700 group-hover:scale-150" style="background: ${color}"></div>
+                    
+                    <div class="relative z-10 flex flex-col h-full" style="${flexColFix}">
+                        <div class="flex items-start justify-between mb-2 sm:mb-6" style="${flexRowFix}">
+                            <div class="flex flex-col gap-1.5">
+                                <span class="inline-flex items-center px-2 py-0.5 sm:px-3 sm:py-1 bg-slate-50 text-slate-500 rounded-full text-[9px] sm:text-[10px] font-bold border border-slate-100 group-hover:bg-[var(--card-color)] group-hover:text-white group-hover:border-transparent transition-all duration-300">
+                                    ${countText}
+                                </span>
+                            </div>
+                            <div class="flex items-center" style="${flexRowFix}">
+                                <div class="level-badge w-7 h-7 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center text-xs sm:text-lg font-black text-white transform group-hover:rotate-6 transition-all duration-500 shadow-sm">
+                                    ${levelIcon}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex-grow flex flex-col justify-center py-1 sm:py-4" style="${flexColFix}">
+                            <h3 class="card-title-hover ${titleClass} text-slate-800 transition-colors duration-300 line-clamp-3 sm:line-clamp-2 break-words" style="word-break: break-word;" title="${c}">
+                                ${cleanedName}
+                            </h3>
+                        </div>
+
+                        <div class="mt-2 sm:mt-4 pt-2 sm:pt-5 border-t border-slate-50 flex items-center justify-end" style="${flexRowFix}">
+                            <div class="text-[10px] font-bold text-slate-300 group-hover:text-[var(--card-color)] transition-colors uppercase tracking-widest flex items-center gap-1">
+                                <span>${t.viewDetail || 'Voir'}</span>
+                                <svg class="w-3 h-3 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bottom-bar absolute bottom-0 start-0 w-full h-1.5 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ${originClass}"></div>
+                </div>
+            `;
+        }).join('');
+
+        container.innerHTML = rows;
+    };
+
     window.renderAssignments = async function() {
         const t = getTranslations()[getLang()];
         const isAr = getLang() === 'ar';
         const container = document.getElementById('assignments-list');
-        const chipsContainer = document.getElementById('assignment-class-chips');
         const filterName = document.getElementById('filter-name-assignments')?.value.toLowerCase() || '';
         const data = getData();
 
         const globalAcademicYear = window.getGlobalAcademicYear();
-        if (!globalAcademicYear) {
-            container.innerHTML = `<p class="text-gray-500 text-center py-8">${t.selectAcademicYear || 'Veuillez sélectionner une année scolaire.'}</p>`;
+        const globalTrimester = window.getGlobalTrimester();
+
+        const viewClasses = document.getElementById('assignments-view-classes');
+        const viewList = document.getElementById('assignments-view-list');
+
+        if (!globalAcademicYear || !globalTrimester) {
+            if (container) container.innerHTML = `<p class="text-gray-500 text-center py-8">${t.selectAcademicYear || 'Veuillez sélectionner une année scolaire.'}</p>`;
             return;
         }
 
-        const globalTrimester = window.getGlobalTrimester();
-        const createBtn = document.querySelector('#content-assignments button[onclick="openAssignmentModal()"]');
-        if (createBtn) {
-            createBtn.disabled = !globalTrimester;
-            createBtn.classList.toggle('opacity-50', !globalTrimester);
-            createBtn.classList.toggle('cursor-not-allowed', !globalTrimester);
+        // Toggle View Visibility
+        const selectedClass = assignmentsUiState.selectedClass;
+        if (!selectedClass) {
+            if (viewList) viewList.classList.add('hidden');
+            if (viewClasses) viewClasses.classList.remove('hidden');
+            await window.renderAssignmentsClassList();
+            return;
+        } else {
+            if (viewClasses) viewClasses.classList.add('hidden');
+            if (viewList) viewList.classList.remove('hidden');
         }
 
+        // --- View Mode: List Assignments for Selected Class ---
         const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
 
-        // Gérer les Chips de classe
-        const assignmentsForYearAndUser = data.assignments.filter(a => (a.academicYear || '') === globalAcademicYear && (a.createdBy || 'unknown') === userId && (a.trimester || '') === globalTrimester);
-        const allClasses = [...new Set(assignmentsForYearAndUser.map(a => a.className))].filter(Boolean).sort();
-        if (chipsContainer) {
-            const allChip = `<button onclick="toggleAssignmentClassFilter('')" class="whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-bold transition-all ${activeClassFilters.length === 0 ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-100'}">${t.allClassesFilter || 'Toutes'}</button>`;
-            const classChips = allClasses.map(c => {
-                const isActive = activeClassFilters.includes(c);
-                const classColor = getClassColor(c);
-                const borderStyle = `border-color: ${classColor}; border-width: 2px;`;
-                const activeStyle = isActive ? `background-color: ${classColor}; color: white; border-color: ${classColor};` : `background-color: white; color: ${classColor};`;
-                
-                return `<button onclick="toggleAssignmentClassFilter('${c}')" 
-                    style="${activeStyle} ${!isActive ? borderStyle : ''}"
-                    class="whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-bold transition-all shadow-sm hover:scale-105 active:scale-95">
-                    ${c}
-                </button>`;
-            }).join('');
-            
-            // UX: Scroll horizontal sur mobile, wrap sur desktop
-            chipsContainer.className = "flex overflow-x-auto sm:flex-wrap gap-2 pb-2 sm:pb-0 custom-scrollbar";
-            chipsContainer.innerHTML = allChip + classChips;
-        }
+        // Update List Header
+        const titleEl = document.getElementById('assignment-selected-class-title');
+        const statsEl = document.getElementById('assignment-selected-class-stats');
+        if (titleEl) titleEl.textContent = selectedClass;
 
         let filteredAssignments = data.assignments.filter(a => {
             const matchUser = (a.createdBy || 'unknown') === userId;
-            const matchClass = activeClassFilters.length === 0 || activeClassFilters.includes(a.className);
+            const matchClass = a.className === selectedClass;
             const matchName = !filterName || a.name.toLowerCase().includes(filterName);
-            const globalTrimester = window.getGlobalTrimester();
-            const matchTrimester = globalTrimester ? (a.trimester || '') === globalTrimester : false;
-            const matchAcademicYear = globalAcademicYear ? (a.academicYear || '') === globalAcademicYear : false;
+            const matchTrimester = (a.trimester || '') === globalTrimester;
+            const matchAcademicYear = (a.academicYear || '') === globalAcademicYear;
             return matchUser && matchClass && matchName && matchTrimester && matchAcademicYear;
         });
 
-        if (data.assignments.length === 0) {
-            container.innerHTML = `<p class="text-gray-500 text-center py-8">${t.noAssignments}</p>`;
-            return;
+        if (statsEl) {
+            let countLabel = `${filteredAssignments.length} ${t.assignmentsTab || 'devoirs'}`;
+            if (isAr) {
+                const count = filteredAssignments.length;
+                if (count === 0) countLabel = 'لا يوجد فروض';
+                else if (count === 1) countLabel = 'فرض واحد';
+                else if (count === 2) countLabel = 'فرضان';
+                else if (count <= 10) countLabel = `${count} فروض`;
+                else countLabel = `${count} فرضاً`;
+            }
+            statsEl.textContent = countLabel;
         }
 
         if (filteredAssignments.length === 0) {
-            container.innerHTML = `<p class="text-gray-500 text-center py-8">${t.noFilteredAssignments}</p>`;
+            container.innerHTML = `<div class="col-span-full text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                <p class="text-slate-500 font-medium">${t.noFilteredAssignments || 'Aucun devoir trouvé'}</p>
+            </div>`;
             return;
         }
 
-        // Grouper les devoirs par classe
-        const groupedByClass = filteredAssignments.reduce((groups, a) => {
-            const className = a.className || t.noClass;
-            if (!groups[className]) groups[className] = [];
-            groups[className].push(a);
-            return groups;
-        }, {});
-
-        // Rendu des groupes
-        let finalHtml = '';
-        for (const [className, classAssignments] of Object.entries(groupedByClass)) {
-            let assignmentsHTML = '';
-            for (const a of classAssignments) {
+        // Rendu des devoirs
+        let assignmentsHTML = '';
+        for (const a of filteredAssignments) {
                 const totalPoints = gradesSvc().getAssignmentMaxPoints(a);
                 
                 // --- LOGIQUE DE COMPTAGE FUSIONNÉE ET FILTRÉE ---
@@ -1483,21 +1638,8 @@
                     </div>
                 </div>
                 `;
-            }
-            finalHtml += `
-            <div class="assignment-class-group">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="h-8 w-1.5 rounded-full" style="background-color: ${getClassColor(className)}"></div>
-                    <h3 class="text-xl font-bold text-gray-700">${className}</h3>
-                    <span class="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs font-bold rounded-full">${classAssignments.length}</span>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    ${assignmentsHTML}
-                </div>
-            </div>
-            `;
         }
-        container.innerHTML = finalHtml;
+        container.innerHTML = assignmentsHTML;
         
         translatePage();
     };
@@ -1505,6 +1647,10 @@
     // Import is handled in index.html for now, or we can move it here if the input handler is global
     // But index.html usually has the file input listener. 
     // If handleAssignmentImport is called from HTML, we can expose it.
+
+    window.loadClassSelectorsForAssignments = async function() {
+        if (window.loadClassSelectors) await window.loadClassSelectors();
+    };
 
     window.handleAssignmentImport = function(event) {
         // Implementation logic for importing assignments...
