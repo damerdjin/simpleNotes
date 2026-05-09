@@ -197,7 +197,8 @@ async function handleFinalGrades(studentId, className, academicYear, res) {
     
     let configs = (allConfigs || []).filter(c => 
         simplify(c.class_name) === targetSimple && 
-        simplify(c.academic_year) === simplify(targetYear)
+        simplify(c.academic_year) === simplify(targetYear) &&
+        c.is_published === true
     );
 
     if (!configs || configs.length === 0) {

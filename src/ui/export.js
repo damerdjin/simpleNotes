@@ -504,7 +504,6 @@ import { supabase } from './supabase-client.js';
 
         const allAssignsForClass = getAssignmentsForClass(className);
         const subjectsList = [...new Set(allAssignsForClass.map(a => a.subject || a.assignment_subject).filter(Boolean))];
-        console.log('[Export Prep] Subjects List generated:', subjectsList, 'from', allAssignsForClass.length, 'assignments');
         
         if (subjectSelector && (subjectSelector.dataset.lastClass !== className)) {
             subjectSelector.dataset.lastClass = className;
@@ -560,17 +559,15 @@ import { supabase } from './supabase-client.js';
                         changed = true;
                     }
                 }
-                if (savedConfig.out_max && savedConfig.out_max !== cfg.outMax) {
-                    cfg.outMax = savedConfig.out_max;
+                if (savedConfig.is_published !== undefined && savedConfig.is_published !== cfg.isPublished) {
+                    cfg.isPublished = savedConfig.is_published;
                     changed = true;
                 }
                 if (changed) {
                     window.saveExportPrepConfig();
                 }
             }
-        } catch (e) {
-            // Silently fail - Supabase might not be available
-        }
+        } catch (e) {}
 
         if (assigns.length === 1 && (!cfg.devoir1.assignmentIds || cfg.devoir1.assignmentIds.length === 0) && (!cfg.devoir2.assignmentIds || cfg.devoir2.assignmentIds.length === 0)) {
             cfg.devoir1.assignmentIds = [assigns[0].id];
@@ -674,9 +671,20 @@ import { supabase } from './supabase-client.js';
                         <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 font-bold shrink-0 shadow-sm">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                         </div>
-                        <div class="min-w-0">
+                        <div class="min-w-0 flex-1">
                             <h3 class="font-bold text-gray-800 text-lg" data-translate="devoirLabel">${t.devoirLabel || 'Devoir'}</h3>
                             ${assigns.length > 1 ? `<p class="text-xs font-normal text-gray-500 mt-0.5">(${t.average || 'Moyenne'} ${t.devoirShort || 'Dev'} 1 &amp; 2)</p>` : ''}
+                        </div>
+                        <!-- Bouton de Publication -->
+                        <div class="shrink-0 flex items-center gap-2">
+                            <button onclick="toggleExportPublish()" 
+                                class="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all shadow-sm ${cfg.isPublished ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200' : 'bg-blue-600 text-white hover:bg-blue-700'}">
+                                ${cfg.isPublished ? 
+                                    `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> <span>Retirer la publication</span>` : 
+                                    `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg> <span>Publier les moyennes</span>`
+                                }
+                            </button>
+                            ${cfg.isPublished ? '<span class="flex h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>' : ''}
                         </div>
                     </div>
                     
@@ -1600,9 +1608,21 @@ import { supabase } from './supabase-client.js';
             if (error) throw error;
             return data && data.length > 0 ? data[0] : null;
         } catch (err) {
-            console.warn('⚠️ Impossible de charger la configuration depuis Supabase:', err);
             return null;
         }
+    };
+
+    window.toggleExportPublish = function() {
+        const className = document.getElementById('select-class-export')?.value;
+        const subject = document.getElementById('select-subject-export')?.value || '';
+        if (!className) return;
+
+        const cfg = getExportClassConfig(className, subject);
+        cfg.isPublished = !cfg.isPublished;
+        
+        window.saveExportPrepConfig();
+        window.renderExportPrep();
+        window.saveCurrentConfigToSupabase();
     };
 
     /**
@@ -1639,7 +1659,8 @@ import { supabase } from './supabase-client.js';
                 p_tp_assignment_id: String(cfg.tpAssignmentId || ''),
                 p_devoir1_config: cfg.devoir1 || { assignmentIds: [], combine: 'sum', normalize: true, targetMax: 20 },
                 p_devoir2_config: cfg.devoir2 || { assignmentIds: [], combine: 'sum', normalize: true, targetMax: 20 },
-                p_out_max: Number(cfg.outMax || 20)
+                p_out_max: Number(cfg.outMax || 20),
+                p_is_published: !!cfg.isPublished
             });
 
             if (error) throw error;

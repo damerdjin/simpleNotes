@@ -335,6 +335,7 @@ CREATE TABLE IF NOT EXISTS public.grade_calculation_configs (
   -- Barème de sortie (sur 20 par défaut)
   out_max NUMERIC NOT NULL DEFAULT 20,
 
+  is_published BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now(),
 
@@ -407,7 +408,8 @@ CREATE OR REPLACE FUNCTION public.save_grade_calculation_config(
   p_tp_assignment_id TEXT DEFAULT '',
   p_devoir1_config JSONB DEFAULT '{"assignmentIds":[],"combine":"sum","normalize":true,"targetMax":20}'::jsonb,
   p_devoir2_config JSONB DEFAULT '{"assignmentIds":[],"combine":"sum","normalize":true,"targetMax":20}'::jsonb,
-  p_out_max NUMERIC DEFAULT 20
+  p_out_max NUMERIC DEFAULT 20,
+  p_is_published BOOLEAN DEFAULT FALSE
 )
 RETURNS UUID
 SECURITY DEFINER
@@ -418,11 +420,11 @@ BEGIN
   INSERT INTO public.grade_calculation_configs
     (user_id, academic_year, trimester, class_name, subject,
      cc_assignment_id, comp_assignment_id, tp_assignment_id,
-     devoir1_config, devoir2_config, out_max)
+     devoir1_config, devoir2_config, out_max, is_published)
   VALUES
     (auth.uid(), p_academic_year, p_trimester, p_class_name, p_subject,
      p_cc_assignment_id, p_comp_assignment_id, p_tp_assignment_id,
-     p_devoir1_config, p_devoir2_config, p_out_max)
+     p_devoir1_config, p_devoir2_config, p_out_max, p_is_published)
   ON CONFLICT (user_id, academic_year, trimester, class_name, subject)
   DO UPDATE SET
     cc_assignment_id = EXCLUDED.cc_assignment_id,
@@ -431,6 +433,7 @@ BEGIN
     devoir1_config = EXCLUDED.devoir1_config,
     devoir2_config = EXCLUDED.devoir2_config,
     out_max = EXCLUDED.out_max,
+    is_published = EXCLUDED.is_published,
     updated_at = now()
   RETURNING id INTO v_config_id;
 
@@ -454,6 +457,7 @@ RETURNS TABLE(
   devoir1_config JSONB,
   devoir2_config JSONB,
   out_max NUMERIC,
+  is_published BOOLEAN,
   updated_at TIMESTAMPTZ
 )
 SECURITY DEFINER
@@ -468,6 +472,7 @@ BEGIN
     gcc.devoir1_config,
     gcc.devoir2_config,
     gcc.out_max,
+    gcc.is_published,
     gcc.updated_at
   FROM public.grade_calculation_configs gcc
   WHERE gcc.user_id = auth.uid()
