@@ -46,7 +46,7 @@ window.translations = {
         gradesCount: "note",
         gradesCountPlural: "notes",
         yearCurrent: "Année en cours",
-        trimesterAll: "Tous les trimestres",
+        trimesterAll: "Tous",
         trimester1: "1er Trimestre",
         trimester2: "2ème Trimestre",
         trimester3: "3ème Trimestre",

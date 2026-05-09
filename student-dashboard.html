@@ -505,10 +505,10 @@
                 return;
             }
 
-            // Display Student Name + Class
+            // Display Student Name
             const studentName = document.getElementById('student-name');
             if (sessionData.info) {
-                studentName.textContent = sessionData.info.name + (sessionData.info.className ? ` - ${sessionData.info.className}` : '');
+                studentName.textContent = sessionData.info.name;
             }
 
             document.getElementById('logout-btn').addEventListener('click', async () => {
@@ -833,7 +833,13 @@
             emptyState.classList.add('hidden');
             updateStats(filteredGrades);
 
-            gradesList.innerHTML = filteredGrades.map((grade, index) => {
+            // Sort to ensure chronological (recent first)
+            filteredGrades.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+
+            // Limit to 10 most recent grades to avoid long scrolling
+            const recentGrades = filteredGrades.slice(0, 10);
+
+            gradesList.innerHTML = recentGrades.map((grade, index) => {
                 const assignment = grade.assignments;
                 const score = grade.score_final;
                 const max = grade.score_max || 20;
@@ -1050,6 +1056,15 @@
             const chartSection = document.getElementById('chart-section');
             const chartSubjectLabel = document.getElementById('chart-subject-label');
             const chartMainTitle = document.getElementById('chart-main-title');
+
+            if (!chartSection) return;
+
+            // Ne pas afficher le graphique si le disclaimer est toujours visible
+            const disclaimerContainer = document.getElementById('disclaimer-container');
+            if (disclaimerContainer && !disclaimerContainer.classList.contains('hidden')) {
+                chartSection.classList.add('hidden');
+                return;
+            }
 
             if (progressionChart) {
                 progressionChart.destroy();
