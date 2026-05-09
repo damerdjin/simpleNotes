@@ -33,38 +33,120 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Styles pour les Chips (Filtres de matières) */
-        .subjects-carousel {
+        /* Segmented Control (Trimestres) */
+        .segmented-control {
             display: flex;
-            overflow-x: auto;
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-            gap: 8px;
-            padding: 4px 0;
+            background: #e5e7eb;
+            border-radius: 12px;
+            padding: 4px;
+            position: relative;
         }
-        .subjects-carousel::-webkit-scrollbar {
+        .segmented-control input {
             display: none;
         }
-        .subject-chip {
-            flex: 0 0 auto;
-            padding: 8px 16px;
-            border-radius: 12px;
+        .segmented-control label {
+            flex: 1;
+            text-align: center;
+            padding: 8px 0;
             font-size: 13px;
             font-weight: 600;
-            background: white;
             color: #6b7280;
-            border: 1px solid #e5e7eb;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
-            white-space: nowrap;
+            z-index: 2;
+            transition: color 0.3s ease;
         }
-        .subject-chip.active {
-            background: #10b981;
-            color: white;
-            border-color: #10b981;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
-            transform: translateY(-1px);
+        .segmented-control input:checked + label {
+            color: #064e3b;
+        }
+        .segmented-indicator {
+            position: absolute;
+            top: 4px;
+            bottom: 4px;
+            width: calc(25% - 2px);
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            z-index: 1;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        input[id="tri-all"]:checked ~ .segmented-indicator { transform: translateX(0); }
+        input[id="tri-1"]:checked ~ .segmented-indicator { transform: translateX(100%); }
+        input[id="tri-2"]:checked ~ .segmented-indicator { transform: translateX(200%); }
+        input[id="tri-3"]:checked ~ .segmented-indicator { transform: translateX(300%); }
+
+        /* Custom Dropdown (Matières) */
+        .custom-dropdown-container {
+            position: relative;
+            width: 100%;
+        }
+        .custom-dropdown-button {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #374151;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+        }
+        .custom-dropdown-button:active {
+            background: #f9fafb;
+        }
+        .custom-dropdown-icon {
+            transition: transform 0.3s ease;
+        }
+        .custom-dropdown-button.open .custom-dropdown-icon {
+            transform: rotate(180deg);
+        }
+        .custom-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            border: 1px solid #f3f4f6;
+            z-index: 50;
+            max-height: 250px;
+            overflow-y: auto;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .custom-dropdown-menu.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        .custom-dropdown-item {
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #4b5563;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .custom-dropdown-item:last-child {
+            border-bottom: none;
+        }
+        .custom-dropdown-item:active {
+            background: #f3f4f6;
+        }
+        .custom-dropdown-item.selected {
+            background: #ecfdf5;
+            color: #10b981;
+            font-weight: 700;
         }
 
         /* Amélioration des cartes de stats */
@@ -140,18 +222,35 @@
     <main class="p-4 max-w-lg mx-auto pb-24">
 
         <!-- 1. FILTERS & NAVIGATION -->
-        <div class="mb-6 space-y-4">
-            <!-- Trimesters -->
-            <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar" id="trimester-chips">
-                <button class="subject-chip active" data-tri="all" data-translate="trimesterAll">Tous</button>
-                <button class="subject-chip" data-tri="1">T1</button>
-                <button class="subject-chip" data-tri="2">T2</button>
-                <button class="subject-chip" data-tri="3">T3</button>
+        <div class="mb-6 space-y-5">
+            <!-- Segmented Control for Trimesters -->
+            <div class="segmented-control" id="trimester-segmented">
+                <input type="radio" name="trimester" id="tri-all" value="all" checked>
+                <label for="tri-all" data-translate="trimesterAll">Tous</label>
+                
+                <input type="radio" name="trimester" id="tri-1" value="1">
+                <label for="tri-1">T1</label>
+                
+                <input type="radio" name="trimester" id="tri-2" value="2">
+                <label for="tri-2">T2</label>
+                
+                <input type="radio" name="trimester" id="tri-3" value="3">
+                <label for="tri-3">T3</label>
+                
+                <div class="segmented-indicator"></div>
             </div>
 
-            <!-- Subjects Carousel -->
-            <div class="subjects-carousel no-scrollbar" id="subjects-list-chips">
-                <button class="subject-chip active" data-subj="all" data-translate="subjectAll">Toutes les matières</button>
+            <!-- Custom Dropdown for Subjects -->
+            <div class="custom-dropdown-container" id="subject-dropdown">
+                <button type="button" class="custom-dropdown-button" id="subject-dropdown-btn">
+                    <span id="subject-dropdown-label" class="truncate" data-translate="subjectAll">Toutes les matières</span>
+                    <svg class="w-5 h-5 text-gray-400 custom-dropdown-icon flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <div class="custom-dropdown-menu" id="subject-dropdown-menu">
+                    <!-- Options injected via JS -->
+                </div>
             </div>
         </div>
 
@@ -439,15 +538,33 @@
                 });
             }
 
-            // Gestion des clics sur les chips de trimestre
-            document.querySelectorAll('#trimester-chips .subject-chip').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('#trimester-chips .subject-chip').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    currentTrimester = btn.dataset.tri;
+            // Gestion du Segmented Control pour les trimestres
+            document.querySelectorAll('input[name="trimester"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    currentTrimester = e.target.value;
                     renderFilteredView();
                 });
             });
+
+            // Logique du Custom Dropdown pour les matières
+            const subjectDropdownBtn = document.getElementById('subject-dropdown-btn');
+            const subjectDropdownMenu = document.getElementById('subject-dropdown-menu');
+
+            if (subjectDropdownBtn && subjectDropdownMenu) {
+                subjectDropdownBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    subjectDropdownBtn.classList.toggle('open');
+                    subjectDropdownMenu.classList.toggle('show');
+                });
+
+                // Fermer le menu si on clique en dehors
+                document.addEventListener('click', (e) => {
+                    if (!subjectDropdownBtn.contains(e.target) && !subjectDropdownMenu.contains(e.target)) {
+                        subjectDropdownBtn.classList.remove('open');
+                        subjectDropdownMenu.classList.remove('show');
+                    }
+                });
+            }
 
             // Language selector listener
             const languageSelector = document.getElementById('language-selector');
@@ -569,9 +686,10 @@
                 else if (month >= 1 && month <= 3) defaultTri = '2';
                 else if (month >= 4 && month <= 6) defaultTri = '3';
 
-                const targetChip = document.querySelector(`#trimester-chips .subject-chip[data-tri="${defaultTri}"]`);
-                if (targetChip) {
-                    targetChip.click();
+                const targetRadio = document.querySelector(`input[name="trimester"][value="${defaultTri}"]`);
+                if (targetRadio) {
+                    targetRadio.checked = true;
+                    targetRadio.dispatchEvent(new Event('change'));
                 } else {
                     renderFilteredView();
                 }
@@ -614,34 +732,55 @@
                 }
             });
 
-            const chipsContainer = document.getElementById('subjects-list-chips');
-            // Keep only the "All Subjects" button and clear others
-            const allBtn = chipsContainer.querySelector('[data-subj="all"]');
-            chipsContainer.innerHTML = '';
-            chipsContainer.appendChild(allBtn);
+            const menuContainer = document.getElementById('subject-dropdown-menu');
+            const labelElement = document.getElementById('subject-dropdown-label');
+            const dropdownBtn = document.getElementById('subject-dropdown-btn');
 
-            // Sort subjects and create chips
-            Array.from(subjects.entries()).sort((a, b) => a[1].localeCompare(b[1])).forEach(([id, label]) => {
-                const btn = document.createElement('button');
-                btn.className = 'subject-chip';
-                btn.dataset.subj = id;
-                btn.textContent = label;
-                btn.onclick = () => {
-                    document.querySelectorAll('#subjects-list-chips .subject-chip').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    currentSubject = id;
-                    renderFilteredView();
-                };
-                chipsContainer.appendChild(btn);
-            });
+            if (!menuContainer || !labelElement) return;
 
-            // Re-attach listener for "All" button
-            allBtn.onclick = () => {
-                document.querySelectorAll('#subjects-list-chips .subject-chip').forEach(b => b.classList.remove('active'));
-                allBtn.classList.add('active');
+            // Define the "All" option label
+            const allLabel = t('subjectAll') || "Toutes les matières";
+
+            // Helper to close menu
+            const closeMenu = () => {
+                dropdownBtn.classList.remove('open');
+                menuContainer.classList.remove('show');
+            };
+
+            // Clear menu
+            menuContainer.innerHTML = '';
+
+            // Add "All" option
+            const allItem = document.createElement('div');
+            allItem.className = 'custom-dropdown-item selected';
+            allItem.dataset.subj = 'all';
+            allItem.innerHTML = `<span class="flex-1 truncate">${allLabel}</span>`;
+            allItem.onclick = () => {
+                document.querySelectorAll('.custom-dropdown-item').forEach(i => i.classList.remove('selected'));
+                allItem.classList.add('selected');
+                labelElement.textContent = allLabel;
                 currentSubject = 'all';
+                closeMenu();
                 renderFilteredView();
             };
+            menuContainer.appendChild(allItem);
+
+            // Sort subjects and create items
+            Array.from(subjects.entries()).sort((a, b) => a[1].localeCompare(b[1])).forEach(([id, label]) => {
+                const item = document.createElement('div');
+                item.className = 'custom-dropdown-item';
+                item.dataset.subj = id;
+                item.innerHTML = `<span class="flex-1 truncate">${label}</span>`;
+                item.onclick = () => {
+                    document.querySelectorAll('.custom-dropdown-item').forEach(i => i.classList.remove('selected'));
+                    item.classList.add('selected');
+                    labelElement.textContent = label;
+                    currentSubject = id;
+                    closeMenu();
+                    renderFilteredView();
+                };
+                menuContainer.appendChild(item);
+            });
         }
 
         function renderFilteredView() {
