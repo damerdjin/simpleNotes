@@ -178,6 +178,28 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* Navigation Bottom Bar */
+        .nav-tab.active svg {
+            transform: scale(1.1);
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .nav-tab.active span {
+            color: #10b981;
+        }
+        
+        /* Safe Area Padding for mobile (iPhone Notch/Home bar) */
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        /* View transitions */
+        #view-dashboard, #view-history {
+            transition: opacity 0.3s ease;
+        }
+        .hidden {
+            display: none !important;
+        }
     </style>
 </head>
 
@@ -254,7 +276,9 @@
             </div>
         </div>
 
-        <!-- 2. SECTION MOYENNES FINALES -->
+        <!-- VUE 1 : DASHBOARD (Synthèse) -->
+        <div id="view-dashboard">
+            <!-- 2. SECTION MOYENNES FINALES -->
         <div id="final-grades-section" class="hidden mb-8">
             <!-- Header removed to save space, integrated into cards -->
 
@@ -311,7 +335,28 @@
             </div>
         </div>
 
-        <!-- 5. HISTORIQUE DES NOTES -->
+        <!-- VUE 2 : HISTORIQUE COMPLET -->
+        <div id="view-history" class="hidden">
+            <!-- Filtre spécifique à l'historique -->
+            <div class="mb-4">
+                <div class="custom-dropdown-container" id="type-dropdown">
+                    <button type="button" class="custom-dropdown-button !py-2 !px-3" id="type-dropdown-btn">
+                        <span id="type-dropdown-label" class="truncate text-xs" data-translate="typeAll">Tous les types</span>
+                        <svg class="w-4 h-4 text-gray-400 custom-dropdown-icon flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div class="custom-dropdown-menu !max-h-48" id="type-dropdown-menu">
+                        <div class="custom-dropdown-item selected" data-type="all"><span class="flex-1 truncate text-xs" data-translate="typeAll">Tous les types</span></div>
+                        <div class="custom-dropdown-item" data-type="Devoir"><span class="flex-1 truncate text-xs">Devoir</span></div>
+                        <div class="custom-dropdown-item" data-type="Composition"><span class="flex-1 truncate text-xs">Composition</span></div>
+                        <div class="custom-dropdown-item" data-type="CC"><span class="flex-1 truncate text-xs">Contrôle Continu (CC)</span></div>
+                        <div class="custom-dropdown-item" data-type="TP"><span class="flex-1 truncate text-xs">Travaux Pratiques (TP)</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. HISTORIQUE DES NOTES -->
         <div class="mb-8">
             <div class="flex items-center gap-2 mb-4 px-1">
                 <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-sm">
@@ -351,11 +396,28 @@
             </div>
 
             <!-- List -->
-            <div id="grades-list" class="space-y-3"></div>
+            <div id="grades-list" class="space-y-3 pb-8"></div>
         </div>
 
-
     </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 pb-safe z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+        <div class="max-w-lg mx-auto flex justify-around">
+            <button class="nav-tab active flex flex-col items-center justify-center w-full py-3 gap-1 text-emerald-600 transition-colors" data-target="view-dashboard">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                </svg>
+                <span class="text-[10px] font-bold">Synthèse</span>
+            </button>
+            <button class="nav-tab flex flex-col items-center justify-center w-full py-3 gap-1 text-gray-400 hover:text-emerald-500 transition-colors" data-target="view-history">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012-2M9 5l2 2m0 0l2-2m-2 2V5"></path>
+                </svg>
+                <span class="text-[10px] font-bold">Historique</span>
+            </button>
+        </div>
+    </nav>
 
     <!-- Modal Changement de mot de passe -->
     <div id="password-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
@@ -484,6 +546,8 @@
         let allFinalGrades = [];
         let currentTrimester = 'all';
         let currentSubject = 'all';
+        let currentType = 'all';
+        let currentView = 'dashboard'; // 'dashboard' or 'history'
         let progressionChart = null; // Renamed for clarity
         let sessionData = null;
 
@@ -565,6 +629,64 @@
                     }
                 });
             }
+
+            // Logique du Custom Dropdown pour les types d'évaluation
+            const typeDropdownBtn = document.getElementById('type-dropdown-btn');
+            const typeDropdownMenu = document.getElementById('type-dropdown-menu');
+            const typeDropdownLabel = document.getElementById('type-dropdown-label');
+
+            if (typeDropdownBtn && typeDropdownMenu) {
+                typeDropdownBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    typeDropdownBtn.classList.toggle('open');
+                    typeDropdownMenu.classList.toggle('show');
+                });
+
+                document.querySelectorAll('#type-dropdown-menu .custom-dropdown-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        document.querySelectorAll('#type-dropdown-menu .custom-dropdown-item').forEach(i => i.classList.remove('selected'));
+                        item.classList.add('selected');
+                        typeDropdownLabel.textContent = item.textContent.trim();
+                        currentType = item.dataset.type;
+                        typeDropdownBtn.classList.remove('open');
+                        typeDropdownMenu.classList.remove('show');
+                        renderFilteredView();
+                    });
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (!typeDropdownBtn.contains(e.target) && !typeDropdownMenu.contains(e.target)) {
+                        typeDropdownBtn.classList.remove('open');
+                        typeDropdownMenu.classList.remove('show');
+                    }
+                });
+            }
+
+            // Logique des onglets (Bottom Navigation)
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.nav-tab').forEach(t => {
+                        t.classList.remove('active', 'text-emerald-600');
+                        t.classList.add('text-gray-400');
+                    });
+                    tab.classList.add('active', 'text-emerald-600');
+                    tab.classList.remove('text-gray-400');
+
+                    const target = tab.dataset.target;
+                    currentView = target === 'view-dashboard' ? 'dashboard' : 'history';
+
+                    document.getElementById('view-dashboard').classList.add('hidden');
+                    document.getElementById('view-history').classList.add('hidden');
+                    
+                    document.getElementById(target).classList.remove('hidden');
+                    
+                    // Trigger a resize for chart and re-render
+                    if (currentView === 'dashboard') {
+                        updateChart();
+                    }
+                    renderFilteredView();
+                });
+            });
 
             // Language selector listener
             const languageSelector = document.getElementById('language-selector');
@@ -788,7 +910,15 @@
                 const tri = (g.assignments.trimester || '').toString().replace('T', '');
                 const matchTri = currentTrimester === 'all' || tri == currentTrimester;
                 const matchSubj = currentSubject === 'all' || g.assignments.subject === currentSubject;
-                return matchTri && matchSubj;
+                
+                // Le filtre de type ne s'applique que dans la vue historique
+                let matchType = true;
+                if (currentView === 'history' && currentType !== 'all') {
+                    const typeValue = g.assignments.type || g.assignments.assignment_type || '';
+                    matchType = typeValue.toLowerCase().includes(currentType.toLowerCase());
+                }
+                
+                return matchTri && matchSubj && matchType;
             });
 
             // Point 1: Gestion de la visibilité des sections Moyennes et Évolution
@@ -806,12 +936,14 @@
                 if (chartSection) chartSection.classList.add('hidden');
             } else {
                 if (finalGradesSection) finalGradesSection.classList.remove('hidden');
-                // updateChart décidera lui-même s'il doit s'afficher (ex: si une matière est sélectionnée)
+                // updateChart décidera lui-même s'il doit s'afficher
             }
 
             // Mettre à jour les vues
             renderFinalGrades(filteredFinals);
-            updateChart();
+            if (currentView === 'dashboard') {
+                updateChart();
+            }
 
             // Update badge (optional but nice)
             const countBadge = document.getElementById('grades-count-badge');
@@ -836,10 +968,12 @@
             // Sort to ensure chronological (recent first)
             filteredGrades.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
 
-            // Limit to 10 most recent grades to avoid long scrolling
-            const recentGrades = filteredGrades.slice(0, 10);
+            // Dans le Dashboard, on ne montre que les 3 dernières notes
+            // Dans l'historique, on montre tout
+            const limit = currentView === 'dashboard' ? 3 : filteredGrades.length;
+            const gradesToRender = filteredGrades.slice(0, limit);
 
-            gradesList.innerHTML = recentGrades.map((grade, index) => {
+            gradesList.innerHTML = gradesToRender.map((grade, index) => {
                 const assignment = grade.assignments;
                 const score = grade.score_final;
                 const max = grade.score_max || 20;
@@ -880,8 +1014,19 @@
                 `;
             }).join('');
 
+            if (currentView === 'dashboard' && filteredGrades.length > 3) {
+                gradesList.innerHTML += `
+                    <button class="w-full mt-2 py-3 bg-gray-50 hover:bg-gray-100 text-emerald-600 font-bold rounded-xl transition text-sm flex items-center justify-center gap-2" onclick="document.querySelector('.nav-tab[data-target=\\'view-history\\']').click()">
+                        <span>Voir tout l'historique</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                `;
+            }
+
+            // Dans l'historique, s'assurer que updateChart ne casse rien s'il était appelé
+            // mais on a déjà conditionné updateChart à currentView === 'dashboard'
+            
             updateStats(filteredGrades);
-            updateChart(filteredGrades);
         }
 
         function renderFinalGrades(dataToRender) {
