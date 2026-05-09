@@ -321,6 +321,7 @@ CREATE TABLE IF NOT EXISTS public.grade_calculation_configs (
   academic_year TEXT NOT NULL,
   trimester TEXT NOT NULL,
   class_name TEXT NOT NULL,
+  subject TEXT NOT NULL DEFAULT '',
 
   -- IDs des assignments sélectionnés
   cc_assignment_id TEXT NOT NULL DEFAULT '',
@@ -337,7 +338,8 @@ CREATE TABLE IF NOT EXISTS public.grade_calculation_configs (
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now(),
 
-  UNIQUE (user_id, academic_year, trimester, class_name)
+  -- Unicité : un prof ne peut avoir qu'une seule config par classe/trimestre/matière
+  CONSTRAINT grade_calculation_configs_unique_key UNIQUE (user_id, academic_year, trimester, class_name, subject)
 );
 
 ALTER TABLE public.grade_calculation_configs ENABLE ROW LEVEL SECURITY;
@@ -356,6 +358,7 @@ CREATE TABLE IF NOT EXISTS public.student_final_grades (
   academic_year TEXT NOT NULL,
   trimester TEXT NOT NULL,
   class_name TEXT NOT NULL,
+  subject TEXT NOT NULL DEFAULT '',
 
   student_id TEXT NOT NULL REFERENCES public.students(id) ON DELETE CASCADE,
 
@@ -371,7 +374,7 @@ CREATE TABLE IF NOT EXISTS public.student_final_grades (
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now(),
 
-  UNIQUE (user_id, academic_year, trimester, class_name, student_id)
+  CONSTRAINT student_final_grades_unique_key UNIQUE (user_id, academic_year, trimester, class_name, subject, student_id)
 );
 
 ALTER TABLE public.student_final_grades ENABLE ROW LEVEL SECURITY;
@@ -386,11 +389,7 @@ CREATE POLICY "Users can manage their own student final grades"
 CREATE INDEX IF NOT EXISTS idx_grade_calc_configs_lookup
   ON public.grade_calculation_configs(user_id, academic_year, trimester, class_name);
 
-CREATE INDEX IF NOT EXISTS idx_student_final_grades_lookup
-  ON public.student_final_grades(user_id, academic_year, trimester, class_name);
-
-CREATE INDEX IF NOT EXISTS idx_student_final_grades_student
-  ON public.student_final_grades(student_id);
+-- (indexes student_final_grades supprimés avec la table)
 
 
 -- ==============================================================================
@@ -400,6 +399,7 @@ CREATE INDEX IF NOT EXISTS idx_student_final_grades_student
 -- A. Sauvegarder la configuration de calcul d'une classe (Upsert)
 CREATE OR REPLACE FUNCTION public.save_grade_calculation_config(
   p_class_name TEXT,
+  p_subject TEXT,
   p_trimester TEXT,
   p_academic_year TEXT,
   p_cc_assignment_id TEXT DEFAULT '',
@@ -416,14 +416,14 @@ DECLARE
   v_config_id UUID;
 BEGIN
   INSERT INTO public.grade_calculation_configs
-    (user_id, academic_year, trimester, class_name,
+    (user_id, academic_year, trimester, class_name, subject,
      cc_assignment_id, comp_assignment_id, tp_assignment_id,
      devoir1_config, devoir2_config, out_max)
   VALUES
-    (auth.uid(), p_academic_year, p_trimester, p_class_name,
+    (auth.uid(), p_academic_year, p_trimester, p_class_name, p_subject,
      p_cc_assignment_id, p_comp_assignment_id, p_tp_assignment_id,
      p_devoir1_config, p_devoir2_config, p_out_max)
-  ON CONFLICT (user_id, academic_year, trimester, class_name)
+  ON CONFLICT (user_id, academic_year, trimester, class_name, subject)
   DO UPDATE SET
     cc_assignment_id = EXCLUDED.cc_assignment_id,
     comp_assignment_id = EXCLUDED.comp_assignment_id,
@@ -442,6 +442,7 @@ $$ LANGUAGE plpgsql;
 -- B. Récupérer la configuration de calcul d'une classe
 CREATE OR REPLACE FUNCTION public.get_grade_calculation_config(
   p_class_name TEXT,
+  p_subject TEXT,
   p_trimester TEXT,
   p_academic_year TEXT
 )
@@ -473,131 +474,12 @@ BEGIN
     AND gcc.academic_year = p_academic_year
     AND gcc.trimester = p_trimester
     AND gcc.class_name = p_class_name
+    AND gcc.subject = p_subject
   LIMIT 1;
 END;
 $$ LANGUAGE plpgsql;
 
 
--- C. Sauvegarder les notes finales calculées d'une classe (batch upsert)
-CREATE OR REPLACE FUNCTION public.save_student_final_grades(
-  p_class_name TEXT,
-  p_trimester TEXT,
-  p_academic_year TEXT,
-  p_grades JSONB -- Tableau d'objets: [{student_id, cc_score, tp_score, comp_score, devoir_score, moyenne, observation, advice}]
-)
-RETURNS VOID
-SECURITY DEFINER
-AS $$
-DECLARE
-  v_user_id UUID := auth.uid();
-  v_item JSONB;
-BEGIN
-  FOR v_item IN SELECT * FROM jsonb_array_elements(p_grades)
-  LOOP
-    INSERT INTO public.student_final_grades
-      (user_id, academic_year, trimester, class_name,
-       student_id, cc_score, tp_score, comp_score, devoir_score,
-       moyenne, observation, advice)
-    VALUES
-      (v_user_id, p_academic_year, p_trimester, p_class_name,
-       (v_item->>'student_id')::TEXT,
-       (v_item->>'cc_score')::NUMERIC,
-       (v_item->>'tp_score')::NUMERIC,
-       (v_item->>'comp_score')::NUMERIC,
-       (v_item->>'devoir_score')::NUMERIC,
-       (v_item->>'moyenne')::NUMERIC,
-       (v_item->>'observation')::TEXT,
-       (v_item->>'advice')::TEXT)
-    ON CONFLICT (user_id, academic_year, trimester, class_name, student_id)
-    DO UPDATE SET
-      cc_score = EXCLUDED.cc_score,
-      tp_score = EXCLUDED.tp_score,
-      comp_score = EXCLUDED.comp_score,
-      devoir_score = EXCLUDED.devoir_score,
-      moyenne = EXCLUDED.moyenne,
-      observation = EXCLUDED.observation,
-      advice = EXCLUDED.advice,
-      updated_at = now();
-  END LOOP;
-END;
-$$ LANGUAGE plpgsql;
-
-
--- D. Récupérer les notes finales d'une classe (pour le professeur)
-CREATE OR REPLACE FUNCTION public.get_teacher_student_final_grades(
-  p_class_name TEXT,
-  p_trimester TEXT,
-  p_academic_year TEXT
-)
-RETURNS TABLE(
-  student_id TEXT,
-  cc_score NUMERIC,
-  tp_score NUMERIC,
-  comp_score NUMERIC,
-  devoir_score NUMERIC,
-  moyenne NUMERIC,
-  observation TEXT,
-  advice TEXT,
-  updated_at TIMESTAMPTZ
-)
-SECURITY DEFINER
-AS $$
-BEGIN
-  RETURN QUERY
-  SELECT
-    sfg.student_id,
-    sfg.cc_score,
-    sfg.tp_score,
-    sfg.comp_score,
-    sfg.devoir_score,
-    sfg.moyenne,
-    sfg.observation,
-    sfg.advice,
-    sfg.updated_at
-  FROM public.student_final_grades sfg
-  WHERE sfg.user_id = auth.uid()
-    AND sfg.academic_year = p_academic_year
-    AND sfg.trimester = p_trimester
-    AND sfg.class_name = p_class_name
-  ORDER BY sfg.student_id;
-END;
-$$ LANGUAGE plpgsql;
-
-
--- E. Récupérer les notes finales d'un élève (pour le dashboard élève)
--- SECURITY DEFINER: l'élève n'a pas de compte auth, on cherche par student_id
-CREATE OR REPLACE FUNCTION public.get_student_final_grades_for_dashboard(p_student_id TEXT)
-RETURNS TABLE(
-  trimester TEXT,
-  class_name TEXT,
-  academic_year TEXT,
-  cc_score NUMERIC,
-  tp_score NUMERIC,
-  comp_score NUMERIC,
-  devoir_score NUMERIC,
-  moyenne NUMERIC,
-  observation TEXT,
-  advice TEXT,
-  updated_at TIMESTAMPTZ
-)
-SECURITY DEFINER
-AS $$
-BEGIN
-  RETURN QUERY
-  SELECT
-    sfg.trimester,
-    sfg.class_name,
-    sfg.academic_year,
-    sfg.cc_score,
-    sfg.tp_score,
-    sfg.comp_score,
-    sfg.devoir_score,
-    sfg.moyenne,
-    sfg.observation,
-    sfg.advice,
-    sfg.updated_at
-  FROM public.student_final_grades sfg
-  WHERE sfg.student_id = p_student_id
-  ORDER BY sfg.trimester;
-END;
-$$ LANGUAGE plpgsql;
+-- (save_student_final_grades, get_teacher_student_final_grades,
+--  delete_student_final_grades, get_student_final_grades_for_dashboard
+--  supprimées — calcul des moyennes à la volée côté API)

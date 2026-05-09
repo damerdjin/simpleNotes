@@ -2157,14 +2157,28 @@
 
                             <!-- Choix classe -->
                             <div id="export-class-card" class="mb-6 p-4 sm:p-5 bg-slate-50 border-2 border-slate-100 rounded-2xl">
-                                <label class="block text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider mb-2 sm:mb-3" data-translate="selectClass" for="select-class-export">
-                                    -- Sélectionner une classe --
-                                </label>
-                                <select id="select-class-export"
-                                    onchange="onExportClassChange(); updateExportClassCardColor();"
-                                    class="w-full sm:w-auto p-2.5 sm:p-3 bg-white border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-medium text-slate-700 text-xs sm:text-base min-w-0 sm:min-w-[250px]">
-                                    <option value="">-- Sélectionner une classe --</option>
-                                </select>
+                                <div class="flex flex-col sm:flex-row gap-3 sm:items-end">
+                                    <div class="flex-1">
+                                        <label class="block text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider mb-2 sm:mb-3" data-translate="selectClass" for="select-class-export">
+                                            -- Sélectionner une classe --
+                                        </label>
+                                        <select id="select-class-export"
+                                            onchange="onExportClassChange();"
+                                            class="w-full p-2.5 sm:p-3 bg-white border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-medium text-slate-700 text-xs sm:text-base">
+                                            <option value="">-- Sélectionner une classe --</option>
+                                        </select>
+                                    </div>
+                                    <div class="flex-1">
+                                        <label class="block text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider mb-2 sm:mb-3" data-translate="selectSubject" for="select-subject-export">
+                                            Matière
+                                        </label>
+                                        <select id="select-subject-export"
+                                            onchange="onExportSubjectChange();"
+                                            class="w-full p-2.5 sm:p-3 bg-white border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-medium text-slate-700 text-xs sm:text-base">
+                                            <option value="">-- Matière --</option>
+                                        </select>
+                                    </div>
+                                </div>
                                 <p class="text-xs text-gray-500 mt-2" data-translate="exportPrepHint">
                                     Choisissez la classe, puis associez les devoirs existants aux trois notes à exporter.
                                 </p>
@@ -2206,13 +2220,7 @@
                                             <span class="hidden sm:inline" data-translate="rakamna">Rakamna</span>
                                         </button>
 
-                                        <button id="btn-save-export-db" onclick="saveExportPrepToSupabase()"
-                                            class="hidden flex items-center justify-center p-2 sm:px-4 sm:py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-bold shadow-sm transition active:scale-95"
-                                            title="Sauvegarder en base"
-                                            data-translate-title="saveToDb">
-                                            <svg class="w-5 h-5 sm:w-4 sm:h-4 sm:me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
-                                            <span class="hidden sm:inline" data-translate="saveToDb">💾 Sauvegarder</span>
-                                        </button>
+                                        <!-- (boutons Sauvegarder/Annuler supprimés — calcul à la volée) -->
                                     </div>
 
                                     <div class="text-xs sm:text-sm text-gray-500" id="export-preview-meta"></div>
@@ -2635,11 +2643,6 @@
         // Language Management
         const initApp = async () => {
             try {
-                // Initialize Service Worker
-                if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW registration failed', err));
-                }
-
                 // Initialize language from storage
                 if (window.initLanguage) window.initLanguage();
 

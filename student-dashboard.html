@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#10b981">
     <link rel="manifest" href="/manifest.json" crossorigin="use-credentials">
     <title data-translate="studentSpaceTitle">Espace Élève - Mon Suivi</title>
@@ -14,13 +16,15 @@
             background-color: #f3f4f6;
             -webkit-tap-highlight-color: transparent;
         }
+
         .grade-card {
             transition: transform 0.2s;
         }
+
         .grade-card:active {
             transform: scale(0.98);
         }
-        
+
         /* Spinner */
         .loader {
             border: 3px solid #f3f3f3;
@@ -31,12 +35,19 @@
             -webkit-animation: spin 1s linear infinite;
             animation: spin 1s linear infinite;
         }
+
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
     </style>
 </head>
+
 <body class="text-gray-800 antialiased pb-10">
 
     <!-- Header -->
@@ -47,46 +58,67 @@
         </div>
         <div class="flex items-center gap-2">
             <!-- Language Selector -->
-            <select id="language-selector" class="bg-emerald-700 text-white text-sm rounded-full p-1.5 border border-emerald-500 focus:ring-2 focus:ring-emerald-400 focus:outline-none transition" hidden>
+            <select id="language-selector"
+                class="bg-emerald-700 text-white text-sm rounded-full p-1.5 border border-emerald-500 focus:ring-2 focus:ring-emerald-400 focus:outline-none transition"
+                hidden>
                 <option value="fr" selected>Français</option>
                 <option value="en">English</option>
                 <option value="ar">العربية</option>
             </select>
-            
-            <button id="btn-change-password" class="p-2 bg-emerald-700 rounded-full hover:bg-emerald-800 transition" data-translate-title="changePassword" title="Changer de mot de passe">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+
+            <button id="btn-change-password" class="p-2 bg-emerald-700 rounded-full hover:bg-emerald-800 transition"
+                data-translate-title="changePassword" title="Changer de mot de passe">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z">
+                    </path>
+                </svg>
             </button>
-            <button id="logout-btn" class="p-2 bg-emerald-700 rounded-full hover:bg-emerald-800 transition" data-translate-title="logout" title="Se déconnecter">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+            <button id="logout-btn" class="p-2 bg-emerald-700 rounded-full hover:bg-emerald-800 transition"
+                data-translate-title="logout" title="Se déconnecter">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                    </path>
+                </svg>
             </button>
         </div>
     </header>
 
     <!-- Main Content -->
     <main class="p-4 max-w-lg mx-auto pb-24">
-        
+
         <!-- Filters -->
         <div class="bg-white rounded-2xl shadow-sm p-4 mb-6 space-y-3">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-sm font-bold text-gray-700 flex items-center gap-2">
-                    <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                    <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
+                        </path>
+                    </svg>
                     <span data-translate="filters">Filtres</span>
                 </h2>
-                <span id="grades-count-badge" class="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded-full">0 note</span>
+                <span id="grades-count-badge"
+                    class="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded-full">0 note</span>
             </div>
-            
+
             <div class="grid grid-cols-2 gap-3">
-                <select id="filter-year" class="w-full bg-gray-100 border border-gray-200 text-gray-500 text-sm rounded-xl block p-2.5 outline-none cursor-not-allowed" disabled>
+                <select id="filter-year"
+                    class="w-full bg-gray-100 border border-gray-200 text-gray-500 text-sm rounded-xl block p-2.5 outline-none cursor-not-allowed"
+                    disabled>
                     <option value="current" data-translate="yearCurrent">Année en cours</option>
                 </select>
-                <select id="filter-trimester" class="w-full bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block p-2.5 outline-none">
+                <select id="filter-trimester"
+                    class="w-full bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block p-2.5 outline-none">
                     <option value="all" data-translate="trimesterAll">Tous les trimestres</option>
                     <option value="1" data-translate="trimester1">1er Trimestre</option>
                     <option value="2" data-translate="trimester2">2ème Trimestre</option>
                     <option value="3" data-translate="trimester3">3ème Trimestre</option>
                 </select>
             </div>
-            <select id="filter-subject" class="w-full bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block p-2.5 outline-none">
+            <select id="filter-subject"
+                class="w-full bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block p-2.5 outline-none">
                 <option value="all" data-translate="subjectAll">Toutes les matières</option>
             </select>
         </div>
@@ -111,43 +143,79 @@
             </div>
         </div>
 
-        <h2 class="text-lg font-bold text-gray-700 mb-4 px-1 flex items-center justify-between">
-            <span data-translate="historyTitle">Historique des notes</span>
-            <span class="text-xs font-normal text-gray-400" data-translate="historySubtitle">Du + récent au + ancien</span>
-        </h2>
-
-        <!-- Loading State -->
-        <div id="loading-state" class="flex flex-col items-center justify-center py-10">
-            <div class="loader mb-3"></div>
-            <p class="text-gray-500 text-sm" data-translate="loadingGrades">Récupération de vos notes...</p>
-        </div>
-
-        <!-- Error State -->
-        <div id="error-state" class="hidden bg-red-50 text-red-600 p-4 rounded-xl text-sm text-center border border-red-100">
-            <span data-translate="errorLoadingGrades">Impossible de charger les notes. Veuillez réessayer.</span>
-        </div>
-
-        <!-- Empty State -->
-        <div id="empty-state" class="hidden flex flex-col items-center justify-center py-10 text-center">
-            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3 text-gray-400">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        <!-- ============================================================ -->
+        <!-- SECTION MOYENNES FINALES -->
+        <!-- ============================================================ -->
+        <div id="final-grades-section" class="hidden mb-8">
+            <div class="flex items-center gap-2 mb-4 px-1">
+                <div
+                    class="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-sm">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                        </path>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-gray-800" data-translate="finalGradesTitle">Moyennes</h2>
+                    <p class="text-xs text-gray-400" data-translate="finalGradesSubtitle">Notes validées par vos
+                        professeurs</p>
+                </div>
             </div>
-            <p class="text-gray-600 font-medium" data-translate="noGradesAvailable">Aucune note disponible</p>
-            <p class="text-gray-400 text-sm mt-1" data-translate="noGradesDescription">Vos professeurs n'ont pas encore publié de notes pour vous.</p>
-        </div>
-
-        <!-- Final Grades Section (Moyennes) -->
-        <div id="final-grades-section" class="hidden mb-6">
-            <h2 class="text-lg font-bold text-gray-700 mb-3 px-1 flex items-center gap-2">
-                <svg class="w-5 h-5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                <span data-translate="finalGradesTitle">Notes Finales / Moyennes</span>
-            </h2>
             <div id="final-grades-list" class="space-y-3"></div>
         </div>
 
-        <!-- Grades List -->
-        <div id="grades-list" class="space-y-3">
-            <!-- Injected dynamically -->
+        <!-- ============================================================ -->
+        <!-- SECTION HISTORIQUE DES NOTES -->
+        <!-- ============================================================ -->
+        <div class="mb-8">
+            <div class="flex items-center gap-2 mb-4 px-1">
+                <div
+                    class="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-sm">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <h2 class="text-lg font-bold text-gray-800" data-translate="historyTitle">Historique des notes</h2>
+                    <p class="text-xs text-gray-400" data-translate="historySubtitle">Du plus récent au plus ancien</p>
+                </div>
+                <span id="grades-count-badge"
+                    class="text-xs font-bold text-gray-500 bg-gray-100 px-3 py-1 rounded-full">0</span>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loading-state" class="flex flex-col items-center justify-center py-10">
+                <div class="loader mb-3"></div>
+                <p class="text-gray-500 text-sm" data-translate="loadingGrades">Récupération de vos notes...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="error-state"
+                class="hidden bg-red-50 text-red-600 p-4 rounded-xl text-sm text-center border border-red-100">
+                <span data-translate="errorLoadingGrades">Impossible de charger les notes. Veuillez réessayer.</span>
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="hidden flex flex-col items-center justify-center py-10 text-center">
+                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3 text-gray-400">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                </div>
+                <p class="text-gray-600 font-medium" data-translate="noGradesAvailable">Aucune note disponible</p>
+                <p class="text-gray-400 text-sm mt-1" data-translate="noGradesDescription">Vos professeurs n'ont pas
+                    encore publié de notes pour vous.</p>
+            </div>
+
+            <!-- Grades List -->
+            <div id="grades-list" class="space-y-3">
+                <!-- Injected dynamically -->
+            </div>
         </div>
 
     </main>
@@ -156,30 +224,46 @@
     <div id="password-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-gray-800" data-translate="changePasswordTitle">Changer mon mot de passe</h3>
+                <h3 class="text-lg font-bold text-gray-800" data-translate="changePasswordTitle">Changer mon mot de
+                    passe</h3>
                 <button id="close-password-modal" class="text-gray-400 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
                 </button>
             </div>
-            
+
             <form id="password-form" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1" data-translate="currentPassword">Mot de passe actuel</label>
-                    <input type="password" id="old-password" required class="w-full border border-gray-300 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="AAAAMMJJ ou votre mot de passe">
+                    <label class="block text-sm font-medium text-gray-700 mb-1" data-translate="currentPassword">Mot de
+                        passe actuel</label>
+                    <input type="password" id="old-password" required
+                        class="w-full border border-gray-300 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                        placeholder="AAAAMMJJ ou votre mot de passe">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1" data-translate="newPassword">Nouveau mot de passe</label>
-                    <input type="password" id="new-password" required minlength="6" class="w-full border border-gray-300 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="6 caractères minimum">
+                    <label class="block text-sm font-medium text-gray-700 mb-1" data-translate="newPassword">Nouveau mot
+                        de passe</label>
+                    <input type="password" id="new-password" required minlength="6"
+                        class="w-full border border-gray-300 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                        placeholder="6 caractères minimum">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1" data-translate="confirmPassword">Confirmer le nouveau</label>
-                    <input type="password" id="confirm-password" required minlength="6" class="w-full border border-gray-300 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="Retapez le nouveau mot de passe">
+                    <label class="block text-sm font-medium text-gray-700 mb-1"
+                        data-translate="confirmPassword">Confirmer le nouveau</label>
+                    <input type="password" id="confirm-password" required minlength="6"
+                        class="w-full border border-gray-300 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                        placeholder="Retapez le nouveau mot de passe">
                 </div>
 
                 <div id="password-error" class="hidden text-red-600 text-sm bg-red-50 p-2 rounded-lg"></div>
-                <div id="password-success" class="hidden text-emerald-700 text-sm bg-emerald-50 p-2 rounded-lg" data-translate="passwordModified">Mot de passe modifié avec succès !</div>
+                <div id="password-success" class="hidden text-emerald-700 text-sm bg-emerald-50 p-2 rounded-lg"
+                    data-translate="passwordModified">Mot de passe modifié avec succès !</div>
 
-                <button type="submit" id="submit-password" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl hover:bg-emerald-700 transition flex justify-center items-center" data-translate="save">
+                <button type="submit" id="submit-password"
+                    class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl hover:bg-emerald-700 transition flex justify-center items-center"
+                    data-translate="save">
                     Enregistrer
                 </button>
             </form>
@@ -187,32 +271,42 @@
     </div>
 
     <!-- Modal Détails de la Note (Bottom Sheet) -->
-    <div id="grade-details-modal" class="fixed inset-0 bg-black/60 z-[60] hidden opacity-0 transition-opacity duration-300 flex flex-col justify-end">
-        <div id="grade-details-content" class="bg-white rounded-t-3xl w-full translate-y-full transition-transform duration-300">
+    <div id="grade-details-modal"
+        class="fixed inset-0 bg-black/60 z-[60] hidden opacity-0 transition-opacity duration-300 flex flex-col justify-end">
+        <div id="grade-details-content"
+            class="bg-white rounded-t-3xl w-full translate-y-full transition-transform duration-300">
             <!-- Handle indicator -->
             <div class="w-full flex justify-center pt-4 pb-2 cursor-pointer" id="close-details-handle">
                 <div class="w-12 h-1.5 bg-gray-300 rounded-full"></div>
             </div>
-            
+
             <div class="p-6 pt-2 pb-10 max-w-lg mx-auto w-full">
                 <div class="text-center mb-6">
-                    <p class="text-sm text-gray-500 font-medium mb-1 inline-block px-3 py-1 rounded-full bg-purple-50 text-purple-600" id="detail-subject">Matière</p>
+                    <p class="text-sm text-gray-500 font-medium mb-1 inline-block px-3 py-1 rounded-full bg-purple-50 text-purple-600"
+                        id="detail-subject">Matière</p>
                     <h3 class="text-2xl font-bold text-gray-800 mt-2" id="detail-title">Devoir</h3>
                     <p class="text-sm text-gray-400 mt-1" id="detail-date">Date</p>
                 </div>
-                
+
                 <div class="flex justify-center mb-6">
-                    <div class="text-center p-5 bg-emerald-50 rounded-3xl border-2 border-emerald-100 min-w-[140px] shadow-sm">
+                    <div
+                        class="text-center p-5 bg-emerald-50 rounded-3xl border-2 border-emerald-100 min-w-[140px] shadow-sm">
                         <p class="text-xs text-emerald-600 font-bold uppercase mb-1" data-translate="noteLabel">Note</p>
-                        <p class="text-4xl font-black text-emerald-700" id="detail-score">--<span class="text-xl text-emerald-500 font-bold">/--</span></p>
+                        <p class="text-4xl font-black text-emerald-700" id="detail-score">--<span
+                                class="text-xl text-emerald-500 font-bold">/--</span></p>
                     </div>
                 </div>
 
                 <div class="space-y-4 mb-8">
                     <!-- Commentaire prof -->
-                    <div id="detail-comment-container" class="hidden bg-gradient-to-r from-indigo-50 to-purple-50 p-4 rounded-2xl border border-indigo-100 shadow-sm">
+                    <div id="detail-comment-container"
+                        class="hidden bg-gradient-to-r from-indigo-50 to-purple-50 p-4 rounded-2xl border border-indigo-100 shadow-sm">
                         <p class="text-[11px] font-bold text-indigo-600 uppercase mb-2 flex items-center gap-1.5">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z">
+                                </path>
+                            </svg>
                             <span data-translate="teacherComment">Commentaire du professeur</span>
                         </p>
                         <p class="text-gray-700 text-sm italic font-medium" id="detail-comment"></p>
@@ -221,21 +315,26 @@
                     <!-- Stats classe -->
                     <div id="detail-stats-container" class="grid grid-cols-3 gap-3">
                         <div class="bg-gray-50 rounded-2xl p-4 text-center border border-gray-100 shadow-sm">
-                            <p class="text-[10px] text-gray-500 font-bold uppercase mb-1" data-translate="classAvg">Classe</p>
+                            <p class="text-[10px] text-gray-500 font-bold uppercase mb-1" data-translate="classAvg">
+                                Classe</p>
                             <p class="font-black text-lg text-gray-800" id="detail-avg">--</p>
                         </div>
                         <div class="bg-green-50 rounded-2xl p-4 text-center border border-green-100 shadow-sm">
-                            <p class="text-[10px] text-green-600 font-bold uppercase mb-1" data-translate="classMax">Max</p>
+                            <p class="text-[10px] text-green-600 font-bold uppercase mb-1" data-translate="classMax">Max
+                            </p>
                             <p class="font-black text-lg text-green-700" id="detail-max">--</p>
                         </div>
                         <div class="bg-orange-50 rounded-2xl p-4 text-center border border-orange-100 shadow-sm">
-                            <p class="text-[10px] text-orange-600 font-bold uppercase mb-1" data-translate="classMin">Min</p>
+                            <p class="text-[10px] text-orange-600 font-bold uppercase mb-1" data-translate="classMin">
+                                Min</p>
                             <p class="font-black text-lg text-orange-700" id="detail-min">--</p>
                         </div>
                     </div>
                 </div>
 
-                <button id="close-details-btn" class="w-full py-3.5 bg-gray-100 font-bold text-gray-700 rounded-xl hover:bg-gray-200 transition focus:outline-none focus:ring-2 focus:ring-gray-300" data-translate="close">Fermer</button>
+                <button id="close-details-btn"
+                    class="w-full py-3.5 bg-gray-100 font-bold text-gray-700 rounded-xl hover:bg-gray-200 transition focus:outline-none focus:ring-2 focus:ring-gray-300"
+                    data-translate="close">Fermer</button>
             </div>
         </div>
     </div>
@@ -248,12 +347,6 @@
         let allFinalGrades = [];
         let chartInstance = null;
         let sessionData = null;
-
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW registration failed', err));
-            });
-        }
 
         // Initialize language on page load
         document.addEventListener('DOMContentLoaded', () => {
@@ -279,7 +372,7 @@
 
             try {
                 sessionData = JSON.parse(sessionStr);
-            } catch(e) {
+            } catch (e) {
                 window.location.href = '/login.html';
                 return;
             }
@@ -309,11 +402,11 @@
                 languageSelector.addEventListener('change', (e) => {
                     const newLang = e.target.value;
                     changeLanguage(newLang);
-                    
+
                     // Persist the language choice using the same key as index.html
                     // Note: changeLanguage already saves to localStorage, but we ensure consistency
                     // localStorage.setItem('corrections-language', newLang);
-                    
+
                     // Change html lang attribute
                     document.documentElement.lang = newLang;
                 });
@@ -390,7 +483,7 @@
 
             // Init Pull-to-refresh
             initPullToRefresh();
-            
+
             // Init Bottom Sheet Modal Events
             initBottomSheet();
 
@@ -403,11 +496,16 @@
             const emptyState = document.getElementById('empty-state');
 
             try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+
                 const res = await fetch('/api/student/grades', {
                     headers: {
                         'Authorization': `Bearer ${token}`
-                    }
+                    },
+                    signal: controller.signal
                 });
+                clearTimeout(timeoutId);
 
                 if (res.status === 401 || res.status === 403) {
                     localStorage.removeItem('student_session');
@@ -416,7 +514,7 @@
                 }
 
                 const data = await res.json();
-                
+
                 if (!res.ok) throw new Error(data.error);
 
                 loadingState.classList.add('hidden');
@@ -428,26 +526,43 @@
 
                 // Sort by updated_at descending (newest first)
                 allGrades = data.grades.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
-                
+
                 populateFilters();
                 renderFilteredView();
 
                 // Also fetch final grades (moyennes) from Supabase
                 try {
-                    const finalRes = await fetch('/api/student/grades?type=final', {
+                    console.log('[Student Dashboard] sessionData.info:', sessionData?.info);
+                    const academicYear = (sessionData?.info?.academicYear) || '';
+                    console.log('[Student Dashboard] academicYear from session:', academicYear);
+                    console.log('[Student Dashboard] Envoi de la requête pour les moyennes finales...');
+                    const finalRes = await fetch(`/api/student/grades?type=final&academicYear=${encodeURIComponent(academicYear)}`, {
                         headers: {
                             'Authorization': `Bearer ${token}`
                         }
                     });
+                    console.log('[Student Dashboard] Réponse reçue status:', finalRes.status);
+                    
                     if (finalRes.ok) {
                         const finalData = await finalRes.json();
+                        console.log('[Student Dashboard] Données reçues:', finalData);
                         if (finalData.finalGrades && finalData.finalGrades.length > 0) {
                             allFinalGrades = finalData.finalGrades;
                             renderFinalGrades();
+                        } else {
+                            console.log('[Student Dashboard] Aucune moyenne finale retournée par l\'API.');
+                            if (finalData.debug && finalData.debug.availableInDB) {
+                                console.log('[Student Dashboard] CLASSES TROUVÉES DANS LA BASE :');
+                                console.table(finalData.debug.availableInDB);
+                                console.log('[Student Dashboard] VOTRE CLASSE RECHERCHÉE :', finalData.debug.requestedClass);
+                            }
                         }
+                    } else {
+                        const errData = await finalRes.json().catch(() => ({}));
+                        console.error('[Student Dashboard] Erreur API moyennes:', finalRes.status, errData);
                     }
                 } catch (finalErr) {
-                    console.warn('Could not load final grades:', finalErr);
+                    console.error('[Student Dashboard] Exception lors du chargement des moyennes:', finalErr);
                 }
 
             } catch (err) {
@@ -478,25 +593,25 @@
             // Year dropdown is static, no population needed
 
             // Populate Subject Dropdown
-        const subjSelect = document.getElementById('filter-subject');
-        Array.from(subjects.entries()).sort((a,b) => a[1].localeCompare(b[1])).forEach(([id, label]) => {
-            subjSelect.add(new Option(label, id));
-        });
+            const subjSelect = document.getElementById('filter-subject');
+            Array.from(subjects.entries()).sort((a, b) => a[1].localeCompare(b[1])).forEach(([id, label]) => {
+                subjSelect.add(new Option(label, id));
+            });
 
-        // Sélection automatique du trimestre en fonction du mois actuel
-        const currentMonth = new Date().getMonth() + 1; // getMonth() commence à 0 (Janvier = 1)
-        let defaultTri = 'all';
-        
-        if (currentMonth >= 9 && currentMonth <= 12) {
-            defaultTri = '1'; // Septembre à Décembre
-        } else if (currentMonth >= 1 && currentMonth <= 3) {
-            defaultTri = '2'; // Janvier à Mars
-        } else if (currentMonth >= 4 && currentMonth <= 5) {
-            defaultTri = '3'; // Avril à Mai
-        } // Juin à Août => 'all'
+            // Sélection automatique du trimestre en fonction du mois actuel
+            const currentMonth = new Date().getMonth() + 1; // getMonth() commence à 0 (Janvier = 1)
+            let defaultTri = 'all';
 
-        document.getElementById('filter-trimester').value = defaultTri;
-    }
+            if (currentMonth >= 9 && currentMonth <= 12) {
+                defaultTri = '1'; // Septembre à Décembre
+            } else if (currentMonth >= 1 && currentMonth <= 3) {
+                defaultTri = '2'; // Janvier à Mars
+            } else if (currentMonth >= 4 && currentMonth <= 5) {
+                defaultTri = '3'; // Avril à Mai
+            } // Juin à Août => 'all'
+
+            document.getElementById('filter-trimester').value = defaultTri;
+        }
 
         function renderFilteredView() {
             const triFilter = document.getElementById('filter-trimester').value;
@@ -514,7 +629,7 @@
 
             const gradesList = document.getElementById('grades-list');
             const emptyState = document.getElementById('empty-state');
-            
+
             if (filteredGrades.length === 0) {
                 gradesList.innerHTML = '';
                 emptyState.classList.remove('hidden');
@@ -530,7 +645,7 @@
                 const assignment = grade.assignments;
                 const score = grade.score_final;
                 const max = grade.score_max || 20;
-                
+
                 // Get Subject Translation
                 const subjId = assignment.subject;
                 let displaySubject = subjId;
@@ -585,78 +700,110 @@
         }
 
         function renderFinalGrades() {
-             const section = document.getElementById('final-grades-section');
-             const list = document.getElementById('final-grades-list');
-             if (!allFinalGrades || allFinalGrades.length === 0) {
-                 section.classList.add('hidden');
-                 return;
-             }
-             section.classList.remove('hidden');
-             list.innerHTML = allFinalGrades.map(fg => {
-                 const cc = fg.cc_score !== null ? fg.cc_score.toFixed(2) : '--';
-                 const devoir = fg.devoir_score !== null ? fg.devoir_score.toFixed(2) : '--';
-                 const comp = fg.comp_score !== null ? fg.comp_score.toFixed(2) : '--';
-                 const tp = fg.tp_score !== null ? fg.tp_score.toFixed(2) : null;
-                 const moyenne = fg.moyenne !== null ? fg.moyenne.toFixed(2) : '--';
-                 const obs = fg.observation || '';
-                 const advice = fg.advice || '';
+            const section = document.getElementById('final-grades-section');
+            const list = document.getElementById('final-grades-list');
+            if (!allFinalGrades || allFinalGrades.length === 0) {
+                section.classList.add('hidden');
+                return;
+            }
+            section.classList.remove('hidden');
 
-                 return `
-                     <div class="bg-white rounded-2xl shadow-sm p-4 border border-gray-100">
-                         <div class="flex items-center justify-between mb-3">
-                             <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-violet-50 text-violet-700">
-                                 ${fg.class_name || ''}
-                             </span>
-                             <span class="text-xs text-gray-400">
-                                 ${fg.trimester ? 'Trimestre ' + fg.trimester : ''}
-                             </span>
-                         </div>
+            // Group final grades by trimester
+            const byTrimester = {};
+            allFinalGrades.forEach(fg => {
+                const tri = fg.trimester || 'T1';
+                if (!byTrimester[tri]) byTrimester[tri] = [];
+                byTrimester[tri].push(fg);
+            });
 
-                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
-                             <div class="bg-gray-50 rounded-xl p-2 text-center">
-                                 <span class="text-xs text-gray-500 block" data-translate="ccLabel">CC</span>
-                                 <span class="text-lg font-bold text-gray-800">${cc}</span>
-                             </div>
-                             <div class="bg-gray-50 rounded-xl p-2 text-center">
-                                 <span class="text-xs text-gray-500 block" data-translate="devoirLabel">Devoir</span>
-                                 <span class="text-lg font-bold text-gray-800">${devoir}</span>
-                             </div>
-                             ${tp !== null ? `
-                             <div class="bg-gray-50 rounded-xl p-2 text-center">
-                                 <span class="text-xs text-gray-500 block" data-translate="tpLabel">TP</span>
-                                 <span class="text-lg font-bold text-gray-800">${tp}</span>
-                             </div>
-                             ` : ''}
-                             <div class="bg-gray-50 rounded-xl p-2 text-center">
-                                 <span class="text-xs text-gray-500 block" data-translate="compLabel">Composition</span>
-                                 <span class="text-lg font-bold text-gray-800">${comp}</span>
-                             </div>
-                             <div class="bg-emerald-50 rounded-xl p-2 text-center col-span-1">
-                                 <span class="text-xs text-emerald-600 font-bold block" data-translate="averageLabel">Moyenne</span>
-                                 <span class="text-xl font-extrabold text-emerald-700">${moyenne}</span>
-                             </div>
-                         </div>
+            const trimesterOrder = ['T1', 'T2', 'T3'];
+            const sortedTrimesters = Object.keys(byTrimester).sort((a, b) => {
+                return trimesterOrder.indexOf(a) - trimesterOrder.indexOf(b);
+            });
 
-                         ${obs || advice ? `
-                         <div class="border-t border-gray-100 pt-3 mt-1 space-y-1">
-                             ${obs ? `
-                             <div>
-                                 <span class="text-xs font-bold text-gray-500 block" data-translate="observationLabel">Observation</span>
-                                 <p class="text-sm text-gray-700 italic">${obs}</p>
-                             </div>
-                             ` : ''}
-                             ${advice ? `
-                             <div>
-                                 <span class="text-xs font-bold text-gray-500 block" data-translate="adviceLabel">Conseil</span>
-                                 <p class="text-sm text-gray-700">${advice}</p>
-                             </div>
-                             ` : ''}
+            list.innerHTML = sortedTrimesters.map(tri => {
+                const grades = byTrimester[tri];
+                return `
+                     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                         <div class="bg-gradient-to-r from-violet-50 to-purple-50 px-4 py-2 border-b border-gray-100">
+                             <span class="text-xs font-bold text-violet-700">Trimestre ${tri.replace('T', '')}</span>
                          </div>
-                         ` : ''}
+                         <div class="divide-y divide-gray-50">
+                             ${grades.map(fg => {
+                    const subject = fg.subject || 'Matière';
+                    const cc = fg.cc_score !== null ? fg.cc_score.toFixed(2) : '--';
+                    const devoir = fg.devoir_score !== null ? fg.devoir_score.toFixed(2) : '--';
+                    const comp = fg.comp_score !== null ? fg.comp_score.toFixed(2) : '--';
+                    const tp = fg.tp_score !== null ? fg.tp_score.toFixed(2) : null;
+                    const moyenne = fg.moyenne !== null ? fg.moyenne.toFixed(2) : '--';
+                    const obs = fg.observation || '';
+                    const advice = fg.advice || '';
+
+                    return `
+                                     <div class="p-4">
+                                         <div class="flex items-center justify-between mb-3">
+                                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-violet-50 text-violet-700">
+                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                                                 ${subject}
+                                             </span>
+                                             <span class="text-xs text-gray-400">${fg.class_name || ''}</span>
+                                         </div>
+
+                                         <div class="grid grid-cols-5 gap-1.5 mb-3">
+                                             <div class="bg-gray-50 rounded-xl py-2 px-1 text-center">
+                                                 <span class="text-[10px] text-gray-500 block font-medium">CC</span>
+                                                 <span class="text-sm font-bold text-gray-800">${cc}</span>
+                                             </div>
+                                             <div class="bg-gray-50 rounded-xl py-2 px-1 text-center">
+                                                 <span class="text-[10px] text-gray-500 block font-medium">Devoir</span>
+                                                 <span class="text-sm font-bold text-gray-800">${devoir}</span>
+                                             </div>
+                                             ${tp !== null ? `
+                                             <div class="bg-gray-50 rounded-xl py-2 px-1 text-center">
+                                                 <span class="text-[10px] text-gray-500 block font-medium">TP</span>
+                                                 <span class="text-sm font-bold text-gray-800">${tp}</span>
+                                             </div>
+                                             ` : '<div class="col-span-1"></div>'}
+                                             <div class="bg-gray-50 rounded-xl py-2 px-1 text-center">
+                                                 <span class="text-[10px] text-gray-500 block font-medium">Comp</span>
+                                                 <span class="text-sm font-bold text-gray-800">${comp}</span>
+                                             </div>
+                                             <div class="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl py-2 px-1 text-center ring-1 ring-emerald-200">
+                                                 <span class="text-[10px] text-emerald-600 block font-bold">Moy</span>
+                                                 <span class="text-base font-extrabold text-emerald-700">${moyenne}</span>
+                                             </div>
+                                         </div>
+
+                                         ${obs || advice ? `
+                                         <div class="border-t border-gray-50 pt-3 mt-1 space-y-1.5">
+                                             ${obs ? `
+                                             <div class="flex items-start gap-2">
+                                                 <svg class="w-4 h-4 text-amber-400 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-7.536 5.879a1 1 0 001.415 0 3 3 0 014.242 0 1 1 0 001.415-1.415 5 5 0 00-7.072 0 1 1 0 000 1.415z"></path></svg>
+                                                 <div>
+                                                     <span class="text-[11px] font-bold text-gray-500 block" data-translate="observationLabel">Observation</span>
+                                                     <p class="text-sm text-gray-700">${obs}</p>
+                                                 </div>
+                                             </div>
+                                             ` : ''}
+                                             ${advice ? `
+                                             <div class="flex items-start gap-2">
+                                                 <svg class="w-4 h-4 text-blue-400 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
+                                                 <div>
+                                                     <span class="text-[11px] font-bold text-gray-500 block" data-translate="adviceLabel">Conseil</span>
+                                                     <p class="text-sm text-gray-700">${advice}</p>
+                                                 </div>
+                                             </div>
+                                             ` : ''}
+                                         </div>
+                                         ` : ''}
+                                     </div>
+                                 `;
+                }).join('')}
+                         </div>
                      </div>
                  `;
-             }).join('');
-         }
+            }).join('');
+        }
 
         function updateStats(grades) {
             const statMax = document.getElementById('stat-max');
@@ -687,7 +834,7 @@
 
         function updateChart(grades) {
             const validGrades = grades.filter(g => g.score_final !== null && g.score_final !== undefined)
-                                      .reverse(); // Chronological order for chart
+                .reverse(); // Chronological order for chart
 
             if (chartInstance) {
                 chartInstance.destroy();
@@ -702,10 +849,10 @@
             document.getElementById('progressionChart').parentElement.style.display = 'block';
 
             const ctx = document.getElementById('progressionChart').getContext('2d');
-            
+
             const labels = validGrades.map(g => {
                 const d = new Date(g.updated_at);
-                return `${d.getDate()}/${d.getMonth()+1}`;
+                return `${d.getDate()}/${d.getMonth() + 1}`;
             });
 
             const dataPoints = validGrades.map(g => {
@@ -737,7 +884,7 @@
                         legend: { display: false },
                         tooltip: {
                             callbacks: {
-                                label: function(context) {
+                                label: function (context) {
                                     const g = validGrades[context.dataIndex];
                                     return `${g.assignments.name}: ${g.score_final}/${g.score_max || 20}`;
                                 }
@@ -748,12 +895,12 @@
                         y: {
                             beginAtZero: true,
                             max: 20,
-                            ticks: { stepSize: 5, color: '#9ca3af', font: {size: 10} },
+                            ticks: { stepSize: 5, color: '#9ca3af', font: { size: 10 } },
                             grid: { color: '#f3f4f6' },
                             border: { display: false }
                         },
                         x: {
-                            ticks: { color: '#9ca3af', font: {size: 10} },
+                            ticks: { color: '#9ca3af', font: { size: 10 } },
                             grid: { display: false },
                             border: { display: false }
                         }
@@ -768,7 +915,7 @@
 
             pTRContainer.addEventListener('touchstart', e => {
                 if (window.scrollY === 0) touchstartY = e.changedTouches[0].screenY;
-            }, {passive: true});
+            }, { passive: true });
 
             pTRContainer.addEventListener('touchend', e => {
                 if (window.scrollY === 0) {
@@ -781,14 +928,14 @@
                         }
                     }
                 }
-            }, {passive: true});
+            }, { passive: true });
         }
 
         // Global functions for inline HTML events
         const detailsModal = document.getElementById('grade-details-modal');
         const detailsContent = document.getElementById('grade-details-content');
-        
-        window.openGradeDetails = function(gradeId) {
+
+        window.openGradeDetails = function (gradeId) {
             const grade = allGrades.find(g => g.id === gradeId);
             if (!grade) return;
 
@@ -824,7 +971,7 @@
 
             if (grade.class_avg !== null && grade.class_avg !== undefined) {
                 statsContainer.classList.remove('hidden');
-                
+
                 avgEl.textContent = `${grade.class_avg}`;
                 maxEl.textContent = `${grade.class_max}`;
                 minEl.textContent = `${grade.class_min}`;
@@ -853,7 +1000,7 @@
                 detailsModal.classList.remove('opacity-0');
                 detailsContent.classList.remove('translate-y-full');
             }, 10);
-            
+
             // Disable body scroll
             document.body.style.overflow = 'hidden';
         };
@@ -861,7 +1008,7 @@
         function closeGradeDetails() {
             detailsModal.classList.add('opacity-0');
             detailsContent.classList.add('translate-y-full');
-            
+
             // Wait for transition before hiding
             setTimeout(() => {
                 detailsModal.classList.add('hidden');
@@ -873,21 +1020,21 @@
             document.getElementById('close-details-btn').addEventListener('click', closeGradeDetails);
             document.getElementById('close-details-handle').addEventListener('click', closeGradeDetails);
             detailsModal.addEventListener('click', (e) => {
-                if(e.target === detailsModal) closeGradeDetails();
+                if (e.target === detailsModal) closeGradeDetails();
             });
 
             // Touch swipe down to close
             let touchStartY = 0;
             detailsContent.addEventListener('touchstart', e => {
                 touchStartY = e.changedTouches[0].screenY;
-            }, {passive: true});
-            
+            }, { passive: true });
+
             detailsContent.addEventListener('touchmove', e => {
                 const currentY = e.changedTouches[0].screenY;
                 if (currentY > touchStartY + 50) {
                     closeGradeDetails();
                 }
-            }, {passive: true});
+            }, { passive: true });
         }
     </script>
 </body>

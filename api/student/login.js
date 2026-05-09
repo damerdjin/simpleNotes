@@ -7,6 +7,7 @@ import bcrypt from 'bcryptjs';
 const JWT_SECRET = process.env.JWT_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || 'default-secret-key-for-students';
 
 async function handler(req, res) {
+    console.log('[API Student Login] Requête reçue');
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
@@ -19,7 +20,7 @@ async function handler(req, res) {
         }
 
         console.log(`[Student Login] Tentative connexion pour NIN: ${nin}`);
-        
+
         // Recherche de l'élève via la fonction RPC sécurisée (qui bypass le RLS)
         const { data: students, error } = await supabase
             .rpc('check_student_login', { p_nin: nin });
@@ -30,8 +31,8 @@ async function handler(req, res) {
         }
 
         if (!students || students.length === 0) {
-             console.log('[Student Login] Aucun élève trouvé pour ce NIN.');
-             return res.status(401).json({ error: 'Identifiants incorrects.' });
+            console.log('[Student Login] Aucun élève trouvé pour ce NIN.');
+            return res.status(401).json({ error: 'Identifiants incorrects.' });
         }
 
         const student = students[0];
@@ -58,7 +59,7 @@ async function handler(req, res) {
             console.log(`[Student Login] Date de naissance en base: ${student.birthdate}`);
 
             isAuthenticated = student.birthdate === formattedBirthdate;
-            
+
             if (!isAuthenticated && student.birthdate) {
                 const parts = student.birthdate.split('/');
                 if (parts.length === 3) {
@@ -84,8 +85,8 @@ async function handler(req, res) {
 
         // Créer un token
         const token = jwt.sign(
-            { 
-                id: student.id, 
+            {
+                id: student.id,
                 role: 'student',
                 name: `${student.last_name} ${student.first_name}`,
                 class_name: student.class_name
@@ -103,8 +104,8 @@ async function handler(req, res) {
             sameSite: 'lax'
         }));
 
-        return res.status(200).json({ 
-            success: true, 
+        return res.status(200).json({
+            success: true,
             student: {
                 id: student.id,
                 name: `${student.last_name} ${student.first_name}`,

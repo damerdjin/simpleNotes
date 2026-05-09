@@ -186,16 +186,17 @@ import { supabase } from './supabase-client.js';
         window.openRemarksModal();
     };
 
-    function getExportClassConfig(className) {
+    function getExportClassConfig(className, subject = '') {
         if (!className) return null;
         const trimester = window.getGlobalTrimester() || 'T1';
-        const key = `${trimester}|${className}`;
+        const key = `${trimester}|${className}|${subject}`;
 
         if (!exportPrepConfig.byClass[key]) {
             exportPrepConfig.byClass[key] = {
                 ccAssignmentId: '',
                 compAssignmentId: '',
                 tpAssignmentId: '',
+                subject: subject,
                 devoir1: { assignmentIds: [], combine: 'sum', normalize: true, targetMax: 20 },
                 devoir2: { assignmentIds: [], combine: 'sum', normalize: true, targetMax: 20 },
                 outMax: 20
@@ -203,12 +204,12 @@ import { supabase } from './supabase-client.js';
         }
         const cfg = exportPrepConfig.byClass[key];
 
-        // --- TYPE AUTO-MAPPING ---
+        // --- TYPE AUTO-MAPPING (filtered by subject) ---
         if (typeof getAssignmentsForClass === 'function') {
-            const allAssigns = getAssignmentsForClass(className);
-            cfg.ccAssignmentId = allAssigns.find(a => a.type === 'cc')?.id || '';
-            cfg.tpAssignmentId = allAssigns.find(a => a.type === 'tp')?.id || '';
-            cfg.compAssignmentId = allAssigns.find(a => a.type === 'comp')?.id || '';
+            const allAssigns = getAssignmentsForClass(className).filter(a => !subject || (a.subject || a.assignment_subject) === subject);
+            if (!cfg.ccAssignmentId) cfg.ccAssignmentId = allAssigns.find(a => a.type === 'cc')?.id || '';
+            if (!cfg.tpAssignmentId) cfg.tpAssignmentId = allAssigns.find(a => a.type === 'tp')?.id || '';
+            if (!cfg.compAssignmentId) cfg.compAssignmentId = allAssigns.find(a => a.type === 'comp')?.id || '';
         }
 
         return cfg;
@@ -218,12 +219,15 @@ import { supabase } from './supabase-client.js';
     window.deleteClassDataFromExport = function(className) {
         if (!className) return;
         const trimester = window.getGlobalTrimester() || 'T1';
-        const key = `${trimester}|${className}`;
         
-        if (exportPrepConfig && exportPrepConfig.byClass && exportPrepConfig.byClass[key]) {
-            delete exportPrepConfig.byClass[key];
-            window.saveExportPrepConfig();
-        }
+        // Remove all keys for this class across all subjects
+        Object.keys(exportPrepConfig.byClass).forEach(key => {
+            const parts = key.split('|');
+            if (parts[1] === className) {
+                delete exportPrepConfig.byClass[key];
+            }
+        });
+        window.saveExportPrepConfig();
 
         if (remarksOverrides && remarksOverrides[className]) {
             delete remarksOverrides[className];
@@ -232,14 +236,28 @@ import { supabase } from './supabase-client.js';
     };
 
     function getAssignmentsForClass(className) {
-        const globalTrimester = window.getGlobalTrimester();
+        const globalTrimester = String(window.getGlobalTrimester() || '');
         const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
-        return getData().assignments.filter(a => {
-            const matchUser = (a.createdBy || 'unknown') === userId;
+        const allAssignments = getData().assignments || [];
+        
+        const filtered = allAssignments.filter(a => {
+            // Match class (trimmed)
             const matchClass = (a.className || '').trim() === (className || '').trim();
-            const matchTrimester = globalTrimester ? (a.trimester || '') === globalTrimester : false;
-            return matchUser && matchClass && matchTrimester;
+            
+            // Flexible trimester match (handle both "1" and "T1")
+            const aTri = String(a.trimester || '').replace('T', '');
+            const gTri = globalTrimester.replace('T', '');
+            const matchTrimester = (aTri === gTri);
+            
+            // Match user (be flexible if createdBy is missing)
+            const aUser = a.createdBy || a.user_id || 'unknown';
+            const matchUser = (aUser === 'unknown' || aUser === userId);
+
+            return matchClass && matchTrimester && matchUser;
         });
+
+        console.log(`[Export Prep] Assignments found for ${className} (Trimester ${globalTrimester}):`, filtered.length);
+        return filtered;
     }
 
     function toNumberOrNull(v) {
@@ -436,26 +454,21 @@ import { supabase } from './supabase-client.js';
     };
 
     window.onExportClassChange = function() {
-        const className = document.getElementById('select-class-export')?.value || '';
-        if (!className) {
-            document.getElementById('export-config').innerHTML = '';
-            document.getElementById('export-preview-table').innerHTML = '';
-            document.getElementById('export-preview-meta').textContent = '';
-            document.getElementById('export-preview-section')?.classList.add('hidden');
-            return;
-        }
-        getExportClassConfig(className);
-        window.saveExportPrepConfig();
         window.renderExportPrep();
         window.installRakmanaColorAutoUpdate();
         window.updateExportClassCardColor();
     };
 
+    window.onExportSubjectChange = function() {
+        window.renderExportPrep();
+    };
+
     window.resetExportConfig = function() {
         const className = document.getElementById('select-class-export')?.value || '';
         if (!className) return;
+        const subject = document.getElementById('select-subject-export')?.value || '';
         const trimester = window.getGlobalTrimester() || 'T1';
-        const key = `${trimester}|${className}`;
+        const key = `${trimester}|${className}|${subject}`;
 
         delete exportPrepConfig.byClass[key];
         window.saveExportPrepConfig();
@@ -471,6 +484,9 @@ import { supabase } from './supabase-client.js';
         if (!getTranslations() || !getLang() || !getTranslations()[getLang()]) return;
         const t = getTranslations()[getLang()];
         const className = document.getElementById('select-class-export')?.value || '';
+        const subjectSelector = document.getElementById('select-subject-export');
+        const subject = subjectSelector?.value || '';
+        
         const container = document.getElementById('export-config');
         const preview = document.getElementById('export-preview-table');
         const meta = document.getElementById('export-preview-meta');
@@ -482,11 +498,35 @@ import { supabase } from './supabase-client.js';
             preview.innerHTML = '';
             meta.textContent = '';
             document.getElementById('export-preview-section')?.classList.add('hidden');
+            if (subjectSelector) subjectSelector.innerHTML = '<option value="">-- Matière --</option>';
             return;
         }
 
-        const cfg = getExportClassConfig(className);
-        const allAssigns = getAssignmentsForClass(className);
+        const allAssignsForClass = getAssignmentsForClass(className);
+        const subjectsList = [...new Set(allAssignsForClass.map(a => a.subject || a.assignment_subject).filter(Boolean))];
+        console.log('[Export Prep] Subjects List generated:', subjectsList, 'from', allAssignsForClass.length, 'assignments');
+        
+        if (subjectSelector && (subjectSelector.dataset.lastClass !== className)) {
+            subjectSelector.dataset.lastClass = className;
+            subjectSelector.innerHTML = `<option value="">-- ${t.selectSubject || 'Matière'} --</option>` + 
+                subjectsList.map(sid => {
+                    const sObj = (window.subjects || []).find(s => s.id === sid);
+                    const label = sObj ? (sObj[getLang()] || sObj.fr || sid) : sid;
+                    return `<option value="${sid}">${label}</option>`;
+                }).join('');
+            // If there's only one subject, select it automatically
+            if (subjectsList.length === 1) {
+                subjectSelector.value = subjectsList[0];
+            } else {
+                subjectSelector.value = "";
+            }
+        }
+        
+        // Refresh subject value after possible auto-select
+        const currentSubject = subjectSelector?.value || '';
+
+        const cfg = getExportClassConfig(className, currentSubject);
+        const allAssigns = allAssignsForClass.filter(a => !currentSubject || (a.subject || a.assignment_subject) === currentSubject);
         const assigns = allAssigns.filter(a => !a.type || a.type === 'devoir');
 
         // Try to load saved config from Supabase (if available)
@@ -751,6 +791,7 @@ import { supabase } from './supabase-client.js';
         meta.textContent = `${students.length} ${t.students}`;
 
         await renderExportPreviewTable(className, cfg);
+        window.saveCurrentConfigToSupabase();
         window.translatePage();
     };
 
@@ -875,7 +916,8 @@ import { supabase } from './supabase-client.js';
 
     window.setExportSingle = function(field, assignmentId) {
         const className = document.getElementById('select-class-export')?.value || '';
-        const cfg = getExportClassConfig(className);
+        const subject = document.getElementById('select-subject-export')?.value || '';
+        const cfg = getExportClassConfig(className, subject);
         if (!assignmentId) {
             cfg[field] = '';
             window.saveExportPrepConfig();
@@ -890,7 +932,8 @@ import { supabase } from './supabase-client.js';
 
     window.setExportOutMax = function(val) {
         const className = document.getElementById('select-class-export')?.value || '';
-        const cfg = getExportClassConfig(className);
+        const subject = document.getElementById('select-subject-export')?.value || '';
+        const cfg = getExportClassConfig(className, subject);
         const n = parseInt(val, 10);
         cfg.outMax = Number.isFinite(n) && n > 0 ? n : 20;
         if (!cfg.devoir1.targetMax) cfg.devoir1.targetMax = cfg.outMax;
@@ -901,7 +944,8 @@ import { supabase } from './supabase-client.js';
 
     window.setExportGroupField = function(groupKey, field, value) {
         const className = document.getElementById('select-class-export')?.value || '';
-        const cfg = getExportClassConfig(className);
+        const subject = document.getElementById('select-subject-export')?.value || '';
+        const cfg = getExportClassConfig(className, subject);
         cfg[groupKey][field] = value;
         window.saveExportPrepConfig();
         window.renderExportPrep();
@@ -910,7 +954,8 @@ import { supabase } from './supabase-client.js';
 
     window.toggleExportGroupAssignment = function(groupKey, assignmentId, checked) {
         const className = document.getElementById('select-class-export')?.value || '';
-        const cfg = getExportClassConfig(className);
+        const subject = document.getElementById('select-subject-export')?.value || '';
+        const cfg = getExportClassConfig(className, subject);
         const arr = cfg[groupKey].assignmentIds || [];
         const set = new Set(arr);
         if (checked) {
@@ -1028,11 +1073,7 @@ import { supabase } from './supabase-client.js';
             if (hasAnyMoyenne) btnRakamna.classList.remove('hidden');
             else btnRakamna.classList.add('hidden');
         }
-        const btnSaveDb = document.getElementById('btn-save-export-db');
-        if (btnSaveDb) {
-            if (hasAnyMoyenne) btnSaveDb.classList.remove('hidden');
-            else btnSaveDb.classList.add('hidden');
-        }
+        // (boutons Sauvegarder/Annuler supprimés — calcul à la volée)
         const fmt = (v) => (v === null ? '' : round2(v).toFixed(2));
 
         const rows = studentsWithAverages.map(item => {
@@ -1534,121 +1575,8 @@ import { supabase } from './supabase-client.js';
         alert(`✅ ${totalMatches} élève(s) mis à jour.\n🔐 Protection préservée si possible.`);
     };
 
-    // --- SUPABASE PERSISTENCE ---
-
     /**
-     * Sauvegarde la configuration ET les notes finales calculées dans Supabase
-     */
-    window.saveExportPrepToSupabase = async function() {
-        const className = document.getElementById('select-class-export')?.value;
-        if (!className) {
-            alert('Veuillez d\'abord sélectionner une classe.');
-            return;
-        }
-
-        const trimester = (window.getGlobalTrimester && window.getGlobalTrimester()) || 'T1';
-        const academicYear = (window.getGlobalAcademicYear && window.getGlobalAcademicYear()) || '';
-
-        if (!academicYear) {
-            alert('Année académique manquante.');
-            return;
-        }
-
-        const cfg = getExportClassConfig(className);
-        if (!cfg) {
-            alert('Configuration manquante pour cette classe.');
-            return;
-        }
-
-        try {
-            // 1. Save configuration
-            const { data: configId, error: configError } = await supabase.rpc('save_grade_calculation_config', {
-                p_class_name: className,
-                p_trimester: trimester,
-                p_academic_year: academicYear,
-                p_cc_assignment_id: cfg.ccAssignmentId || '',
-                p_comp_assignment_id: cfg.compAssignmentId || '',
-                p_tp_assignment_id: cfg.tpAssignmentId || '',
-                p_devoir1_config: cfg.devoir1 || { assignmentIds: [], combine: 'sum', normalize: true, targetMax: 20 },
-                p_devoir2_config: cfg.devoir2 || { assignmentIds: [], combine: 'sum', normalize: true, targetMax: 20 },
-                p_out_max: cfg.outMax || 20
-            });
-            if (configError) throw configError;
-
-            // 2. Check if the preview table exists and has rows with data-student-id
-            const table = document.getElementById('export-preview-table');
-            if (!table) {
-                alert('Aucun tableau de prévisualisation. Veuillez d\'abord calculer les moyennes.');
-                return;
-            }
-
-            const rows = table.querySelectorAll('tr[data-student-id]');
-            if (!rows || rows.length === 0) {
-                alert('Aucune donnée élève dans le tableau. Veuillez d\'abord calculer les moyennes.');
-                return;
-            }
-
-            const hasTP = !!cfg.tpAssignmentId;
-            const gradesData = [];
-
-            rows.forEach(row => {
-                const studentId = row.getAttribute('data-student-id');
-                const cells = row.querySelectorAll('td');
-
-                // cells[0] = name, cells[1] = CC, cells[2] = Devoir
-                // if hasTP: cells[3] = TP, cells[4] = Comp, cells[5] = Moy, cells[6] = Obs, cells[7] = Cons
-                // if !hasTP: cells[3] = Comp, cells[4] = Moy, cells[5] = Obs, cells[6] = Cons
-                const ccVal = parseFloat(cells[1]?.textContent?.trim()) || null;
-                const devoirVal = parseFloat(cells[2]?.textContent?.trim()) || null;
-
-                let tpVal = null, compVal = null, moyVal = null;
-                if (hasTP) {
-                    tpVal = parseFloat(cells[3]?.textContent?.trim()) || null;
-                    compVal = parseFloat(cells[4]?.textContent?.trim()) || null;
-                    moyVal = parseFloat(cells[5]?.textContent?.trim()) || null;
-                } else {
-                    compVal = parseFloat(cells[3]?.textContent?.trim()) || null;
-                    moyVal = parseFloat(cells[4]?.textContent?.trim()) || null;
-                }
-
-                // Extract observation & advice from remark cells
-                const obsEl = row.querySelector('[data-kind="obs"] .remark-text');
-                const consEl = row.querySelector('[data-kind="cons"] .remark-text');
-
-                gradesData.push({
-                    student_id: studentId,
-                    cc_score: ccVal,
-                    tp_score: tpVal,
-                    comp_score: compVal,
-                    devoir_score: devoirVal,
-                    moyenne: moyVal,
-                    observation: obsEl?.textContent?.trim() || '',
-                    advice: consEl?.textContent?.trim() || ''
-                });
-            });
-
-            if (gradesData.length === 0) {
-                alert('Aucune donnée à sauvegarder.');
-                return;
-            }
-
-            // 3. Save final grades
-            const { error: gradesError } = await supabase.rpc('save_student_final_grades', {
-                p_class_name: className,
-                p_trimester: trimester,
-                p_academic_year: academicYear,
-                p_grades: gradesData
-            });
-            if (gradesError) throw gradesError;
-
-            alert(`✅ Configuration et notes de ${gradesData.length} élève(s) sauvegardées avec succès !`);
-        } catch (err) {
-            console.error('❌ Erreur lors de la sauvegarde Supabase:', err);
-            alert('❌ Erreur lors de la sauvegarde : ' + (err.message || 'Erreur inconnue'));
-        }
-    };
-
-    /**
+     * Charge la configuration depuis Supabase pour la classe/trimestre actuel
      * Charge la configuration depuis Supabase pour la classe/trimestre actuel
      * Retourne l'objet config ou null si aucune config sauvegardée
      */
@@ -1656,6 +1584,7 @@ import { supabase } from './supabase-client.js';
         const className = document.getElementById('select-class-export')?.value;
         if (!className) return null;
 
+        const subject = document.getElementById('select-subject-export')?.value || '';
         const trimester = (window.getGlobalTrimester && window.getGlobalTrimester()) || 'T1';
         const academicYear = (window.getGlobalAcademicYear && window.getGlobalAcademicYear()) || '';
         if (!academicYear) return null;
@@ -1663,6 +1592,7 @@ import { supabase } from './supabase-client.js';
         try {
             const { data, error } = await supabase.rpc('get_grade_calculation_config', {
                 p_class_name: className,
+                p_subject: subject,
                 p_trimester: trimester,
                 p_academic_year: academicYear
             });
@@ -1676,27 +1606,45 @@ import { supabase } from './supabase-client.js';
     };
 
     /**
-     * Vérifie si des notes finales existent déjà en base pour cette classe
+     * Sauvegarde la configuration actuelle dans Supabase (grade_calculation_configs)
+     * pour que l'API élève puisse calculer les moyennes à la volée.
+     * Appelée automatiquement après chaque modification de la config.
      */
-    window.hasExportPrepSavedData = async function() {
+    window.saveCurrentConfigToSupabase = async function() {
         const className = document.getElementById('select-class-export')?.value;
-        if (!className) return false;
+        if (!className) return;
 
         const trimester = (window.getGlobalTrimester && window.getGlobalTrimester()) || 'T1';
         const academicYear = (window.getGlobalAcademicYear && window.getGlobalAcademicYear()) || '';
-        if (!academicYear) return false;
+        if (!academicYear) return;
+
+        const subject = document.getElementById('select-subject-export')?.value || '';
+        const cfg = getExportClassConfig(className, subject);
+        if (!cfg) return;
+
+        // Ne sauvegarder que si au moins CC + Comp + 1 devoir sont configurés
+        const hasCC = !!cfg.ccAssignmentId;
+        const hasComp = !!cfg.compAssignmentId;
+        const hasDevoir = (cfg.devoir1?.assignmentIds?.length > 0) || (cfg.devoir2?.assignmentIds?.length > 0);
+        if (!hasCC || !hasComp || !hasDevoir) return;
 
         try {
-            const { data, error } = await supabase.rpc('get_teacher_student_final_grades', {
+            const { error } = await supabase.rpc('save_grade_calculation_config', {
                 p_class_name: className,
+                p_subject: subject,
                 p_trimester: trimester,
-                p_academic_year: academicYear
+                p_academic_year: academicYear,
+                p_cc_assignment_id: String(cfg.ccAssignmentId || ''),
+                p_comp_assignment_id: String(cfg.compAssignmentId || ''),
+                p_tp_assignment_id: String(cfg.tpAssignmentId || ''),
+                p_devoir1_config: cfg.devoir1 || { assignmentIds: [], combine: 'sum', normalize: true, targetMax: 20 },
+                p_devoir2_config: cfg.devoir2 || { assignmentIds: [], combine: 'sum', normalize: true, targetMax: 20 },
+                p_out_max: Number(cfg.outMax || 20)
             });
 
             if (error) throw error;
-            return data && data.length > 0;
         } catch (err) {
-            return false;
+            console.warn('⚠️ Impossible de sauvegarder la configuration dans Supabase:', err);
         }
     };
 

@@ -159,13 +159,7 @@
         import { login, checkAuth, resetPassword } from './src/ui/auth.js';
         import { initLanguage, changeLanguage, t } from './src/ui/i18n.js';
 
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW registration failed', err));
-            });
-        }
-
-        // Initialize language
+// Initialize language
         const currentLang = initLanguage();
         const langSelector = document.getElementById('language-selector');
         if (langSelector) {
