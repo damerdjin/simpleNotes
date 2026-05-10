@@ -481,6 +481,9 @@ window.translations = {
         typePlaceholder: "-- Choisir type --",
         searchStudent: "Rechercher un élève...",
         noResults: "Aucun résultat",
+        skip: "Passer",
+        confirm: "Confirmer",
+        assignmentTotal: "Total du devoir",
     },
 
     // Anglais
@@ -928,6 +931,9 @@ window.translations = {
         stepGoToSection: "Go to the section",
         stepExportExcel: "Export the Excel file by clicking on",
         stepImportHere: "Import it right here!",
+        skip: "Skip",
+        confirm: "Confirm",
+        assignmentTotal: "Assignment Total",
     },
 
     // Arabe
@@ -1396,5 +1402,8 @@ window.translations = {
         typePlaceholder: "-- اختر النوع --",
         searchStudent: "بحث عن طالب...",
         noResults: "لا توجد نتائج",
+        skip: "تخطي",
+        confirm: "تأكيد",
+        assignmentTotal: "المجموع الكلي للواجب",
     }
 };

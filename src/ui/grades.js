@@ -969,7 +969,7 @@
 
                 <div class="flex items-center gap-3">
                     <button onclick="window.closeExerciseTotalConfirm()" class="flex-1 py-3.5 rounded-2xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all text-sm">
-                        ${t.skip || 'Passer'}
+                        ${t.skip || 'Revenir'}
                     </button>
                     <button onclick="window.confirmAssignmentTotal('${studentId}','${assignmentId}')" class="flex-1 py-3.5 rounded-2xl font-bold text-white transition-all text-sm shadow-lg" style="background-color: ${color}">
                         ${t.confirm || 'Confirmer'}
