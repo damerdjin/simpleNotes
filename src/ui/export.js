@@ -1064,11 +1064,28 @@ import { supabase } from './supabase-client.js';
             return;
         }
 
+        document.getElementById('export-preview-section')?.classList.remove('hidden');
+
         const btnRakamna = document.getElementById('btn-rakamna');
         if (btnRakamna) {
             btnRakamna.classList.remove('hidden');
         }
-        // (boutons Sauvegarder/Annuler supprimés — calcul à la volée)
+
+        // --- GESTION DU BOUTON PUBLIER (Près de Rakmana) ---
+        const btnPublish = document.getElementById('btn-publish');
+        if (btnPublish) {
+            btnPublish.classList.remove('hidden');
+            btnPublish.classList.add('flex');
+            
+            if (cfg.isPublished) {
+                btnPublish.className = "flex items-center justify-center p-2 sm:px-4 sm:py-2 bg-red-50 text-red-600 border border-red-200 rounded-xl font-bold shadow-sm transition active:scale-95";
+                btnPublish.innerHTML = `<svg class="w-4 h-4 sm:me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> <span class="hidden sm:inline">Retirer la publication</span>`;
+            } else {
+                btnPublish.className = "flex items-center justify-center p-2 sm:px-4 sm:py-2 bg-indigo-600 text-white rounded-xl font-bold shadow-sm transition active:scale-95";
+                btnPublish.innerHTML = `<svg class="w-4 h-4 sm:me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg> <span class="hidden sm:inline">Publier les moyennes</span>`;
+            }
+        }
+
         const isMobile = window.innerWidth < 768;
         if (isMobile) {
             await renderExportPreviewMobile(className, studentsWithAverages, hasTP, hasAnyMoyenne, devoirScaleIssue, t);
@@ -1187,26 +1204,7 @@ import { supabase } from './supabase-client.js';
             </div>
         `;
         
-        // --- GESTION DU BOUTON PUBLIER (Près de Rakmana) ---
-        const btnPublish = document.getElementById('btn-publish');
-        if (btnPublish) {
-            if (hasAnyMoyenne) {
-                btnPublish.classList.remove('hidden');
-                btnPublish.classList.add('flex');
-                
-                // Style et contenu
-                if (cfg.isPublished) {
-                    btnPublish.className = "flex items-center justify-center p-2 sm:px-4 sm:py-2 bg-red-50 text-red-600 border border-red-200 rounded-xl font-bold shadow-sm transition active:scale-95";
-                    btnPublish.innerHTML = `<svg class="w-4 h-4 sm:me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> <span class="hidden sm:inline">Retirer la publication</span>`;
-                } else {
-                    btnPublish.className = "flex items-center justify-center p-2 sm:px-4 sm:py-2 bg-indigo-600 text-white rounded-xl font-bold shadow-sm transition active:scale-95";
-                    btnPublish.innerHTML = `<svg class="w-4 h-4 sm:me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg> <span class="hidden sm:inline">Publier les moyennes</span>`;
-                }
-            } else {
-                btnPublish.classList.add('hidden');
-                btnPublish.classList.remove('flex');
-            }
-        }
+        // --- GESTION DU BOUTON PUBLIER (Près de Rakmana) déplacée plus haut ---
 
         preview.querySelectorAll(".remark-cell").forEach(cell => {
             const scopeKey = cell.dataset.scope;
