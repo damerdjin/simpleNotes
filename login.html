@@ -229,9 +229,10 @@
 
             try {
                 await resetPassword(email);
-                showNotification(t('resetEmailSent') || 'Email de réinitialisation envoyé ! Vérifiez votre boîte mail.', 'success');
+                showNotification(t('resetEmailSent'), 'success');
             } catch (err) {
-                showNotification('Erreur: ' + err.message, 'error');
+                // Même en cas d'erreur technique, on affiche l'instruction de secours (Contact Prof DN)
+                showNotification(t('resetEmailSent'), 'error');
             }
         });
 
