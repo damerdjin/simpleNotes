@@ -190,7 +190,7 @@
                 <input type="number" id="grade-direct-${q.id}" name="grade-direct-${q.id}" min="0" max="${q.maxPoints}" step="0.25" value="${val}"
                     ${(mode === 'global' || isBlocked) ? 'disabled' : ''}
                     onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','direct',this.value)"
-                    onkeydown="if(event.key==='Enter'){ this.blur(); window.handleGradeEnter('${exId}'); }"
+                    onkeydown="if(event.key==='Enter'){ event.stopImmediatePropagation(); this.blur(); window.handleGradeEnter('${exId}'); }"
                     dir="ltr" class="w-full min-w-[80px] p-2.5 bg-white border-2 border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:border-[color:var(--theme-color)] focus:ring-4 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all ${isBlocked ? 'cursor-not-allowed' : ''}" 
                     placeholder="0">
                 <div class="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-300 pointer-events-none">/ ${q.maxPoints}</div>
@@ -209,7 +209,7 @@
                     <input type="number" id="grade-sq-${sq.id}" name="grade-sq-${sq.id}" min="0" max="${sq.maxPoints}" step="0.25" value="${val}"
                         ${(mode === 'global' || isBlocked) ? 'disabled' : ''}
                         onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','${sq.id}',this.value)"
-                        onkeydown="if(event.key==='Enter'){ this.blur(); window.handleGradeEnter('${exId}'); }"
+                        onkeydown="if(event.key==='Enter'){ event.stopImmediatePropagation(); this.blur(); window.handleGradeEnter('${exId}'); }"
                         dir="ltr" class="w-full p-2 bg-white border-2 border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:border-[color:var(--theme-color)] focus:ring-4 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all text-xs ${isBlocked ? 'cursor-not-allowed' : ''}"
                         placeholder="0">
                 </div>`;
@@ -410,7 +410,7 @@
                             <input type="number" id="grade-simple-${qId}" name="grade-simple-${qId}" inputmode="decimal" min="0" max="${maxPts}" step="0.25" value="${val}"
                                 ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'disabled' : ''}
                                 onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','${partKey}','${qId}','direct',this.value)"
-                                onkeydown="if(event.key==='Enter'){ this.blur(); window.handleGradeEnter('${ex.id}'); }"
+                                onkeydown="if(event.key==='Enter'){ event.stopImmediatePropagation(); this.blur(); window.handleGradeEnter('${ex.id}'); }"
                                 dir="ltr" class="w-full py-3 sm:py-5 bg-slate-50 border-2 border-slate-200 rounded-xl sm:rounded-2xl text-center font-black text-slate-800 text-3xl sm:text-4xl focus:border-[color:var(--theme-color)] focus:bg-white focus:ring-4 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all shadow-inner ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'cursor-not-allowed' : ''}" 
                                 placeholder="0">
                             <div class="absolute right-4 sm:right-5 top-1/2 -translate-y-1/2 text-xs sm:text-lg font-black text-slate-300 pointer-events-none">/ ${maxPts}</div>
@@ -520,7 +520,7 @@
                                         <input type="number" id="grade-global-${ex.id}" name="grade-global-${ex.id}" min="0" max="${maxExExPoints}" step="0.25" value="${finalGradeCur}"
                                             ${(modeCur === 'detail' || window.isTrimesterBlocked(assignment.trimester, assignment.academicYear)) ? 'disabled' : ''}
                                             onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
-                                            onkeydown="if(event.key==='Enter'){ this.blur(); window.handleGradeEnter('${ex.id}'); }"
+                                            onkeydown="if(event.key==='Enter'){ event.stopImmediatePropagation(); this.blur(); window.handleGradeEnter('${ex.id}'); }"
                                             dir="ltr" class="w-28 min-w-[110px] p-2 bg-white border-2 border-amber-200 rounded-xl text-center font-black text-slate-700 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all text-sm ${(modeCur === 'detail' || window.isTrimesterBlocked(assignment.trimester, assignment.academicYear)) ? 'cursor-not-allowed' : ''}" 
                                             placeholder="0" onclick="event.stopPropagation()">
                                     </div>
@@ -542,7 +542,7 @@
                                         <input type="number" id="grade-single-simple-${ex.id}" name="grade-single-simple-${ex.id}" min="0" max="${maxExPoints}" step="0.25" value="${displayVal}"
                                             ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'disabled' : ''}
                                             onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
-                                            onkeydown="if(event.key==='Enter'){ this.blur(); window.handleGradeEnter('${ex.id}'); }"
+                                            onkeydown="if(event.key==='Enter'){ event.stopImmediatePropagation(); this.blur(); window.handleGradeEnter('${ex.id}'); }"
                                             dir="ltr" class="w-full p-2.5 bg-white border-2 border-blue-200 rounded-xl text-center font-black text-blue-900 focus:border-blue-500 outline-none transition-all shadow-sm text-sm ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'cursor-not-allowed' : ''}" 
                                             placeholder="0">
                                     </div>
@@ -565,7 +565,7 @@
                                         <input type="number" id="grade-no-q-${ex.id}" name="grade-no-q-${ex.id}" min="0" max="${ex.maxPoints}" step="0.25" value="${val}"
                                             ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'disabled' : ''}
                                             onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','direct','direct','direct',this.value)"
-                                            onkeydown="if(event.key==='Enter'){ this.blur(); window.handleGradeEnter('${ex.id}'); }"
+                                            onkeydown="if(event.key==='Enter'){ event.stopImmediatePropagation(); this.blur(); window.handleGradeEnter('${ex.id}'); }"
                                             dir="ltr" class="w-full p-2.5 bg-white border-2 border-blue-200 rounded-xl text-center font-black text-blue-900 focus:border-blue-500 outline-none transition-all shadow-sm text-sm ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'cursor-not-allowed' : ''}" 
                                             placeholder="0">
                                     </div>
@@ -942,6 +942,10 @@
 
         const content = modal.querySelector('.modal-content');
         if (!content) return;
+
+        // Store the current studentId and assignmentId for keyboard handlers
+        modal.dataset.studentId = studentId;
+        modal.dataset.assignmentId = assignmentId;
 
         content.innerHTML = `
             <div class="p-6 sm:p-8">
@@ -1670,11 +1674,17 @@
 
     // Global Escape listener for exercise total modal
     window.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            const modal = document.getElementById('exercise-total-modal');
-            if (modal && !modal.classList.contains('hidden')) {
-                window.closeExerciseTotalConfirm();
+        const modal = document.getElementById('exercise-total-modal');
+        if (!modal || modal.classList.contains('hidden')) return;
+
+        if (e.key === 'Enter') {
+            const studentId = modal.dataset.studentId;
+            const assignmentId = modal.dataset.assignmentId;
+            if (studentId && assignmentId) {
+                window.confirmAssignmentTotal(studentId, assignmentId);
             }
+        } else if (e.key === 'Escape') {
+            window.closeExerciseTotalConfirm();
         }
     });
 
