@@ -550,7 +550,7 @@ import { supabase } from './supabase-client.js';
         // Mise à jour de la liste des matières si la classe a changé
         if (subjectSelector && (subjectSelector.dataset.lastClass !== className)) {
             subjectSelector.dataset.lastClass = className;
-            subjectSelector.innerHTML = `<option value="">-- ${t.selectSubject || 'Matière'} --</option>` + 
+            subjectSelector.innerHTML = `<option value="">-- ${t.subjectPlaceholder || 'Matière'} --</option>` + 
                 subjectsList.map(sid => {
                     const sObj = (window.subjects || []).find(s => s.id === sid);
                     const label = sObj ? (sObj[getLang()] || sObj.fr || sid) : sid;

@@ -26,6 +26,7 @@
         if (newIndex >= studentSelect.options.length) newIndex = 1;
         
         studentSelect.selectedIndex = newIndex;
+        window.updateCustomStudentSelectorTrigger();
         await window.loadGradeEntry();
     };
 
@@ -126,6 +127,9 @@
         if (currentStudentId && filteredStudents.some(s => s.id === currentStudentId)) {
             studentSelect.value = currentStudentId;
         }
+
+        // Mettre à jour le trigger du sélecteur personnalisé
+        window.updateCustomStudentSelectorTrigger();
 
         // Recharger l'interface de saisie (gère aussi la visibilité du sélecteur d'élève)
         await window.loadGradeEntry();
@@ -721,6 +725,7 @@
         }
         saveData();
         window.recalculateTotals(assignmentId, studentId);
+        window.updateCustomStudentSelectorTrigger();
     };
 
     window.setExerciseMode = async function(studentId, assignmentId, exId, mode) {
@@ -1257,6 +1262,275 @@
         }
     };
     
+    // --- CUSTOM STUDENT SELECTOR LOGIC ---
+    let studentSelectorFilter = 'all'; // 'all' or 'remaining'
+    let exerciseFocusFilter = null; // ID of focused exercise
+
+    window.openStudentSelector = function() {
+        const modal = document.getElementById('student-selector-modal');
+        if (!modal) return;
+        
+        const t = getTranslations()[getLang()];
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden'; // Prevent scroll
+        
+        // Restore search label & Fix labels
+        const searchInput = document.getElementById('student-selector-search');
+        if (searchInput) {
+            searchInput.placeholder = t.searchStudent || 'Rechercher un élève...';
+        }
+        
+        // PERSISTENCE: We don't reset studentSelectorFilter or exerciseFocusFilter here
+        // Manually update the button styles to match the persisted state
+        const btnAll = document.getElementById('filter-all-students');
+        const btnRem = document.getElementById('filter-remaining-students');
+        if (btnAll && btnRem) {
+            if (studentSelectorFilter === 'all') {
+                btnAll.className = 'px-4 py-2 rounded-xl text-xs font-bold transition-all bg-blue-600 text-white shadow-md shadow-blue-500/20';
+                btnRem.className = 'px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-100 text-slate-600 hover:bg-slate-200';
+            } else {
+                btnRem.className = 'px-4 py-2 rounded-xl text-xs font-bold transition-all bg-blue-600 text-white shadow-md shadow-blue-500/20';
+                btnAll.className = 'px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-100 text-slate-600 hover:bg-slate-200';
+            }
+        }
+        
+        window.renderStudentListInSelector();
+        
+        // Focus search (but keep existing text if any)
+        setTimeout(() => searchInput?.focus(), 100);
+    };
+
+    window.closeStudentSelector = function() {
+        const modal = document.getElementById('student-selector-modal');
+        if (modal) modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    };
+
+    window.setStudentSelectorFilter = function(filter) {
+        studentSelectorFilter = filter;
+        
+        // Update UI buttons
+        const btnAll = document.getElementById('filter-all-students');
+        const btnRem = document.getElementById('filter-remaining-students');
+        const t = getTranslations()[getLang()];
+        
+        if (btnAll && btnRem) {
+            if (filter === 'all') {
+                btnAll.textContent = t.allStudents || 'Tous';
+                btnAll.className = 'px-4 py-2 rounded-xl text-xs font-bold transition-all bg-blue-600 text-white shadow-md shadow-blue-500/20';
+                btnRem.className = 'px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-100 text-slate-600 hover:bg-slate-200';
+            } else {
+                btnRem.textContent = t.remainingToGrade || 'À corriger';
+                btnRem.className = 'px-4 py-2 rounded-xl text-xs font-bold transition-all bg-blue-600 text-white shadow-md shadow-blue-500/20';
+                btnAll.className = 'px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-100 text-slate-600 hover:bg-slate-200';
+            }
+        }
+        
+        window.renderStudentListInSelector();
+    };
+
+    window.setExerciseFocusFilter = function(exId) {
+        // Toggle focus
+        exerciseFocusFilter = (exerciseFocusFilter === exId) ? null : exId;
+        window.renderStudentListInSelector();
+    };
+
+    function getStudentGradingProgress(studentId, assignmentId) {
+        const data = getData();
+        const assignment = data.assignments.find(a => a.id === assignmentId);
+        if (!assignment) return { count: 0, total: 0, scores: [], status: 'none' };
+
+        const studentGrades = data.grades[studentId]?.[assignmentId] || {};
+        const exercises = assignment.exercises || [];
+        const total = exercises.length;
+        let count = 0;
+        const scores = [];
+
+        exercises.forEach(ex => {
+            const hasGrade = window.grades.hasAnyGradeForExercise(studentGrades, ex);
+            if (hasGrade) {
+                count++;
+                const totalEx = window.grades.getStudentExerciseTotal(studentGrades, ex);
+                scores.push(totalEx);
+            } else {
+                scores.push('-');
+            }
+        });
+
+        let status = 'none';
+        if (count === total && total > 0) status = 'completed';
+        else if (count > 0) status = 'partial';
+
+        return { count, total, scores, status };
+    }
+
+    window.updateCustomStudentSelectorTrigger = function() {
+        const studentSelect = document.getElementById('select-student');
+        const assignmentSelect = document.getElementById('select-assignment');
+        const nameSpan = document.getElementById('custom-student-name');
+        const dot = document.getElementById('custom-student-status-dot');
+        
+        if (!studentSelect || !nameSpan || !dot) return;
+        
+        const studentId = studentSelect.value;
+        const assignmentId = assignmentSelect ? assignmentSelect.value : '';
+        
+        if (!studentId) {
+            nameSpan.textContent = getTranslations()[getLang()].selectStudent || '-- Sélectionner --';
+            dot.className = 'status-dot none';
+            return;
+        }
+
+        const student = (window.currentClassStudents || []).find(s => s.id === studentId);
+        nameSpan.textContent = student ? student.name : '--';
+        
+        if (assignmentId) {
+            const prog = getStudentGradingProgress(studentId, assignmentId);
+            dot.className = `status-dot ${prog.status}`;
+        } else {
+            dot.className = 'status-dot none';
+        }
+    };
+
+    window.renderStudentListInSelector = function() {
+        const listContainer = document.getElementById('student-selector-list');
+        const countLabel = document.getElementById('student-selector-count');
+        const searchInput = document.getElementById('student-selector-search');
+        const exFiltersContainer = document.getElementById('student-selector-exercise-filters');
+        const studentSelect = document.getElementById('select-student');
+        const assignmentSelect = document.getElementById('select-assignment');
+        const t = getTranslations()[getLang()];
+        
+        if (!listContainer || !studentSelect) return;
+        
+        const assignmentId = assignmentSelect ? assignmentSelect.value : '';
+        const assignment = getData().assignments.find(a => a.id === assignmentId);
+        const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+        const students = window.currentClassStudents || [];
+        const currentStudentId = studentSelect.value;
+
+        // --- Render Exercise Tags ---
+        if (exFiltersContainer && assignment) {
+            const exercises = assignment.exercises || [];
+            // Only show tags if there's more than 1 exercise
+            if (exercises.length > 1) {
+                exFiltersContainer.innerHTML = exercises.map((ex, idx) => {
+                    const isActive = exerciseFocusFilter === ex.id;
+                    return `
+                        <button onclick="setExerciseFocusFilter('${ex.id}')" 
+                            class="shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-tight border-2 transition-all
+                            ${isActive ? 'bg-amber-100 border-amber-400 text-amber-700 shadow-sm' : 'bg-slate-50 border-slate-100 text-slate-400 hover:bg-white hover:border-slate-200'}">
+                            ${ex.name || (t.exerciseAbbr || 'Ex') + (idx + 1)}
+                        </button>
+                    `;
+                }).join('');
+                exFiltersContainer.classList.remove('hidden');
+            } else {
+                exFiltersContainer.innerHTML = '';
+                exFiltersContainer.classList.add('hidden');
+            }
+        }
+
+        // --- Filter and calculate info ---
+        let items = students.map(s => {
+            const prog = assignmentId ? getStudentGradingProgress(s.id, assignmentId) : { count: 0, total: 0, scores: [], status: 'none' };
+            return { student: s, progress: prog };
+        }).filter(item => {
+            const nameMatch = item.student.name.toLowerCase().includes(searchTerm);
+            
+            if (studentSelectorFilter === 'remaining') {
+                return nameMatch && item.progress.status !== 'completed';
+            }
+            return nameMatch;
+        });
+
+        // --- Smart Sorting ---
+        items.sort((a, b) => {
+            // 1. If focused on an exercise, put those without grade for it first
+            if (exerciseFocusFilter && assignment) {
+                const exIdx = assignment.exercises.findIndex(ex => ex.id === exerciseFocusFilter);
+                if (exIdx !== -1) {
+                    const aGraded = a.progress.scores[exIdx] !== '-';
+                    const bGraded = b.progress.scores[exIdx] !== '-';
+                    if (!aGraded && bGraded) return -1;
+                    if (aGraded && !bGraded) return 1;
+                }
+            }
+
+            // 2. If 'remaining' filter, sort by completion progress (less graded first)
+            if (studentSelectorFilter === 'remaining') {
+                if (a.progress.count !== b.progress.count) {
+                    return a.progress.count - b.progress.count;
+                }
+            }
+
+            // 3. Current student always shows high up if possible? No, alphabetical usually best as fallback
+            return a.student.name.localeCompare(b.student.name);
+        });
+
+        countLabel.textContent = `${items.length} ${t.students || 'élèves'}`;
+
+        if (items.length === 0) {
+            listContainer.innerHTML = `<div class="py-10 text-center text-slate-400 font-bold">${t.noResults || 'Aucun résultat'}</div>`;
+            return;
+        }
+
+        listContainer.innerHTML = items.map(item => {
+            const s = item.student;
+            const p = item.progress;
+            const isActive = s.id === currentStudentId;
+            
+            // Format scores list
+            const scoresHtml = p.scores.map((score, idx) => {
+                const isFocused = assignment && assignment.exercises[idx]?.id === exerciseFocusFilter;
+                const baseClass = score === '-' ? 'empty' : 'filled';
+                const focusClass = isFocused ? 'ring-2 ring-amber-400 ring-offset-1' : '';
+                return `<span class="grade-pill ${baseClass} ${focusClass}">${score}</span>`;
+            }).join('');
+
+            return `
+                <div onclick="selectStudentFromCustomList('${s.id}')" 
+                    class="student-item flex items-center justify-between p-3 rounded-2xl cursor-pointer ${isActive ? 'active' : 'bg-white'}">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="status-dot ${p.status} shrink-0"></div>
+                        <div class="min-w-0">
+                            <p class="font-black text-slate-800 text-sm sm:text-base truncate">${s.name}</p>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
+                                    ${p.count}/${p.total} ${t.graded || 'notés'}
+                                </span>
+                                ${p.status === 'completed' ? '✅' : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1 overflow-x-auto no-scrollbar ms-2">
+                        ${scoresHtml}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    };
+
+    window.selectStudentFromCustomList = function(id) {
+        const studentSelect = document.getElementById('select-student');
+        if (studentSelect) {
+            studentSelect.value = id;
+            // Native select change doesn't always trigger onchange via JS, so call it
+            window.loadGradeEntry();
+            window.updateCustomStudentSelectorTrigger();
+            window.closeStudentSelector();
+        }
+    };
+
+    // Close modal on click outside
+    window.addEventListener('click', (e) => {
+        const modal = document.getElementById('student-selector-modal');
+        const container = modal?.querySelector('.modal-container');
+        if (e.target === container) {
+            window.closeStudentSelector();
+        }
+    });
+
     // Initial setup function to be called after data load
     window.initGradesUI = function() {
         window.goToGradeStep(1);
