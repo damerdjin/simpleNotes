@@ -46,7 +46,20 @@
                 activeClassFilters.push(className);
             }
         }
-        window.renderAssignments();
+    };
+
+    window.renderAssignments = function() {
+        if (typeof window.renderAssignmentsInternal === 'function') window.renderAssignmentsInternal();
+    };
+
+    window.toggleAssignmentsFab = function() {
+        const btn = document.getElementById('assignments-fab-btn');
+        const options = document.getElementById('assignments-fab-options');
+        if (!btn || !options) return;
+        
+        btn.classList.toggle('open');
+        options.classList.toggle('hidden');
+        options.classList.toggle('flex');
     };
 
     window.toggleAdvancedOptions = function() {
@@ -1437,6 +1450,7 @@
 
         // Toggle View Visibility
         const selectedClass = assignmentsUiState.selectedClass;
+        
         if (!selectedClass) {
             if (viewList) viewList.classList.add('hidden');
             if (viewClasses) viewClasses.classList.remove('hidden');

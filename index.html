@@ -1922,7 +1922,7 @@
                                     <p class="text-slate-500 mt-1 text-xs sm:text-sm rtl:text-right" data-translate="selectClassToManageAssignments">Sélectionnez une classe pour gérer ses devoirs</p>
                                 </div>
                                 <button onclick="openAssignmentModal()"
-                                    class="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-green-500/20 transition-all active:scale-95 flex items-center justify-center gap-2 text-sm">
+                                    class="hidden sm:flex w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-green-500/20 transition-all active:scale-95 items-center justify-center gap-2 text-sm">
                                     <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                                     <span data-translate="createAssignment">Créer un devoir</span>
                                 </button>
@@ -1948,7 +1948,7 @@
                         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-8">
                             <!-- Header with Back navigation -->
                             <div class="flex flex-col gap-6 mb-8">
-                                <div class="flex items-center gap-4">
+                                <div class="sticky top-0 z-30 bg-white/80 backdrop-blur-md -mx-4 sm:-mx-8 px-4 sm:px-8 py-3 mb-4 flex items-center gap-4 border-b border-slate-100">
                                     <button onclick="setAssignmentsSelectedClass('')" class="p-2.5 rounded-xl bg-white text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-all border border-slate-200 shadow-sm shrink-0">
                                         <svg class="w-5 h-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                                     </button>
@@ -1957,7 +1957,7 @@
                                         <p class="text-[10px] sm:text-xs font-bold text-blue-600 uppercase tracking-wider" id="assignment-selected-class-stats">--</p>
                                     </div>
                                     <button onclick="openAssignmentModal()"
-                                        class="ms-auto bg-green-500 hover:bg-green-600 text-white p-2.5 rounded-xl font-bold shadow-lg shadow-green-500/20 transition-all active:scale-95 flex items-center justify-center gap-2 text-sm">
+                                        class="flex ms-auto bg-green-500 hover:bg-green-600 text-white p-2.5 rounded-xl font-bold shadow-lg shadow-green-500/20 transition-all active:scale-95 items-center justify-center gap-2 text-sm">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                                         <span class="hidden sm:inline" data-translate="createAssignment">Créer un devoir</span>
                                     </button>
@@ -1976,6 +1976,14 @@
 
                             <div id="assignments-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6"></div>
                         </div>
+                    </div>
+
+                    <!-- FAB Mobile - Actions Devoirs -->
+                    <div id="assignments-fab" class="fixed bottom-24 right-4 z-50 md:hidden">
+                        <button onclick="openAssignmentModal()" 
+                            class="w-12 h-12 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-[0_8px_16px_rgba(22,163,74,0.3)] flex items-center justify-center transition-all transform active:scale-95">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        </button>
                     </div>
                 </div>
 
@@ -2178,6 +2186,33 @@
                             transform: translateY(0);
                             pointer-events: auto;
                         }
+                    }
+
+                    /* ===== FAB ANIMATIONS ===== */
+                    #students-fab-options, #assignments-fab-options {
+                        animation: fab-slide-up 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                    }
+
+                    #students-fab-options.flex, #assignments-fab-options.flex {
+                        display: flex !important;
+                    }
+
+                    @keyframes fab-slide-up {
+                        from { 
+                            opacity: 0; 
+                            transform: translateY(15px) scale(0.95); 
+                            pointer-events: none;
+                        }
+                        to { 
+                            opacity: 1; 
+                            transform: translateY(0) scale(1); 
+                            pointer-events: auto;
+                        }
+                    }
+
+                    #students-fab-btn.open #students-fab-icon,
+                    #assignments-fab-btn.open #assignments-fab-icon {
+                        transform: rotate(45deg);
                     }
 
                     .rtl-layout .glass-sticky-header {
