@@ -186,14 +186,14 @@
             const val = qGrades['direct'] || '';
             const isBlocked = window.isTrimesterBlocked(assignment?.trimester, assignment?.academicYear);
             qHtml += `
-            <div class="relative ${(mode === 'global' || isBlocked) ? 'opacity-40 grayscale pointer-events-none' : ''}" dir="ltr">
+            <div class="relative ${(mode === 'global' || isBlocked) ? 'opacity-40 grayscale pointer-events-none' : ''}">
                 <input type="number" id="grade-direct-${q.id}" name="grade-direct-${q.id}" min="0" max="${q.maxPoints}" step="0.25" value="${val}"
                     ${(mode === 'global' || isBlocked) ? 'disabled' : ''}
                     onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','direct',this.value)"
                     onkeydown="if(event.key==='Enter'){ this.blur(); window.openStudentSelector(); }"
-                    class="w-full p-2.5 pr-8 bg-white border-2 border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:border-[color:var(--theme-color)] focus:ring-4 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all ${isBlocked ? 'cursor-not-allowed' : ''}" 
+                    dir="ltr" class="w-full min-w-[80px] p-2.5 bg-white border-2 border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:border-[color:var(--theme-color)] focus:ring-4 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all ${isBlocked ? 'cursor-not-allowed' : ''}" 
                     placeholder="0">
-                <div class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">/ ${q.maxPoints}</div>
+                <div class="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-300 pointer-events-none">/ ${q.maxPoints}</div>
             </div>`;
         } else {
             const isBlocked = window.isTrimesterBlocked(assignment?.trimester, assignment?.academicYear);
@@ -210,7 +210,7 @@
                         ${(mode === 'global' || isBlocked) ? 'disabled' : ''}
                         onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','${sq.id}',this.value)"
                         onkeydown="if(event.key==='Enter'){ this.blur(); window.openStudentSelector(); }"
-                        class="w-full p-2 bg-white border-2 border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:border-[color:var(--theme-color)] focus:ring-4 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all text-xs ${isBlocked ? 'cursor-not-allowed' : ''}"
+                        dir="ltr" class="w-full p-2 bg-white border-2 border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:border-[color:var(--theme-color)] focus:ring-4 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all text-xs ${isBlocked ? 'cursor-not-allowed' : ''}"
                         placeholder="0">
                 </div>`;
             }).join('');
@@ -406,14 +406,14 @@
                     </div>
                     
                     <div class="w-full md:w-64 shrink-0 mt-2 md:mt-0">
-                        <div class="relative w-full" dir="ltr">
+                        <div class="relative w-full">
                             <input type="number" id="grade-simple-${qId}" name="grade-simple-${qId}" inputmode="decimal" min="0" max="${maxPts}" step="0.25" value="${val}"
                                 ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'disabled' : ''}
                                 onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','${partKey}','${qId}','direct',this.value)"
                                 onkeydown="if(event.key==='Enter'){ this.blur(); window.openStudentSelector(); }"
-                                class="w-full py-3 sm:py-5 pr-12 sm:pr-16 bg-slate-50 border-2 border-slate-200 rounded-xl sm:rounded-2xl text-center font-black text-slate-800 text-3xl sm:text-4xl focus:border-[color:var(--theme-color)] focus:bg-white focus:ring-4 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all shadow-inner ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'cursor-not-allowed' : ''}" 
+                                dir="ltr" class="w-full py-3 sm:py-5 bg-slate-50 border-2 border-slate-200 rounded-xl sm:rounded-2xl text-center font-black text-slate-800 text-3xl sm:text-4xl focus:border-[color:var(--theme-color)] focus:bg-white focus:ring-4 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all shadow-inner ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'cursor-not-allowed' : ''}" 
                                 placeholder="0">
-                            <div class="absolute right-4 sm:right-5 top-1/2 -translate-y-1/2 text-sm sm:text-lg font-black text-slate-400">/ ${maxPts}</div>
+                            <div class="absolute right-4 sm:right-5 top-1/2 -translate-y-1/2 text-xs sm:text-lg font-black text-slate-300 pointer-events-none">/ ${maxPts}</div>
                         </div>
                     </div>
                 </div>
@@ -477,7 +477,7 @@
                         
                         <div class="flex items-center gap-2 sm:gap-3">
                             <span id="ex-total-${ex.id}" class="px-2 sm:px-4 py-1 sm:py-1.5 bg-[color:var(--theme-color)]/10 text-[color:var(--theme-color)] font-black rounded-lg sm:rounded-xl text-[10px] sm:text-sm border border-[color:var(--theme-color)]/20 shadow-sm whitespace-nowrap">
-                                0 / ${maxExPoints}
+                                0
                             </span>
                             <div id="icon-${accordionId}" class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-[color:var(--theme-color)] group-hover:text-white group-hover:border-[color:var(--theme-color)] transition-all duration-500 shadow-sm shrink-0">
                                 <svg class="w-4 h-4 sm:w-5 sm:h-5 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -514,16 +514,15 @@
                                 </div>
 
                                 <!-- Global Grade Input -->
-                                <div class="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto border-t border-slate-200 sm:border-0 pt-3 sm:pt-0 mt-1 sm:mt-0 ${modeCur === 'detail' ? 'opacity-40 grayscale pointer-events-none' : ''}">
-                                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-tight truncate mr-2 sm:mr-0">${t.globalGrade || 'Note globale'} :</span>
-                                    <div class="relative shrink-0" dir="ltr">
+                                <div class="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto border-t border-slate-200 sm:border-0 pt-3 sm:pt-0 mt-1 sm:mt-0 flex-1 min-w-0 ${modeCur === 'detail' ? 'opacity-40 grayscale pointer-events-none' : ''}">
+                                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-tight truncate mr-2 sm:mr-0 flex-1 min-w-0">${t.globalGrade || 'Note globale'} :</span>
+                                    <div class="shrink-0">
                                         <input type="number" id="grade-global-${ex.id}" name="grade-global-${ex.id}" min="0" max="${maxExExPoints}" step="0.25" value="${finalGradeCur}"
                                             ${(modeCur === 'detail' || window.isTrimesterBlocked(assignment.trimester, assignment.academicYear)) ? 'disabled' : ''}
                                             onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
                                             onkeydown="if(event.key==='Enter'){ this.blur(); window.openStudentSelector(); }"
-                                            class="w-24 p-2 pr-10 bg-white border-2 border-amber-200 rounded-xl text-center font-black text-slate-700 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all text-sm ${(modeCur === 'detail' || window.isTrimesterBlocked(assignment.trimester, assignment.academicYear)) ? 'cursor-not-allowed' : ''}" 
+                                            dir="ltr" class="w-28 min-w-[110px] p-2 bg-white border-2 border-amber-200 rounded-xl text-center font-black text-slate-700 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all text-sm ${(modeCur === 'detail' || window.isTrimesterBlocked(assignment.trimester, assignment.academicYear)) ? 'cursor-not-allowed' : ''}" 
                                             placeholder="0" onclick="event.stopPropagation()">
-                                        <div class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">/ ${maxExPoints}</div>
                                     </div>
                                 </div>
                             </div>`;
@@ -532,21 +531,20 @@
                      const displayVal = finalGradeCur !== '' ? finalGradeCur : singleSimpleQVal;
                      exHtml += `
                             <div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
-                                <div class="flex items-center gap-3 shrink-0 w-full sm:w-auto">
-                                    <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    </div>
-                                    <span class="text-xs font-bold text-blue-900">${t.globalGrade || 'Note globale'}</span>
+                                <div class="flex items-center gap-3 w-full sm:w-auto flex-1 min-w-0">
+                                     <div class="w-8 h-8 shrink-0 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
+                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                     </div>
+                                     <span class="text-xs font-bold text-blue-900 break-words">${t.globalGrade || 'Note globale'}</span>
                                 </div>
-                                <div class="flex items-center gap-3 w-full sm:w-auto">
-                                    <div class="relative w-full sm:w-32" dir="ltr">
+                                <div class="flex items-center gap-3 w-full sm:w-auto shrink-0">
+                                    <div class="w-full sm:w-32">
                                         <input type="number" id="grade-single-simple-${ex.id}" name="grade-single-simple-${ex.id}" min="0" max="${maxExPoints}" step="0.25" value="${displayVal}"
                                             ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'disabled' : ''}
                                             onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
                                             onkeydown="if(event.key==='Enter'){ this.blur(); window.openStudentSelector(); }"
-                                            class="w-full p-2.5 pr-12 bg-white border-2 border-blue-200 rounded-xl text-center font-black text-blue-900 focus:border-blue-500 outline-none transition-all shadow-sm text-sm ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'cursor-not-allowed' : ''}" 
+                                            dir="ltr" class="w-full p-2.5 bg-white border-2 border-blue-200 rounded-xl text-center font-black text-blue-900 focus:border-blue-500 outline-none transition-all shadow-sm text-sm ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'cursor-not-allowed' : ''}" 
                                             placeholder="0">
-                                        <div class="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-blue-400">/ ${maxExPoints}</div>
                                     </div>
                                 </div>
                             </div>`;
@@ -556,21 +554,20 @@
                     const val = data.grades[studentId][assignmentId][ex.id]?.['direct']?.['direct']?.['direct'] || '';
                     exHtml += `
                             <div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
-                                <div class="flex items-center gap-3 shrink-0 w-full sm:w-auto">
-                                    <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
+                                <div class="flex items-center gap-3 w-full sm:w-auto flex-1 min-w-0">
+                                    <div class="w-8 h-8 shrink-0 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     </div>
-                                    <span class="text-xs font-bold text-blue-900">${t.grade || 'Note'}</span>
+                                    <span class="text-xs font-bold text-blue-900 break-words">${t.grade || 'Note'}</span>
                                 </div>
-                                <div class="flex items-center gap-3 w-full sm:w-auto">
-                                    <div class="relative w-full sm:w-32" dir="ltr">
+                                <div class="flex items-center gap-3 w-full sm:w-auto shrink-0">
+                                    <div class="w-full sm:w-32">
                                         <input type="number" id="grade-no-q-${ex.id}" name="grade-no-q-${ex.id}" min="0" max="${ex.maxPoints}" step="0.25" value="${val}"
                                             ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'disabled' : ''}
                                             onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','direct','direct','direct',this.value)"
                                             onkeydown="if(event.key==='Enter'){ this.blur(); window.openStudentSelector(); }"
-                                            class="w-full p-2.5 pr-12 bg-white border-2 border-blue-200 rounded-xl text-center font-black text-blue-900 focus:border-blue-500 outline-none transition-all shadow-sm text-sm ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'cursor-not-allowed' : ''}" 
+                                            dir="ltr" class="w-full p-2.5 bg-white border-2 border-blue-200 rounded-xl text-center font-black text-blue-900 focus:border-blue-500 outline-none transition-all shadow-sm text-sm ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'cursor-not-allowed' : ''}" 
                                             placeholder="0">
-                                        <div class="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-blue-400">/ ${ex.maxPoints}</div>
                                     </div>
                                 </div>
                             </div>`;
@@ -854,10 +851,10 @@
             const exEl = document.getElementById('ex-total-' + ex.id);
             if (exEl) {
                 if (isTrulyEmpty) {
-                    exEl.textContent = '-- / ' + svc.getExerciseMaxPoints(ex);
+                    exEl.textContent = '--';
                     exEl.className = `text-slate-400 font-medium bg-slate-50 px-3 py-1 rounded-full border border-dashed border-slate-200 text-sm`;
                 } else {
-                    exEl.textContent = exTotal + ' / ' + svc.getExerciseMaxPoints(ex);
+                    exEl.textContent = exTotal;
                     const isGlobal = finalGrade !== undefined && finalGrade !== '';
                     exEl.className = `text-blue-700 font-bold ${isGlobal ? 'bg-yellow-100' : 'bg-white'} px-3 py-1 rounded-full shadow-sm text-sm`;
                 }
