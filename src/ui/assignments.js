@@ -129,7 +129,7 @@
         nameInput.value = suggestedName;
     };
 
-    window.openAssignmentModal = async function (assignmentId = null) {
+    window.openAssignmentModal = async function (assignmentId = null, preSelectedClass = null) {
         const t = getTranslations()[getLang()];
         const isAr = getLang() === 'ar';
         editingAssignmentId = assignmentId;
@@ -491,9 +491,18 @@
             const subjectSelect = document.getElementById('assignment-subject');
             const classSelect = document.getElementById('assignment-class');
 
-            // --- AUTO-SELECT CLASS IF ONE IS SELECTED IN THE UI ---
-            if (!assignmentId && classSelect && assignmentsUiState.selectedClass) {
-                classSelect.value = assignmentsUiState.selectedClass;
+            // --- AUTO-SELECT CLASS IF ONE IS PROVIDED OR SELECTED IN THE UI ---
+            if (!assignmentId && classSelect && (preSelectedClass || assignmentsUiState.selectedClass)) {
+                classSelect.value = preSelectedClass || assignmentsUiState.selectedClass;
+                
+                // Unlock next steps if a class is selected
+                if (classSelect.value) {
+                    ['express-step-2', 'express-step-3'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.classList.remove('opacity-50', 'pointer-events-none');
+                    });
+                }
+
                 // Trigger any side effects like auto-suggesting subject
                 setTimeout(() => {
                     if (typeof window.autoSuggestAssignmentName === 'function') window.autoSuggestAssignmentName();

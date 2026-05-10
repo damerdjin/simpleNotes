@@ -1089,8 +1089,17 @@
             const flexColFix = 'display: flex !important; flex-direction: column !important;';
             const flexRowFix = 'display: flex !important; flex-direction: row !important;';
 
+            // Count assignments for this class in current trimester/year
+            const classAssignments = getData().assignments.filter(a => 
+                a.className === c && 
+                (a.createdBy || 'unknown') === userId && 
+                (a.academicYear || '') === globalAcademicYear &&
+                (a.trimester || '') === window.getGlobalTrimester()
+            );
+            const hasAssignments = classAssignments.length > 0;
+
             return `
-                <div onclick="selectGradeClass('${c}', '${color}')" 
+                <div onclick="${hasAssignments ? `selectGradeClass('${c}', '${color}')` : `window.openAssignmentModal(null, '${c}')`}" 
                     class="class-card-modern group relative bg-white p-3 sm:p-6 rounded-2xl sm:rounded-[2rem] border-2 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col h-full hover:-translate-y-2 hover:shadow-xl hover:border-[color:var(--card-color)]"
                     style="--card-color: ${color}; --card-color-alpha: ${colorAlpha};">
                     
@@ -1120,6 +1129,15 @@
                             <h3 class="card-title-hover ${titleClass} text-slate-800 transition-colors duration-300 line-clamp-3 sm:line-clamp-2 break-words" style="word-break: break-word;" title="${c}">
                                 ${cleanedName}
                             </h3>
+                            
+                            ${!hasAssignments ? `
+                            <div class="mt-4 sm:mt-6">
+                                <div class="w-full py-2 sm:py-3.5 bg-[color:var(--card-color)] text-white font-black rounded-xl sm:rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-[color:var(--card-color)]/30 group-hover:scale-105 active:scale-95 transition-all duration-300 text-xs sm:text-sm">
+                                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                                    ${t.createAssignmentTitle || 'Créer un Devoir'}
+                                </div>
+                            </div>
+                            ` : ''}
                         </div>
                     </div>
                 </div>
