@@ -70,6 +70,45 @@ export function hasAnyGradeForExercise(studentGrades, ex) {
   return false;
 }
 
+export function isExerciseFullyGraded(studentGrades, ex) {
+  const exGrades = studentGrades?.[ex.id] || {};
+  const directQuestions = ex.questions || [];
+  const parts = ex.parts || [];
+
+  if (directQuestions.length === 0 && parts.length === 0) {
+    const d = exGrades?.direct?.direct?.direct;
+    return d !== undefined && d !== '';
+  }
+
+  for (const q of directQuestions) {
+    const qg = exGrades?.direct?.[q.id] || {};
+    if (!q.subQuestions || q.subQuestions.length === 0) {
+      const v = qg?.direct;
+      if (v === undefined || v === '') return false;
+    } else {
+      for (const sq of q.subQuestions) {
+        const v = qg?.[sq.id];
+        if (v === undefined || v === '') return false;
+      }
+    }
+  }
+  for (const part of parts) {
+    for (const q of (part.questions || [])) {
+      const qg = exGrades?.[part.id]?.[q.id] || {};
+      if (!q.subQuestions || q.subQuestions.length === 0) {
+        const v = qg?.direct;
+        if (v === undefined || v === '') return false;
+      } else {
+        for (const sq of q.subQuestions) {
+          const v = qg?.[sq.id];
+          if (v === undefined || v === '') return false;
+        }
+      }
+    }
+  }
+  return true;
+}
+
 export function getStudentExerciseTotal(studentGrades, ex) {
   const exGrades = studentGrades[ex.id] || {};
   const directQuestions = ex.questions || [];

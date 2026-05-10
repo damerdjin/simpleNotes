@@ -190,7 +190,7 @@
                 <input type="number" id="grade-direct-${q.id}" name="grade-direct-${q.id}" min="0" max="${q.maxPoints}" step="0.25" value="${val}"
                     ${(mode === 'global' || isBlocked) ? 'disabled' : ''}
                     onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','direct',this.value)"
-                    onkeydown="if(event.key==='Enter'){ this.blur(); window.openStudentSelector(); }"
+                    onkeydown="if(event.key==='Enter'){ this.blur(); window.handleGradeEnter('${exId}'); }"
                     dir="ltr" class="w-full min-w-[80px] p-2.5 bg-white border-2 border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:border-[color:var(--theme-color)] focus:ring-4 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all ${isBlocked ? 'cursor-not-allowed' : ''}" 
                     placeholder="0">
                 <div class="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-300 pointer-events-none">/ ${q.maxPoints}</div>
@@ -209,7 +209,7 @@
                     <input type="number" id="grade-sq-${sq.id}" name="grade-sq-${sq.id}" min="0" max="${sq.maxPoints}" step="0.25" value="${val}"
                         ${(mode === 'global' || isBlocked) ? 'disabled' : ''}
                         onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','${sq.id}',this.value)"
-                        onkeydown="if(event.key==='Enter'){ this.blur(); window.openStudentSelector(); }"
+                        onkeydown="if(event.key==='Enter'){ this.blur(); window.handleGradeEnter('${exId}'); }"
                         dir="ltr" class="w-full p-2 bg-white border-2 border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:border-[color:var(--theme-color)] focus:ring-4 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all text-xs ${isBlocked ? 'cursor-not-allowed' : ''}"
                         placeholder="0">
                 </div>`;
@@ -410,7 +410,7 @@
                             <input type="number" id="grade-simple-${qId}" name="grade-simple-${qId}" inputmode="decimal" min="0" max="${maxPts}" step="0.25" value="${val}"
                                 ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'disabled' : ''}
                                 onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','${partKey}','${qId}','direct',this.value)"
-                                onkeydown="if(event.key==='Enter'){ this.blur(); window.openStudentSelector(); }"
+                                onkeydown="if(event.key==='Enter'){ this.blur(); window.handleGradeEnter('${ex.id}'); }"
                                 dir="ltr" class="w-full py-3 sm:py-5 bg-slate-50 border-2 border-slate-200 rounded-xl sm:rounded-2xl text-center font-black text-slate-800 text-3xl sm:text-4xl focus:border-[color:var(--theme-color)] focus:bg-white focus:ring-4 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all shadow-inner ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'cursor-not-allowed' : ''}" 
                                 placeholder="0">
                             <div class="absolute right-4 sm:right-5 top-1/2 -translate-y-1/2 text-xs sm:text-lg font-black text-slate-300 pointer-events-none">/ ${maxPts}</div>
@@ -520,7 +520,7 @@
                                         <input type="number" id="grade-global-${ex.id}" name="grade-global-${ex.id}" min="0" max="${maxExExPoints}" step="0.25" value="${finalGradeCur}"
                                             ${(modeCur === 'detail' || window.isTrimesterBlocked(assignment.trimester, assignment.academicYear)) ? 'disabled' : ''}
                                             onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
-                                            onkeydown="if(event.key==='Enter'){ this.blur(); window.openStudentSelector(); }"
+                                            onkeydown="if(event.key==='Enter'){ this.blur(); window.handleGradeEnter('${ex.id}'); }"
                                             dir="ltr" class="w-28 min-w-[110px] p-2 bg-white border-2 border-amber-200 rounded-xl text-center font-black text-slate-700 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all text-sm ${(modeCur === 'detail' || window.isTrimesterBlocked(assignment.trimester, assignment.academicYear)) ? 'cursor-not-allowed' : ''}" 
                                             placeholder="0" onclick="event.stopPropagation()">
                                     </div>
@@ -542,7 +542,7 @@
                                         <input type="number" id="grade-single-simple-${ex.id}" name="grade-single-simple-${ex.id}" min="0" max="${maxExPoints}" step="0.25" value="${displayVal}"
                                             ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'disabled' : ''}
                                             onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
-                                            onkeydown="if(event.key==='Enter'){ this.blur(); window.openStudentSelector(); }"
+                                            onkeydown="if(event.key==='Enter'){ this.blur(); window.handleGradeEnter('${ex.id}'); }"
                                             dir="ltr" class="w-full p-2.5 bg-white border-2 border-blue-200 rounded-xl text-center font-black text-blue-900 focus:border-blue-500 outline-none transition-all shadow-sm text-sm ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'cursor-not-allowed' : ''}" 
                                             placeholder="0">
                                     </div>
@@ -565,7 +565,7 @@
                                         <input type="number" id="grade-no-q-${ex.id}" name="grade-no-q-${ex.id}" min="0" max="${ex.maxPoints}" step="0.25" value="${val}"
                                             ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'disabled' : ''}
                                             onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','direct','direct','direct',this.value)"
-                                            onkeydown="if(event.key==='Enter'){ this.blur(); window.openStudentSelector(); }"
+                                            onkeydown="if(event.key==='Enter'){ this.blur(); window.handleGradeEnter('${ex.id}'); }"
                                             dir="ltr" class="w-full p-2.5 bg-white border-2 border-blue-200 rounded-xl text-center font-black text-blue-900 focus:border-blue-500 outline-none transition-all shadow-sm text-sm ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'cursor-not-allowed' : ''}" 
                                             placeholder="0">
                                     </div>
@@ -895,6 +895,110 @@
     window.hasAnyGradeForAssignment = (studentId, assignmentId) => gradesSvc().hasAnyGradeForAssignment(getData(), studentId, assignmentId);
     window.getStudentAssignmentTotal = (studentId, assignmentId) => gradesSvc().getStudentAssignmentTotal(getData(), studentId, assignmentId);
     window.getStudentExerciseTotal = (studentGrades, ex) => gradesSvc().getStudentExerciseTotal(studentGrades, ex);
+    window.isExerciseFullyGraded = (studentGrades, ex) => gradesSvc().isExerciseFullyGraded(studentGrades, ex);
+
+    // --- Exercise Total Confirmation Dialog ---
+
+    window.handleGradeEnter = function(exId) {
+        const studentId = document.getElementById('select-student').value;
+        const assignmentId = document.getElementById('select-assignment').value;
+        const data = getData();
+        const assignment = data.assignments.find(a => a.id === assignmentId);
+
+        if (!assignment || !exId) {
+            window.openStudentSelector();
+            return;
+        }
+
+        const studentGrades = data.grades[studentId]?.[assignmentId] || {};
+        const isMultiExercise = assignment.exercises.length > 1;
+
+        if (isMultiExercise) {
+            const allExercisesGraded = assignment.exercises.every(ex => {
+                return window.isExerciseFullyGraded(studentGrades, ex);
+            });
+
+            if (allExercisesGraded) {
+                window.showAssignmentTotalConfirm(studentId, assignmentId);
+                return;
+            }
+        }
+
+        window.openStudentSelector();
+    };
+
+    window.showAssignmentTotalConfirm = function(studentId, assignmentId) {
+        const data = getData();
+        const t = getTranslations()[getLang()];
+        const student = (window.currentClassStudents || []).find(s => s.id === studentId);
+        const assignment = data.assignments.find(a => a.id === assignmentId);
+        const svc = gradesSvc();
+        const maxPts = svc.getAssignmentMaxPoints(assignment);
+        const calculatedTotal = svc.getStudentAssignmentTotal(data, studentId, assignmentId);
+        const color = window.currentClassColor || '#3b82f6';
+
+        const modal = document.getElementById('exercise-total-modal');
+        if (!modal) return;
+
+        const content = modal.querySelector('.modal-content');
+        if (!content) return;
+
+        content.innerHTML = `
+            <div class="p-6 sm:p-8">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-lg shrink-0" style="background-color: ${color}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+                    </div>
+                    <div class="min-w-0">
+                        <h3 class="font-black text-slate-800 text-base sm:text-lg truncate">${assignment.name}</h3>
+                        <p class="text-xs text-slate-500 font-bold truncate">${student ? student.name : ''}</p>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 rounded-2xl p-5 border border-slate-200 text-center mb-6">
+                    <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">${t.assignmentTotal || 'Total du devoir'}</div>
+                    <div class="flex items-baseline justify-center gap-2" dir="ltr">
+                        <span class="text-5xl sm:text-6xl font-black text-slate-800">${calculatedTotal}</span>
+                        <span class="text-xl sm:text-2xl font-bold text-slate-400">/ ${maxPts}</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <button onclick="window.closeExerciseTotalConfirm()" class="flex-1 py-3.5 rounded-2xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all text-sm">
+                        ${t.skip || 'Passer'}
+                    </button>
+                    <button onclick="window.confirmAssignmentTotal('${studentId}','${assignmentId}')" class="flex-1 py-3.5 rounded-2xl font-bold text-white transition-all text-sm shadow-lg" style="background-color: ${color}">
+                        ${t.confirm || 'Confirmer'}
+                    </button>
+                </div>
+            </div>
+        `;
+
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    };
+
+    window.confirmAssignmentTotal = function(studentId, assignmentId) {
+        const data = getData();
+        const svc = gradesSvc();
+        const calculatedTotal = svc.getStudentAssignmentTotal(data, studentId, assignmentId);
+
+        if (!data.grades[studentId]) data.grades[studentId] = {};
+        if (!data.grades[studentId][assignmentId]) data.grades[studentId][assignmentId] = {};
+
+        data.grades[studentId][assignmentId].global = calculatedTotal;
+        saveData();
+        window.recalculateTotals(assignmentId, studentId);
+
+        window.closeExerciseTotalConfirm();
+        window.openStudentSelector();
+    };
+
+    window.closeExerciseTotalConfirm = function() {
+        const modal = document.getElementById('exercise-total-modal');
+        if (modal) modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    };
 
     // --- New 3-Step Flow Logic ---
 
@@ -1561,6 +1665,25 @@
         const container = modal?.querySelector('.modal-container');
         if (e.target === container) {
             window.closeStudentSelector();
+        }
+    });
+
+    // Global Escape listener for exercise total modal
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('exercise-total-modal');
+            if (modal && !modal.classList.contains('hidden')) {
+                window.closeExerciseTotalConfirm();
+            }
+        }
+    });
+
+    // Close exercise total modal on click outside
+    window.addEventListener('click', (e) => {
+        const modal = document.getElementById('exercise-total-modal');
+        const container = modal?.querySelector('.modal-container');
+        if (e.target === container) {
+            window.closeExerciseTotalConfirm();
         }
     });
 
