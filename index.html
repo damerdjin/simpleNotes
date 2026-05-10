@@ -2229,30 +2229,30 @@
                             </div>
 
                             <!-- Choix classe -->
-                            <div id="export-class-card" class="mb-6 p-4 sm:p-5 bg-slate-50 border-2 border-slate-100 rounded-2xl">
-                                <div class="flex flex-col sm:flex-row gap-3 sm:items-end">
-                                    <div class="flex-1">
-                                        <label class="block text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider mb-2 sm:mb-3" data-translate="selectClass" for="select-class-export">
+                            <div id="export-class-card" class="mb-6 p-4 sm:p-5 bg-slate-50 border-2 border-slate-100 rounded-2xl transition-all duration-300">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 items-end">
+                                    <div id="class-selector-container" class="w-full sm:max-w-md">
+                                        <label class="block text-[10px] sm:text-sm font-bold text-slate-500 uppercase tracking-wider mb-2 sm:mb-3" data-translate="selectClass" for="select-class-export">
                                             -- Sélectionner une classe --
                                         </label>
                                         <select id="select-class-export"
                                             onchange="onExportClassChange();"
-                                            class="w-full p-2.5 sm:p-3 bg-white border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-medium text-slate-700 text-xs sm:text-base">
+                                            class="w-full p-2.5 sm:p-3 bg-white border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-bold text-slate-700 text-xs sm:text-base">
                                             <option value="">-- Sélectionner une classe --</option>
                                         </select>
                                     </div>
-                                    <div class="flex-1">
-                                        <label class="block text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider mb-2 sm:mb-3" data-translate="selectSubject" for="select-subject-export">
+                                    <div id="subject-selector-container" class="w-full sm:max-w-md hidden">
+                                        <label class="block text-[10px] sm:text-sm font-bold text-slate-500 uppercase tracking-wider mb-2 sm:mb-3" data-translate="selectSubject" for="select-subject-export">
                                             Matière
                                         </label>
                                         <select id="select-subject-export"
                                             onchange="onExportSubjectChange();"
-                                            class="w-full p-2.5 sm:p-3 bg-white border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-medium text-slate-700 text-xs sm:text-base">
+                                            class="w-full p-2.5 sm:p-3 bg-white border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-bold text-slate-700 text-xs sm:text-base">
                                             <option value="">-- Matière --</option>
                                         </select>
                                     </div>
                                 </div>
-                                <p class="text-xs text-gray-500 mt-2" data-translate="exportPrepHint">
+                                <p id="export-prep-hint" class="text-[10px] sm:text-xs text-gray-400 mt-3 italic" data-translate="exportPrepHint">
                                     Choisissez la classe, puis associez les devoirs existants aux trois notes à exporter.
                                 </p>
                             </div>

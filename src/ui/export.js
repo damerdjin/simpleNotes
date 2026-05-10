@@ -458,7 +458,10 @@ import { supabase } from './supabase-client.js';
             classes.map(c => `<option value="${c}">${c}</option>`).join('');
             
         const subjectSelect = document.getElementById('select-subject-export');
-        if (subjectSelect) subjectSelect.innerHTML = `<option value="">-- Matière --</option>`;
+        if (subjectSelect) subjectSelect.innerHTML = `<option value="">-- ${t.selectSubject || 'Matière'} --</option>`;
+        
+        const subjContainer = document.getElementById('subject-selector-container');
+        if (subjContainer) subjContainer.classList.add('hidden');
         
         const configArea = document.getElementById('export-config');
         if (configArea) configArea.innerHTML = '';
@@ -515,11 +518,29 @@ import { supabase } from './supabase-client.js';
             preview.innerHTML = '';
             meta.textContent = '';
             document.getElementById('export-preview-section')?.classList.add('hidden');
+            
+            // Reset header state
+            const headerCard = document.getElementById('export-class-card');
+            if (headerCard) headerCard.classList.remove('p-3', 'mb-3', 'opacity-90');
+            const hint = document.getElementById('export-prep-hint');
+            if (hint) hint.classList.remove('hidden');
+
             if (subjectSelector) {
-                subjectSelector.innerHTML = '<option value="">-- Matière --</option>';
+                subjectSelector.innerHTML = `<option value="">-- ${t.selectSubject || 'Matière'} --</option>`;
                 subjectSelector.dataset.lastClass = '';
+                const subjContainer = document.getElementById('subject-selector-container');
+                if (subjContainer) subjContainer.classList.remove('hidden');
             }
             return;
+        }
+
+        // --- COMPACTION DU HEADER SUR MOBILE ---
+        const isMobile = window.innerWidth < 768;
+        if (isMobile) {
+            const headerCard = document.getElementById('export-class-card');
+            if (headerCard) headerCard.classList.add('p-3', 'mb-3', 'opacity-90');
+            const hint = document.getElementById('export-prep-hint');
+            if (hint) hint.classList.add('hidden');
         }
 
         // 2. Récupération des matières pour la classe choisie
@@ -536,11 +557,18 @@ import { supabase } from './supabase-client.js';
                     return `<option value="${sid}">${label}</option>`;
                 }).join('');
             
-            // Auto-sélection si une seule matière
-            if (subjectsList.length === 1) {
-                subjectSelector.value = subjectsList[0];
+            // Auto-sélection si 0 ou 1 seule matière
+            const subjContainer = document.getElementById('subject-selector-container');
+            const classCont = document.getElementById('class-selector-container');
+            
+            if (subjectsList.length <= 1) {
+                if (subjectsList.length === 1) {
+                    subjectSelector.value = subjectsList[0];
+                }
+                if (subjContainer) subjContainer.classList.add('hidden');
             } else {
                 subjectSelector.value = "";
+                if (subjContainer) subjContainer.classList.remove('hidden');
             }
         }
         
@@ -569,16 +597,16 @@ import { supabase } from './supabase-client.js';
         const renderStatusBadge = (found, title) => {
             if (found) {
                 return `
-                    <div class="p-4 border-2 border-emerald-200 rounded-2xl bg-emerald-50/50 flex flex-col justify-center">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm shrink-0">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    <div class="p-2 sm:p-4 border-2 border-emerald-200 rounded-xl sm:rounded-2xl bg-emerald-50/50 flex flex-col justify-center">
+                        <div class="flex items-center gap-2 sm:gap-3">
+                            <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm shrink-0">
+                                <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                             </div>
                             <div class="min-w-0">
-                                <h3 class="font-bold text-gray-800 text-sm sm:text-base">${title}</h3>
-                                <div class="flex items-center gap-2 mt-0.5">
-                                    <p class="text-xs font-bold text-emerald-700 truncate">${found.name}</p>
-                                    <span class="text-[10px] font-bold px-1.5 py-0.5 bg-emerald-200 text-emerald-800 rounded" dir="ltr">/${getAssignmentMaxPoints(found)}</span>
+                                <h3 class="font-bold text-gray-800 text-[10px] sm:text-base leading-tight">${title}</h3>
+                                <div class="flex items-center gap-1 mt-0.5">
+                                    <p class="text-[9px] sm:text-xs font-bold text-emerald-700 truncate">${found.name}</p>
+                                    <span class="text-[8px] sm:text-[10px] font-black px-1 py-0.5 bg-emerald-200 text-emerald-800 rounded shrink-0" dir="ltr">/${getAssignmentMaxPoints(found)}</span>
                                 </div>
                             </div>
                         </div>
@@ -586,12 +614,12 @@ import { supabase } from './supabase-client.js';
                 `;
             } else {
                 return `
-                    <div class="p-4 border-2 border-gray-100 border-dashed rounded-2xl bg-gray-50 flex items-center gap-3 opacity-80 grayscale-[0.5]">
-                        <div class="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center text-rose-500 shadow-sm shrink-0">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    <div class="p-2 sm:p-4 border-2 border-gray-100 border-dashed rounded-xl sm:rounded-2xl bg-gray-50 flex items-center gap-2 sm:gap-3 opacity-80 grayscale-[0.5]">
+                        <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-rose-100 flex items-center justify-center text-rose-500 shadow-sm shrink-0">
+                            <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         </div>
                         <div class="min-w-0">
-                            <h3 class="font-bold text-gray-700 text-sm sm:text-base">${title}</h3>
+                            <h3 class="font-bold text-gray-700 text-[10px] sm:text-base leading-tight">${title}</h3>
                         </div>
                     </div>
                 `;
@@ -648,7 +676,7 @@ import { supabase } from './supabase-client.js';
         const d2Issue = groupHasExportScaleIssue(className, cfg, 'devoir2');
 
         container.innerHTML = `
-            <div class="grid grid-cols-1 ${assigns.length === 0 ? 'sm:grid-cols-2 lg:grid-cols-4' : 'md:grid-cols-3'} gap-4 mb-6">
+            <div class="grid grid-cols-2 ${assigns.length === 0 ? 'sm:grid-cols-2 lg:grid-cols-4' : 'md:grid-cols-3'} gap-2 sm:gap-4 mb-6">
                 ${renderStatusBadge(allAssigns.find(a => a.type === 'cc'), t.ccLabel || 'CC')}
                 ${renderStatusBadge(allAssigns.find(a => a.type === 'tp'), t.tpLabel || 'TP')}
                 ${renderStatusBadge(allAssigns.find(a => a.type === 'comp'), t.compLabel || 'Composition')}
@@ -1773,8 +1801,7 @@ import { supabase } from './supabase-client.js';
                 <div class="bg-white border-2 border-slate-100 rounded-2xl p-4 shadow-sm space-y-4">
                     <div class="flex items-center justify-between gap-3">
                         <div class="min-w-0 flex-1">
-                            <h4 class="font-bold text-slate-800 text-base truncate">${s.name}</h4>
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">${className}</p>
+                            <h4 class="font-bold text-slate-800 text-sm sm:text-base line-clamp-2 leading-tight">${s.name}</h4>
                         </div>
                         ${hasAnyMoyenne ? `
                         <div class="shrink-0 flex flex-col items-center">

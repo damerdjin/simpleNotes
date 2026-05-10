@@ -218,7 +218,7 @@
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
                         </div>
                         <select id="assignment-type" onchange="window.autoSuggestAssignmentName()" class="w-full ${inputPadding} py-3 bg-gray-50/50 border-2 border-gray-100 rounded-xl focus:bg-white focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 outline-none transition-all font-bold text-gray-800 appearance-none cursor-pointer">
-                            <option value="">${t.typePlaceholderShort || 'Choisir type...'}</option>
+                            <option value="">${t.typePlaceholder || '-- Choisir type --'}</option>
                             <option value="devoir">${t.typeDevoir || 'Devoir'}</option>
                             <option value="cc">${t.typeCC || 'CC'}</option>
                             <option value="tp">${t.typeTP || 'TP'}</option>
