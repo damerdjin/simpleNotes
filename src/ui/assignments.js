@@ -201,7 +201,7 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                     </div>
                     <select id="assignment-class" onchange="window.autoSuggestAssignmentName()" class="w-full ${inputPadding} py-3 bg-emerald-50/30 border-2 border-emerald-100 rounded-xl focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all font-bold text-gray-800 appearance-none cursor-pointer">
-                        <option value="" data-translate="selectClass">${t.selectClass || '-- Sélectionner une classe --'}</option>
+                        <option value="" data-translate="selectClassPlaceholder">${t.selectClassPlaceholder || 'Choisir classe...'}</option>
                     </select>
                     <div class="absolute ${chevronPos} pointer-events-none text-emerald-400">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -218,7 +218,7 @@
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
                         </div>
                         <select id="assignment-type" onchange="window.autoSuggestAssignmentName()" class="w-full ${inputPadding} py-3 bg-gray-50/50 border-2 border-gray-100 rounded-xl focus:bg-white focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 outline-none transition-all font-bold text-gray-800 appearance-none cursor-pointer">
-                            <option value="">${t.typePlaceholder || '-- Choisir un type --'}</option>
+                            <option value="">${t.typePlaceholderShort || 'Choisir type...'}</option>
                             <option value="devoir">${t.typeDevoir || 'Devoir'}</option>
                             <option value="cc">${t.typeCC || 'CC'}</option>
                             <option value="tp">${t.typeTP || 'TP'}</option>
@@ -238,7 +238,7 @@
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
                         </div>
                         <select id="assignment-subject" onchange="window.autoSuggestAssignmentName()" class="w-full ${inputPadding} py-3 bg-gray-50/50 border-2 border-gray-100 rounded-xl focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 outline-none transition-all font-medium text-gray-700 appearance-none cursor-pointer">
-                            <option value="">${t.subjectPlaceholder || '-- Sélectionner une matière --'}</option>
+                            <option value="">${t.subjectPlaceholderShort || 'Choisir matière...'}</option>
                             ${(window.subjects || []).map(s => `<option value="${s.id}">${s[getLang()] || s.fr}</option>`).join('')}
                         </select>
                         <div class="absolute ${chevronPos} pointer-events-none text-gray-400">
@@ -247,22 +247,13 @@
                     </div>
                 </div>
 
-                <!-- Trimester Selection -->
-                <div class="relative group">
-                    <label class="absolute -top-2 ${labelPos} px-1.5 bg-white text-[11px] font-bold text-amber-600 z-10 transition-all group-focus-within:text-amber-700" for="assignment-trimester">${t.assignmentTrimesterLabel || 'Trimestre'}</label>
-                    <div class="relative flex items-center">
-                        <div class="absolute ${iconPos} text-gray-400 group-focus-within:text-amber-500 transition-colors">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                        </div>
-                        <select id="assignment-trimester" onchange="window.autoSuggestAssignmentName()" class="w-full ${inputPadding} py-3 bg-gray-50/50 border-2 border-gray-100 rounded-xl focus:bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all font-bold text-gray-800 appearance-none cursor-pointer">
-                            <option value="1">${t.trimesterShort || 'T'}1</option>
-                            <option value="2">${t.trimesterShort || 'T'}2</option>
-                            <option value="3">${t.trimesterShort || 'T'}3</option>
-                        </select>
-                        <div class="absolute ${chevronPos} pointer-events-none text-gray-400">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </div>
-                    </div>
+                <!-- Trimester Selection (Hidden as it follows app state) -->
+                <div class="hidden">
+                    <select id="assignment-trimester">
+                        <option value="1">T1</option>
+                        <option value="2">T2</option>
+                        <option value="3">T3</option>
+                    </select>
                 </div>
             </div>
 
