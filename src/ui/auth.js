@@ -190,7 +190,7 @@ export async function getSchools(params = {}) {
 export async function resetPassword(email) {
     try {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: window.location.origin + '/reset-password.html', // Or a dedicated page
+            redirectTo: window.location.origin + '/reset-password.html',
         });
         if (error) throw error;
         return true;
