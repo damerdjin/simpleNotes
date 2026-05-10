@@ -190,7 +190,7 @@
                 <input type="number" id="grade-direct-${q.id}" name="grade-direct-${q.id}" min="0" max="${q.maxPoints}" step="0.25" value="${val}"
                     ${(mode === 'global' || isBlocked) ? 'disabled' : ''}
                     onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','direct',this.value)"
-                    onkeydown="if(event.key==='Enter'){ this.blur(); window.toggleAccordion('grade-ex-${exId}'); }"
+                    onkeydown="if(event.key==='Enter'){ this.blur(); window.openStudentSelector(); }"
                     class="w-full p-2.5 pr-8 bg-white border-2 border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:border-[color:var(--theme-color)] focus:ring-4 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all ${isBlocked ? 'cursor-not-allowed' : ''}" 
                     placeholder="0">
                 <div class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">/ ${q.maxPoints}</div>
@@ -209,7 +209,7 @@
                     <input type="number" id="grade-sq-${sq.id}" name="grade-sq-${sq.id}" min="0" max="${sq.maxPoints}" step="0.25" value="${val}"
                         ${(mode === 'global' || isBlocked) ? 'disabled' : ''}
                         onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','${sq.id}',this.value)"
-                        onkeydown="if(event.key==='Enter'){ this.blur(); window.toggleAccordion('grade-ex-${exId}'); }"
+                        onkeydown="if(event.key==='Enter'){ this.blur(); window.openStudentSelector(); }"
                         class="w-full p-2 bg-white border-2 border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:border-[color:var(--theme-color)] focus:ring-4 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all text-xs ${isBlocked ? 'cursor-not-allowed' : ''}"
                         placeholder="0">
                 </div>`;
@@ -410,7 +410,7 @@
                             <input type="number" id="grade-simple-${qId}" name="grade-simple-${qId}" inputmode="decimal" min="0" max="${maxPts}" step="0.25" value="${val}"
                                 ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'disabled' : ''}
                                 onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','${partKey}','${qId}','direct',this.value)"
-                                onkeydown="if(event.key==='Enter'){ this.blur(); const sel = document.getElementById('select-student'); if(sel) sel.focus(); }"
+                                onkeydown="if(event.key==='Enter'){ this.blur(); window.openStudentSelector(); }"
                                 class="w-full py-3 sm:py-5 pr-12 sm:pr-16 bg-slate-50 border-2 border-slate-200 rounded-xl sm:rounded-2xl text-center font-black text-slate-800 text-3xl sm:text-4xl focus:border-[color:var(--theme-color)] focus:bg-white focus:ring-4 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all shadow-inner ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'cursor-not-allowed' : ''}" 
                                 placeholder="0">
                             <div class="absolute right-4 sm:right-5 top-1/2 -translate-y-1/2 text-sm sm:text-lg font-black text-slate-400">/ ${maxPts}</div>
@@ -520,7 +520,7 @@
                                         <input type="number" id="grade-global-${ex.id}" name="grade-global-${ex.id}" min="0" max="${maxExExPoints}" step="0.25" value="${finalGradeCur}"
                                             ${(modeCur === 'detail' || window.isTrimesterBlocked(assignment.trimester, assignment.academicYear)) ? 'disabled' : ''}
                                             onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
-                                            onkeydown="if(event.key==='Enter'){ this.blur(); window.toggleAccordion('grade-ex-${ex.id}'); }"
+                                            onkeydown="if(event.key==='Enter'){ this.blur(); window.openStudentSelector(); }"
                                             class="w-24 p-2 pr-10 bg-white border-2 border-amber-200 rounded-xl text-center font-black text-slate-700 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all text-sm ${(modeCur === 'detail' || window.isTrimesterBlocked(assignment.trimester, assignment.academicYear)) ? 'cursor-not-allowed' : ''}" 
                                             placeholder="0" onclick="event.stopPropagation()">
                                         <div class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">/ ${maxExPoints}</div>
@@ -543,7 +543,7 @@
                                         <input type="number" id="grade-single-simple-${ex.id}" name="grade-single-simple-${ex.id}" min="0" max="${maxExPoints}" step="0.25" value="${displayVal}"
                                             ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'disabled' : ''}
                                             onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
-                                            onkeydown="if(event.key==='Enter'){ this.blur(); window.toggleAccordion('grade-ex-${ex.id}'); }"
+                                            onkeydown="if(event.key==='Enter'){ this.blur(); window.openStudentSelector(); }"
                                             class="w-full p-2.5 pr-12 bg-white border-2 border-blue-200 rounded-xl text-center font-black text-blue-900 focus:border-blue-500 outline-none transition-all shadow-sm text-sm ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'cursor-not-allowed' : ''}" 
                                             placeholder="0">
                                         <div class="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-blue-400">/ ${maxExPoints}</div>
@@ -567,7 +567,7 @@
                                         <input type="number" id="grade-no-q-${ex.id}" name="grade-no-q-${ex.id}" min="0" max="${ex.maxPoints}" step="0.25" value="${val}"
                                             ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'disabled' : ''}
                                             onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','direct','direct','direct',this.value)"
-                                            onkeydown="if(event.key==='Enter'){ this.blur(); window.toggleAccordion('grade-ex-${ex.id}'); }"
+                                            onkeydown="if(event.key==='Enter'){ this.blur(); window.openStudentSelector(); }"
                                             class="w-full p-2.5 pr-12 bg-white border-2 border-blue-200 rounded-xl text-center font-black text-blue-900 focus:border-blue-500 outline-none transition-all shadow-sm text-sm ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'cursor-not-allowed' : ''}" 
                                             placeholder="0">
                                         <div class="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-blue-400">/ ${ex.maxPoints}</div>
