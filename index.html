@@ -1622,6 +1622,11 @@
                 
                 const user = await checkAuth();
                 if (user) {
+                    // Force password reset if flagged by admin
+                    if (user.user_metadata && user.user_metadata.force_password_reset === true) {
+                        window.location.href = '/reset-password.html';
+                        return;
+                    }
                     window.currentUser = user;
                     
                     // Sync user preferences (year, language...) before loading data
