@@ -1274,10 +1274,32 @@
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden'; // Prevent scroll
         
-        // Restore search label & Fix labels
+        // Reset search & Focus Fix labels
         const searchInput = document.getElementById('student-selector-search');
         if (searchInput) {
+            searchInput.value = ''; // RECENT CHANGE: Clear search on return/open
             searchInput.placeholder = t.searchStudent || 'Rechercher un élève...';
+            
+            // Add Enter/Escape key listener if not already added
+            if (!searchInput.dataset.hasListener) {
+                searchInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        const items = document.querySelectorAll('#student-selector-list .student-item');
+                        if (items.length === 1) {
+                            items[0].click(); // Trigger selection if only one remains
+                        }
+                    } else if (e.key === 'Escape') {
+                        e.stopPropagation(); // Prevent global listener from closing immediately
+                        if (searchInput.value.length > 0) {
+                            searchInput.value = ''; // Clear search
+                            window.renderStudentListInSelector(); // Refresh list
+                        } else {
+                            window.closeStudentSelector(); // Close if already empty
+                        }
+                    }
+                });
+                searchInput.dataset.hasListener = 'true';
+            }
         }
         
         // PERSISTENCE: We don't reset studentSelectorFilter or exerciseFocusFilter here
@@ -1296,7 +1318,7 @@
         
         window.renderStudentListInSelector();
         
-        // Focus search (but keep existing text if any)
+        // Focus search
         setTimeout(() => searchInput?.focus(), 100);
     };
 
@@ -1521,6 +1543,20 @@
             window.closeStudentSelector();
         }
     };
+
+    // Global Escape listener for student selector
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('student-selector-modal');
+            if (modal && !modal.classList.contains('hidden')) {
+                const searchInput = document.getElementById('student-selector-search');
+                // If focus is not on search or search is empty, close it
+                if (document.activeElement !== searchInput || (searchInput && searchInput.value.length === 0)) {
+                    window.closeStudentSelector();
+                }
+            }
+        }
+    });
 
     // Close modal on click outside
     window.addEventListener('click', (e) => {
