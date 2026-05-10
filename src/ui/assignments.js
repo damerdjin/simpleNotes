@@ -1551,8 +1551,8 @@
                     <div class="h-2 w-full" style="background-color: ${classColor}"></div>
 
                     <!-- En-tête de la carte (cliquable pour accordéon) -->
-                    <div class="p-6 flex-1 cursor-pointer select-none bg-gradient-to-br from-white via-white to-gray-50/50" onclick="toggleAccordion('${a.id}')">
-                        <div class="flex items-start justify-between gap-4 mb-6">
+                    <div class="p-4 sm:p-6 flex-1 cursor-pointer select-none bg-gradient-to-br from-white via-white to-gray-50/50" onclick="toggleAccordion('${a.id}')">
+                        <div class="flex items-start justify-between gap-3 mb-3 sm:mb-6">
                             <div class="min-w-0 flex-1">
                                 <div class="flex flex-wrap items-center gap-2 mb-1.5">
                                     ${a.subject ? (() => {
@@ -1560,18 +1560,29 @@
                                         const displaySubject = subj ? (subj[getLang()] || subj.fr) : a.subject;
                                         return `<span class="px-2 py-0.5 rounded-md bg-purple-100 text-purple-700 text-[10px] font-bold uppercase tracking-wider border border-purple-200">${displaySubject}</span>`;
                                     })() : ''}
-                                    ${a.isVisible ? `<span class="px-2 py-0.5 rounded-md bg-green-100 text-green-700 text-[10px] font-bold uppercase tracking-wider border border-green-200 flex items-center gap-1" title="Visible par les élèves"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>Visible</span>` : `<span class="px-2 py-0.5 rounded-md bg-gray-100 text-gray-500 text-[10px] font-bold uppercase tracking-wider border border-gray-200 flex items-center gap-1" title="Caché aux élèves"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>Caché</span>`}
+                                    <!-- Visibility (Desktop only) -->
+                                    <div class="hidden sm:block">
+                                        ${a.isVisible ? `<span class="px-2 py-0.5 rounded-md bg-green-100 text-green-700 text-[10px] font-bold uppercase tracking-wider border border-green-200 flex items-center gap-1" title="Visible par les élèves"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>Visible</span>` : `<span class="px-2 py-0.5 rounded-md bg-gray-100 text-gray-500 text-[10px] font-bold uppercase tracking-wider border border-gray-200 flex items-center gap-1" title="Caché aux élèves"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>Caché</span>`}
+                                    </div>
                                 </div>
                                 <h4 class="${titleClass}" title="${a.name}">
                                     ${(window.isTrimesterBlocked && window.isTrimesterBlocked(a.trimester, a.academicYear)) ? '🔒 ' : ''}${a.name}
                                 </h4>
-                                <div class="flex items-center gap-2 mt-2.5">
-                                    <div class="px-2.5 py-1 rounded-lg bg-gray-100 text-[10px] font-bold text-gray-500 uppercase ${labelTracking} border border-gray-200/50 shadow-sm shrink-0">
-                                        <span class="sm:hidden">${t.totalPointsShort || t.totalPointsLabel}</span>
-                                        <span class="hidden sm:inline">${t.totalPointsLabel || 'Total Points'}</span>
-                                    </div>
-                                    <span class="text-sm ${fontBlack} text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100 shadow-sm whitespace-nowrap">
+                                <div class="flex items-center flex-wrap gap-2 mt-2">
+                                    <!-- Points -->
+                                    <span class="text-[11px] sm:text-sm ${fontBlack} text-blue-600 bg-blue-50 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg border border-blue-100 shadow-sm whitespace-nowrap">
                                         ${totalPoints} ${t.points}
+                                    </span>
+                                    
+                                    <!-- Progression (Compact on mobile) -->
+                                    <span class="flex sm:hidden items-center gap-1.5 px-2 py-0.5 rounded-lg bg-gray-50 text-[10px] font-bold text-gray-500 border border-gray-100">
+                                        <div class="w-1.5 h-1.5 rounded-full ${completionRate === 100 ? 'bg-green-500' : 'bg-blue-400 animate-pulse'}"></div>
+                                        ${nbGrades}/${nbStudents} (${completionRate}%)
+                                    </span>
+
+                                    <!-- Visibility (Compact on mobile) -->
+                                    <span class="inline-flex sm:hidden items-center">
+                                        ${a.isVisible ? `<span class="px-2 py-0.5 rounded-lg bg-green-50 text-green-700 border border-green-100 flex items-center justify-center shadow-sm"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg></span>` : `<span class="px-2 py-0.5 rounded-lg bg-gray-50 text-gray-400 border border-gray-100 flex items-center justify-center shadow-sm"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg></span>`}
                                     </span>
                                 </div>
                             </div>
@@ -1580,8 +1591,8 @@
                             </div>
                         </div>
                         
-                        <!-- Barre de progression ultra-visible -->
-                        <div class="mt-8 space-y-3">
+                        <!-- Barre de progression (Desktop only) -->
+                        <div class="hidden sm:block mt-8 space-y-3">
                             <div class="flex items-center justify-between text-[11px] ${fontBlack} uppercase ${progressTracking}">
                                 <span class="text-gray-500 flex items-center gap-2">
                                     <div class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></div>
@@ -1601,7 +1612,7 @@
                     </div>
                     
                     <!-- Barre d'actions moderne à haut contraste -->
-                    <div class="px-6 py-4 bg-gray-50/80 border-t border-gray-200 flex items-center justify-between gap-3" onclick="event.stopPropagation()">
+                    <div class="px-4 py-2 sm:px-6 sm:py-4 bg-gray-50/80 border-t border-gray-200 flex items-center justify-between gap-3" onclick="event.stopPropagation()">
                         <div class="flex items-center gap-2">
                             <button onclick="openAssignmentModal('${a.id}')" class="p-2.5 text-gray-600 hover:text-orange-600 hover:bg-white hover:shadow-md rounded-xl transition-all active:scale-90 border border-transparent hover:border-orange-100" title="${t.edit}">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
