@@ -34,10 +34,8 @@ export async function login(email, password) {
 
 export async function register(userData) {
     try {
-        let schoolId = userData.school_id;
-        if (schoolId === "") schoolId = null;
-
-        if (!schoolId && !userData.new_school) {
+        const schoolId = userData.school_id;
+        if (!schoolId) {
             throw new Error('Un établissement est requis. Veuillez en sélectionner ou en créer un.');
         }
 
@@ -66,50 +64,26 @@ export async function register(userData) {
         const user = data.user;
         if (!user) throw new Error('Utilisateur non créé.');
 
-        // 1. Si nouvelle école, la créer maintenant (utilisateur authentifié)
-        if (userData.new_school) {
-            const { data: school, error: schoolError } = await supabase
-                .from('schools')
-                .insert([{
-                    name: userData.new_school.name,
-                    commune_id: userData.new_school.commune_id,
-                    created_by: user.id,
-                    approved: false
-                }])
-                .select()
-                .single();
+        // Rattacher l'utilisateur à l'école (seulement si pas déjà créée par qqn)
+        await supabase.from('schools').update({ created_by: user.id }).eq('id', schoolId).is('created_by', null);
 
-            if (schoolError) {
-                console.error('Error creating school:', schoolError);
-                throw new Error('Erreur lors de la création du lycée.');
-            }
-            schoolId = school.id;
+        // Mettre à jour la table users avec le school_id
+        const { error: userUpdateError } = await supabase
+            .from('users')
+            .upsert({
+                id: user.id,
+                email: user.email,
+                school_id: schoolId,
+                city: userData.city,
+                wilaya: userData.wilaya
+            }, { onConflict: 'id' });
 
-            // Mettre à jour user_metadata avec le school_id
-            await supabase.auth.updateUser({
-                data: { school_id: schoolId }
-            });
+        if (userUpdateError) {
+            console.error('Error updating users table:', userUpdateError);
         }
 
-        // 2. Sync school_id to public users table
-        if (schoolId) {
-            const { error: userUpdateError } = await supabase
-                .from('users')
-                .upsert({
-                    id: user.id,
-                    email: user.email,
-                    school_id: schoolId,
-                    city: userData.city,
-                    wilaya: userData.wilaya
-                }, { onConflict: 'id' });
-
-            if (userUpdateError) {
-                console.error('Error updating users table:', userUpdateError);
-            }
-        }
-
-        // 3. Associer les classes
-        if (schoolId && userData.selectedClasses && userData.selectedClasses.length > 0) {
+        // Associer les classes sélectionnées
+        if (userData.selectedClasses && userData.selectedClasses.length > 0) {
             const now = new Date();
             const currentYear = now.getFullYear();
             const academicYear = now.getMonth() >= 8 

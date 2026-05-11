@@ -427,10 +427,20 @@
                     submitBtn.textContent = t('registerButton');
                     return;
                 }
-                userData.new_school = {
-                    name: newSchoolName,
-                    commune_id: communeSelect.value
-                };
+                // Créer l'école via l'API (bypass RLS avec service_role)
+                const schoolRes = await fetch('/api/schools', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: newSchoolName,
+                        commune_id: communeSelect.value
+                    })
+                });
+                if (!schoolRes.ok) {
+                    throw new Error('Erreur lors de la création du lycée.');
+                }
+                const schoolData = await schoolRes.json();
+                userData.school_id = schoolData.school.id;
             } else {
                 const selectedSchool = schoolSelect.value;
                 if (!selectedSchool) {
