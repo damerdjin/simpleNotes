@@ -14,30 +14,65 @@
     // ============================================================
 
     const DashboardEngine = {
+        // Get current filters (year + trimester)
+        _getFilters() {
+            return {
+                year: window.getGlobalAcademicYear ? window.getGlobalAcademicYear() : '',
+                trimester: window.getGlobalTrimester ? window.getGlobalTrimester() : ''
+            };
+        },
+
+        // Check if a student belongs to the current academic year
+        _isStudentInYear(s) {
+            return !s.academicYear || s.academicYear === this._getFilters().year;
+        },
+
+        // Check if an assignment belongs to current year + trimester
+        _isAssignmentInPeriod(a) {
+            const { year, trimester } = this._getFilters();
+            return (!a.academicYear || a.academicYear === year) &&
+                   (!a.trimester || a.trimester === trimester || a.trimester === 'T' + trimester);
+        },
+
+        // Get student average for specific assignments (normalized to /20)
+        _getStudentAverage(data, studentId, assignments) {
+            let totalScore = 0, count = 0;
+            assignments.forEach(a => {
+                if (data.grades && data.grades[studentId] && data.grades[studentId][a.id]) {
+                    const score = window.grades ? window.grades.getStudentAssignmentTotal(data, studentId, a.id) : 0;
+                    const maxPts = window.grades ? window.grades.getAssignmentMaxPoints(a) : 20;
+                    if (score > 0 && maxPts > 0) {
+                        totalScore += (score / maxPts) * 20;
+                        count++;
+                    }
+                }
+            });
+            return count > 0 ? totalScore / count : null;
+        },
+
         getClasses() {
             const data = getData();
             if (!data || !data.students) return [];
+            const { year } = this._getFilters();
             const classes = new Set();
             (data.students || []).forEach(s => {
-                if (s.className && s.status !== 'archived') classes.add(s.className);
+                if (s.className && s.status !== 'archived' && this._isStudentInYear(s)) classes.add(s.className);
             });
             return [...classes].sort();
         },
 
         getStudentsByClass(className) {
             const data = getData();
-            return (data.students || []).filter(s => s.className === className && s.status !== 'archived');
+            return (data.students || []).filter(s =>
+                s.className === className && s.status !== 'archived' && this._isStudentInYear(s)
+            );
         },
 
         getAssignmentsByClass(className) {
             const data = getData();
-            const year = window.getGlobalAcademicYear ? window.getGlobalAcademicYear() : '';
-            const trimester = window.getGlobalTrimester ? window.getGlobalTrimester() : '';
             return (data.assignments || []).filter(a => {
                 const matchClass = (a.className || '').trim() === (className || '').trim();
-                const matchYear = !a.academicYear || a.academicYear === year;
-                const matchTri = !a.trimester || a.trimester === trimester;
-                return matchClass && matchYear && matchTri;
+                return matchClass && this._isAssignmentInPeriod(a);
             });
         },
 
@@ -62,6 +97,7 @@
             return { total, filled, rate: total > 0 ? Math.round((filled / total) * 100) : 0 };
         },
 
+        // Class average = weighted average of ALL student averages in that class
         getClassAverage(className) {
             const students = this.getStudentsByClass(className);
             const assignments = this.getAssignmentsByClass(className);
@@ -69,30 +105,37 @@
             const data = getData();
             const avgs = [];
             students.forEach(s => {
-                let totalScore = 0, count = 0;
-                assignments.forEach(a => {
-                    if (data.grades && data.grades[s.id] && data.grades[s.id][a.id]) {
-                        const score = window.grades ? window.grades.getStudentAssignmentTotal(data, s.id, a.id) : 0;
-                        const maxPts = window.grades ? window.grades.getAssignmentMaxPoints(a) : 20;
-                        if (score > 0 && maxPts > 0) {
-                            totalScore += (score / maxPts) * 20;
-                            count++;
-                        }
-                    }
-                });
-                if (count > 0) avgs.push(totalScore / count);
+                const avg = this._getStudentAverage(data, s.id, assignments);
+                if (avg !== null) avgs.push(avg);
             });
             if (avgs.length === 0) return null;
             return (avgs.reduce((a, b) => a + b, 0) / avgs.length).toFixed(2);
         },
 
+        // Global average = weighted by number of students who have grades
+        getGlobalAverage() {
+            const data = getData();
+            const classes = this.getClasses();
+            let totalSum = 0, totalCount = 0;
+            classes.forEach(cls => {
+                const students = this.getStudentsByClass(cls);
+                const assignments = this.getAssignmentsByClass(cls);
+                students.forEach(s => {
+                    const avg = this._getStudentAverage(data, s.id, assignments);
+                    if (avg !== null) {
+                        totalSum += avg;
+                        totalCount++;
+                    }
+                });
+            });
+            return totalCount > 0 ? (totalSum / totalCount).toFixed(2) : null;
+        },
+
         getAssignmentTypeDistribution() {
             const data = getData();
-            const year = window.getGlobalAcademicYear ? window.getGlobalAcademicYear() : '';
-            const trimester = window.getGlobalTrimester ? window.getGlobalTrimester() : '';
             const dist = { devoir: 0, cc: 0, tp: 0, comp: 0 };
             (data.assignments || []).forEach(a => {
-                if ((!a.academicYear || a.academicYear === year) && (!a.trimester || a.trimester === trimester)) {
+                if (this._isAssignmentInPeriod(a)) {
                     const type = a.type || 'devoir';
                     if (dist[type] !== undefined) dist[type]++;
                 }
@@ -100,9 +143,10 @@
             return dist;
         },
 
+        // Trimester progression: compare T1, T2, T3 for the CURRENT year
         getTrimesterProgression() {
             const data = getData();
-            const year = window.getGlobalAcademicYear ? window.getGlobalAcademicYear() : '';
+            const { year } = this._getFilters();
             const classes = this.getClasses();
             const progression = {};
             ['1', '2', '3'].forEach(tri => {
@@ -116,18 +160,8 @@
                     );
                     if (assignments.length === 0) return;
                     students.forEach(s => {
-                        let totalScore = 0, count = 0;
-                        assignments.forEach(a => {
-                            if (data.grades && data.grades[s.id] && data.grades[s.id][a.id]) {
-                                const score = window.grades ? window.grades.getStudentAssignmentTotal(data, s.id, a.id) : 0;
-                                const maxPts = window.grades ? window.grades.getAssignmentMaxPoints(a) : 20;
-                                if (score > 0 && maxPts > 0) {
-                                    totalScore += (score / maxPts) * 20;
-                                    count++;
-                                }
-                            }
-                        });
-                        if (count > 0) triAvgs.push(totalScore / count);
+                        const avg = this._getStudentAverage(data, s.id, assignments);
+                        if (avg !== null) triAvgs.push(avg);
                     });
                 });
                 progression[tri] = triAvgs.length > 0
@@ -140,8 +174,6 @@
         getAnomalies() {
             const anomalies = [];
             const data = getData();
-            const year = window.getGlobalAcademicYear ? window.getGlobalAcademicYear() : '';
-            const trimester = window.getGlobalTrimester ? window.getGlobalTrimester() : '';
             const classes = this.getClasses();
 
             classes.forEach(cls => {
@@ -155,7 +187,7 @@
                         type: 'critical',
                         icon: 'exclamation-triangle',
                         title: 'Notes manquantes',
-                        message: `${cls}: seulement ${completion.rate}% de completion (${completion.filled}/${completion.total})`,
+                        message: `${cls}: seulement ${completion.rate}% de complétion (${completion.filled}/${completion.total})`,
                         className: cls
                     });
                 }
@@ -188,8 +220,8 @@
                         anomalies.push({
                             type: 'info',
                             icon: 'scale',
-                            title: 'Bareme non standard',
-                            message: `"${a.name}" (${cls}): bareme sur ${maxPts} au lieu de 20`,
+                            title: 'Barème non standard',
+                            message: `"${a.name}" (${cls}): barème sur ${maxPts} au lieu de 20`,
                             className: cls
                         });
                     }
@@ -199,15 +231,14 @@
             // A4: Config export incomplete
             if (window.exportPrepConfig) {
                 const cfg = window.exportPrepConfig;
-                // Check if any class has partial config
                 Object.keys(cfg.byClass || {}).forEach(key => {
                     const c = cfg.byClass[key];
                     if (c && !c.ccAssignmentId && !c.compAssignmentId && (c.devoir1 || c.devoir2)) {
                         anomalies.push({
                             type: 'warning',
                             icon: 'cog',
-                            title: 'Config incomplete',
-                            message: `Configuration export incomplete pour ${key}`,
+                            title: 'Config incomplète',
+                            message: `Configuration export incomplète pour ${key}`,
                             className: key.split('|')[1] || ''
                         });
                     }
@@ -217,11 +248,11 @@
             return anomalies;
         },
 
+        // Gender stats filtered by current year
         getGenderStats() {
             const data = getData();
-            const year = window.getGlobalAcademicYear ? window.getGlobalAcademicYear() : '';
             const stats = { total: 0, boys: 0, girls: 0, unknown: 0 };
-            (data.students || []).filter(s => s.status !== 'archived' && (!s.academicYear || s.academicYear === year)).forEach(s => {
+            (data.students || []).filter(s => s.status !== 'archived' && this._isStudentInYear(s)).forEach(s => {
                 stats.total++;
                 const sex = (s.sex || '').toLowerCase().trim();
                 if (sex === 'm' || sex === 'male') stats.boys++;
@@ -260,34 +291,22 @@
             }).sort((a, b) => (b.average || 0) - (a.average || 0));
         },
 
+        // Top students for current trimester
         getTopStudents(limit = 10) {
             const data = getData();
-            const year = window.getGlobalAcademicYear ? window.getGlobalAcademicYear() : '';
-            const trimester = window.getGlobalTrimester ? window.getGlobalTrimester() : '';
             const studentAvgs = [];
 
-            (data.students || []).filter(s => s.status !== 'archived' && (!s.academicYear || s.academicYear === year)).forEach(s => {
+            (data.students || []).filter(s => s.status !== 'archived' && this._isStudentInYear(s)).forEach(s => {
                 const assignments = (data.assignments || []).filter(a =>
                     (a.className || '').trim() === (s.className || '').trim() &&
-                    (!a.academicYear || a.academicYear === year) &&
-                    (!a.trimester || a.trimester === trimester)
+                    this._isAssignmentInPeriod(a)
                 );
-                let totalScore = 0, count = 0;
-                assignments.forEach(a => {
-                    if (data.grades && data.grades[s.id] && data.grades[s.id][a.id]) {
-                        const score = window.grades ? window.grades.getStudentAssignmentTotal(data, s.id, a.id) : 0;
-                        const maxPts = window.grades ? window.grades.getAssignmentMaxPoints(a) : 20;
-                        if (score > 0 && maxPts > 0) {
-                            totalScore += (score / maxPts) * 20;
-                            count++;
-                        }
-                    }
-                });
-                if (count > 0) {
+                const avg = this._getStudentAverage(data, s.id, assignments);
+                if (avg !== null) {
                     studentAvgs.push({
                         name: `${s.lastName || ''} ${s.firstName || ''}`.trim() || s.name || s.id,
                         className: s.className,
-                        average: totalScore / count
+                        average: avg
                     });
                 }
             });
@@ -295,10 +314,9 @@
             return studentAvgs.sort((a, b) => b.average - a.average).slice(0, limit);
         },
 
+        // Grade distribution for current trimester
         getGradeDistribution() {
             const data = getData();
-            const year = window.getGlobalAcademicYear ? window.getGlobalAcademicYear() : '';
-            const trimester = window.getGlobalTrimester ? window.getGlobalTrimester() : '';
             const ranges = [
                 { label: '0-5', min: 0, max: 5, count: 0, color: '#ef4444' },
                 { label: '5-8', min: 5, max: 8, count: 0, color: '#f97316' },
@@ -308,25 +326,13 @@
                 { label: '15-20', min: 15, max: 20, count: 0, color: '#0ea5e9' }
             ];
 
-            (data.students || []).filter(s => s.status !== 'archived' && (!s.academicYear || s.academicYear === year)).forEach(s => {
+            (data.students || []).filter(s => s.status !== 'archived' && this._isStudentInYear(s)).forEach(s => {
                 const assignments = (data.assignments || []).filter(a =>
                     (a.className || '').trim() === (s.className || '').trim() &&
-                    (!a.academicYear || a.academicYear === year) &&
-                    (!a.trimester || a.trimester === trimester)
+                    this._isAssignmentInPeriod(a)
                 );
-                let totalScore = 0, count = 0;
-                assignments.forEach(a => {
-                    if (data.grades && data.grades[s.id] && data.grades[s.id][a.id]) {
-                        const score = window.grades ? window.grades.getStudentAssignmentTotal(data, s.id, a.id) : 0;
-                        const maxPts = window.grades ? window.grades.getAssignmentMaxPoints(a) : 20;
-                        if (score > 0 && maxPts > 0) {
-                            totalScore += (score / maxPts) * 20;
-                            count++;
-                        }
-                    }
-                });
-                if (count > 0) {
-                    const avg = totalScore / count;
+                const avg = this._getStudentAverage(data, s.id, assignments);
+                if (avg !== null) {
                     for (const r of ranges) {
                         if (avg >= r.min && avg < r.max) { r.count++; break; }
                     }
@@ -522,20 +528,33 @@
         const globalCompletion = classes.length > 0
             ? Math.round(classStats.reduce((s, c) => s + c.completionRate, 0) / classes.length)
             : 0;
-        const globalAvg = classStats.length > 0
-            ? (classStats.filter(c => c.average !== null).reduce((s, c) => s + c.average, 0) / classStats.filter(c => c.average !== null).length).toFixed(2)
-            : '--';
+        // Use weighted global average (by student, not by class average)
+        const globalAvg = engine.getGlobalAverage();
+        const globalAvgDisplay = globalAvg !== null ? globalAvg : '--';
 
         const completionColor = globalCompletion >= 80 ? '#22c55e' : globalCompletion >= 50 ? '#eab308' : '#ef4444';
-        const avgColor = globalAvg !== '--' ? (parseFloat(globalAvg) >= 10 ? '#22c55e' : '#ef4444') : '#94a3b8';
+        const avgColor = globalAvg !== null ? (parseFloat(globalAvg) >= 10 ? '#22c55e' : '#ef4444') : '#94a3b8';
+
+        // Current period label
+        const { year, trimester } = engine._getFilters();
+        const periodLabel = `T${trimester || '?'} ${year || ''}`;
 
         container.innerHTML = `
+            <!-- Period Indicator -->
+            <div class="flex items-center gap-2 mb-4 px-1">
+                <div class="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 border border-indigo-100 rounded-xl">
+                    <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <span class="text-sm font-bold text-indigo-700">${periodLabel}</span>
+                </div>
+                <span class="text-xs text-slate-400 font-medium">Donn\u00e9es du trimestre s\u00e9lectionn\u00e9</span>
+            </div>
+
             <!-- KPI CARDS ROW -->
             <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
-                ${renderKPICard(Icons.users, 'El\u00e8ves', genderStats.total, 'text-blue-600', 'bg-blue-50', `+${classes.length} classes`)}
+                ${renderKPICard(Icons.users, 'El\u00e8ves', genderStats.total, 'text-blue-600', 'bg-blue-50', `${classes.length} classes`)}
                 ${renderKPICard(Icons.clipboard, 'Devoirs', totalAssignments, 'text-violet-600', 'bg-violet-50', `${typeDist.cc} CC / ${typeDist.comp} Comp`)}
                 ${renderKPICard(Icons.check, 'Compl\u00e9tion', globalCompletion + '%', 'text-emerald-600', 'bg-emerald-50', '', Charts.progressRing(globalCompletion, 52, 6, completionColor))}
-                ${renderKPICard(Icons.chart, 'Moyenne', globalAvg + '/20', `text-${parseFloat(globalAvg) >= 10 ? 'emerald' : 'red'}-600`, `bg-${parseFloat(globalAvg) >= 10 ? 'emerald' : 'red'}-50`, globalAvg !== '--' ? (parseFloat(globalAvg) >= 10 ? 'Au-dessus de la moyenne' : 'En dessous de la moyenne') : '')}
+                ${renderKPICard(Icons.chart, 'Moyenne', globalAvgDisplay + '/20', globalAvg !== null && parseFloat(globalAvg) >= 10 ? 'text-emerald-600' : globalAvg !== null ? 'text-red-600' : 'text-slate-400', globalAvg !== null && parseFloat(globalAvg) >= 10 ? 'bg-emerald-50' : globalAvg !== null ? 'bg-red-50' : 'bg-slate-50', globalAvg !== null ? (parseFloat(globalAvg) >= 10 ? 'Au-dessus de la moyenne' : 'En dessous de la moyenne') : 'Aucune note')}
                 ${renderKPICard(Icons.alert, 'Alertes', anomalies.length, anomalies.length > 0 ? 'text-amber-600' : 'text-slate-400', anomalies.length > 0 ? 'bg-amber-50' : 'bg-slate-50', anomalies.filter(a => a.type === 'critical').length + ' critiques')}
             </div>
 
