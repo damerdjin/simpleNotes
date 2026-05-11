@@ -1435,12 +1435,19 @@ import { supabase } from './supabase-client.js';
     window.precheckRakmanaAllClassesConfig = function() {
         const t = getTranslations()[getLang()] || {};
         const select = document.getElementById('select-class-export');
-        const classNames = select ? Array.from(select.options).map(o => (o.value || '').trim()).filter(Boolean) : [...new Set((getData().students || []).map(s => (s.className || '').trim()).filter(Boolean))];
+        const classNames = select ? Array.from(select.options).map(o => (o.value || '').trim()).filter(Boolean) : [];
         if (!classNames.length) { alert(t.selectClass || "Aucune classe trouvée."); return false; }
         const assignmentsById = new Map((getData().assignments || []).map(a => [a.id, a]));
         const issues = [];
         for (const className of classNames) {
-            const cfg = getExportClassConfig(className);
+            const classAssigns = getAssignmentsForClass(className);
+            const subjects = [...new Set(classAssigns.map(a => a.subject || a.assignment_subject).filter(Boolean))];
+            if (subjects.length === 0) {
+                issues.push(`- ${className}: aucun devoir avec matière.`);
+                continue;
+            }
+            const subject = subjects[0];
+            const cfg = getExportClassConfig(className, subject);
             if (!cfg) { issues.push(`- ${className}: config absente.`); continue; }
             if (!cfg.ccAssignmentId || !assignmentsById.has(cfg.ccAssignmentId)) issues.push(`- ${className}: CC manquant.`);
             if (!cfg.compAssignmentId || !assignmentsById.has(cfg.compAssignmentId)) issues.push(`- ${className}: Composition manquante.`);
@@ -1543,7 +1550,11 @@ import { supabase } from './supabase-client.js';
         const plan = []; const issues = [];
 
         for (const className of classNames) {
-            const cfg = getExportClassConfig(className);
+            const classAssigns = getAssignmentsForClass(className);
+            const subjects = [...new Set(classAssigns.map(a => a.subject || a.assignment_subject).filter(Boolean))];
+            if (subjects.length === 0) { issues.push(`- ${className}: aucun devoir avec matière.`); continue; }
+            const subject = subjects[0];
+            const cfg = getExportClassConfig(className, subject);
             if (!cfg) { issues.push(`- ${className}: config absente.`); continue; }
             const ccA = cfg.ccAssignmentId ? assignmentsById.get(cfg.ccAssignmentId) : null;
             const compA = cfg.compAssignmentId ? assignmentsById.get(cfg.compAssignmentId) : null;
@@ -1612,7 +1623,7 @@ import { supabase } from './supabase-client.js';
                 const g = gradesByNIN[nin];
                 if (!g) continue;
                 totalMatches++;
-                const write = (c, v) => { if (c !== -1 && v != null) ws.getRow(r).getCell(c).value = round2(Number(v)); };
+                const write = (c, v) => { if (c !== -1 && v != null) { const cell = ws.getRow(r).getCell(c); cell.value = round2(Number(v)); cell.protection = { locked: false }; } };
                 write(colIndices.cc, g.cc);
                 write(colIndices.devoir, g.devoir);
                 if (hasTP) write(colIndices.tp, g.tp);
@@ -1620,8 +1631,8 @@ import { supabase } from './supabase-client.js';
                 
                 const avg = computeAverageFromGrades(g, cfg, hasTP);
                 const res = window.computeFinalObsCons({ className, studentId: g.studentId, devoir: g.devoir, comp: g.comp, avg, currentLanguage: getLang() });
-                if (colIndices.obs !== -1) ws.getRow(r).getCell(colIndices.obs).value = res.obs;
-                if (colIndices.cons !== -1) ws.getRow(r).getCell(colIndices.cons).value = res.cons;
+                if (colIndices.obs !== -1) { const cell = ws.getRow(r).getCell(colIndices.obs); cell.value = res.obs; cell.protection = { locked: false }; }
+                if (colIndices.cons !== -1) { const cell = ws.getRow(r).getCell(colIndices.cons); cell.value = res.cons; cell.protection = { locked: false }; }
             }
         }
 
@@ -1635,6 +1646,14 @@ import { supabase } from './supabase-client.js';
 
         const originalZip = await JSZip.loadAsync(arrayBuffer);
         const correctedZip = await JSZip.loadAsync(correctedBuffer);
+
+        // Supprimer les balises strike/strikethrough ajoutées par ExcelJS dans les styles
+        let correctedStylesXml = await correctedZip.file("xl/styles.xml")?.async("string");
+        if (correctedStylesXml) {
+            correctedStylesXml = correctedStylesXml.replace(/<strike[^>]*\/>/gi, '').replace(/<strikethrough[^>]*\/>/gi, '');
+            correctedZip.file("xl/styles.xml", correctedStylesXml);
+        }
+
         const workbookXml = await originalZip.file("xl/workbook.xml")?.async("string");
         const workbookRelsXml = await originalZip.file("xl/_rels/workbook.xml.rels")?.async("string");
         
