@@ -112,31 +112,34 @@
             return (avgs.reduce((a, b) => a + b, 0) / avgs.length).toFixed(2);
         },
 
-        // Global average = weighted by number of students who have grades
-        getGlobalAverage() {
-            const data = getData();
+        // Class averages ranking - returns per-class data with best/worst
+        getClassAveragesRanking() {
             const classes = this.getClasses();
-            let totalSum = 0, totalCount = 0;
-            classes.forEach(cls => {
-                const students = this.getStudentsByClass(cls);
-                const assignments = this.getAssignmentsByClass(cls);
-                students.forEach(s => {
-                    const avg = this._getStudentAverage(data, s.id, assignments);
-                    if (avg !== null) {
-                        totalSum += avg;
-                        totalCount++;
-                    }
-                });
-            });
-            return totalCount > 0 ? (totalSum / totalCount).toFixed(2) : null;
+            const rankings = classes.map(cls => {
+                const avg = this.getClassAverage(cls);
+                return {
+                    name: cls,
+                    average: avg !== null ? parseFloat(avg) : null
+                };
+            }).filter(r => r.average !== null).sort((a, b) => b.average - a.average);
+
+            return {
+                rankings,
+                best: rankings.length > 0 ? rankings[0] : null,
+                worst: rankings.length > 0 ? rankings[rankings.length - 1] : null,
+                count: rankings.length
+            };
         },
 
+        // Assignment type distribution - EXCLUDES CC (CC is continuous assessment, not a devoir)
         getAssignmentTypeDistribution() {
             const data = getData();
-            const dist = { devoir: 0, cc: 0, tp: 0, comp: 0 };
+            const dist = { devoir: 0, tp: 0, comp: 0 };
             (data.assignments || []).forEach(a => {
                 if (this._isAssignmentInPeriod(a)) {
                     const type = a.type || 'devoir';
+                    // Exclude CC - it's a continuous assessment note, not a devoir
+                    if (type === 'cc') return;
                     if (dist[type] !== undefined) dist[type]++;
                 }
             });
@@ -274,6 +277,8 @@
                 const typeDist = {};
                 assignments.forEach(a => {
                     const type = a.type || 'devoir';
+                    // Exclude CC - it's continuous assessment, not a devoir
+                    if (type === 'cc') return;
                     typeDist[type] = (typeDist[type] || 0) + 1;
                 });
                 return {
@@ -528,12 +533,12 @@
         const globalCompletion = classes.length > 0
             ? Math.round(classStats.reduce((s, c) => s + c.completionRate, 0) / classes.length)
             : 0;
-        // Use weighted global average (by student, not by class average)
-        const globalAvg = engine.getGlobalAverage();
-        const globalAvgDisplay = globalAvg !== null ? globalAvg : '--';
+        // Class averages ranking (no mixing between different class levels)
+        const avgRanking = engine.getClassAveragesRanking();
+        const bestClass = avgRanking.best;
+        const worstClass = avgRanking.worst;
 
         const completionColor = globalCompletion >= 80 ? '#22c55e' : globalCompletion >= 50 ? '#eab308' : '#ef4444';
-        const avgColor = globalAvg !== null ? (parseFloat(globalAvg) >= 10 ? '#22c55e' : '#ef4444') : '#94a3b8';
 
         // Current period label
         const { year, trimester } = engine._getFilters();
@@ -552,9 +557,9 @@
             <!-- KPI CARDS ROW -->
             <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
                 ${renderKPICard(Icons.users, 'El\u00e8ves', genderStats.total, 'text-blue-600', 'bg-blue-50', `${classes.length} classes`)}
-                ${renderKPICard(Icons.clipboard, 'Devoirs', totalAssignments, 'text-violet-600', 'bg-violet-50', `${typeDist.cc} CC / ${typeDist.comp} Comp`)}
+                ${renderKPICard(Icons.clipboard, 'Devoirs', totalAssignments, 'text-violet-600', 'bg-violet-50', `${typeDist.comp} Comp / ${typeDist.tp || 0} TP`)}
                 ${renderKPICard(Icons.check, 'Compl\u00e9tion', globalCompletion + '%', 'text-emerald-600', 'bg-emerald-50', '', Charts.progressRing(globalCompletion, 52, 6, completionColor))}
-                ${renderKPICard(Icons.chart, 'Moyenne', globalAvgDisplay + '/20', globalAvg !== null && parseFloat(globalAvg) >= 10 ? 'text-emerald-600' : globalAvg !== null ? 'text-red-600' : 'text-slate-400', globalAvg !== null && parseFloat(globalAvg) >= 10 ? 'bg-emerald-50' : globalAvg !== null ? 'bg-red-50' : 'bg-slate-50', globalAvg !== null ? (parseFloat(globalAvg) >= 10 ? 'Au-dessus de la moyenne' : 'En dessous de la moyenne') : 'Aucune note')}
+                ${renderKPICard(Icons.chart, 'Moyenne', bestClass ? bestClass.average.toFixed(1) + '/20' : '--', bestClass && bestClass.average >= 10 ? 'text-emerald-600' : bestClass ? 'text-red-600' : 'text-slate-400', bestClass && bestClass.average >= 10 ? 'bg-emerald-50' : bestClass ? 'bg-red-50' : 'bg-slate-50', bestClass ? `${bestClass.name} (meilleure)` : 'Aucune note')}
                 ${renderKPICard(Icons.alert, 'Alertes', anomalies.length, anomalies.length > 0 ? 'text-amber-600' : 'text-slate-400', anomalies.length > 0 ? 'bg-amber-50' : 'bg-slate-50', anomalies.filter(a => a.type === 'critical').length + ' critiques')}
             </div>
 
@@ -585,14 +590,12 @@
                         <div class="flex-shrink-0 w-[160px]">
                             ${Charts.donut([
                                 { value: typeDist.devoir, color: '#3b82f6', label: 'Devoir' },
-                                { value: typeDist.cc, color: '#8b5cf6', label: 'CC' },
                                 { value: typeDist.tp, color: '#f59e0b', label: 'TP' },
                                 { value: typeDist.comp, color: '#ef4444', label: 'Comp' }
                             ], 160, 160)}
                         </div>
                         <div class="flex-1 space-y-2.5">
                             ${renderDonutLegend('Devoir', typeDist.devoir, '#3b82f6', totalAssignments)}
-                            ${renderDonutLegend('CC', typeDist.cc, '#8b5cf6', totalAssignments)}
                             ${renderDonutLegend('TP', typeDist.tp, '#f59e0b', totalAssignments)}
                             ${renderDonutLegend('Composition', typeDist.comp, '#ef4444', totalAssignments)}
                         </div>
