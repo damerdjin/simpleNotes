@@ -34,13 +34,30 @@ export async function login(email, password) {
 
 export async function register(userData) {
     try {
-        // Handle new school creation logic
         let schoolId = userData.school_id;
         if (schoolId === "") schoolId = null;
 
-        // Validation : un établissement est obligatoire
         if (!schoolId && !userData.new_school) {
             throw new Error('Un établissement est requis. Veuillez en sélectionner ou en créer un.');
+        }
+
+        // Si nouvelle école, la créer AVANT l'inscription
+        if (userData.new_school) {
+            const { data: school, error: schoolError } = await supabase
+                .from('schools')
+                .insert([{
+                    name: userData.new_school.name,
+                    commune_id: userData.new_school.commune_id,
+                    approved: false
+                }])
+                .select()
+                .single();
+
+            if (schoolError) {
+                console.error('Error creating school:', schoolError);
+                throw new Error('Erreur lors de la création du lycée.');
+            }
+            schoolId = school.id;
         }
 
         const { data, error } = await supabase.auth.signUp({
@@ -68,29 +85,12 @@ export async function register(userData) {
         const user = data.user;
         if (!user) throw new Error('Utilisateur non créé.');
 
-        // 1. If new school, create it first
-        if (userData.new_school) {
-            const { data: school, error: schoolError } = await supabase
+        // Mettre à jour le created_by de l'école
+        if (userData.new_school && schoolId) {
+            await supabase
                 .from('schools')
-                .insert([{
-                    name: userData.new_school.name,
-                    commune_id: userData.new_school.commune_id,
-                    created_by: user.id,
-                    approved: false
-                }])
-                .select()
-                .single();
-
-            if (schoolError) {
-                console.error('Error creating school:', schoolError);
-            } else if (school) {
-                schoolId = school.id;
-                // Update user metadata in Auth (for JWT claims)
-                // Note: Auth metadata is updated via auth.updateUser, not public.users table if using JWT Claims pattern
-                await supabase.auth.updateUser({
-                    data: { school_id: schoolId }
-                });
-            }
+                .update({ created_by: user.id })
+                .eq('id', schoolId);
         }
 
         // Sync school_id to public users table
