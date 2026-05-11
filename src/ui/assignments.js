@@ -1207,6 +1207,31 @@
         window.closeAssignmentModal();
     };
 
+    function isCopySuffix(name) {
+        return name.endsWith(' (copie)') || name.endsWith(' (copie intégrale)');
+    }
+
+    function getOriginalNameFromCopy(copyName) {
+        if (copyName.endsWith(' (copie intégrale)')) {
+            return copyName.slice(0, -' (copie intégrale)'.length);
+        }
+        if (copyName.endsWith(' (copie)')) {
+            return copyName.slice(0, -' (copie)'.length);
+        }
+        return null;
+    }
+
+    function areGradesIdentical(data, assignmentIdA, assignmentIdB) {
+        for (const studentId in data.grades) {
+            const gradesA = data.grades[studentId]?.[assignmentIdA];
+            const gradesB = data.grades[studentId]?.[assignmentIdB];
+            const aStr = JSON.stringify(gradesA || {});
+            const bStr = JSON.stringify(gradesB || {});
+            if (aStr !== bStr) return false;
+        }
+        return true;
+    }
+
     window.deleteAssignment = function (id) {
         const t = getTranslations()[getLang()];
         const data = getData();
@@ -1217,11 +1242,10 @@
             return;
         }
 
-        // --- PROTECTION CONTRE LA SUPPRESSION AVEC NOTES ---
+        // --- DÉTECTION DES COPIES AVEC NOTES IDENTIQUES ---
         let hasGrades = false;
         const hasGradeFunc = window.hasAnyGradeForAssignment || ((sid, aid) => gradesSvc()?.hasAnyGradeForAssignment?.(data, sid, aid));
         
-        // On vérifie tous les élèves pour voir si l'un d'eux a une note pour ce devoir
         for (const student of data.students) {
             try {
                 if (hasGradeFunc(student.id, id)) {
@@ -1231,7 +1255,24 @@
             } catch (e) {}
         }
 
-        if (hasGrades) {
+        if (hasGrades && assignment && isCopySuffix(assignment.name)) {
+            const originalName = getOriginalNameFromCopy(assignment.name);
+            const original = data.assignments.find(a =>
+                a.name === originalName &&
+                a.className === assignment.className &&
+                a.trimester === assignment.trimester &&
+                a.academicYear === assignment.academicYear
+            );
+
+            if (original && areGradesIdentical(data, id, original.id)) {
+                const msg = (t.deleteDuplicateAssignment || '').replace('{name}', assignment.name).replace('{original}', original.name);
+                if (!confirm(msg)) return;
+            } else {
+                const msg = t.cannotDeleteAssignmentWithGrades || "Impossible de supprimer un devoir qui a déjà des notes saisies. Supprimez d'abord les notes si vous voulez vraiment l'effacer.";
+                if (window.showToast) window.showToast(msg, 'error');
+                return;
+            }
+        } else if (hasGrades) {
             const msg = t.cannotDeleteAssignmentWithGrades || "Impossible de supprimer un devoir qui a déjà des notes saisies. Supprimez d'abord les notes si vous voulez vraiment l'effacer.";
             if (window.showToast) window.showToast(msg, 'error');
             return;
@@ -1240,7 +1281,6 @@
         if (!confirm(t.deleteAssignment)) return;
 
         data.assignments = data.assignments.filter(a => a.id !== id);
-        // Clean grades
         for (const studentId in data.grades) {
             delete data.grades[studentId][id];
         }
