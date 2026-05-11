@@ -1,7 +1,43 @@
 -- ==============================================================================
--- SCHEMA SUPABASE COMPLET POUR L'APPLICATION (Mise à jour Mars 2026)
+-- SCHEMA SUPABASE COMPLET POUR L'APPLICATION (Mise à jour Juin 2025)
 -- Ce fichier contient TOUTES les tables, les politiques de sécurité (RLS)
 -- et les fonctions (RPC) nécessaires au bon fonctionnement de l'application.
+-- ==============================================================================
+
+-- ==============================================================================
+-- 0. TRIGGER : SYNC auth.users → public.users
+-- ==============================================================================
+
+-- Ajouter la contrainte NOT NULL sur school_id (décommenter après migration des anciens users)
+-- ALTER TABLE public.users ALTER COLUMN school_id SET NOT NULL;
+-- Note : La contrainte est appliquée côté application. En base, on garde NULL autorisé
+-- pour permettre au trigger de créer l'utilisateur avant que l'école soit créée.
+
+-- Rendre password_hash optionnel (Supabase gère le mot de passe)
+ALTER TABLE public.users ALTER COLUMN password_hash DROP NOT NULL;
+
+-- Fonction déclenchée à la création d'un utilisateur dans auth.users
+CREATE OR REPLACE FUNCTION public.handle_new_user() 
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.users (id, email, wilaya, city, school_id, created_at)
+  VALUES (
+    new.id, 
+    new.email, 
+    NULLIF(TRIM(new.raw_user_meta_data->>'wilaya'), ''),
+    NULLIF(TRIM(new.raw_user_meta_data->>'city'), ''),
+    NULLIF((new.raw_user_meta_data->>'school_id')::uuid::text, '')::uuid,
+    new.created_at
+  );
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
 -- ==============================================================================
 
 -- 1. TABLE DE STOCKAGE "BLOB" (MIGRATION PROGRESSIVE)
