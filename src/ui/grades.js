@@ -607,8 +607,13 @@
         container.innerHTML = html;
         saveData();
         window.recalculateTotals(assignmentId, studentId);
-        // On ne recharge l'interface complète que si c'est nécessaire (changement de mode ou undo)
-        // updateGrade est appelé à chaque frappe, donc on évite de tout re-render
+
+        // Auto-focus sur le premier champ de saisie
+        const firstInput = container.querySelector('input:not([disabled])');
+        if (firstInput) {
+            firstInput.focus();
+            firstInput.select();
+        }
     };
 
     window.undoLastGrade = async function(studentId, assignmentId) {
