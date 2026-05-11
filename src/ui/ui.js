@@ -202,7 +202,16 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
             }
         });
 
-        // 6. Register Config Tab
+        // 6. Register Dashboard Tab
+        window.tabs.registerTab('dashboard', {
+            label: t.dashboardTitle || 'Dashboard',
+            icon: '📈',
+            onShow: () => {
+                if (window.renderDashboard) window.renderDashboard();
+            }
+        });
+
+        // 7. Register Config Tab
         window.tabs.registerTab('config', {
             label: t.configTitle || 'Configuration',
             icon: '⚙️',
@@ -243,6 +252,11 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
             if (success && tabId === 'students' && window.setStudentsSelectedClass) {
                 // Par défaut, quand on clique sur l'onglet Élèves, on veut la liste des classes
                 window.setStudentsSelectedClass('', { skipHistory: true });
+            }
+
+            // Render dashboard when switching to it
+            if (success && tabId === 'dashboard' && window.renderDashboard) {
+                window.renderDashboard();
             }
 
             // On mobile, close sidebar after selection

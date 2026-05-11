@@ -1747,6 +1747,10 @@
                 <span>📦</span>
                 <span data-translate="exportPrepTitle">Export</span>
             </div>
+            <div class="nav-item" data-tab="dashboard" onclick="switchTab('dashboard')">
+                <span>📊</span>
+                <span data-translate="dashboardTitle">Dashboard</span>
+            </div>
 
         </nav>
     </aside>
@@ -1876,6 +1880,11 @@
             <button onclick="switchTab('export')" data-tab="export" class="mobile-nav-item">
                 <div class="nav-icon-wrapper">
                     <span class="text-xl">📦</span>
+                </div>
+            </button>
+            <button onclick="switchTab('dashboard')" data-tab="dashboard" class="mobile-nav-item">
+                <div class="nav-icon-wrapper">
+                    <span class="text-xl">📈</span>
                 </div>
             </button>
         </nav>
@@ -2417,6 +2426,96 @@
                     </div>
                 </div>
 
+                <!-- Dashboard Tab -->
+                <div id="content-dashboard" class="tab-content view-section">
+                    <div class="container mx-auto px-4 max-w-7xl">
+                        <!-- Dashboard Header -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                                </div>
+                                <div>
+                                    <h2 class="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight" data-translate="dashboardTitle">Dashboard</h2>
+                                    <p class="text-xs text-slate-400 font-medium" data-translate="dashboardSubtitle">Vue d'ensemble de vos classes et notes</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="renderDashboard()" class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-95 shadow-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                    <span data-translate="refresh">Actualiser</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Dashboard Content -->
+                        <div id="dashboard-content">
+                            <!-- Loading State -->
+                            <div class="flex items-center justify-center py-20">
+                                <div class="text-center">
+                                    <div class="inline-flex items-center justify-center w-16 h-16 bg-slate-100 rounded-2xl mb-4 animate-pulse">
+                                        <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                                    </div>
+                                    <p class="text-slate-500 font-medium">Chargement du dashboard...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <style>
+                        /* Dashboard-specific styles */
+                        #content-dashboard .container {
+                            animation: dashboardFadeIn 0.4s ease-out;
+                        }
+
+                        @keyframes dashboardFadeIn {
+                            from { opacity: 0; transform: translateY(8px); }
+                            to { opacity: 1; transform: translateY(0); }
+                        }
+
+                        #content-dashboard .bg-white {
+                            transition: box-shadow 0.2s ease, transform 0.15s ease;
+                        }
+
+                        #content-dashboard .bg-white:hover {
+                            transform: translateY(-1px);
+                        }
+
+                        /* Anomaly type badges */
+                        .anomaly-critical { background: #fef2f2; border-left: 3px solid #ef4444; }
+                        .anomaly-warning { background: #fffbeb; border-left: 3px solid #f59e0b; }
+                        .anomaly-info { background: #eff6ff; border-left: 3px solid #3b82f6; }
+
+                        /* Top student rank badges */
+                        .rank-1 { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; }
+                        .rank-2 { background: linear-gradient(135deg, #d1d5db, #9ca3af); color: white; }
+                        .rank-3 { background: linear-gradient(135deg, #d97706, #b45309); color: white; }
+                        .rank-other { background: #f1f5f9; color: #64748b; }
+
+                        /* Grade distribution bars */
+                        .grade-bar {
+                            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+                        }
+
+                        /* Responsive table scroll */
+                        #content-dashboard table {
+                            min-width: 600px;
+                        }
+
+                        /* RTL Support */
+                        .rtl-layout #content-dashboard .anomaly-critical,
+                        .rtl-layout #content-dashboard .anomaly-warning,
+                        .rtl-layout #content-dashboard .anomaly-info {
+                            border-left: none;
+                            border-right: 3px solid;
+                        }
+
+                        .rtl-layout #content-dashboard .anomaly-critical { border-right-color: #ef4444; }
+                        .rtl-layout #content-dashboard .anomaly-warning { border-right-color: #f59e0b; }
+                        .rtl-layout #content-dashboard .anomaly-info { border-right-color: #3b82f6; }
+                    </style>
+                </div>
+
                 <!-- Config Tab -->
                 <div id="content-config" class="tab-content view-section">
                     <div class="container mx-auto px-4 max-w-4xl">
@@ -2872,6 +2971,7 @@
     <script type="module" src="./src/ui/grades.js?v=2.0"></script>
     <script type="module" src="./src/ui/data-management.js?v=2.0"></script>
     <script type="module" src="./src/ui/ui.js?v=2.0"></script>
+    <script src="./src/ui/dashboard.js?v=2.0"></script>
 
     <script type="module">
         // Language Management
@@ -2916,6 +3016,9 @@
                 if (window.loadExportPrepConfig) loadExportPrepConfig();
                 if (window.loadClassSelectorsForExport) await loadClassSelectorsForExport();
                 if (window.initGradesUI) initGradesUI();
+
+                // Initialize Dashboard
+                if (window.initDashboard) window.initDashboard();
 
                 // Give a tiny bit of time for the browser to paint the rendered content
                 setTimeout(() => {

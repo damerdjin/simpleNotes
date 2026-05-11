@@ -153,7 +153,6 @@ export function supabaseAdapter() {
           .eq('academic_year', academicYear);
 
         if (onlyMine) {
-          // Join with teacher_classes to get only subscriptions
           const { data: tcData, error: tcError } = await supabase
             .from('teacher_classes')
             .select('class_id')
@@ -165,13 +164,10 @@ export function supabaseAdapter() {
           const classIds = tcData.map(tc => tc.class_id);
           query = query.in('id', classIds);
         } else {
-            // Même si on veut "toutes les classes de l'école", dans le contexte actuel de l'UI,
-            // pour éviter d'afficher des classes non désirées, on limite souvent à ce que le prof 
-            // a lui-même créé ou s'est abonné. (Optionnel : si on veut vraiment toutes les classes
-            // du lycée, on laisse tel quel, mais ça cause le bug UI "toutes les classes s'affichent").
-            
-            // Pour l'instant on garde le comportement global si onlyMine=false, 
-            // mais l'UI appelle souvent sans paramètre par défaut.
+          const schoolId = window.currentUser?.user_metadata?.school_id;
+          if (schoolId) {
+            query = query.eq('school_id', schoolId);
+          }
         }
 
         const { data, error } = await query.order('name');

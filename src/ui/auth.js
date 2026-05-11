@@ -88,6 +88,23 @@ export async function register(userData) {
             }
         }
 
+        // Sync school_id to public users table
+        if (schoolId) {
+            const { error: userUpdateError } = await supabase
+                .from('users')
+                .upsert({
+                    id: user.id,
+                    email: user.email,
+                    school_id: schoolId,
+                    city: userData.city,
+                    wilaya: userData.wilaya
+                }, { onConflict: 'id' });
+            
+            if (userUpdateError) {
+                console.error('Error updating users table:', userUpdateError);
+            }
+        }
+
         // 2. Associate with classes
         if (schoolId && userData.selectedClasses && userData.selectedClasses.length > 0) {
             const now = new Date();
