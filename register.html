@@ -417,12 +417,32 @@
             };
 
             if (isNewSchoolMode) {
+                const newSchoolName = document.getElementById('new-school-name').value.trim();
+                if (!newSchoolName) {
+                    errorDiv.textContent = t('schoolRequired') || "Veuillez saisir le nom de votre lycée.";
+                    errorDiv.classList.remove('hidden');
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('bg-green-500');
+                    submitBtn.classList.add('bg-blue-500', 'hover:bg-blue-700');
+                    submitBtn.textContent = t('registerButton');
+                    return;
+                }
                 userData.new_school = {
-                    name: document.getElementById('new-school-name').value,
+                    name: newSchoolName,
                     commune_id: communeSelect.value
                 };
             } else {
-                userData.school_id = schoolSelect.value;
+                const selectedSchool = schoolSelect.value;
+                if (!selectedSchool) {
+                    errorDiv.textContent = t('schoolRequired') || "Veuillez sélectionner ou créer un lycée.";
+                    errorDiv.classList.remove('hidden');
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('bg-green-500');
+                    submitBtn.classList.add('bg-blue-500', 'hover:bg-blue-700');
+                    submitBtn.textContent = t('registerButton');
+                    return;
+                }
+                userData.school_id = selectedSchool;
             }
 
             try {

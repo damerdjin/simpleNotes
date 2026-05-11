@@ -38,6 +38,11 @@ export async function register(userData) {
         let schoolId = userData.school_id;
         if (schoolId === "") schoolId = null;
 
+        // Validation : un établissement est obligatoire
+        if (!schoolId && !userData.new_school) {
+            throw new Error('Un établissement est requis. Veuillez en sélectionner ou en créer un.');
+        }
+
         const { data, error } = await supabase.auth.signUp({
             email: userData.email,
             password: userData.password,
