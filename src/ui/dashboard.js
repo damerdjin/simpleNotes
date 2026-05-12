@@ -691,10 +691,7 @@ import { supabase } from './supabase-client.js';
                 const x = 20 + gap + i * (barWidth + gap);
                 const y = chartHeight - barH + 10;
                 const color = colors ? colors[i % colors.length] : '#3b82f6';
-                bars += `<rect x="${x}" y="${y}" width="${barWidth}" height="${barH}" rx="4" fill="${color}" opacity="0.85">
-                    <animate attributeName="height" from="0" to="${barH}" dur="0.6s" fill="freeze"/>
-                    <animate attributeName="y" from="${chartHeight + 10}" to="${y}" dur="0.6s" fill="freeze"/>
-                </rect>`;
+                bars += `<rect x="${x}" y="${y}" width="${barWidth}" height="${barH}" rx="4" fill="${color}" opacity="0.85" class="dash-bar-rect"/>`;
                 bars += `<text x="${x + barWidth/2}" y="${y - 6}" text-anchor="middle" font-size="11" font-weight="700" fill="${color}">${v}</text>`;
                 if (labels && labels[i]) {
                     bars += `<text x="${x + barWidth/2}" y="${height - 8}" text-anchor="middle" font-size="10" fill="#64748b" font-weight="500">${labels[i]}</text>`;
@@ -725,9 +722,7 @@ import { supabase } from './supabase-client.js';
                 const y = 10 + i * (barHeight + 6);
                 const color = colors ? colors[i % colors.length] : '#3b82f6';
                 bars += `<text x="0" y="${y + barHeight/2 + 4}" font-size="11" fill="#475569" font-weight="600">${labels ? labels[i] : ''}</text>`;
-                bars += `<rect x="80" y="${y}" width="${barW}" height="${barHeight}" rx="4" fill="${color}" opacity="0.85">
-                    <animate attributeName="width" from="0" to="${barW}" dur="0.5s" fill="freeze"/>
-                </rect>`;
+                bars += `<rect x="80" y="${y}" width="${barW}" height="${barHeight}" rx="4" fill="${color}" opacity="0.85" class="dash-bar-rect"/>`;
                 bars += `<text x="${80 + barW + 6}" y="${y + barHeight/2 + 4}" font-size="11" fill="${color}" font-weight="700">${v}</text>`;
             });
 
@@ -740,32 +735,32 @@ import { supabase } from './supabase-client.js';
             if (total === 0) return '<p class="text-slate-400 text-sm text-center py-8">Aucune donn\u00e9e</p>';
             const cx = width / 2, cy = height / 2, r = Math.min(width, height) / 2 - 15;
             const innerR = r * 0.6;
+            const midR = (r + innerR) / 2;
+            const circ = 2 * Math.PI * midR;
+            const strokeW = r - innerR;
 
-            let paths = '';
-            let startAngle = -Math.PI / 2;
+            let circles = '';
+            let cumulativeAngle = -Math.PI / 2;
             segments.forEach((seg, i) => {
-                const angle = (seg.value / total) * Math.PI * 2;
-                const endAngle = startAngle + angle;
-                const largeArc = angle > Math.PI ? 1 : 0;
-                const x1 = cx + r * Math.cos(startAngle);
-                const y1 = cy + r * Math.sin(startAngle);
-                const x2 = cx + r * Math.cos(endAngle);
-                const y2 = cy + r * Math.sin(endAngle);
-                const ix1 = cx + innerR * Math.cos(endAngle);
-                const iy1 = cy + innerR * Math.sin(endAngle);
-                const ix2 = cx + innerR * Math.cos(startAngle);
-                const iy2 = cy + innerR * Math.sin(startAngle);
+                const segAngle = (seg.value / total) * Math.PI * 2;
+                const segLen = (seg.value / total) * circ;
+                const targetOffset = circ - segLen;
+                const deg = (cumulativeAngle * 180) / Math.PI;
 
-                paths += `<path d="M${x1},${y1} A${r},${r} 0 ${largeArc} 1 ${x2},${y2} L${ix1},${iy1} A${innerR},${innerR} 0 ${largeArc} 0 ${ix2},${iy2} Z" fill="${seg.color}" opacity="0.9">
-                    <animate attributeName="opacity" from="0" to="0.9" dur="0.4s" fill="freeze"/>
-                </path>`;
-                startAngle = endAngle;
+                circles += `<circle cx="${cx}" cy="${cy}" r="${midR}" fill="none" stroke="${seg.color}" stroke-width="${strokeW}"
+                    stroke-dasharray="${circ}" stroke-dashoffset="${circ}"
+                    transform="rotate(${deg} ${cx} ${cy})"
+                    class="dash-donut-segment"
+                    data-target-offset="${targetOffset}"
+                    data-circ="${circ}"/>`;
+
+                cumulativeAngle += segAngle;
             });
 
             const centerText = `<text x="${cx}" y="${cy - 6}" text-anchor="middle" font-size="22" font-weight="800" fill="#1e293b">${total}</text>
                 <text x="${cx}" y="${cy + 12}" text-anchor="middle" font-size="10" fill="#94a3b8" font-weight="500">total</text>`;
 
-            return `<svg viewBox="0 0 ${width} ${height}" class="w-full" style="max-height:${height}px">${paths}${centerText}</svg>`;
+            return `<svg viewBox="0 0 ${width} ${height}" class="w-full" style="max-height:${height}px">${circles}${centerText}</svg>`;
         },
 
         line(seriesOrPoints, width = 400, height = 180) {
@@ -823,7 +818,7 @@ import { supabase } from './supabase-client.js';
                     else linePath += ' L' + x + ',' + y;
                 });
                 if (linePath) {
-                    linesSvg += '<path d="' + linePath + '" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="prog-line prog-line-' + si + '" style="opacity:0.7;transition:opacity 0.2s,stroke-width 0.2s"/>';
+                    linesSvg += '<path d="' + linePath + '" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="dash-line-path prog-line prog-line-' + si + '" style="opacity:0.7;transition:opacity 0.2s,stroke-width 0.2s"/>';
                 }
                 linesSvg += pts;
                 // End label: only for best and worst (just the value, no class name)
@@ -894,7 +889,7 @@ import { supabase } from './supabase-client.js';
                 const x = 40 + i * step;
                 labels += `<text x="${x}" y="${height - 5}" text-anchor="middle" font-size="10" fill="#64748b" font-weight="500">${p.label}</text>`;
             });
-            return `<svg viewBox="0 0 ${width} ${height}" class="w-full" style="max-height:${height}px">${grid}<path d="${areaPath}" fill="url(#areaGrad)" opacity="0.15"/><defs><linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${color}"/><stop offset="100%" stop-color="${color}" stop-opacity="0"/></linearGradient></defs><path d="${linePath}" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>${points}${labels}</svg>`;
+            return `<svg viewBox="0 0 ${width} ${height}" class="w-full" style="max-height:${height}px">${grid}<path d="${areaPath}" fill="url(#areaGrad)" opacity="0.15"/><defs><linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${color}"/><stop offset="100%" stop-color="${color}" stop-opacity="0"/></linearGradient></defs><path d="${linePath}" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="dash-line-path"/>${points}${labels}</svg>`;
         },
 
         progressRing(pct, size = 80, strokeWidth = 8, color = '#22c55e') {
@@ -904,9 +899,12 @@ import { supabase } from './supabase-client.js';
             return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
                 <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#e2e8f0" stroke-width="${strokeWidth}"/>
                 <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"
-                    stroke-dasharray="${circ}" stroke-dashoffset="${offset}" stroke-linecap="round"
-                    transform="rotate(-90 ${size/2} ${size/2})" style="transition: stroke-dashoffset 0.8s ease"/>
-                <text x="${size/2}" y="${size/2 - 4}" text-anchor="middle" font-size="${size * 0.22}" font-weight="800" fill="#1e293b">${pct}%</text>
+                    stroke-dasharray="${circ}" stroke-dashoffset="${circ}" stroke-linecap="round"
+                    transform="rotate(-90 ${size/2} ${size/2})"
+                    class="dash-animated-ring"
+                    data-target-offset="${offset}"
+                    data-full-offset="${circ}"/>
+                <text x="${size/2}" y="${size/2 - 4}" text-anchor="middle" font-size="${size * 0.22}" font-weight="800" fill="#1e293b" class="dash-counter" data-target="${pct}" data-suffix="%"></text>
                 <text x="${size/2}" y="${size/2 + 10}" text-anchor="middle" font-size="${size * 0.1}" fill="#94a3b8">compl\u00e9t\u00e9</text>
             </svg>`;
         }
@@ -926,6 +924,248 @@ import { supabase } from './supabase-client.js';
         trend: '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>',
         gender: '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>'
     };
+
+    // ============================================================
+    // ANIMATION ENGINE
+    // ============================================================
+
+    // Inject CSS keyframes for dashboard animations
+    (function injectDashboardAnimationsCSS() {
+        const style = document.createElement('style');
+        style.id = 'dashboard-animations-css';
+        if (document.getElementById('dashboard-animations-css')) return;
+        style.textContent = `
+            @keyframes dashSlideUp {
+                from { opacity: 0; transform: translateY(24px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            @keyframes dashFadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes dashScaleIn {
+                from { opacity: 0; transform: scale(0.85); }
+                to { opacity: 1; transform: scale(1); }
+            }
+            @keyframes dashDrawLine {
+                to { stroke-dashoffset: 0; }
+            }
+            @keyframes dashDonutSpin {
+                from { opacity: 0; transform: rotate(-90deg); }
+                to { opacity: 1; transform: rotate(0deg); }
+            }
+            @keyframes dashPulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+            }
+            @keyframes dashLoaderDot {
+                0%, 100% { transform: scale(1); opacity: 0.4; }
+                50% { transform: scale(1.4); opacity: 1; }
+            }
+            @keyframes dashShimmer {
+                0% { background-position: -200% center; }
+                100% { background-position: 200% center; }
+            }
+            @keyframes dashGlow {
+                0%, 100% { filter: drop-shadow(0 0 4px rgba(99,102,241,0.3)); }
+                50% { filter: drop-shadow(0 0 12px rgba(99,102,241,0.5)); }
+            }
+            @keyframes dashProgressFill {
+                from { width: 0 !important; }
+            }
+            .dash-kpi-card {
+                opacity: 0;
+                animation: dashSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
+            .dash-kpi-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            }
+            .dash-section {
+                opacity: 0;
+                animation: dashSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            }
+            .dash-section:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+            }
+            .dash-counter-value {
+                display: inline-block;
+                font-variant-numeric: tabular-nums;
+            }
+            .dash-animated-ring {
+                transition: stroke-dashoffset 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+            }
+            .dash-animated-ring:hover {
+                animation: dashGlow 1.5s ease-in-out infinite;
+            }
+            .dash-donut-segment {
+                opacity: 0;
+                transition: opacity 0.3s, transform 0.3s;
+            }
+            .dash-donut-segment.animated {
+                opacity: 1;
+            }
+            .dash-donut-segment:hover {
+                opacity: 1 !important;
+                transform: scale(1.02);
+            }
+            .dash-line-path {
+                opacity: 0;
+            }
+            .dash-bar-rect {
+                transform-origin: left center;
+                animation: dashScaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                transition: opacity 0.3s;
+            }
+            .dash-bar-rect:hover {
+                opacity: 1 !important;
+            }
+            .dash-table-row {
+                opacity: 0;
+                animation: dashSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
+            .dash-table-row:hover {
+                background: rgba(99,102,241,0.03) !important;
+            }
+            .dash-top-student {
+                opacity: 0;
+                animation: dashSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                transition: transform 0.2s, box-shadow 0.2s;
+            }
+            .dash-top-student:hover {
+                transform: translateX(3px);
+                box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            }
+            .dash-anomaly {
+                opacity: 0;
+                animation: dashSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                transition: transform 0.2s, box-shadow 0.2s;
+            }
+            .dash-anomaly:hover {
+                transform: translateX(2px);
+            }
+            .dash-gender-card {
+                opacity: 0;
+                animation: dashScaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                transition: transform 0.2s, box-shadow 0.2s;
+            }
+            .dash-gender-card:hover {
+                transform: scale(1.03);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            }
+            .dash-progress-bar {
+                transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+            }
+            .dash-table-progress {
+                animation: dashProgressFill 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
+            .dash-section .prog-type-btn {
+                transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            }
+            .dash-section .prog-type-btn:hover {
+                transform: translateY(-1px);
+            }
+        `;
+        document.head.appendChild(style);
+    })();
+
+    // Animate a number from 0 to target value
+    function animateCounter(element, target, duration = 800, isDecimal = false, suffix = '') {
+        if (!element) return;
+        element.textContent = '0' + suffix;
+        const start = 0;
+        const startTime = performance.now();
+        // Adaptive step: bigger numbers get longer duration
+        const adjustedDuration = Math.min(duration + target * 8, 2000);
+
+        function update(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / adjustedDuration, 1);
+            // Ease out cubic
+            const eased = 1 - Math.pow(1 - progress, 3);
+            const current = start + (target - start) * eased;
+            if (isDecimal) {
+                element.textContent = current.toFixed(1) + suffix;
+            } else {
+                element.textContent = Math.round(current) + suffix;
+            }
+            if (progress < 1) {
+                requestAnimationFrame(update);
+            }
+        }
+        requestAnimationFrame(update);
+    }
+
+    // Trigger all dashboard animations after render
+    function triggerDashboardAnimations() {
+        // Animate KPI counters
+        document.querySelectorAll('.dash-counter[data-target]').forEach(el => {
+            const target = parseFloat(el.dataset.target);
+            const isDecimal = el.dataset.decimal === 'true';
+            const suffix = el.dataset.suffix || '';
+            animateCounter(el, target, 800, isDecimal, suffix);
+        });
+
+        // Animate progress rings (start from full offset, then transition to target)
+        document.querySelectorAll('.dash-animated-ring[data-target-offset]').forEach(ring => {
+            const targetOffset = parseFloat(ring.dataset.targetOffset);
+            const fullOffset = parseFloat(ring.dataset.fullOffset || targetOffset * 2);
+            ring.style.strokeDashoffset = fullOffset;
+            // Force reflow
+            ring.getBoundingClientRect();
+            ring.style.strokeDashoffset = targetOffset;
+        });
+
+        // Animate line chart paths (set --dash-length for CSS animation)
+        document.querySelectorAll('.dash-line-path').forEach(path => {
+            const length = path.getTotalLength ? path.getTotalLength() : 500;
+            path.style.opacity = '1';
+            path.style.strokeDasharray = length;
+            path.style.strokeDashoffset = length;
+            path.getBoundingClientRect();
+            path.style.transition = 'stroke-dashoffset 2.5s cubic-bezier(0.16, 1, 0.3, 1)';
+            path.style.strokeDashoffset = '0';
+        });
+
+        // Animate donut segments with circular stroke-dashoffset animation
+        document.querySelectorAll('.dash-donut-segment[data-target-offset]').forEach((circle, i) => {
+            const targetOffset = parseFloat(circle.dataset.targetOffset);
+            const circ = parseFloat(circle.dataset.circ || circle.getAttribute('stroke-dasharray'));
+            circle.style.strokeDashoffset = circ;
+            circle.getBoundingClientRect();
+            circle.style.transition = `stroke-dashoffset 0.9s cubic-bezier(0.16, 1, 0.3, 1) ${i * 0.15}s`;
+            circle.style.strokeDashoffset = targetOffset;
+            // Make visible after animation starts
+            setTimeout(() => circle.classList.add('animated'), i * 150 + 50);
+        });
+
+        // Animate horizontal bar rects with stagger
+        document.querySelectorAll('.dash-bar-rect').forEach((rect, i) => {
+            rect.style.animationDelay = (i * 0.08) + 's';
+        });
+
+        // Animate table rows with stagger
+        document.querySelectorAll('.dash-table-row').forEach((row, i) => {
+            row.style.animationDelay = (i * 0.04 + 0.2) + 's';
+        });
+
+        // Animate top students with stagger
+        document.querySelectorAll('.dash-top-student').forEach((item, i) => {
+            item.style.animationDelay = (i * 0.08 + 0.3) + 's';
+        });
+
+        // Animate anomalies with stagger
+        document.querySelectorAll('.dash-anomaly').forEach((item, i) => {
+            item.style.animationDelay = (i * 0.06 + 0.2) + 's';
+        });
+
+        // Animate gender cards
+        document.querySelectorAll('.dash-gender-card').forEach((card, i) => {
+            card.style.animationDelay = (i * 0.1 + 0.4) + 's';
+        });
+    }
 
     // ============================================================
     // HOVER INTERACTIVITY
@@ -966,7 +1206,6 @@ import { supabase } from './supabase-client.js';
         const typeDist = engine.getAssignmentTypeDistribution();
         const anomalies = engine.getAnomalies();
         const classStats = engine.getClassDetailedStats();
-        const topStudents = engine.getTopStudents(5);
         const gradeDist = engine.getGradeDistribution();
         const progression = engine.getTrimesterProgression('all');
         const progressionDev = engine.getTrimesterProgression('dev');
@@ -998,17 +1237,17 @@ import { supabase } from './supabase-client.js';
 
             <!-- KPI CARDS ROW -->
             <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
-                ${renderKPICard(Icons.users, 'El\u00e8ves', genderStats.total, 'text-blue-600', 'bg-blue-50', `${classes.length} classes`)}
-                ${renderKPICard(Icons.clipboard, 'Devoirs', totalAssignments, 'text-violet-600', 'bg-violet-50', `${typeDist.comp} Comp / ${typeDist.tp || 0} TP / ${typeDist.cc || 0} CC`)}
-                ${renderKPICard(Icons.check, 'Compl\u00e9tion', globalCompletion + '%', 'text-emerald-600', 'bg-emerald-50', '', Charts.progressRing(globalCompletion, 52, 6, completionColor))}
-                ${renderKPICard(Icons.chart, 'Moyenne', bestClass ? bestClass.average.toFixed(1) + '/20' : '--', bestClass && bestClass.average >= 10 ? 'text-emerald-600' : bestClass ? 'text-red-600' : 'text-slate-400', bestClass && bestClass.average >= 10 ? 'bg-emerald-50' : bestClass ? 'bg-red-50' : 'bg-slate-50', bestClass ? `${bestClass.name} (meilleure)` : 'Aucune note')}
-                ${renderKPICard(Icons.alert, 'Alertes', anomalies.length, anomalies.length > 0 ? 'text-amber-600' : 'text-slate-400', anomalies.length > 0 ? 'bg-amber-50' : 'bg-slate-50', anomalies.filter(a => a.type === 'critical').length + ' critiques')}
+                ${renderKPICard(Icons.users, 'El\u00e8ves', genderStats.total, 'text-blue-600', 'bg-blue-50', `${classes.length} classes`, null, 0)}
+                ${renderKPICard(Icons.clipboard, 'Devoirs', totalAssignments, 'text-violet-600', 'bg-violet-50', `${typeDist.comp} Comp / ${typeDist.tp || 0} TP / ${typeDist.cc || 0} CC`, null, 80)}
+                ${renderKPICard(Icons.check, 'Compl\u00e9tion', globalCompletion + '%', 'text-emerald-600', 'bg-emerald-50', '', Charts.progressRing(globalCompletion, 52, 6, completionColor), 160)}
+                ${renderKPICard(Icons.chart, 'Moyenne', bestClass ? bestClass.average.toFixed(1) + '/20' : '--', bestClass && bestClass.average >= 10 ? 'text-emerald-600' : bestClass ? 'text-red-600' : 'text-slate-400', bestClass && bestClass.average >= 10 ? 'bg-emerald-50' : bestClass ? 'bg-red-50' : 'bg-slate-50', bestClass ? `${bestClass.name} (meilleure)` : 'Aucune note', null, 240)}
+                ${renderKPICard(Icons.alert, 'Alertes', anomalies.length, anomalies.length > 0 ? 'text-amber-600' : 'text-slate-400', anomalies.length > 0 ? 'bg-amber-50' : 'bg-slate-50', anomalies.filter(a => a.type === 'critical').length + ' critiques', null, 320)}
             </div>
 
             <!-- MAIN CHARTS ROW -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
                 <!-- Trimester Progression -->
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+                <div class="dash-section bg-white rounded-2xl border border-slate-100 shadow-sm p-5" style="animation-delay:400ms">
                     <div class="flex items-center justify-between mb-3">
                         <h3 class="text-base font-bold text-slate-800">Progression des Moyennes</h3>
                         <div class="flex items-center gap-1 bg-slate-50 rounded-lg p-0.5">
@@ -1028,7 +1267,20 @@ import { supabase } from './supabase-client.js';
                                 const btn = document.getElementById('prog-btn-' + type);
                                 if (btn) { btn.classList.add('bg-indigo-500', 'text-white'); btn.classList.remove('text-slate-500'); }
                                 const container = document.getElementById('progression-chart-container');
-                                if (container) container.innerHTML = window._renderProgressionChart(type);
+                                if (container) {
+                                    container.innerHTML = window._renderProgressionChart(type);
+                                    requestAnimationFrame(() => {
+                                        document.querySelectorAll('#progression-chart-container .dash-line-path').forEach(path => {
+                                            const length = path.getTotalLength ? path.getTotalLength() : 500;
+                                            path.style.opacity = '1';
+                                            path.style.strokeDasharray = length;
+                                            path.style.strokeDashoffset = length;
+                                            path.getBoundingClientRect();
+                                            path.style.transition = 'stroke-dashoffset 2.5s cubic-bezier(0.16, 1, 0.3, 1)';
+                                            path.style.strokeDashoffset = '0';
+                                        });
+                                    });
+                                }
                             };
                             window._renderProgressionChart = function(type) {
                                 const prog = window._progressionData[type] || { data: {}, activeTrimesters: [] };
@@ -1066,7 +1318,7 @@ import { supabase } from './supabase-client.js';
                 </div>
 
                 <!-- Assignment Type Distribution -->
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+                <div class="dash-section bg-white rounded-2xl border border-slate-100 shadow-sm p-5" style="animation-delay:500ms">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-base font-bold text-slate-800">R\u00e9partition par Type</h3>
                         <span class="text-xs font-medium text-slate-400 bg-slate-50 px-2.5 py-1 rounded-lg">${totalAssignments} devoirs</span>
@@ -1093,7 +1345,7 @@ import { supabase } from './supabase-client.js';
             <!-- CLASS STATS + GRADE DISTRIBUTION ROW -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
                 <!-- Class Detailed Table -->
-                <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm p-5 overflow-hidden">
+                <div class="dash-section lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm p-5 overflow-hidden" style="animation-delay:600ms">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-base font-bold text-slate-800">Statistiques par Classe</h3>
                         <span class="text-xs font-medium text-slate-400 bg-slate-50 px-2.5 py-1 rounded-lg">${classes.length} classes</span>
@@ -1112,7 +1364,7 @@ import { supabase } from './supabase-client.js';
                             </thead>
                             <tbody>
                                 ${classStats.map((cs, i) => `
-                                    <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors ${i < 3 && cs.average !== null ? 'bg-gradient-to-r from-amber-50/30 to-transparent' : ''}">
+                                    <tr class="dash-table-row border-b border-slate-50 hover:bg-slate-50/50 transition-colors ${i < 3 && cs.average !== null ? 'bg-gradient-to-r from-amber-50/30 to-transparent' : ''}" style="animation-delay:${i * 0.04 + 0.2}s">
                                         <td class="py-2.5 px-3">
                                             <div class="flex items-center gap-2">
                                                 ${i < 3 && cs.average !== null ? '<span class="text-amber-500">' + Icons.trophy + '</span>' : '<span class="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-400">' + (i+1) + '</span>'}
@@ -1132,7 +1384,7 @@ import { supabase } from './supabase-client.js';
                                         <td class="text-center py-2.5 px-2">
                                             <div class="flex items-center justify-center gap-1.5">
                                                 <div class="w-16 h-2 bg-slate-100 rounded-full overflow-hidden">
-                                                    <div class="h-full rounded-full transition-all duration-700" style="width:${cs.completionRate}%; background:${cs.completionRate >= 80 ? '#22c55e' : cs.completionRate >= 50 ? '#eab308' : '#ef4444'}"></div>
+                                                    <div class="dash-table-progress h-full rounded-full" style="width:${cs.completionRate}%; background:${cs.completionRate >= 80 ? '#22c55e' : cs.completionRate >= 50 ? '#eab308' : '#ef4444'}"></div>
                                                 </div>
                                                 <span class="text-xs font-bold ${cs.completionRate >= 80 ? 'text-emerald-600' : cs.completionRate >= 50 ? 'text-amber-600' : 'text-red-600'}">${cs.completionRate}%</span>
                                             </div>
@@ -1150,7 +1402,7 @@ import { supabase } from './supabase-client.js';
                 </div>
 
                 <!-- Grade Distribution -->
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+                <div class="dash-section bg-white rounded-2xl border border-slate-100 shadow-sm p-5" style="animation-delay:700ms">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-base font-bold text-slate-800">Distribution des Notes</h3>
                     </div>
@@ -1169,15 +1421,15 @@ import { supabase } from './supabase-client.js';
                             <span class="text-sm font-bold text-slate-700">R\u00e9partition par Sexe</span>
                         </div>
                         <div class="flex items-center gap-3">
-                            <div class="flex-1 bg-blue-50 rounded-xl p-3 text-center">
+                            <div class="dash-gender-card flex-1 bg-blue-50 rounded-xl p-3 text-center" style="animation-delay:0.4s">
                                 <div class="text-xl font-black text-blue-600">${genderStats.boys}</div>
                                 <div class="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Gar\u00e7ons</div>
                             </div>
-                            <div class="flex-1 bg-pink-50 rounded-xl p-3 text-center">
+                            <div class="dash-gender-card flex-1 bg-pink-50 rounded-xl p-3 text-center" style="animation-delay:0.5s">
                                 <div class="text-xl font-black text-pink-600">${genderStats.girls}</div>
                                 <div class="text-[10px] font-bold text-pink-400 uppercase tracking-wider">Filles</div>
                             </div>
-                            ${genderStats.unknown > 0 ? `<div class="flex-1 bg-slate-50 rounded-xl p-3 text-center">
+                            ${genderStats.unknown > 0 ? `<div class="dash-gender-card flex-1 bg-slate-50 rounded-xl p-3 text-center" style="animation-delay:0.6s">
                                 <div class="text-xl font-black text-slate-500">${genderStats.unknown}</div>
                                 <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Non d\u00e9fini</div>
                             </div>` : ''}
@@ -1189,7 +1441,7 @@ import { supabase } from './supabase-client.js';
             <!-- TOP STUDENTS + ANOMALIES ROW -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <!-- Top Students PRO -->
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+                <div class="dash-section bg-white rounded-2xl border border-slate-100 shadow-sm p-5" style="animation-delay:800ms">
                     <div class="flex items-center justify-between mb-3">
                         <div class="flex items-center gap-2">
                             ${Icons.trophy}
@@ -1219,30 +1471,22 @@ import { supabase } from './supabase-client.js';
                         </select>
                     </div>
                     <div id="top-students-list">
-                    ${topStudents.length > 0 ? `
-                        <div class="space-y-2">
-                            ${topStudents.map((s, i) => `
-                                <div class="flex items-center gap-3 p-2 rounded-xl ${i === 0 ? 'bg-gradient-to-r from-amber-50 to-amber-50/30 border border-amber-100' : i === 1 ? 'bg-gradient-to-r from-slate-50 to-slate-50/30 border border-slate-100' : i === 2 ? 'bg-gradient-to-r from-orange-50 to-orange-50/30 border border-orange-100' : 'hover:bg-slate-50/50'} transition-colors">
-                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black ${i === 0 ? 'bg-amber-400 text-white' : i === 1 ? 'bg-slate-300 text-white' : i === 2 ? 'bg-orange-400 text-white' : 'bg-slate-100 text-slate-500'}">${i + 1}</div>
-                                    <div class="flex-1 min-w-0">
-                                        <div class="font-semibold text-slate-800 text-sm truncate">${s.name}</div>
-                                        <div class="text-[10px] font-medium text-slate-400">${s.className}</div>
-                                    </div>
-                                    <div class="flex items-center gap-1.5">
-                                        <div class="w-20 h-2 bg-slate-100 rounded-full overflow-hidden">
-                                            <div class="h-full rounded-full" style="width:${(s.average / 20) * 100}%; background:${s.average >= 15 ? '#0ea5e9' : s.average >= 12 ? '#22c55e' : s.average >= 10 ? '#84cc16' : '#ef4444'}"></div>
-                                        </div>
-                                        <span class="font-bold text-sm ${s.average >= 10 ? 'text-emerald-600' : 'text-red-500'} min-w-[48px] text-right">${s.average.toFixed(2)}</span>
-                                    </div>
-                                </div>
-                            `).join('')}
+                        <div class="flex flex-col items-center justify-center py-10 text-slate-400">
+                            <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center mb-3">
+                                <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                            </div>
+                            <div class="flex items-center gap-1.5 mb-1">
+                                <span class="w-1 h-1 rounded-full bg-slate-300" style="animation: dashLoaderDot 1s ease-in-out infinite"></span>
+                                <span class="w-1 h-1 rounded-full bg-slate-400" style="animation: dashLoaderDot 1s ease-in-out 0.2s infinite"></span>
+                                <span class="w-1 h-1 rounded-full bg-slate-500" style="animation: dashLoaderDot 1s ease-in-out 0.4s infinite"></span>
+                            </div>
+                            <span class="text-xs font-medium">D\u00e9filez pour voir le Top 5</span>
                         </div>
-                    ` : '<div class="text-center py-8 text-slate-400 text-sm">Aucune donn\u00e9e de note disponible</div>'}
                     </div>
                 </div>
 
                 <!-- Anomalies & Alerts -->
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+                <div class="dash-section bg-white rounded-2xl border border-slate-100 shadow-sm p-5" style="animation-delay:900ms">
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center gap-2">
                             ${Icons.alert}
@@ -1252,8 +1496,8 @@ import { supabase } from './supabase-client.js';
                     </div>
                     ${anomalies.length > 0 ? `
                         <div class="space-y-2.5 max-h-[400px] overflow-y-auto custom-scrollbar">
-                            ${anomalies.map(a => `
-                                <div class="flex items-start gap-3 p-3 rounded-xl border ${a.type === 'critical' ? 'bg-red-50/50 border-red-100' : a.type === 'warning' ? 'bg-amber-50/50 border-amber-100' : 'bg-blue-50/50 border-blue-100'} transition-all hover:shadow-sm">
+                            ${anomalies.map((a, ai) => `
+                                <div class="dash-anomaly flex items-start gap-3 p-3 rounded-xl border ${a.type === 'critical' ? 'bg-red-50/50 border-red-100' : a.type === 'warning' ? 'bg-amber-50/50 border-amber-100' : 'bg-blue-50/50 border-blue-100'} transition-all hover:shadow-sm" style="animation-delay:${ai * 0.06 + 0.2}s">
                                     <div class="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${a.type === 'critical' ? 'bg-red-100 text-red-600' : a.type === 'warning' ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'}">
                                         ${a.type === 'critical' ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>' : a.type === 'warning' ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>' : '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'}
                                     </div>
@@ -1277,20 +1521,63 @@ import { supabase } from './supabase-client.js';
                 </div>
             </div>
         `;
+
+        // Trigger all animations after DOM is rendered
+        requestAnimationFrame(() => {
+            triggerDashboardAnimations();
+        });
+
+        // Lazy load Top 5 when scrolled into view
+        const topList = document.getElementById('top-students-list');
+        if (topList && !topList.dataset.lazyLoaded) {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        topList.dataset.lazyLoaded = '1';
+                        observer.disconnect();
+                        // Tiny delay so the placeholder is visible momentarily
+                        setTimeout(() => {
+                            window._renderTopStudents();
+                            // Re-trigger animations for top students
+                            requestAnimationFrame(() => {
+                                document.querySelectorAll('#top-students-list .dash-top-student').forEach((item, i) => {
+                                    item.style.animationDelay = (i * 0.08 + 0.3) + 's';
+                                    item.style.animation = 'none';
+                                    item.getBoundingClientRect();
+                                    item.style.animation = '';
+                                });
+                            });
+                        }, 400);
+                    }
+                });
+            }, { rootMargin: '100px' });
+            observer.observe(topList);
+        }
     };
 
     // ============================================================
     // HELPER RENDERERS
     // ============================================================
 
-    function renderKPICard(icon, label, value, textColor, bgColor, subtitle, extraContent) {
+    function renderKPICard(icon, label, value, textColor, bgColor, subtitle, extraContent, animDelay = 0) {
+        // Parse numeric value for animation
+        const numericMatch = String(value).match(/^(\d+(?:\.\d+)?)(.*)/);
+        const isNumeric = numericMatch && !isNaN(parseFloat(numericMatch[1]));
+        const numericVal = isNumeric ? parseFloat(numericMatch[1]) : 0;
+        const suffix = isNumeric ? numericMatch[2] : '';
+        const isDecimal = isNumeric && String(value).includes('.');
+
+        const valueHtml = isNumeric
+            ? `<span class="dash-counter dash-counter-value" data-target="${numericVal}" data-decimal="${isDecimal}" data-suffix="${suffix}"></span>`
+            : value;
+
         return `
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 sm:p-5 hover:shadow-md transition-shadow">
+            <div class="dash-kpi-card bg-white rounded-2xl border border-slate-100 shadow-sm p-4 sm:p-5 hover:shadow-md transition-shadow" style="animation-delay:${animDelay}ms">
                 <div class="flex items-start justify-between mb-3">
                     <div class="w-10 h-10 rounded-xl ${bgColor} flex items-center justify-center ${textColor}">${icon}</div>
                     ${extraContent ? extraContent : ''}
                 </div>
-                <div class="text-2xl sm:text-3xl font-black ${textColor} tracking-tight">${value}</div>
+                <div class="text-2xl sm:text-3xl font-black ${textColor} tracking-tight">${valueHtml}</div>
                 <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mt-1">${label}</div>
                 ${subtitle ? `<div class="text-[10px] text-slate-400 mt-1 truncate">${subtitle}</div>` : ''}
             </div>
@@ -1369,12 +1656,15 @@ import { supabase } from './supabase-client.js';
         const container = document.getElementById('top-students-list');
         if (!container) return;
 
+        // Mark as lazy loaded if observer was set up
+        container.dataset.lazyLoaded = '1';
+
         _styleTopTypeBtns();
 
         if (topStudents.length > 0) {
             container.innerHTML = `<div class="space-y-2">
                 ${topStudents.map((s, i) => `
-                    <div class="flex items-center gap-3 p-2 rounded-xl ${i === 0 ? 'bg-gradient-to-r from-amber-50 to-amber-50/30 border border-amber-100' : i === 1 ? 'bg-gradient-to-r from-slate-50 to-slate-50/30 border border-slate-100' : i === 2 ? 'bg-gradient-to-r from-orange-50 to-orange-50/30 border border-orange-100' : 'hover:bg-slate-50/50'} transition-colors">
+                    <div class="dash-top-student flex items-center gap-3 p-2 rounded-xl ${i === 0 ? 'bg-gradient-to-r from-amber-50 to-amber-50/30 border border-amber-100' : i === 1 ? 'bg-gradient-to-r from-slate-50 to-slate-50/30 border border-slate-100' : i === 2 ? 'bg-gradient-to-r from-orange-50 to-orange-50/30 border border-orange-100' : 'hover:bg-slate-50/50'} transition-colors" style="animation-delay:${i * 0.08 + 0.3}s">
                         <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black ${i === 0 ? 'bg-amber-400 text-white' : i === 1 ? 'bg-slate-300 text-white' : i === 2 ? 'bg-orange-400 text-white' : 'bg-slate-100 text-slate-500'}">${i + 1}</div>
                         <div class="flex-1 min-w-0">
                             <div class="font-semibold text-slate-800 text-sm truncate">${s.name}</div>
@@ -1382,7 +1672,7 @@ import { supabase } from './supabase-client.js';
                         </div>
                         <div class="flex items-center gap-1.5">
                             <div class="w-20 h-2 bg-slate-100 rounded-full overflow-hidden">
-                                <div class="h-full rounded-full" style="width:${(s.average / 20) * 100}%; background:${s.average >= 15 ? '#0ea5e9' : s.average >= 12 ? '#22c55e' : s.average >= 10 ? '#84cc16' : '#ef4444'}"></div>
+                                <div class="dash-progress-bar h-full rounded-full" style="width:${(s.average / 20) * 100}%; background:${s.average >= 15 ? '#0ea5e9' : s.average >= 12 ? '#22c55e' : s.average >= 10 ? '#84cc16' : '#ef4444'}"></div>
                             </div>
                             <span class="font-bold text-sm ${s.average >= 10 ? 'text-emerald-600' : 'text-red-500'} min-w-[48px] text-right">${s.average.toFixed(2)}</span>
                         </div>

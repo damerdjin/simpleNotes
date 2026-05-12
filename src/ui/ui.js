@@ -86,7 +86,7 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
     window.initHistory = function() {
         // État initial : on s'assure d'avoir un état même au premier chargement
         // On utilise replaceState pour ne pas polluer l'historique mais avoir un état de base
-        const currentTab = (window.tabs && window.tabs.activeTab) ? window.tabs.activeTab : 'students';
+        const currentTab = (window.tabs && window.tabs.activeTab) ? window.tabs.activeTab : 'dashboard';
         const initialState = { tab: currentTab, subView: null };
         
         if (!history.state || !history.state.tab) {
@@ -100,11 +100,8 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
             // ou ne pas contenir les informations nécessaires
             if (!state || !state.tab) {
                 // On force le retour à l'onglet par défaut (Élèves) et vue liste des classes
-                if (window.tabs && window.tabs.activeTab !== 'students') {
-                    window.tabs.activateTab('students', { skipHistory: true });
-                }
-                if (window.setStudentsSelectedClass) {
-                    window.setStudentsSelectedClass('', { skipHistory: true, force: true });
+                if (window.tabs && window.tabs.activeTab !== 'dashboard') {
+                    window.tabs.activateTab('dashboard', { skipHistory: true });
                 }
                 
                 // Si l'état était null, on le remplace par l'état initial pour les prochains retours
@@ -146,7 +143,16 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
 
         const t = getTranslations() && getTranslations()[getLang()] ? getTranslations()[getLang()] : {};
 
-        // 1. Register Students Tab
+        // 1. Register Dashboard Tab (Home page)
+        window.tabs.registerTab('dashboard', {
+            label: t.dashboardTitle || 'Dashboard',
+            icon: '📈',
+            onShow: () => {
+                if (window.renderDashboard) window.renderDashboard();
+            }
+        });
+
+        // 2. Register Students Tab
         window.tabs.registerTab('students', {
             label: t.studentsTab || 'Élèves',
             icon: '👥',
@@ -157,7 +163,7 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
             }
         });
 
-        // 2. Register Assignments Tab
+        // 3. Register Assignments Tab
         window.tabs.registerTab('assignments', {
             label: t.assignmentsTab || 'Devoirs',
             icon: '📝',
@@ -167,7 +173,7 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
             }
         });
 
-        // 3. Register Grades Tab
+        // 4. Register Grades Tab
         window.tabs.registerTab('grades', {
             label: t.gradesTab || 'Notes',
             icon: '📊',
@@ -177,7 +183,7 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
             }
         });
 
-        // 4. Register Summary Tab
+        // 5. Register Summary Tab
         window.tabs.registerTab('summary', {
             label: t.summaryTab || 'Récapitulatif',
             icon: '📋',
@@ -192,22 +198,13 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
             }
         });
 
-        // 5. Register Export Tab
+        // 6. Register Export Tab
         window.tabs.registerTab('export', {
             label: t.exportPrepTitle || 'Export',
             icon: '📦',
             onShow: async () => {
                 if (window.loadClassSelectorsForExport) await window.loadClassSelectorsForExport();
                 if (window.renderExportPrep) window.renderExportPrep();
-            }
-        });
-
-        // 6. Register Dashboard Tab
-        window.tabs.registerTab('dashboard', {
-            label: t.dashboardTitle || 'Dashboard',
-            icon: '📈',
-            onShow: () => {
-                if (window.renderDashboard) window.renderDashboard();
             }
         });
 

@@ -2453,8 +2453,13 @@
                             <!-- Loading State -->
                             <div class="flex items-center justify-center py-20">
                                 <div class="text-center">
-                                    <div class="inline-flex items-center justify-center w-16 h-16 bg-slate-100 rounded-2xl mb-4 animate-pulse">
-                                        <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                                    <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-100 to-blue-100 rounded-2xl mb-4" style="animation: dashLoaderPulse 1.2s ease-in-out infinite">
+                                        <svg class="w-8 h-8 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                                    </div>
+                                    <div class="flex items-center justify-center gap-1.5 mb-1">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-400" style="animation: dashLoaderDot 1s ease-in-out infinite"></span>
+                                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-500" style="animation: dashLoaderDot 1s ease-in-out 0.2s infinite"></span>
+                                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-600" style="animation: dashLoaderDot 1s ease-in-out 0.4s infinite"></span>
                                     </div>
                                     <p class="text-slate-500 font-medium">Chargement du dashboard...</p>
                                 </div>
@@ -2471,6 +2476,16 @@
                         @keyframes dashboardFadeIn {
                             from { opacity: 0; transform: translateY(8px); }
                             to { opacity: 1; transform: translateY(0); }
+                        }
+
+                        @keyframes dashLoaderPulse {
+                            0%, 100% { transform: scale(1); opacity: 1; }
+                            50% { transform: scale(1.05); opacity: 0.8; }
+                        }
+
+                        @keyframes dashLoaderDot {
+                            0%, 100% { transform: scale(1); opacity: 0.4; }
+                            50% { transform: scale(1.4); opacity: 1; }
                         }
 
                         #content-dashboard .bg-white {
@@ -3019,12 +3034,13 @@
 
                 // Initialize Dashboard
                 if (window.initDashboard) window.initDashboard();
+                if (window.renderDashboard) await window.renderDashboard();
 
                 // Give a tiny bit of time for the browser to paint the rendered content
                 setTimeout(() => {
                     // Force activation of first tab if none active
                     if (window.tabs && !window.tabs.activeTab) {
-                        window.tabs.activateTab('students', { skipHistory: true });
+                        window.tabs.activateTab('dashboard', { skipHistory: true });
                     }
                 }, 100);
             } catch (err) {
