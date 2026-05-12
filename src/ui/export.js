@@ -1804,17 +1804,71 @@ import { supabase } from './supabase-client.js';
         const hasComp = !!cfg.compAssignmentId;
         const hasDevoir = (cfg.devoir1?.assignmentIds?.length > 0) || (cfg.devoir2?.assignmentIds?.length > 0);
         
-        // Si la config devient incomplète ALORS qu'elle était publiée :
-        // On force le retrait de la publication pour l'élève.
-        if (!hasCC || !hasComp || !hasDevoir) {
-            if (cfg.isPublished) {
-                cfg.isPublished = false;
-                // On continue pour enregistrer le passage à FALSE
-            } else {
-                // Sinon, on ignore l'appel API pour économiser des ressources
-                return;
+        const isComplete = hasCC && hasComp && hasDevoir;
+
+        // Si la config est incomplète, on sauvegarde quand même avec averages vidées et is_published=false
+        if (!isComplete) {
+            cfg.isPublished = false;
+            try {
+                const { error } = await supabase.rpc('save_grade_calculation_config', {
+                    p_class_name: className,
+                    p_subject: subject,
+                    p_trimester: trimester,
+                    p_academic_year: academicYear,
+                    p_cc_assignment_id: String(cfg.ccAssignmentId || ''),
+                    p_comp_assignment_id: String(cfg.compAssignmentId || ''),
+                    p_tp_assignment_id: String(cfg.tpAssignmentId || ''),
+                    p_devoir1_config: cfg.devoir1 || { assignmentIds: [], combine: 'sum', normalize: true, targetMax: 20 },
+                    p_devoir2_config: cfg.devoir2 || { assignmentIds: [], combine: 'sum', normalize: true, targetMax: 20 },
+                    p_out_max: Number(cfg.outMax || 20),
+                    p_is_published: false,
+                    p_average_all: null,
+                    p_average_comp: null,
+                    p_average_cc: null,
+                    p_average_dev: null,
+                    p_average_tp: null,
+                    p_min_all: null,
+                    p_max_all: null,
+                    p_min_comp: null,
+                    p_max_comp: null,
+                    p_min_dev: null,
+                    p_max_dev: null
+                });
+                if (error) throw error;
+            } catch (err) {
+                // Silently fail
             }
+            return;
         }
+
+        // --- Calcul des statistiques de la classe ---
+        const students = (getData().students || []).filter(s => s.className === className && s.status !== 'archived');
+        const ccA = cfg.ccAssignmentId ? getData().assignments.find(a => a.id === cfg.ccAssignmentId) : null;
+        const tpA = cfg.tpAssignmentId ? getData().assignments.find(a => a.id === cfg.tpAssignmentId) : null;
+        const compA = cfg.compAssignmentId ? getData().assignments.find(a => a.id === cfg.compAssignmentId) : null;
+        const hasTP = !!tpA;
+
+        const moyennes = [], compScores = [], ccScores = [], devScores = [], tpScores = [];
+        students.forEach(s => {
+            const cc = ccA ? calcScaledScore(s.id, ccA) : null;
+            const tp = tpA ? calcScaledScore(s.id, tpA) : null;
+            const comp = compA ? calcScaledScore(s.id, compA) : null;
+            const devoir = computeDevoirFinal(s.id, className, cfg);
+            const requiredOk = (devoir !== null && cc !== null && comp !== null && (!hasTP || tp !== null));
+            let moyenne = null;
+            if (requiredOk) {
+                moyenne = hasTP ? (devoir + cc + tp + 2 * comp) / 5 : (devoir + cc + 2 * comp) / 4;
+            }
+            if (moyenne !== null) moyennes.push(moyenne);
+            if (comp !== null) compScores.push(comp);
+            if (cc !== null) ccScores.push(cc);
+            if (devoir !== null) devScores.push(devoir);
+            if (tp !== null) tpScores.push(tp);
+        });
+
+        const calcAvg = arr => arr.length > 0 ? parseFloat((arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(2)) : null;
+        const calcMin = arr => arr.length > 0 ? parseFloat(Math.min(...arr).toFixed(2)) : null;
+        const calcMax = arr => arr.length > 0 ? parseFloat(Math.max(...arr).toFixed(2)) : null;
 
         try {
             const { error } = await supabase.rpc('save_grade_calculation_config', {
@@ -1828,7 +1882,18 @@ import { supabase } from './supabase-client.js';
                 p_devoir1_config: cfg.devoir1 || { assignmentIds: [], combine: 'sum', normalize: true, targetMax: 20 },
                 p_devoir2_config: cfg.devoir2 || { assignmentIds: [], combine: 'sum', normalize: true, targetMax: 20 },
                 p_out_max: Number(cfg.outMax || 20),
-                p_is_published: !!cfg.isPublished
+                p_is_published: !!cfg.isPublished,
+                p_average_all: calcAvg(moyennes),
+                p_average_comp: calcAvg(compScores),
+                p_average_cc: calcAvg(ccScores),
+                p_average_dev: calcAvg(devScores),
+                p_average_tp: calcAvg(tpScores),
+                p_min_all: calcMin(moyennes),
+                p_max_all: calcMax(moyennes),
+                p_min_comp: calcMin(compScores),
+                p_max_comp: calcMax(compScores),
+                p_min_dev: calcMin(devScores),
+                p_max_dev: calcMax(devScores)
             });
 
             if (error) throw error;

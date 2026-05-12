@@ -389,6 +389,19 @@ CREATE TABLE IF NOT EXISTS public.grade_calculation_configs (
   -- Barème de sortie (sur 20 par défaut)
   out_max NUMERIC NOT NULL DEFAULT 20,
 
+  -- Statistiques calculées lors de la sauvegarde de la config
+  average_all  NUMERIC(5,2),  -- moyenne générale de la classe
+  average_comp NUMERIC(5,2),  -- moyenne des compositions
+  average_cc   NUMERIC(5,2),  -- moyenne des CC
+  average_dev  NUMERIC(5,2),  -- moyenne des devoirs
+  average_tp   NUMERIC(5,2),  -- moyenne des TP
+  min_all      NUMERIC(5,2),  -- note minimale (moyenne générale)
+  max_all      NUMERIC(5,2),  -- note maximale (moyenne générale)
+  min_comp     NUMERIC(5,2),  -- note minimale composition
+  max_comp     NUMERIC(5,2),  -- note maximale composition
+  min_dev      NUMERIC(5,2),  -- note minimale devoir
+  max_dev      NUMERIC(5,2),  -- note maximale devoir
+
   is_published BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now(),
@@ -463,7 +476,18 @@ CREATE OR REPLACE FUNCTION public.save_grade_calculation_config(
   p_devoir1_config JSONB DEFAULT '{"assignmentIds":[],"combine":"sum","normalize":true,"targetMax":20}'::jsonb,
   p_devoir2_config JSONB DEFAULT '{"assignmentIds":[],"combine":"sum","normalize":true,"targetMax":20}'::jsonb,
   p_out_max NUMERIC DEFAULT 20,
-  p_is_published BOOLEAN DEFAULT FALSE
+  p_is_published BOOLEAN DEFAULT FALSE,
+  p_average_all NUMERIC DEFAULT NULL,
+  p_average_comp NUMERIC DEFAULT NULL,
+  p_average_cc NUMERIC DEFAULT NULL,
+  p_average_dev NUMERIC DEFAULT NULL,
+  p_average_tp NUMERIC DEFAULT NULL,
+  p_min_all NUMERIC DEFAULT NULL,
+  p_max_all NUMERIC DEFAULT NULL,
+  p_min_comp NUMERIC DEFAULT NULL,
+  p_max_comp NUMERIC DEFAULT NULL,
+  p_min_dev NUMERIC DEFAULT NULL,
+  p_max_dev NUMERIC DEFAULT NULL
 )
 RETURNS UUID
 SECURITY DEFINER
@@ -474,11 +498,15 @@ BEGIN
   INSERT INTO public.grade_calculation_configs
     (user_id, academic_year, trimester, class_name, subject,
      cc_assignment_id, comp_assignment_id, tp_assignment_id,
-     devoir1_config, devoir2_config, out_max, is_published)
+     devoir1_config, devoir2_config, out_max, is_published,
+     average_all, average_comp, average_cc, average_dev, average_tp,
+     min_all, max_all, min_comp, max_comp, min_dev, max_dev)
   VALUES
     (auth.uid(), p_academic_year, p_trimester, p_class_name, p_subject,
      p_cc_assignment_id, p_comp_assignment_id, p_tp_assignment_id,
-     p_devoir1_config, p_devoir2_config, p_out_max, p_is_published)
+     p_devoir1_config, p_devoir2_config, p_out_max, p_is_published,
+     p_average_all, p_average_comp, p_average_cc, p_average_dev, p_average_tp,
+     p_min_all, p_max_all, p_min_comp, p_max_comp, p_min_dev, p_max_dev)
   ON CONFLICT (user_id, academic_year, trimester, class_name, subject)
   DO UPDATE SET
     cc_assignment_id = EXCLUDED.cc_assignment_id,
@@ -488,6 +516,17 @@ BEGIN
     devoir2_config = EXCLUDED.devoir2_config,
     out_max = EXCLUDED.out_max,
     is_published = EXCLUDED.is_published,
+    average_all = EXCLUDED.average_all,
+    average_comp = EXCLUDED.average_comp,
+    average_cc = EXCLUDED.average_cc,
+    average_dev = EXCLUDED.average_dev,
+    average_tp = EXCLUDED.average_tp,
+    min_all = EXCLUDED.min_all,
+    max_all = EXCLUDED.max_all,
+    min_comp = EXCLUDED.min_comp,
+    max_comp = EXCLUDED.max_comp,
+    min_dev = EXCLUDED.min_dev,
+    max_dev = EXCLUDED.max_dev,
     updated_at = now()
   RETURNING id INTO v_config_id;
 
@@ -512,6 +551,17 @@ RETURNS TABLE(
   devoir2_config JSONB,
   out_max NUMERIC,
   is_published BOOLEAN,
+  average_all NUMERIC,
+  average_comp NUMERIC,
+  average_cc NUMERIC,
+  average_dev NUMERIC,
+  average_tp NUMERIC,
+  min_all NUMERIC,
+  max_all NUMERIC,
+  min_comp NUMERIC,
+  max_comp NUMERIC,
+  min_dev NUMERIC,
+  max_dev NUMERIC,
   updated_at TIMESTAMPTZ
 )
 SECURITY DEFINER
@@ -527,6 +577,17 @@ BEGIN
     gcc.devoir2_config,
     gcc.out_max,
     gcc.is_published,
+    gcc.average_all,
+    gcc.average_comp,
+    gcc.average_cc,
+    gcc.average_dev,
+    gcc.average_tp,
+    gcc.min_all,
+    gcc.max_all,
+    gcc.min_comp,
+    gcc.max_comp,
+    gcc.min_dev,
+    gcc.max_dev,
     gcc.updated_at
   FROM public.grade_calculation_configs gcc
   WHERE gcc.user_id = auth.uid()

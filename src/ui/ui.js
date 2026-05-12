@@ -254,8 +254,9 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
                 window.setStudentsSelectedClass('', { skipHistory: true });
             }
 
-            // Render dashboard when switching to it
+            // Render dashboard when switching to it (invalidate cache first for fresh data)
             if (success && tabId === 'dashboard' && window.renderDashboard) {
+                if (window.invalidateDashboardCache) window.invalidateDashboardCache();
                 window.renderDashboard();
             }
 
@@ -672,6 +673,8 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
             if (window.renderSummary) renderSummary();
             if (window.loadGradeSelectors) await window.loadGradeSelectors();
             if (window.renderExportPrep) window.renderExportPrep();
+            if (window.invalidateDashboardCache) window.invalidateDashboardCache();
+            if (window.renderDashboard) window.renderDashboard();
             
             // Update import buttons status
             const academicYear = localStorage.getItem('corrections-global-academic-year');
