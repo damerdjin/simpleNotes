@@ -391,7 +391,7 @@ const DashboardEngine = {
             stats.total++;
             const sex = (s.sex || '').toLowerCase().trim();
             if (sex === 'm' || sex === 'male' || sex === 'garçon' || sex === 'homme' || sex === 'boy' || sex.includes('ذكر')) stats.boys++;
-            else if (sex === 'f' || sex === 'female' || sex === 'fille' || sex === 'femme' || sex === 'girl' || sex.includes('أثنى') || sex.includes('انثى')) stats.girls++;
+            else if (sex === 'f' || sex === 'female' || sex === 'fille' || sex === 'femme' || sex === 'girl' || sex.includes('أنثى') || sex.includes('انثى')) stats.girls++;
             else stats.unknown++;
         });
         return stats;
@@ -414,7 +414,7 @@ const DashboardEngine = {
             const maxAll = classConfigs.length > 0 ? Math.max(...classConfigs.map(c => parseFloat(c.max_all)).filter(v => !isNaN(v))) : null;
             const isPublished = allClassConfigs.length > 0 ? allClassConfigs.every(c => c.is_published) : null;
             const boys = students.filter(s => { const sex = (s.sex || '').toLowerCase().trim(); return sex === 'm' || sex === 'male' || sex === 'garçon' || sex === 'homme' || sex === 'boy' || sex.includes('ذكر'); }).length;
-            const girls = students.filter(s => { const sex = (s.sex || '').toLowerCase().trim(); return sex === 'f' || sex === 'female' || sex === 'fille' || sex === 'femme' || sex === 'girl' || sex.includes('أثنى') || sex.includes('انثى'); }).length;
+            const girls = students.filter(s => { const sex = (s.sex || '').toLowerCase().trim(); return sex === 'f' || sex === 'female' || sex === 'fille' || sex === 'femme' || sex === 'girl' || sex.includes('أنثى') || sex.includes('انثى'); }).length;
             const typeDist = {};
             assignments.forEach(a => {
                 const type = a.type || 'devoir';
