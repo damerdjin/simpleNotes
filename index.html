@@ -1242,6 +1242,32 @@
             border-bottom-color: var(--border) !important;
         }
 
+        [data-theme="dark"] #mobile-header {
+            background-color: var(--bg-card) !important;
+            border-color: var(--border) !important;
+        }
+
+        [data-theme="dark"] #mobile-header .text-slate-800 {
+            color: #f1f5f9 !important;
+        }
+
+        [data-theme="dark"] #mobile-more-menu {
+            background-color: var(--bg-card) !important;
+            border-color: var(--border) !important;
+        }
+
+        [data-theme="dark"] #mobile-more-menu button:hover {
+            background-color: var(--bg-card-hover) !important;
+        }
+
+        [data-theme="dark"] #mobile-more-menu .border-gray-50 {
+            border-color: var(--border) !important;
+        }
+
+        [data-theme="dark"] #mobile-more-menu .text-slate-700 {
+            color: #f1f5f9 !important;
+        }
+
         [data-theme="dark"] .bg-amber-50 { background-color: rgba(245,158,11,0.1) !important; }
         [data-theme="dark"] .bg-amber-100 { background-color: rgba(245,158,11,0.15) !important; }
         [data-theme="dark"] .bg-emerald-50 { background-color: rgba(16,185,129,0.1) !important; }
@@ -1643,6 +1669,7 @@
             main#main-content {
                 margin-left: 0;
                 width: 100%;
+                padding-top: 48px; /* Space for mobile header */
             }
 
             .rtl-layout main#main-content {
@@ -1814,6 +1841,32 @@
                 const yearShort = year.substring(0,4);
                 const check = document.getElementById(`check-${yearShort}`);
                 if (check) check.classList.remove('hidden');
+            }
+
+            // Sync mobile session display
+            const mobileDisplay = document.getElementById('mobile-session-display');
+            if (mobileDisplay && display) {
+                mobileDisplay.textContent = display.textContent;
+            }
+
+            // Sync mobile trimester buttons
+            if (trimester) {
+                document.querySelectorAll('[data-mobile-tri]').forEach(btn => {
+                    const isActive = btn.dataset.mobileTri === String(trimester);
+                    btn.className = isActive
+                        ? 'flex-1 py-1.5 rounded-lg text-[11px] font-bold border transition-all bg-blue-600 text-white border-blue-600'
+                        : 'flex-1 py-1.5 rounded-lg text-[11px] font-bold border transition-all border-gray-100 text-gray-600 hover:bg-blue-50';
+                });
+            }
+
+            // Sync mobile year buttons
+            if (year) {
+                document.querySelectorAll('[data-mobile-year]').forEach(btn => {
+                    const isActive = btn.dataset.mobileYear === year;
+                    btn.className = isActive
+                        ? 'flex-1 py-1.5 rounded-lg text-[11px] font-bold border transition-all bg-blue-600 text-white border-blue-600'
+                        : 'flex-1 py-1.5 rounded-lg text-[11px] font-bold border transition-all border-gray-100 text-gray-600 hover:bg-blue-50';
+                });
             }
 
             // Update Trimester Button Visuals
@@ -2123,6 +2176,46 @@
 
     <main id="main-content">
 
+        <!-- Mobile Header -->
+        <div id="mobile-header" class="fixed top-0 left-0 right-0 z-[100] flex md:hidden items-center justify-between px-4 h-12 bg-white border-b border-gray-200 shadow-sm">
+            <div class="flex items-center gap-2">
+                <div class="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xs shrink-0">G</div>
+                <span class="text-sm font-bold text-slate-800">Correction Pro</span>
+            </div>
+            <div class="relative">
+                <button id="mobile-more-btn" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-all cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+                    </svg>
+                </button>
+                <div id="mobile-more-menu" class="absolute right-0 top-full mt-1 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 hidden z-50 overflow-hidden">
+                    <div class="px-4 py-2 border-b border-gray-50">
+                        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2" data-translate="academicSession">Session</div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="flex-1 flex gap-1">
+                                <button onclick="updateTrimester(1)" data-mobile-tri="1" class="flex-1 py-1.5 rounded-lg text-[11px] font-bold border transition-all border-gray-100 text-gray-600 hover:bg-blue-50">T1</button>
+                                <button onclick="updateTrimester(2)" data-mobile-tri="2" class="flex-1 py-1.5 rounded-lg text-[11px] font-bold border transition-all border-gray-100 text-gray-600 hover:bg-blue-50">T2</button>
+                                <button onclick="updateTrimester(3)" data-mobile-tri="3" class="flex-1 py-1.5 rounded-lg text-[11px] font-bold border transition-all border-gray-100 text-gray-600 hover:bg-blue-50">T3</button>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="updateYear('2024/2025')" data-mobile-year="2024/2025" class="flex-1 py-1.5 rounded-lg text-[11px] font-bold border border-gray-100 text-gray-600 hover:bg-blue-50 transition-all">2024/2025</button>
+                            <button onclick="updateYear('2025/2026')" data-mobile-year="2025/2026" class="flex-1 py-1.5 rounded-lg text-[11px] font-bold border border-gray-100 text-gray-600 hover:bg-blue-50 transition-all">2025/2026</button>
+                        </div>
+                    </div>
+                    <button onclick="switchTab('config')" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        <span data-translate="configTitle">Configuration</span>
+                    </button>
+                    <hr class="border-gray-50 my-1">
+                    <button onclick="handleLogout()" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                        <span data-translate="logout">D\u00e9connexion</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Bottom Navigation Mobile -->
         <nav id="mobile-bottom-nav" class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-[9999] flex md:hidden items-stretch justify-around safe-area-bottom shadow-[0_-8px_24px_rgba(0,0,0,0.12)]">
             <button onclick="switchTab('students')" data-tab="students" class="mobile-nav-item">
@@ -2148,11 +2241,6 @@
             <button onclick="switchTab('export')" data-tab="export" class="mobile-nav-item">
                 <div class="nav-icon-wrapper">
                     <span class="text-xl">📦</span>
-                </div>
-            </button>
-            <button onclick="switchTab('dashboard')" data-tab="dashboard" class="mobile-nav-item">
-                <div class="nav-icon-wrapper">
-                    <span class="text-xl">📈</span>
                 </div>
             </button>
         </nav>
@@ -3373,6 +3461,17 @@
                 // Initialize sidebar collapse
                 if (window.initSidebarCollapse) window.initSidebarCollapse();
 
+                // Mobile more menu toggle
+                const moreBtn = document.getElementById('mobile-more-btn');
+                const moreMenu = document.getElementById('mobile-more-menu');
+                if (moreBtn && moreMenu) {
+                    moreBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        moreMenu.classList.toggle('hidden');
+                    });
+                    document.addEventListener('click', () => moreMenu.classList.add('hidden'));
+                }
+
                 // Initialize global helpers
                 window.getGlobalAcademicYear = function() {
                     const select = document.getElementById('global-academic-year');
@@ -3407,9 +3506,10 @@
 
                 // Give a tiny bit of time for the browser to paint the rendered content
                 setTimeout(() => {
-                    // Force activation of first tab if none active
-                    if (window.tabs && !window.tabs.activeTab) {
-                        window.tabs.activateTab('dashboard', { skipHistory: true });
+                    // Clear old persisted state and force students tab
+                    localStorage.removeItem('app:tabs:activeTab');
+                    if (window.tabs) {
+                        window.tabs.activateTab('students', { skipHistory: true });
                     }
                 }, 100);
             } catch (err) {
