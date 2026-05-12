@@ -1059,16 +1059,40 @@
             --primary-hover: #1d4ed8;
             --bg-body: #f8fafc;
             --bg-card: #ffffff;
+            --bg-card-hover: #f8fafc;
             --text-main: #1e293b;
             --text-muted: #64748b;
+            --text-inverse: #ffffff;
             --border: #e2e8f0;
+            --border-light: #f1f5f9;
             --accent: #10b981;
             --sidebar-width: 260px;
             --sidebar-collapsed-width: 80px;
             --header-height: 70px;
             --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
             --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08);
             --radius: 12px;
+            --radius-sm: 8px;
+            --radius-lg: 16px;
+            --transition: 0.2s ease;
+        }
+
+        [data-theme="dark"] {
+            --primary: #60a5fa;
+            --primary-hover: #93bbfd;
+            --bg-body: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #334155;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --text-inverse: #0f172a;
+            --border: #334155;
+            --border-light: #1e293b;
+            --accent: #34d399;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5);
         }
 
         /* Base Layout Structure */
@@ -1077,7 +1101,140 @@
             color: var(--text-main);
             min-height: 100vh;
             display: flex;
+            transition: background-color var(--transition), color var(--transition);
         }
+
+        /* Dark mode overrides for common Tailwind classes */
+        [data-theme="dark"] .bg-white,
+        [data-theme="dark"] aside#app-sidebar,
+        [data-theme="dark"] header#app-header {
+            background-color: var(--bg-card) !important;
+        }
+
+        [data-theme="dark"] .bg-slate-50,
+        [data-theme="dark"] .bg-gray-50 {
+            background-color: var(--bg-card-hover) !important;
+        }
+
+        [data-theme="dark"] .text-slate-800,
+        [data-theme="dark"] .text-slate-700,
+        [data-theme="dark"] .text-gray-800,
+        [data-theme="dark"] .text-gray-700 {
+            color: #f1f5f9 !important;
+        }
+
+        [data-theme="dark"] .text-slate-600,
+        [data-theme="dark"] .text-slate-500,
+        [data-theme="dark"] .text-gray-600,
+        [data-theme="dark"] .text-gray-500 {
+            color: #94a3b8 !important;
+        }
+
+        [data-theme="dark"] .text-slate-400,
+        [data-theme="dark"] .text-gray-400 {
+            color: #64748b !important;
+        }
+
+        [data-theme="dark"] .border-slate-100,
+        [data-theme="dark"] .border-gray-100,
+        [data-theme="dark"] .border-gray-200 {
+            border-color: var(--border) !important;
+        }
+
+        [data-theme="dark"] .shadow-sm,
+        [data-theme="dark"] .shadow-md {
+            box-shadow: var(--shadow-sm) !important;
+        }
+
+        [data-theme="dark"] .hover\:bg-slate-50:hover,
+        [data-theme="dark"] .hover\:bg-gray-100:hover {
+            background-color: var(--bg-card-hover) !important;
+        }
+
+        [data-theme="dark"] .bg-indigo-50 { background-color: rgba(99,102,241,0.1) !important; }
+        [data-theme="dark"] .text-indigo-700,
+        [data-theme="dark"] .text-indigo-600 { color: #a5b4fc !important; }
+        [data-theme="dark"] .text-indigo-500 { color: #818cf8 !important; }
+        [data-theme="dark"] .border-indigo-100 { border-color: rgba(99,102,241,0.2) !important; }
+
+        [data-theme="dark"] .bg-gradient-to-r.from-amber-50 {
+            background: linear-gradient(to right, rgba(245,158,11,0.1), transparent) !important;
+        }
+
+        [data-theme="dark"] .dash-section,
+        [data-theme="dark"] .dash-kpi-card {
+            background-color: var(--bg-card) !important;
+            border-color: var(--border) !important;
+        }
+
+        [data-theme="dark"] #dashboard-nav {
+            background-color: var(--bg-card) !important;
+            border-color: var(--border) !important;
+        }
+
+        [data-theme="dark"] .dash-gender-card.bg-blue-50 { background-color: rgba(59,130,246,0.1) !important; }
+        [data-theme="dark"] .dash-gender-card.bg-pink-50 { background-color: rgba(236,72,153,0.1) !important; }
+        [data-theme="dark"] .dash-gender-card.bg-slate-50 { background-color: rgba(100,116,139,0.1) !important; }
+        [data-theme="dark"] .text-blue-600 { color: #60a5fa !important; }
+        [data-theme="dark"] .text-pink-600 { color: #f472b6 !important; }
+        [data-theme="dark"] .text-emerald-600 { color: #34d399 !important; }
+        [data-theme="dark"] .text-emerald-700 { color: #6ee7b7 !important; }
+        [data-theme="dark"] .text-emerald-500 { color: #34d399 !important; }
+        [data-theme="dark"] .text-amber-600 { color: #fbbf24 !important; }
+        [data-theme="dark"] .text-amber-700 { color: #fcd34d !important; }
+        [data-theme="dark"] .text-amber-800 { color: #fde68a !important; }
+        [data-theme="dark"] .text-red-500 { color: #f87171 !important; }
+        [data-theme="dark"] .text-red-600 { color: #fca5a5 !important; }
+        [data-theme="dark"] .text-red-700 { color: #fca5a5 !important; }
+        [data-theme="dark"] .text-red-800 { color: #fecaca !important; }
+        [data-theme="dark"] .text-violet-600 { color: #a78bfa !important; }
+        [data-theme="dark"] .text-white { color: #f1f5f9 !important; }
+
+        [data-theme="dark"] .top-type-btn.active {
+            background-color: var(--primary) !important;
+            border-color: var(--primary) !important;
+        }
+
+        [data-theme="dark"] select option {
+            background-color: var(--bg-card);
+            color: var(--text-main);
+        }
+
+        [data-theme="dark"] .bg-gradient-to-r.from-blue-50 {
+            background: linear-gradient(to right, rgba(59,130,246,0.1), transparent) !important;
+        }
+        [data-theme="dark"] .bg-gradient-to-r.from-emerald-50 {
+            background: linear-gradient(to right, rgba(16,185,129,0.1), transparent) !important;
+        }
+        [data-theme="dark"] .bg-gradient-to-r.from-red-50 {
+            background: linear-gradient(to right, rgba(239,68,68,0.1), transparent) !important;
+        }
+
+        [data-theme="dark"] #user-menu,
+        [data-theme="dark"] #session-dropdown {
+            background-color: var(--bg-card) !important;
+            border-color: var(--border) !important;
+        }
+
+        [data-theme="dark"] .bg-amber-50 { background-color: rgba(245,158,11,0.1) !important; }
+        [data-theme="dark"] .bg-amber-100 { background-color: rgba(245,158,11,0.15) !important; }
+        [data-theme="dark"] .bg-emerald-50 { background-color: rgba(16,185,129,0.1) !important; }
+        [data-theme="dark"] .bg-emerald-100 { background-color: rgba(16,185,129,0.15) !important; }
+        [data-theme="dark"] .bg-red-50 { background-color: rgba(239,68,68,0.1) !important; }
+        [data-theme="dark"] .bg-red-100 { background-color: rgba(239,68,68,0.15) !important; }
+        [data-theme="dark"] .bg-blue-50 { background-color: rgba(59,130,246,0.1) !important; }
+        [data-theme="dark"] .bg-blue-100 { background-color: rgba(59,130,246,0.15) !important; }
+        [data-theme="dark"] .bg-violet-50 { background-color: rgba(139,92,246,0.1) !important; }
+        [data-theme="dark"] .bg-violet-100 { background-color: rgba(139,92,246,0.15) !important; }
+        [data-theme="dark"] .bg-pink-50 { background-color: rgba(236,72,153,0.1) !important; }
+        [data-theme="dark"] .bg-pink-100 { background-color: rgba(236,72,153,0.15) !important; }
+        [data-theme="dark"] .bg-slate-100 { background-color: var(--bg-card-hover) !important; }
+
+        [data-theme="dark"] .border-amber-100 { border-color: rgba(245,158,11,0.2) !important; }
+        [data-theme="dark"] .border-red-100 { border-color: rgba(239,68,68,0.2) !important; }
+        [data-theme="dark"] .border-blue-100 { border-color: rgba(59,130,246,0.2) !important; }
+        [data-theme="dark"] .border-emerald-100 { border-color: rgba(16,185,129,0.2) !important; }
+        [data-theme="dark"] .border-slate-200 { border-color: var(--border) !important; }
 
         #main-layout {
             display: flex;
@@ -1817,7 +1974,15 @@
                 </div>
             </div>
 
-            <div class="user-profile relative">
+            <div class="user-profile relative flex items-center gap-2">
+                <button id="theme-toggle" class="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-gray-100 transition-all cursor-pointer text-slate-500 hover:text-amber-500" onclick="toggleDarkMode()" title="Changer le thème">
+                    <svg id="theme-icon-sun" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                    </svg>
+                    <svg id="theme-icon-moon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                    </svg>
+                </button>
                 <button id="user-menu-button" class="flex items-center gap-2 p-1.5 hover:bg-gray-100 rounded-xl transition-all duration-200">
                     <div class="avatar">
                         <span id="user-avatar-initial">U</span>
@@ -2432,7 +2597,7 @@
                         <!-- Dashboard Header -->
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center">
+                                <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-blue-600 text-white rounded-xl flex items-center justify-center shadow-md shadow-indigo-200">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                                 </div>
                                 <div>
@@ -2446,6 +2611,27 @@
                                     <span data-translate="refresh">Actualiser</span>
                                 </button>
                             </div>
+                        </div>
+
+                        <!-- Dashboard Horizontal Nav -->
+                        <div id="dashboard-nav" class="flex items-center gap-1.5 mb-6 bg-white rounded-2xl border border-slate-100 shadow-sm p-1.5 overflow-x-auto custom-scrollbar">
+                            <button data-view="overview" class="dash-nav-btn active flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                                <span>Aper\u00e7u</span>
+                            </button>
+                            <button data-view="classes" class="dash-nav-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                <span>Classes</span>
+                            </button>
+                            <button data-view="progression" class="dash-nav-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                                <span>Progression</span>
+                            </button>
+                            <button data-view="alerts" class="dash-nav-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                <span>Alertes</span>
+                                <span id="dash-alert-badge" class="hidden text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-600"></span>
+                            </button>
                         </div>
 
                         <!-- Dashboard Content -->
@@ -2515,6 +2701,23 @@
                         /* Responsive table scroll */
                         #content-dashboard table {
                             min-width: 600px;
+                        }
+
+                        /* Dashboard Horizontal Nav */
+                        #dashboard-nav .dash-nav-btn {
+                            color: #64748b;
+                            background: transparent;
+                            white-space: nowrap;
+                            cursor: pointer;
+                        }
+                        #dashboard-nav .dash-nav-btn:hover {
+                            background: #f1f5f9;
+                            color: #475569;
+                        }
+                        #dashboard-nav .dash-nav-btn.active {
+                            background: #4f46e5;
+                            color: white;
+                            box-shadow: 0 4px 12px rgba(79,70,229,0.3);
                         }
 
                         /* RTL Support */
@@ -2990,6 +3193,40 @@
 
     <script type="module">
         // Language Management
+        // Dark Mode Toggle
+        window.toggleDarkMode = function() {
+            const html = document.documentElement;
+            const isDark = html.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                html.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            }
+            window._updateThemeIcons();
+        };
+
+        window.initDarkMode = function() {
+            const saved = localStorage.getItem('theme');
+            if (saved === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+            window._updateThemeIcons();
+        };
+
+        window._updateThemeIcons = function() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const sun = document.getElementById('theme-icon-sun');
+            const moon = document.getElementById('theme-icon-moon');
+            if (sun && moon) {
+                sun.classList.toggle('hidden', !isDark);
+                moon.classList.toggle('hidden', isDark);
+            }
+        };
+
         const initApp = async () => {
             try {
                 // Initialize language from storage
@@ -3017,6 +3254,9 @@
                     const select = document.getElementById('global-trimester');
                     return select ? select.value : '1';
                 };
+
+                // Initialize dark mode
+                window.initDarkMode();
 
                 // Initialize authentication and data loading
                 if (window.initAuth) await window.initAuth();
