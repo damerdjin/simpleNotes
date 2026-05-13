@@ -1323,9 +1323,9 @@
             const totalPoints = gradesSvc().getAssignmentMaxPoints(a);
 
             // Dynamic font size based on name length to fit on one line
-            let nameFontClass = 'text-xl';
-            if (a.name.length > 20) nameFontClass = 'text-sm';
-            else if (a.name.length > 12) nameFontClass = 'text-base';
+            let nameFontClass = 'text-sm sm:text-xl';
+            if (a.name.length > 20) nameFontClass = 'text-[11px] sm:text-sm';
+            else if (a.name.length > 12) nameFontClass = 'text-xs sm:text-base';
 
             return `
             <div onclick="selectGradeAssignment('${a.id}')" 
@@ -1346,7 +1346,7 @@
                 </div>
                 
                 <div class="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-slate-500 font-medium mb-3 sm:mb-4">
-                    <span class="flex items-center gap-1">
+                    <span class="hidden sm:flex items-center gap-1">
                         <svg class="w-3 h-3 sm:w-4 sm:h-4 text-slate-400 group-hover:text-[color:var(--theme-color)] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                         ${exerciseCount} ${t.exerciseAbbr || 'Ex'}
                     </span>
