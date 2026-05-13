@@ -1574,7 +1574,7 @@
 
                 // ARABIC FIX: Typography and Layout
                 const cardStyle = isAr ? 'flex-direction: column !important;' : '';
-                const titleClass = isAr ? 'text-xl font-bold text-gray-900 leading-normal transition-colors group-hover:text-blue-600 truncate text-right' : 'text-xl font-black text-gray-900 leading-tight transition-colors group-hover:text-blue-600 truncate tracking-tight';
+                const titleClass = isAr ? 'text-sm sm:text-xl font-bold text-gray-900 leading-normal transition-colors group-hover:text-blue-600 truncate text-right' : 'text-sm sm:text-xl font-black text-gray-900 leading-tight transition-colors group-hover:text-blue-600 truncate tracking-tight';
                 const labelTracking = isAr ? '' : 'tracking-widest';
                 const progressTracking = isAr ? '' : 'tracking-wider';
                 const fontBlack = isAr ? 'font-bold' : 'font-black';
@@ -1598,7 +1598,7 @@
                                     ${a.subject ? (() => {
                                         const subj = (window.subjects || []).find(s => s.id === a.subject);
                                         const displaySubject = subj ? (subj[getLang()] || subj.fr) : a.subject;
-                                        return `<span class="px-2 py-0.5 rounded-md bg-purple-100 text-purple-700 text-[10px] font-bold uppercase tracking-wider border border-purple-200">${displaySubject}</span>`;
+                                        return `<span class="px-1.5 sm:px-2 py-0.5 rounded-md bg-purple-100 text-purple-700 text-[9px] sm:text-[10px] font-bold border border-purple-200">${displaySubject}</span>`;
                                     })() : ''}
                                     <!-- Visibility (Desktop only) -->
                                     <div class="hidden sm:block">
