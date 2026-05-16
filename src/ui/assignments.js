@@ -1,3 +1,5 @@
+import { supabase } from './supabase-client.js';
+
 (function () {
     // Helper to access globals
     const getData = () => window.data;
@@ -14,6 +16,70 @@
     const assignmentsSvc = () => window.assignmentsSvc;
     const gradesSvc = () => window.grades;
 
+    // Cache for subject_teachers (matières déjà attribuées)
+    let takenSubjects = null;
+
+    async function fetchTakenSubjects(className) {
+        const currentYear = window.getGlobalAcademicYear();
+        const trimester = window.getGlobalTrimester();
+        const schoolId = window.currentUser?.user_metadata?.school_id;
+        if (!className || !currentYear || !trimester || !schoolId) {
+            takenSubjects = new Set();
+            return;
+        }
+        try {
+            const { data, error } = await supabase
+                .from('subject_teachers')
+                .select('subject')
+                .eq('school_id', schoolId)
+                .eq('class_name', className)
+                .eq('academic_year', currentYear)
+                .eq('trimester', trimester)
+                .neq('user_id', window.currentUser?.id || '');
+            if (!error && data) {
+                takenSubjects = new Set(data.map(r => r.subject));
+            } else {
+                takenSubjects = new Set();
+            }
+        } catch (e) {
+            takenSubjects = new Set();
+        }
+    }
+
+    function applySubjectFilters() {
+        const select = document.getElementById('assignment-subject');
+        if (!select) return;
+        const currentVal = select.value;
+        Array.from(select.options).forEach(opt => {
+            if (!opt.value) return;
+            if (takenSubjects && takenSubjects.has(opt.value)) {
+                opt.disabled = true;
+                opt.textContent = opt.textContent.replace(/ \(.*\)$/, '') + ' (déjà attribuée)';
+            } else {
+                opt.disabled = false;
+                opt.textContent = opt.textContent.replace(/ \(.*\)$/, '');
+            }
+        });
+        if (currentVal && takenSubjects && takenSubjects.has(currentVal)) {
+            select.value = '';
+        }
+    }
+
+    window.refreshSubjectFilter = async function() {
+        const className = document.getElementById('assignment-class')?.value;
+        if (className && !editingAssignmentId) {
+            await fetchTakenSubjects(className);
+            applySubjectFilters();
+        } else if (!editingAssignmentId) {
+            const select = document.getElementById('assignment-subject');
+            if (select) {
+                Array.from(select.options).forEach(opt => {
+                    opt.disabled = false;
+                    opt.textContent = opt.textContent.replace(/ \(.*\)$/, '');
+                });
+            }
+        }
+    };
 
     // State specific to Assignments UI
     let editingAssignmentId = null;
@@ -200,7 +266,7 @@
                     <div class="absolute ${iconPos} text-gray-400 group-focus-within:text-emerald-500 transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                     </div>
-                    <select id="assignment-class" onchange="window.autoSuggestAssignmentName()" class="w-full ${inputPadding} py-3 bg-emerald-50/30 border-2 border-emerald-100 rounded-xl focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all font-bold text-gray-800 appearance-none cursor-pointer">
+                    <select id="assignment-class" onchange="window.autoSuggestAssignmentName(); window.refreshSubjectFilter()" class="w-full ${inputPadding} py-3 bg-emerald-50/30 border-2 border-emerald-100 rounded-xl focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all font-bold text-gray-800 appearance-none cursor-pointer">
                         <option value="" data-translate="selectClassPlaceholder">${t.selectClassPlaceholder || 'Choisir classe...'}</option>
                     </select>
                     <div class="absolute ${chevronPos} pointer-events-none text-emerald-400">
@@ -506,6 +572,7 @@
                 // Trigger any side effects like auto-suggesting subject
                 setTimeout(() => {
                     if (typeof window.autoSuggestAssignmentName === 'function') window.autoSuggestAssignmentName();
+                    if (typeof window.refreshSubjectFilter === 'function') window.refreshSubjectFilter();
                 }, 100);
             }
             
@@ -1204,6 +1271,27 @@
         window.renderAssignments();
         renderSummary();
         renderExportPrep();
+
+        // Enregistrer l'assignation matière dans subject_teachers (nouveau devoir uniquement)
+        if (!editingAssignmentId) {
+            const schoolId = window.currentUser?.user_metadata?.school_id;
+            const userId = window.currentUser?.id;
+            if (schoolId && userId && className && subject) {
+                const currentYear = window.getGlobalAcademicYear();
+                const tri = trimester || window.getGlobalTrimester();
+                supabase.from('subject_teachers').upsert({
+                    school_id: schoolId,
+                    user_id: userId,
+                    class_name: className,
+                    subject: subject,
+                    academic_year: currentYear,
+                    trimester: tri
+                }, { onConflict: 'school_id,class_name,subject,academic_year,trimester' }).then(({ error }) => {
+                    if (error) console.warn('[subject_teachers] upsert error:', error);
+                });
+            }
+        }
+
         window.closeAssignmentModal();
     };
 
@@ -1286,6 +1374,35 @@
         }
 
         saveData();
+
+        // Nettoyer l'assignation matière si c'était le seul devoir de cette matière
+        if (assignment && assignment.subject && assignment.className) {
+            const schoolId = window.currentUser?.user_metadata?.school_id;
+            const userId = window.currentUser?.id;
+            if (schoolId && userId) {
+                const hasOther = data.assignments.some(a =>
+                    a.id !== id &&
+                    a.className === assignment.className &&
+                    a.subject === assignment.subject &&
+                    a.trimester === assignment.trimester &&
+                    (a.academicYear || '') === (assignment.academicYear || '') &&
+                    (a.createdBy || '') === (assignment.createdBy || '')
+                );
+                if (!hasOther) {
+                    supabase.from('subject_teachers').delete()
+                        .eq('school_id', schoolId)
+                        .eq('user_id', userId)
+                        .eq('class_name', assignment.className)
+                        .eq('subject', assignment.subject)
+                        .eq('academic_year', assignment.academicYear || window.getGlobalAcademicYear())
+                        .eq('trimester', assignment.trimester || window.getGlobalTrimester())
+                        .then(({ error }) => {
+                            if (error) console.warn('[subject_teachers] delete error:', error);
+                        });
+                }
+            }
+        }
+
         window.renderAssignments();
         renderSummary();
         renderExportPrep();
