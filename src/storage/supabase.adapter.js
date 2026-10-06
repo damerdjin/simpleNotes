@@ -423,6 +423,39 @@ export function supabaseAdapter() {
     },
     set(key, value) {
       localStorage.setItem(key, value);
+    },
+
+    async getActiveAcademicYears() {
+      try {
+        const { data, error } = await supabase
+          .from('academic_years')
+          .select('*')
+          .eq('is_active', true)
+          .order('year', { ascending: false });
+        if (error) throw error;
+        return data || [];
+      } catch (err) {
+        console.warn('[SupabaseAdapter] getActiveAcademicYears error:', err);
+        return [];
+      }
+    },
+
+    async getTrimesters(academicYearId = null) {
+      try {
+        let query = supabase
+          .from('trimesters')
+          .select('*')
+          .order('name', { ascending: true });
+        if (academicYearId) {
+          query = query.eq('academic_year_id', academicYearId);
+        }
+        const { data, error } = await query;
+        if (error) throw error;
+        return data || [];
+      } catch (err) {
+        console.warn('[SupabaseAdapter] getTrimesters error:', err);
+        return [];
+      }
     }
   };
 }

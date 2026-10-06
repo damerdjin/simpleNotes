@@ -96,6 +96,18 @@ export const store = {
       await remote.archiveStudent(studentId);
     }
   },
+  async getActiveAcademicYears() {
+    if (remote.getActiveAcademicYears) {
+      return await remote.getActiveAcademicYears();
+    }
+    return [];
+  },
+  async getTrimesters(academicYearId = null) {
+    if (remote.getTrimesters) {
+      return await remote.getTrimesters(academicYearId);
+    }
+    return [];
+  },
   get(key) {
     return local.get(key);
   },

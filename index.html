@@ -1951,7 +1951,17 @@
 
         // Called by UI interaction for Year
         window.updateYear = (year) => {
-            const currentTri = window.getGlobalTrimester ? window.getGlobalTrimester() : "1";
+            let currentTri = window.getGlobalTrimester ? window.getGlobalTrimester() : "1";
+            
+            // Re-render trimesters for this newly selected year
+            if (window.renderTrimesterSelectors) {
+                const availableTris = window.renderTrimesterSelectors(year, currentTri);
+                if (!availableTris.includes(String(currentTri)) && availableTris.length > 0) {
+                    currentTri = availableTris[0];
+                    if (window.setGlobalTrimester) window.setGlobalTrimester(currentTri);
+                }
+            }
+
             window.updateSessionVisual(year, currentTri);
             
             const hiddenSelect = document.getElementById('global-academic-year');
@@ -1964,7 +1974,7 @@
 
         // Called by UI interaction for Trimester
         window.updateTrimester = (tri) => {
-            const currentYear = window.getGlobalAcademicYear ? window.getGlobalAcademicYear() : "2025/2026";
+            const currentYear = window.getGlobalAcademicYear ? window.getGlobalAcademicYear() : "2026/2027";
             window.updateSessionVisual(currentYear, tri);
             
             const hiddenSelect = document.getElementById('global-trimester');
@@ -1982,7 +1992,7 @@
         // Sync visual UI with state (called on load or after state changes)
         window.syncGlobalUI = () => {
             const autoTri = window.getAutoTrimester ? window.getAutoTrimester() : "1";
-            const autoYear = window.getAutoAcademicYear ? window.getAutoAcademicYear() : "2025/2026";
+            const autoYear = window.getAutoAcademicYear ? window.getAutoAcademicYear() : "2026/2027";
 
             const currentTri = window.getGlobalTrimester ? window.getGlobalTrimester() : (localStorage.getItem('corrections-global-trimester') || autoTri);
             const currentYear = window.getGlobalAcademicYear ? window.getGlobalAcademicYear() : (localStorage.getItem('corrections-global-academic-year') || autoYear);
@@ -2001,6 +2011,11 @@
             try {
                 // Initialize language from storage
                 initLanguage();
+
+                // Fetch latest active academic years & trimesters from Supabase
+                if (window.fetchAcademicSessions) {
+                    await window.fetchAcademicSessions();
+                }
 
                 // Sync visual UI with stored state
                 if (window.syncGlobalUI) window.syncGlobalUI();
@@ -2026,8 +2041,14 @@
                         const autoTri = window.getAutoTrimester();
                         const autoYear = window.getAutoAcademicYear();
                         
+                        const activeYears = window.academicYearsList?.filter(y => y.is_active !== false) || [];
+                        const activeStrings = activeYears.map(y => y.year);
+                        const targetYear = (activeStrings.length === 0 || activeStrings.includes(autoYear))
+                            ? autoYear
+                            : activeStrings[0];
+
                         // Use update functions to ensure state, localStorage, and Supabase are all synced
-                        if (window.updateYear) window.updateYear(autoYear);
+                        if (window.updateYear) window.updateYear(targetYear);
                         if (window.updateTrimester) window.updateTrimester(autoTri);
                     }
 
@@ -2089,7 +2110,7 @@
                     </div>
                     <div class="flex flex-col min-w-0">
                         <span id="session-label" class="text-[9px] text-gray-400 font-bold uppercase tracking-tighter leading-none" data-translate="academicSession">Session</span>
-                        <span id="current-session-display" class="text-xs font-bold text-gray-700 leading-tight truncate">2025/2026 \u2022 T1</span>
+                        <span id="current-session-display" class="text-xs font-bold text-gray-700 leading-tight truncate">2026/2027 • T1</span>
                     </div>
                     <svg class="w-3 h-3 text-gray-400 group-hover:text-blue-500 transition-colors ml-auto shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                 </div>
@@ -2097,22 +2118,22 @@
                 <div id="session-dropdown" class="absolute top-full left-3 mt-1 w-56 bg-white border border-gray-100 rounded-2xl shadow-2xl py-3 hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200" style="left:12px">
                     <div class="px-4 pb-3 border-b border-gray-50">
                         <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3" data-translate="trimester">Trimestre</div>
-                        <div class="flex gap-2">
+                        <div class="flex gap-2" id="session-trimester-buttons">
                             <button onclick="updateTrimester(1)" id="btn-tri1" class="flex-1 py-2 rounded-lg text-xs font-bold border transition-all hover:bg-blue-50 border-gray-100 text-gray-600">T1</button>
                             <button onclick="updateTrimester(2)" id="btn-tri2" class="flex-1 py-2 rounded-lg text-xs font-bold border transition-all hover:bg-blue-50 border-gray-100 text-gray-600">T2</button>
                             <button onclick="updateTrimester(3)" id="btn-tri3" class="flex-1 py-2 rounded-lg text-xs font-bold border transition-all hover:bg-blue-50 border-gray-100 text-gray-600">T3</button>
                         </div>
                     </div>
                     <div class="pt-3">
-                        <div class="px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2" data-translate="academicYear">Ann\u00e9e Scolaire</div>
-                        <div class="max-h-40 overflow-y-auto">
+                        <div class="px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2" data-translate="academicYear">Année Scolaire</div>
+                        <div class="max-h-40 overflow-y-auto" id="session-years-list">
+                            <div class="year-option px-4 py-2 hover:bg-blue-50 text-sm font-bold text-gray-600 hover:text-blue-700 cursor-pointer transition-colors flex items-center justify-between" data-year="2026/2027" onclick="updateYear('2026/2027')">
+                                <span>2026 / 2027</span>
+                                <div class="w-1.5 h-1.5 rounded-full bg-blue-500 hidden" id="check-2026"></div>
+                            </div>
                             <div class="year-option px-4 py-2 hover:bg-blue-50 text-sm font-bold text-gray-600 hover:text-blue-700 cursor-pointer transition-colors flex items-center justify-between" data-year="2025/2026" onclick="updateYear('2025/2026')">
                                 <span>2025 / 2026</span>
                                 <div class="w-1.5 h-1.5 rounded-full bg-blue-500 hidden" id="check-2025"></div>
-                            </div>
-                            <div class="year-option px-4 py-2 hover:bg-blue-50 text-sm font-bold text-gray-600 hover:text-blue-700 cursor-pointer transition-colors flex items-center justify-between" data-year="2024/2025" onclick="updateYear('2024/2025')">
-                                <span>2024 / 2025</span>
-                                <div class="w-1.5 h-1.5 rounded-full bg-blue-500 hidden" id="check-2024"></div>
                             </div>
                         </div>
                     </div>
@@ -2123,9 +2144,9 @@
                     <option value="2">2</option>
                     <option value="3">3</option>
                 </select>
-                <select id="global-academic-year" class="hidden" aria-label="Ann\u00e9e acad\u00e9mique">
+                <select id="global-academic-year" class="hidden" aria-label="Année académique">
+                    <option value="2026/2027">2026/2027</option>
                     <option value="2025/2026">2025/2026</option>
-                    <option value="2024/2025">2024/2025</option>
                 </select>
             </div>
         </div>
@@ -2237,14 +2258,14 @@
                     <div class="px-4 py-2 border-b border-gray-50">
                         <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2" data-translate="academicSession">Session</div>
                         <div class="flex items-center gap-2 mb-2">
-                            <div class="flex-1 flex gap-1">
+                            <div class="flex-1 flex gap-1" id="mobile-trimester-buttons">
                                 <button onclick="updateTrimester(1)" data-mobile-tri="1" class="flex-1 py-1.5 rounded-lg text-[11px] font-bold border transition-all border-gray-100 text-gray-600 hover:bg-blue-50">T1</button>
                                 <button onclick="updateTrimester(2)" data-mobile-tri="2" class="flex-1 py-1.5 rounded-lg text-[11px] font-bold border transition-all border-gray-100 text-gray-600 hover:bg-blue-50">T2</button>
                                 <button onclick="updateTrimester(3)" data-mobile-tri="3" class="flex-1 py-1.5 rounded-lg text-[11px] font-bold border transition-all border-gray-100 text-gray-600 hover:bg-blue-50">T3</button>
                             </div>
                         </div>
-                        <div class="flex gap-2">
-                            <button onclick="updateYear('2024/2025')" data-mobile-year="2024/2025" class="flex-1 py-1.5 rounded-lg text-[11px] font-bold border border-gray-100 text-gray-600 hover:bg-blue-50 transition-all">2024/2025</button>
+                        <div class="flex gap-2 flex-wrap" id="mobile-year-buttons">
+                            <button onclick="updateYear('2026/2027')" data-mobile-year="2026/2027" class="flex-1 py-1.5 rounded-lg text-[11px] font-bold border border-gray-100 text-gray-600 hover:bg-blue-50 transition-all">2026/2027</button>
                             <button onclick="updateYear('2025/2026')" data-mobile-year="2025/2026" class="flex-1 py-1.5 rounded-lg text-[11px] font-bold border border-gray-100 text-gray-600 hover:bg-blue-50 transition-all">2025/2026</button>
                         </div>
                     </div>
@@ -3284,8 +3305,8 @@
                                 </div>
                                 <select id="student-academic-year" class="w-full p-2 sm:p-2.5 bg-transparent font-bold text-sm text-gray-700 outline-none appearance-none cursor-pointer">
                                     <option value="" data-translate="academicYearOption">-- Sélectionner --</option>
+                                    <option value="2026/2027">2026/2027</option>
                                     <option value="2025/2026">2025/2026</option>
-                                    <option value="2024/2025">2024/2025</option>
                                 </select>
                                 <div class="pr-3.5 pointer-events-none text-gray-400">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -3558,7 +3579,7 @@
                 // Initialize global helpers
                 window.getGlobalAcademicYear = function() {
                     const select = document.getElementById('global-academic-year');
-                    return select ? select.value : '2025/2026';
+                    return (select && select.value) ? select.value : (localStorage.getItem('corrections-global-academic-year') || '2026/2027');
                 };
                 
                 window.getGlobalTrimester = function() {

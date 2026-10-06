@@ -1,5 +1,6 @@
 
 import { settingsAdapter } from '../storage/settings.adapter.js';
+import { supabase } from './supabase-client.js';
 
 (function () {
     // Helper to access globals
@@ -555,15 +556,234 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
     
     // --- Global Filters (Academic Year & Trimester) ---
 
+    const CACHE_KEY_ACADEMIC_YEARS = 'corrections-cached-academic-years';
+    const CACHE_KEY_TRIMESTERS = 'corrections-cached-trimesters';
+
+    // In-memory lists initialized with cached data or safe defaults
+    window.academicYearsList = (() => {
+        try {
+            const cached = localStorage.getItem(CACHE_KEY_ACADEMIC_YEARS);
+            return cached ? JSON.parse(cached) : [
+                { id: 4, year: '2026/2027', is_active: true },
+                { id: 2, year: '2025/2026', is_active: true }
+            ];
+        } catch (_) {
+            return [
+                { id: 4, year: '2026/2027', is_active: true },
+                { id: 2, year: '2025/2026', is_active: true }
+            ];
+        }
+    })();
+
+    window.trimestersList = (() => {
+        try {
+            const cached = localStorage.getItem(CACHE_KEY_TRIMESTERS);
+            return cached ? JSON.parse(cached) : [];
+        } catch (_) {
+            return [];
+        }
+    })();
+
+    /**
+     * Fetches active academic years (is_active = true) and trimesters from Supabase
+     */
+    window.fetchAcademicSessions = async function() {
+        try {
+            const { data: years, error: yErr } = await supabase
+                .from('academic_years')
+                .select('*')
+                .eq('is_active', true)
+                .order('year', { ascending: false });
+
+            if (!yErr && years && years.length > 0) {
+                window.academicYearsList = years;
+                try {
+                    localStorage.setItem(CACHE_KEY_ACADEMIC_YEARS, JSON.stringify(years));
+                } catch (_) {}
+            }
+
+            const { data: trimesters, error: tErr } = await supabase
+                .from('trimesters')
+                .select('*')
+                .order('name', { ascending: true });
+
+            if (!tErr && trimesters) {
+                window.trimestersList = trimesters;
+                try {
+                    localStorage.setItem(CACHE_KEY_TRIMESTERS, JSON.stringify(trimesters));
+                } catch (_) {}
+            }
+        } catch (e) {
+            console.warn('[Session] Failed to fetch academic sessions from Supabase:', e);
+        }
+
+        if (window.renderSessionSelectors) {
+            window.renderSessionSelectors();
+        }
+    };
+
+    /**
+     * Renders trimester buttons and options according to the selected academic year
+     */
+    window.renderTrimesterSelectors = function(year, currentTri) {
+        const yearObj = window.academicYearsList?.find(y => y.year === year);
+        let trimestersForYear = [];
+        if (yearObj) {
+            trimestersForYear = window.trimestersList?.filter(t => t.academic_year_id === yearObj.id) || [];
+        }
+        
+        let triNames = trimestersForYear.map(t => String(t.name || t.number));
+        if (triNames.length === 0) {
+            // Default trimesters if none yet configured for this year
+            triNames = ['1', '2', '3'];
+        }
+
+        const lang = window.getLang ? window.getLang() : (localStorage.getItem('corrections-language') || 'fr');
+        const trans = window.translations ? (window.translations[lang] || window.translations['fr']) : {};
+
+        // 1. Session Dropdown Trimester Buttons (#session-trimester-buttons)
+        const triContainer = document.getElementById('session-trimester-buttons');
+        if (triContainer) {
+            triContainer.innerHTML = triNames.map(tNum => {
+                const isBlocked = window.isTrimesterBlocked && window.isTrimesterBlocked(tNum, year);
+                const tLabel = trans[`t${tNum}`] || `T${tNum}`;
+                const label = isBlocked ? `🔒 ${tLabel}` : tLabel;
+                const isSelected = String(currentTri) === String(tNum);
+                const classes = isSelected
+                    ? 'flex-1 py-2 rounded-lg text-xs font-bold border transition-all bg-blue-600 text-white border-blue-600'
+                    : 'flex-1 py-2 rounded-lg text-xs font-bold border transition-all hover:bg-blue-50 border-gray-100 text-gray-600';
+                return `<button onclick="updateTrimester('${tNum}')" id="btn-tri${tNum}" class="${classes}">${label}</button>`;
+            }).join('');
+        }
+
+        // 2. Hidden Select (#global-trimester)
+        const hiddenTriSelect = document.getElementById('global-trimester');
+        if (hiddenTriSelect) {
+            hiddenTriSelect.innerHTML = triNames.map(tNum => `<option value="${tNum}">${tNum}</option>`).join('');
+            if (currentTri && triNames.includes(String(currentTri))) {
+                hiddenTriSelect.value = currentTri;
+            } else if (triNames.length > 0) {
+                hiddenTriSelect.value = triNames[0];
+            }
+        }
+
+        // 3. Mobile Trimester Buttons (#mobile-trimester-buttons)
+        const mobileTriContainer = document.getElementById('mobile-trimester-buttons');
+        if (mobileTriContainer) {
+            mobileTriContainer.innerHTML = triNames.map(tNum => {
+                const isSelected = String(currentTri) === String(tNum);
+                const classes = isSelected
+                    ? 'flex-1 py-1.5 rounded-lg text-[11px] font-bold border transition-all bg-blue-600 text-white border-blue-600'
+                    : 'flex-1 py-1.5 rounded-lg text-[11px] font-bold border transition-all border-gray-100 text-gray-600 hover:bg-blue-50';
+                return `<button onclick="updateTrimester('${tNum}')" data-mobile-tri="${tNum}" class="${classes}">T${tNum}</button>`;
+            }).join('');
+        }
+
+        return triNames;
+    };
+
+    /**
+     * Renders academic year options across desktop, mobile and form dropdowns
+     */
+    window.renderSessionSelectors = function() {
+        // Filter strictly by is_active !== false (active years)
+        const activeYears = (window.academicYearsList && window.academicYearsList.length > 0)
+            ? window.academicYearsList.filter(y => y.is_active !== false)
+            : [{ year: '2026/2027' }, { year: '2025/2026' }];
+
+        const activeYearStrings = activeYears.map(y => y.year);
+        let currentYear = window.getGlobalAcademicYear ? window.getGlobalAcademicYear() : localStorage.getItem('corrections-global-academic-year');
+        
+        // Auto-select valid active year if current is missing or inactive
+        if (!currentYear || !activeYearStrings.includes(currentYear)) {
+            const autoYear = window.getAutoAcademicYear ? window.getAutoAcademicYear() : null;
+            if (autoYear && activeYearStrings.includes(autoYear)) {
+                currentYear = autoYear;
+            } else {
+                currentYear = activeYearStrings[0] || '2026/2027';
+            }
+            localStorage.setItem('corrections-global-academic-year', currentYear);
+        }
+
+        let currentTri = window.getGlobalTrimester ? window.getGlobalTrimester() : (localStorage.getItem('corrections-global-trimester') || '1');
+
+        // 1. Session Dropdown Years List (#session-years-list)
+        const yearsListEl = document.getElementById('session-years-list');
+        if (yearsListEl) {
+            yearsListEl.innerHTML = activeYears.map(y => {
+                const yStr = y.year;
+                const yearShort = yStr.substring(0, 4);
+                const formatted = yStr.includes('/') ? yStr.replace('/', ' / ') : yStr;
+                const isYearBlocked = window.isTrimesterBlocked && window.isTrimesterBlocked(1, yStr);
+                const displayLabel = isYearBlocked ? `🔒 ${formatted}` : formatted;
+                return `
+                    <div class="year-option px-4 py-2 hover:bg-blue-50 text-sm font-bold text-gray-600 hover:text-blue-700 cursor-pointer transition-colors flex items-center justify-between" data-year="${yStr}" onclick="updateYear('${yStr}')">
+                        <span>${displayLabel}</span>
+                        <div class="w-1.5 h-1.5 rounded-full bg-blue-500 hidden" id="check-${yearShort}"></div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 2. Hidden Academic Year Select (#global-academic-year)
+        const hiddenYearSelect = document.getElementById('global-academic-year');
+        if (hiddenYearSelect) {
+            hiddenYearSelect.innerHTML = activeYears.map(y => `<option value="${y.year}">${y.year}</option>`).join('');
+            hiddenYearSelect.value = currentYear;
+        }
+
+        // 3. Student Academic Year Select (#student-academic-year)
+        const studentYearSelect = document.getElementById('student-academic-year');
+        if (studentYearSelect) {
+            const prompt = (window.translations && window.currentLanguage && window.translations[window.currentLanguage]?.academicYearOption) || '-- Sélectionner --';
+            studentYearSelect.innerHTML = `
+                <option value="">${prompt}</option>
+                ${activeYears.map(y => `<option value="${y.year}">${y.year}</option>`).join('')}
+            `;
+            studentYearSelect.value = currentYear;
+        }
+
+        // 4. Mobile Year Buttons (#mobile-year-buttons)
+        const mobileYearContainer = document.getElementById('mobile-year-buttons');
+        if (mobileYearContainer) {
+            mobileYearContainer.innerHTML = activeYears.map(y => `
+                <button onclick="updateYear('${y.year}')" data-mobile-year="${y.year}" class="flex-1 min-w-[70px] py-1.5 rounded-lg text-[11px] font-bold border border-gray-100 text-gray-600 hover:bg-blue-50 transition-all">${y.year}</button>
+            `).join('');
+        }
+
+        // 5. Render trimesters according to selected year
+        const availableTris = window.renderTrimesterSelectors(currentYear, currentTri);
+        if (!availableTris.includes(String(currentTri))) {
+            currentTri = availableTris[0] || '1';
+            localStorage.setItem('corrections-global-trimester', currentTri);
+        }
+
+        // 6. Sync visual display
+        if (window.syncGlobalUI) window.syncGlobalUI();
+    };
+
     window.loadGlobalFilters = function() {
+        if (window.renderSessionSelectors) window.renderSessionSelectors();
+
         let academicYear = localStorage.getItem('corrections-global-academic-year');
         let trimester = localStorage.getItem('corrections-global-trimester');
 
-        // Defaults if missing to ensure data is visible by default
-        if (!academicYear) {
-            academicYear = "2025/2026";
+        const activeYears = (window.academicYearsList && window.academicYearsList.length > 0)
+            ? window.academicYearsList.filter(y => y.is_active !== false)
+            : [];
+        const activeYearStrings = activeYears.map(y => y.year);
+
+        // Ensure selected year is among active years
+        if (!academicYear || (activeYearStrings.length > 0 && !activeYearStrings.includes(academicYear))) {
+            const autoYear = window.getAutoAcademicYear ? window.getAutoAcademicYear() : null;
+            if (autoYear && activeYearStrings.includes(autoYear)) {
+                academicYear = autoYear;
+            } else {
+                academicYear = activeYearStrings[0] || "2026/2027";
+            }
             localStorage.setItem('corrections-global-academic-year', academicYear);
         }
+
         if (!trimester) {
             trimester = "1";
             localStorage.setItem('corrections-global-trimester', trimester);
@@ -578,7 +798,7 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
             trimesterSelect.disabled = !academicYear;
         }
 
-        // Sync new visual UI
+        // Sync visual UI
         if (window.syncGlobalUI) window.syncGlobalUI();
 
         // Disable import buttons and labels if no trimester selected
@@ -768,7 +988,13 @@ import { settingsAdapter } from '../storage/settings.adapter.js';
 
     // Listen for language changes to sync UI
     window.addEventListener('languageChanged', () => {
+        if (window.renderSessionSelectors) window.renderSessionSelectors();
         if (window.syncGlobalUI) window.syncGlobalUI();
     });
+
+    // Initial fetch of academic sessions from Supabase
+    if (window.fetchAcademicSessions) {
+        window.fetchAcademicSessions().catch(e => console.warn('[UI] fetchAcademicSessions error:', e));
+    }
 
 })();
