@@ -190,7 +190,7 @@
                 <input type="number" id="grade-direct-${q.id}" name="grade-direct-${q.id}" min="0" max="${q.maxPoints}" step="0.25" value="${val}"
                     ${(mode === 'global' || isBlocked) ? 'disabled' : ''}
                     onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','direct',this.value)"
-                    onkeydown="if(event.key==='Enter'){ event.stopImmediatePropagation(); this.blur(); window.handleGradeEnter('${exId}'); }"
+                    onkeydown="if(event.key==='Enter'){ event.stopImmediatePropagation(); this.blur(); window.handleGradeEnter('${exId}', this); }"
                     dir="ltr" class="w-full min-w-[80px] p-2.5 bg-white border-2 border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:border-[color:var(--theme-color)] focus:ring-4 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all ${isBlocked ? 'cursor-not-allowed' : ''}" 
                     placeholder="0">
                 <div class="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-300 pointer-events-none">/ ${q.maxPoints}</div>
@@ -209,7 +209,7 @@
                     <input type="number" id="grade-sq-${sq.id}" name="grade-sq-${sq.id}" min="0" max="${sq.maxPoints}" step="0.25" value="${val}"
                         ${(mode === 'global' || isBlocked) ? 'disabled' : ''}
                         onchange="updateGrade('${studentId}','${assignmentId}','${exId}','${partKey}','${q.id}','${sq.id}',this.value)"
-                        onkeydown="if(event.key==='Enter'){ event.stopImmediatePropagation(); this.blur(); window.handleGradeEnter('${exId}'); }"
+                        onkeydown="if(event.key==='Enter'){ event.stopImmediatePropagation(); this.blur(); window.handleGradeEnter('${exId}', this); }"
                         dir="ltr" class="w-full p-2 bg-white border-2 border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:border-[color:var(--theme-color)] focus:ring-4 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all text-xs ${isBlocked ? 'cursor-not-allowed' : ''}"
                         placeholder="0">
                 </div>`;
@@ -218,6 +218,16 @@
         }
         qHtml += `</div>`;
         return qHtml;
+    };
+
+    window.openAccordion = function(id) {
+        const content = document.getElementById('accordion-' + id);
+        const icon = document.getElementById('icon-' + id);
+        if (!content) return;
+        content.style.maxHeight = '2000px';
+        content.style.opacity = '1';
+        content.style.visibility = 'visible';
+        if (icon) icon.classList.add('rotate-180');
     };
 
     window.toggleAccordion = function(id) {
@@ -410,7 +420,7 @@
                             <input type="number" id="grade-simple-${qId}" name="grade-simple-${qId}" inputmode="decimal" min="0" max="${maxPts}" step="0.25" value="${val}"
                                 ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'disabled' : ''}
                                 onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','${partKey}','${qId}','direct',this.value)"
-                                onkeydown="if(event.key==='Enter'){ event.stopImmediatePropagation(); this.blur(); window.handleGradeEnter('${ex.id}'); }"
+                                onkeydown="if(event.key==='Enter'){ event.stopImmediatePropagation(); this.blur(); window.handleGradeEnter('${ex.id}', this); }"
                                 dir="ltr" class="w-full py-3 sm:py-5 bg-slate-50 border-2 border-slate-200 rounded-xl sm:rounded-2xl text-center font-black text-slate-800 text-3xl sm:text-4xl focus:border-[color:var(--theme-color)] focus:bg-white focus:ring-4 focus:ring-[color:var(--theme-color)]/10 outline-none transition-all shadow-inner ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'cursor-not-allowed' : ''}" 
                                 placeholder="0">
                             <div class="absolute right-4 sm:right-5 top-1/2 -translate-y-1/2 text-xs sm:text-lg font-black text-slate-300 pointer-events-none">/ ${maxPts}</div>
@@ -520,7 +530,7 @@
                                         <input type="number" id="grade-global-${ex.id}" name="grade-global-${ex.id}" min="0" max="${maxExExPoints}" step="0.25" value="${finalGradeCur}"
                                             ${(modeCur === 'detail' || window.isTrimesterBlocked(assignment.trimester, assignment.academicYear)) ? 'disabled' : ''}
                                             onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
-                                            onkeydown="if(event.key==='Enter'){ event.stopImmediatePropagation(); this.blur(); window.handleGradeEnter('${ex.id}'); }"
+                                            onkeydown="if(event.key==='Enter'){ event.stopImmediatePropagation(); this.blur(); window.handleGradeEnter('${ex.id}', this); }"
                                             dir="ltr" class="w-28 min-w-[110px] p-2 bg-white border-2 border-amber-200 rounded-xl text-center font-black text-slate-700 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all text-sm ${(modeCur === 'detail' || window.isTrimesterBlocked(assignment.trimester, assignment.academicYear)) ? 'cursor-not-allowed' : ''}" 
                                             placeholder="0" onclick="event.stopPropagation()">
                                     </div>
@@ -542,7 +552,7 @@
                                         <input type="number" id="grade-single-simple-${ex.id}" name="grade-single-simple-${ex.id}" min="0" max="${maxExPoints}" step="0.25" value="${displayVal}"
                                             ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'disabled' : ''}
                                             onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','final','final','final',this.value)"
-                                            onkeydown="if(event.key==='Enter'){ event.stopImmediatePropagation(); this.blur(); window.handleGradeEnter('${ex.id}'); }"
+                                            onkeydown="if(event.key==='Enter'){ event.stopImmediatePropagation(); this.blur(); window.handleGradeEnter('${ex.id}', this); }"
                                             dir="ltr" class="w-full p-2.5 bg-white border-2 border-blue-200 rounded-xl text-center font-black text-blue-900 focus:border-blue-500 outline-none transition-all shadow-sm text-sm ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'cursor-not-allowed' : ''}" 
                                             placeholder="0">
                                     </div>
@@ -565,7 +575,7 @@
                                         <input type="number" id="grade-no-q-${ex.id}" name="grade-no-q-${ex.id}" min="0" max="${ex.maxPoints}" step="0.25" value="${val}"
                                             ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'disabled' : ''}
                                             onchange="updateGrade('${studentId}','${assignmentId}','${ex.id}','direct','direct','direct',this.value)"
-                                            onkeydown="if(event.key==='Enter'){ event.stopImmediatePropagation(); this.blur(); window.handleGradeEnter('${ex.id}'); }"
+                                            onkeydown="if(event.key==='Enter'){ event.stopImmediatePropagation(); this.blur(); window.handleGradeEnter('${ex.id}', this); }"
                                             dir="ltr" class="w-full p-2.5 bg-white border-2 border-blue-200 rounded-xl text-center font-black text-blue-900 focus:border-blue-500 outline-none transition-all shadow-sm text-sm ${window.isTrimesterBlocked(assignment.trimester, assignment.academicYear) ? 'cursor-not-allowed' : ''}" 
                                             placeholder="0">
                                     </div>
@@ -610,6 +620,13 @@
 
         // Auto-focus sur le premier champ de saisie
         const firstInput = container.querySelector('input:not([disabled])');
+        if (firstInput) {
+            const parentAccordion = firstInput.closest('.accordion-content');
+            if (parentAccordion && parentAccordion.id) {
+                const accId = parentAccordion.id.replace('accordion-', '');
+                window.openAccordion(accId);
+            }
+        }
         if (firstInput) {
             firstInput.focus();
             firstInput.select();
@@ -902,21 +919,65 @@
     window.getStudentExerciseTotal = (studentGrades, ex) => gradesSvc().getStudentExerciseTotal(studentGrades, ex);
     window.isExerciseFullyGraded = (studentGrades, ex) => gradesSvc().isExerciseFullyGraded(studentGrades, ex);
 
-    // --- Exercise Total Confirmation Dialog ---
+    // --- Exercise Total Confirmation Dialog & Keyboard Flow ---
 
-    window.handleGradeEnter = function(exId) {
-        const studentId = document.getElementById('select-student').value;
-        const assignmentId = document.getElementById('select-assignment').value;
+    function getEligibleGradeInputs() {
+        const container = document.getElementById('grade-entry');
+        if (!container) return [];
+        const allInputs = Array.from(container.querySelectorAll('input[type="number"]:not([disabled])'));
+        return allInputs.filter(input => {
+            let el = input.parentElement;
+            while (el && el !== container) {
+                if (el.classList.contains('hidden') || el.style.display === 'none') return false;
+                el = el.parentElement;
+            }
+            return true;
+        });
+    }
+
+    window.handleGradeEnter = function(exId, currentInput) {
+        const studentSelect = document.getElementById('select-student');
+        const assignmentSelect = document.getElementById('select-assignment');
+        const studentId = studentSelect ? studentSelect.value : '';
+        const assignmentId = assignmentSelect ? assignmentSelect.value : '';
         const data = getData();
-        const assignment = data.assignments.find(a => a.id === assignmentId);
+        const assignment = data && data.assignments ? data.assignments.find(a => a.id === assignmentId) : null;
 
-        if (!assignment || !exId) {
+        if (!assignment || !studentId) {
             window.openStudentSelector();
             return;
         }
 
+        const inputs = getEligibleGradeInputs();
+        let currentIndex = -1;
+        if (currentInput) {
+            currentIndex = inputs.indexOf(currentInput);
+        } else if (document.activeElement && inputs.includes(document.activeElement)) {
+            currentIndex = inputs.indexOf(document.activeElement);
+        } else if (exId) {
+            currentIndex = inputs.findIndex(inp => inp.id && inp.id.includes(exId));
+        }
+
+        // Si ce n'est pas le dernier champ, sauter au champ suivant (exercice ou question suivante)
+        if (currentIndex !== -1 && currentIndex < inputs.length - 1) {
+            const nextInput = inputs[currentIndex + 1];
+            if (nextInput) {
+                const parentAccordion = nextInput.closest('.accordion-content');
+                if (parentAccordion && parentAccordion.id) {
+                    const accId = parentAccordion.id.replace('accordion-', '');
+                    window.openAccordion(accId);
+                }
+                setTimeout(() => {
+                    nextInput.focus();
+                    nextInput.select();
+                }, 50);
+                return;
+            }
+        }
+
+        // Si nous sommes sur le dernier champ ou si tous les exercices sont notés
         const studentGrades = data.grades[studentId]?.[assignmentId] || {};
-        const isMultiExercise = assignment.exercises.length > 1;
+        const isMultiExercise = assignment.exercises && assignment.exercises.length > 1;
 
         if (isMultiExercise) {
             const allExercisesGraded = assignment.exercises.every(ex => {
@@ -927,6 +988,27 @@
                 window.showAssignmentTotalConfirm(studentId, assignmentId);
                 return;
             }
+        } else {
+            const singleEx = assignment.exercises && assignment.exercises[0];
+            if (singleEx && window.isExerciseFullyGraded(studentGrades, singleEx)) {
+                window.showAssignmentTotalConfirm(studentId, assignmentId);
+                return;
+            }
+        }
+
+        // S'il reste des champs antérieurs non remplis, naviguer vers le premier champ vide
+        const firstEmpty = inputs.find(inp => inp.value === '' || inp.value === null || inp.value === undefined);
+        if (firstEmpty && firstEmpty !== currentInput) {
+            const parentAccordion = firstEmpty.closest('.accordion-content');
+            if (parentAccordion && parentAccordion.id) {
+                const accId = parentAccordion.id.replace('accordion-', '');
+                window.openAccordion(accId);
+            }
+            setTimeout(() => {
+                firstEmpty.focus();
+                firstEmpty.select();
+            }, 50);
+            return;
         }
 
         window.openStudentSelector();
@@ -987,7 +1069,7 @@
         document.body.style.overflow = 'hidden';
     };
 
-    window.confirmAssignmentTotal = function(studentId, assignmentId) {
+    window.confirmAssignmentTotal = async function(studentId, assignmentId) {
         const data = getData();
         const svc = gradesSvc();
         const calculatedTotal = svc.getStudentAssignmentTotal(data, studentId, assignmentId);
@@ -1000,7 +1082,8 @@
         window.recalculateTotals(assignmentId, studentId);
 
         window.closeExerciseTotalConfirm();
-        window.openStudentSelector();
+        // Navigation fluide a l'eleve suivant
+        await window.navigateStudent(1);
     };
 
     window.closeExerciseTotalConfirm = function() {
