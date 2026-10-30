@@ -788,7 +788,7 @@ idx_grade_calc_configs_lookup ON grade_calculation_configs(user_id, academic_yea
 | A1 | **Notes manquantes** | Eleve sans note pour un devoir inclus dans le calcul --> moyenne = null | CRITIQUE |
 | A2 | **School_id manquant** | Prof sans school_id dans user_metadata --> RLS bloque les insertions classes/eleves | CRITIQUE |
 
-### 11.2 Anomalies importantes
+### 11.2 Anomalies  
 
 | # | Anomalie | Description | Gravite |
 |---|----------|-------------|---------|
