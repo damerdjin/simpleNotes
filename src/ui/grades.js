@@ -884,20 +884,9 @@
             if (!isTrulyEmpty) grandTotal += exTotal;
         }
         
-        const totalEl = document.getElementById('grade-total');
-        if (totalEl) {
-            // Priority: if no exercise has a grade, use the global assignment grade if it exists
-            let finalDisplayTotal = grandTotal;
-            if (grandTotal === 0 && studentGrades.global !== undefined && studentGrades.global !== '') {
-                finalDisplayTotal = parseFloat(studentGrades.global) || 0;
-            }
-            totalEl.textContent = finalDisplayTotal;
-        }
-        
-        // If we have any exercise grades, update the global assignment total
-        // but ONLY if there are exercises defined.
+        // If we have exercises defined, sync or clear the global assignment total
+        let hasAnyGrade = false;
         if (assignment.exercises && assignment.exercises.length > 0) {
-            let hasAnyGrade = false;
             for (const ex of assignment.exercises) {
                 if (window.hasAnyGradeForExercise(studentGrades, ex)) {
                     hasAnyGrade = true;
@@ -906,7 +895,21 @@
             }
             if (hasAnyGrade) {
                 studentGrades.global = grandTotal;
+            } else {
+                studentGrades.global = '';
             }
+        }
+
+        const totalEl = document.getElementById('grade-total');
+        if (totalEl) {
+            // Priority: if no exercise has a grade, use the global assignment grade if it exists
+            let finalDisplayTotal = grandTotal;
+            if (!hasAnyGrade && assignment.exercises && assignment.exercises.length > 0) {
+                finalDisplayTotal = 0;
+            } else if (grandTotal === 0 && studentGrades.global !== undefined && studentGrades.global !== '') {
+                finalDisplayTotal = parseFloat(studentGrades.global) || 0;
+            }
+            totalEl.textContent = finalDisplayTotal;
         }
     };
 
