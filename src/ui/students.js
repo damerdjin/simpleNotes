@@ -942,6 +942,18 @@
                 // Fill Academic Year
                 const academicYearSelect = document.getElementById('student-academic-year');
                 if (academicYearSelect) academicYearSelect.value = student.academicYear || '';
+
+                // Fill Gender
+                const sexMRadio = document.getElementById('student-sex-m');
+                const sexFRadio = document.getElementById('student-sex-f');
+                const sSex = (student.sex || 'M').toUpperCase();
+                if (sSex === 'F') {
+                    if (sexFRadio) sexFRadio.checked = true;
+                    if (sexMRadio) sexMRadio.checked = false;
+                } else {
+                    if (sexMRadio) sexMRadio.checked = true;
+                    if (sexFRadio) sexFRadio.checked = false;
+                }
             }
         } else {
             // ADD MODE
@@ -975,6 +987,12 @@
             const globalAcademicYear = window.getGlobalAcademicYear();
             const academicYearSelect = document.getElementById('student-academic-year');
             if (academicYearSelect) academicYearSelect.value = globalAcademicYear;
+
+            // Reset Gender to default (Garçon / M)
+            const sexMRadio = document.getElementById('student-sex-m');
+            const sexFRadio = document.getElementById('student-sex-f');
+            if (sexMRadio) sexMRadio.checked = true;
+            if (sexFRadio) sexFRadio.checked = false;
         }
 
         if (lastNameInput) lastNameInput.focus();
@@ -1041,24 +1059,58 @@
 
         const academicYear = document.getElementById('student-academic-year').value.trim() || window.getGlobalAcademicYear();
         const nin = document.getElementById('student-nin').value.trim();
+        const sex = document.querySelector('input[name="student-sex"]:checked')?.value || 'M';
 
         if (!lastName && !firstName) return window.showStudentError(t.enterName);
         if (!className) return window.showStudentError(t.enterClass);
 
         const name = (lastName + ' ' + firstName).trim();
 
-        // Check for duplicate student in the same class, for the current user and academic year
-        const currentUserId = window.currentUser?.email || window.currentUser?.id || 'unknown';
-        const duplicate = data.students.find(s => 
-            s.name.toLowerCase() === name.toLowerCase() && 
-            s.className === className && 
-            s.academicYear === academicYear &&
-            (s.importedBy || 'unknown') === currentUserId &&
-            s.id !== editingStudentId &&
-            // Ne vérifier que les élèves manuels pour éviter les faux doublons avec les élèves officiels
-            (!s.isOfficial || (s.importedBy || 'unknown') === currentUserId)
-        );
+        // Helper to normalize names (case-insensitive, accents-insensitive, trim extra spaces)
+        const normalizeName = (str) => {
+            return (str || '')
+                .trim()
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/\s+/g, ' ');
+        };
 
+        const normLast = normalizeName(lastName);
+        const normFirst = normalizeName(firstName);
+        const normFullName1 = `${normLast} ${normFirst}`;
+        const normFullName2 = `${normFirst} ${normLast}`;
+
+        // Predicate to check duplicate student in the same class and academic year
+        const isDuplicateStudent = (s) => {
+            if (s.id === editingStudentId) return false;
+            if (s.status === 'archived') return false;
+
+            const sClass = (s.className || '').trim().toLowerCase();
+            const targetClass = className.trim().toLowerCase();
+            if (sClass !== targetClass) return false;
+
+            if (academicYear && s.academicYear && s.academicYear !== academicYear) return false;
+
+            const sLast = normalizeName(s.lastName);
+            const sFirst = normalizeName(s.firstName);
+            const sName = normalizeName(s.name);
+
+            if (sLast && sFirst) {
+                if ((sLast === normLast && sFirst === normFirst) || (sLast === normFirst && sFirst === normLast)) {
+                    return true;
+                }
+            }
+            if (sName) {
+                if (sName === normFullName1 || sName === normFullName2) {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        // Check local duplicate
+        const duplicate = data.students.find(isDuplicateStudent);
         if (duplicate) return window.showStudentError(t.duplicateStudent || 'Cet élève existe déjà dans cette classe.');
 
         if (editingStudentId) {
@@ -1074,42 +1126,23 @@
                 student.name = name;
                 student.className = className;
                 student.academicYear = academicYear;
+                student.sex = sex;
                 // Preserve importedBy
                 if (nin) student.nin = nin; // Only update if provided
-                // Preserve other fields like grades (linked by ID), sex, birthDate, etc.
+                // Preserve other fields like grades (linked by ID), birthDate, etc.
             }
         } else {
             // CREATE - Marquer comme manuel avec l'UUID du prof actuel
             const currentUserId = window.currentUser?.id || window.currentUser?.email || genId();
             
-            // Vérifier si un élève avec le même nom, classe et année existe déjà dans la base de données
-            let existingStudent = null;
-            
-            // Chercher dans les élèves locaux
-            existingStudent = data.students.find(s => 
-                s.name.toLowerCase() === name.toLowerCase() &&
-                s.className === className &&
-                s.academicYear === academicYear
-            );
-            
-            // Si non trouvé localement, chercher dans la base de données
-            if (!existingStudent && window.store && typeof window.store.getSharedStudents === 'function') {
+            // Chercher dans les classes partagées en base de données si disponible
+            if (window.store && typeof window.store.getSharedStudents === 'function') {
                 try {
-                    // Récupérer toutes les classes partagées
-                    const sharedClasses = await window.store.getSharedClasses();
-                    
-                    // Chercher l'élève dans chaque classe partagée
-                    for (const className of sharedClasses) {
-                        const sharedStudents = await window.store.getSharedStudents(className);
-                        const found = sharedStudents.find(s => 
-                            s.name.toLowerCase() === name.toLowerCase() &&
-                            s.className === className &&
-                            s.academicYear === academicYear
-                        );
-                        
-                        if (found) {
-                            existingStudent = found;
-                            break;
+                    const sharedStudents = await window.store.getSharedStudents(className);
+                    if (Array.isArray(sharedStudents)) {
+                        const sharedDuplicate = sharedStudents.find(isDuplicateStudent);
+                        if (sharedDuplicate) {
+                            return window.showStudentError(t.duplicateStudent || 'Cet élève existe déjà dans cette classe.');
                         }
                     }
                 } catch (err) {
@@ -1117,12 +1150,7 @@
                 }
             }
             
-            // Si un élève existe déjà, afficher une erreur
-            if (existingStudent) {
-                return window.showStudentError(t.duplicateStudent || 'Cet élève existe déjà dans cette classe.');
-            }
-            
-            // Sinon, créer le nouvel élève
+            // Créer le nouvel élève
             data.students.push({ 
                 id: genId(), 
                 name, 
@@ -1131,6 +1159,7 @@
                 nin: nin || genId(), 
                 firstName, 
                 lastName, 
+                sex,
                 importedBy: currentUserId,
                 isOfficial: false // Manuel
             });

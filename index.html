@@ -3258,15 +3258,32 @@
                         </div>
                     </div>
 
-                    <!-- NIN -->
-                    <div class="relative group">
-                        <label class="absolute -top-2 left-3 px-1.5 bg-white text-[9px] sm:text-[10px] font-bold text-gray-400 group-focus-within:text-blue-600 transition-colors z-10" data-translate="nin" for="student-nin">NIN</label>
-                        <div class="flex items-center border-2 border-gray-100 rounded-xl group-focus-within:border-blue-500/30 group-focus-within:ring-4 group-focus-within:ring-blue-500/10 transition-all bg-gray-50/30 group-focus-within:bg-white overflow-hidden">
-                            <div class="pl-3.5 text-gray-400 group-focus-within:text-blue-500 transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path></svg>
-                            </div>
-                            <input type="text" id="student-nin" placeholder="NIN (auto-généré)" data-translate-placeholder="ninPlaceholder" class="w-full p-2 sm:p-2.5 bg-transparent font-bold text-sm text-gray-700 outline-none">
-                        </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                        <!-- NIN -->
+                        <div class="relative group">
+                            <label class="absolute -top-2 left-3 px-1.5 bg-white text-[9px] sm:text-[10px] font-bold text-gray-400 group-focus-within:text-blue-600 transition-colors z-10" data-translate="nin" for="student-nin">NIN</label>
+                            <div class="flex items-center border-2 border-gray-100 rounded-xl group-focus-within:border-blue-500/30 group-focus-within:ring-4 group-focus-within:ring-blue-500/10 transition-all bg-gray-50/30 group-focus-within:bg-white overflow-hidden">
+                                <div class="pl-3.5 text-gray-400 group-focus-within:text-blue-500 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path></svg>
+                                </div>
+                                <input type="text" id="student-nin" placeholder="NIN (auto-généré)" data-translate-placeholder="ninPlaceholder" class="w-full p-2 sm:p-2.5 bg-transparent font-bold text-sm text-gray-700 outline-none">
+                            </div>
+                        </div>
+
+                        <!-- Gender (Sexe) -->
+                        <div class="relative group">
+                            <label class="absolute -top-2 left-3 px-1.5 bg-white text-[9px] sm:text-[10px] font-bold text-gray-400 transition-colors z-10" data-translate="gender">Sexe</label>
+                            <div class="flex items-center justify-around h-[42px] px-3 border-2 border-gray-100 rounded-xl bg-gray-50/30 overflow-hidden">
+                                <label class="inline-flex items-center gap-2 cursor-pointer text-xs font-bold text-gray-700 hover:text-blue-600 transition-colors">
+                                    <input type="radio" name="student-sex" id="student-sex-m" value="M" checked class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer">
+                                    <span data-translate="boy">Garçon</span>
+                                </label>
+                                <label class="inline-flex items-center gap-2 cursor-pointer text-xs font-bold text-gray-700 hover:text-pink-600 transition-colors">
+                                    <input type="radio" name="student-sex" id="student-sex-f" value="F" class="w-4 h-4 text-pink-600 focus:ring-pink-500 border-gray-300 cursor-pointer">
+                                    <span data-translate="girl">Fille</span>
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
