@@ -1258,10 +1258,38 @@
         }
     };
 
+    window.clearStudentSearch = function() {
+        const searchInput = document.getElementById('student-search');
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.focus();
+        }
+        const clearBtn = document.getElementById('student-search-clear');
+        if (clearBtn) clearBtn.classList.add('hidden');
+        window.renderStudents();
+    };
+
+    window.handleStudentSearchKeydown = function(e) {
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            e.stopPropagation();
+            window.clearStudentSearch();
+        }
+    };
+
     window.renderStudents = async function() {
         const t = getTranslations()[getLang()];
         const container = document.getElementById('students-list');
-        const searchTerm = document.getElementById('student-search')?.value.trim().toLowerCase() || '';
+        const searchInput = document.getElementById('student-search');
+        const searchTerm = searchInput?.value.trim().toLowerCase() || '';
+        const clearBtn = document.getElementById('student-search-clear');
+        if (clearBtn) {
+            if (searchInput && searchInput.value.length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+        }
         const filterSelect = document.getElementById('filter-class-students');
         const selectedClass = filterSelect ? filterSelect.value : (studentsUiState.selectedClass || '');
         const data = getData();
