@@ -254,12 +254,12 @@
             content.style.visibility = 'visible';
             if (icon) icon.classList.add('rotate-180');
 
-            // Focus first input
+            // Focus first empty input, or focus without select if already graded
             setTimeout(() => {
-                const firstInput = content.querySelector('input:not([disabled])');
+                const inputs = Array.from(content.querySelectorAll('input:not([disabled])'));
+                const firstInput = inputs.find(inp => inp.value === '' || inp.value === null || inp.value === undefined) || inputs[0];
                 if (firstInput) {
                     firstInput.focus();
-                    firstInput.select(); // Select content for easier editing
                 }
             }, 350); // Wait for transition
         }
@@ -618,18 +618,26 @@
         saveData();
         window.recalculateTotals(assignmentId, studentId);
 
-        // Auto-focus sur le premier champ de saisie
-        const firstInput = container.querySelector('input:not([disabled])');
-        if (firstInput) {
+        // Placement intelligent et sécurisé du curseur
+        const allInputs = Array.from(container.querySelectorAll('input:not([disabled])'));
+        const firstEmptyInput = allInputs.find(inp => inp.value === '' || inp.value === null || inp.value === undefined);
+
+        if (firstEmptyInput) {
+            const parentAccordion = firstEmptyInput.closest('.accordion-content');
+            if (parentAccordion && parentAccordion.id) {
+                const accId = parentAccordion.id.replace('accordion-', '');
+                window.openAccordion(accId);
+            }
+            setTimeout(() => {
+                firstEmptyInput.focus();
+            }, 50);
+        } else if (allInputs.length > 0) {
+            const firstInput = allInputs[0];
             const parentAccordion = firstInput.closest('.accordion-content');
             if (parentAccordion && parentAccordion.id) {
                 const accId = parentAccordion.id.replace('accordion-', '');
                 window.openAccordion(accId);
             }
-        }
-        if (firstInput) {
-            firstInput.focus();
-            firstInput.select();
         }
     };
 
@@ -1072,6 +1080,39 @@
         document.body.style.overflow = 'hidden';
     };
 
+    function isStudentFullyGraded(studentId, assignmentId) {
+        const data = getData();
+        const assignment = data.assignments.find(a => a.id === assignmentId);
+        if (!assignment || !assignment.exercises || assignment.exercises.length === 0) return false;
+        const studentGrades = data.grades[studentId]?.[assignmentId] || {};
+        return assignment.exercises.every(ex => window.isExerciseFullyGraded(studentGrades, ex));
+    }
+
+    function findNextIncompleteStudentIndex(assignmentId) {
+        const studentSelect = document.getElementById('select-student');
+        if (!studentSelect || studentSelect.options.length <= 1) return -1;
+
+        const currentIndex = studentSelect.selectedIndex;
+        const totalOptions = studentSelect.options.length;
+
+        for (let i = 1; i < totalOptions; i++) {
+            let checkIndex = currentIndex + i;
+            if (checkIndex >= totalOptions) {
+                checkIndex = 1 + (checkIndex - totalOptions);
+            }
+            if (checkIndex === currentIndex) continue;
+
+            const opt = studentSelect.options[checkIndex];
+            const sId = opt ? opt.value : null;
+            if (!sId) continue;
+
+            if (!isStudentFullyGraded(sId, assignmentId)) {
+                return checkIndex;
+            }
+        }
+        return -1;
+    }
+
     window.confirmAssignmentTotal = async function(studentId, assignmentId) {
         const data = getData();
         const svc = gradesSvc();
@@ -1085,8 +1126,23 @@
         window.recalculateTotals(assignmentId, studentId);
 
         window.closeExerciseTotalConfirm();
-        // Navigation fluide a l'eleve suivant
-        await window.navigateStudent(1);
+
+        // Navigation intelligente vers le prochain élève ayant des notes manquantes
+        const nextIncompleteIndex = findNextIncompleteStudentIndex(assignmentId);
+        if (nextIncompleteIndex !== -1) {
+            const studentSelect = document.getElementById('select-student');
+            if (studentSelect) {
+                studentSelect.selectedIndex = nextIncompleteIndex;
+                window.updateCustomStudentSelectorTrigger();
+                await window.loadGradeEntry();
+            }
+        } else {
+            // Tous les élèves de la classe ont été notés !
+            const t = getTranslations()[getLang()];
+            if (window.showToast) {
+                window.showToast(t.allStudentsGradedForAssignment || "Tous les élèves de la classe ont été notés pour ce devoir !", "success");
+            }
+        }
     };
 
     window.closeExerciseTotalConfirm = function() {
