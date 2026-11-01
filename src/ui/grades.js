@@ -1515,6 +1515,24 @@
     };
     
     // --- CUSTOM STUDENT SELECTOR LOGIC ---
+    function scrollToActiveStudentInSelector(smooth = true) {
+        const listContainer = document.getElementById('student-selector-list');
+        if (!listContainer) return;
+        const activeItem = listContainer.querySelector('.student-item.active');
+        if (!activeItem) return;
+
+        const containerRect = listContainer.getBoundingClientRect();
+        const itemRect = activeItem.getBoundingClientRect();
+        const relativeTop = itemRect.top - containerRect.top;
+        const currentScroll = listContainer.scrollTop;
+        const targetScroll = currentScroll + relativeTop - (listContainer.clientHeight / 2) + (activeItem.clientHeight / 2);
+
+        listContainer.scrollTo({
+            top: Math.max(0, targetScroll),
+            behavior: smooth ? 'smooth' : 'auto'
+        });
+    }
+
     let studentSelectorFilter = 'all'; // 'all' or 'remaining'
     let exerciseFocusFilter = null; // ID of focused exercise
 
@@ -1570,8 +1588,14 @@
         
         window.renderStudentListInSelector();
         
+        // Positionner automatiquement la liste sur l'élève en cours
+        setTimeout(() => scrollToActiveStudentInSelector(false), 50);
+        setTimeout(() => scrollToActiveStudentInSelector(true), 320);
+
         // Focus search
-        setTimeout(() => searchInput?.focus(), 100);
+        setTimeout(() => {
+            if (searchInput) searchInput.focus({ preventScroll: true });
+        }, 100);
     };
 
     window.closeStudentSelector = function() {
@@ -1601,12 +1625,14 @@
         }
         
         window.renderStudentListInSelector();
+        setTimeout(() => scrollToActiveStudentInSelector(true), 60);
     };
 
     window.setExerciseFocusFilter = function(exId) {
         // Toggle focus
         exerciseFocusFilter = (exerciseFocusFilter === exId) ? null : exId;
         window.renderStudentListInSelector();
+        setTimeout(() => scrollToActiveStudentInSelector(true), 60);
     };
 
     function getStudentGradingProgress(studentId, assignmentId) {
