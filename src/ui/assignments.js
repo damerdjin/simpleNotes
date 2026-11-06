@@ -1271,6 +1271,7 @@ import { supabase } from './supabase-client.js';
         window.renderAssignments();
         renderSummary();
         renderExportPrep();
+        if (typeof window.refreshGradesUI === 'function') window.refreshGradesUI();
 
         // Enregistrer l'assignation matière dans subject_teachers (nouveau devoir uniquement)
         if (!editingAssignmentId) {
@@ -1406,6 +1407,7 @@ import { supabase } from './supabase-client.js';
         window.renderAssignments();
         renderSummary();
         renderExportPrep();
+        if (typeof window.refreshGradesUI === 'function') window.refreshGradesUI();
     };
 
     window.duplicateAssignment = function(id, includeGrades = false) {
@@ -1451,6 +1453,7 @@ import { supabase } from './supabase-client.js';
         window.renderAssignments();
         // Force refresh of other components that might depend on assignments list
         if (typeof window.renderSummary === 'function') window.renderSummary(); 
+        if (typeof window.refreshGradesUI === 'function') window.refreshGradesUI();
     };
 
     window.toggleAccordion = function(id) {

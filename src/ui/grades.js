@@ -1875,4 +1875,15 @@
         window.goToGradeStep(1);
     };
 
+    // Public refresh function to synchronize Grades UI when assignments or classes change
+    window.refreshGradesUI = async function() {
+        if (typeof window.loadGradeSelectors === 'function') {
+            await window.loadGradeSelectors();
+        }
+        const currentStep = window.currentGradeStep || 1;
+        if (typeof window.goToGradeStep === 'function') {
+            await window.goToGradeStep(currentStep);
+        }
+    };
+
 })();

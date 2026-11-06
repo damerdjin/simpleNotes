@@ -180,7 +180,11 @@ import { supabase } from './supabase-client.js';
             icon: '📊',
             onShow: async () => {
                 if (window.loadClassSelectors) await window.loadClassSelectors();
-                if (window.loadGradeSelectors) await window.loadGradeSelectors();
+                if (typeof window.refreshGradesUI === 'function') {
+                    await window.refreshGradesUI();
+                } else if (window.loadGradeSelectors) {
+                    await window.loadGradeSelectors();
+                }
             }
         });
 
@@ -852,7 +856,8 @@ import { supabase } from './supabase-client.js';
             if (window.renderStudents) await window.renderStudents();
             if (window.renderAssignments) window.renderAssignments();
             if (window.renderSummary) window.renderSummary();
-            if (window.loadGradeSelectors) await window.loadGradeSelectors();
+            if (typeof window.refreshGradesUI === 'function') await window.refreshGradesUI();
+            else if (window.loadGradeSelectors) await window.loadGradeSelectors();
             if (window.renderExportPrep) window.renderExportPrep();
             
             // Also update any other global state indicators
@@ -888,7 +893,8 @@ import { supabase } from './supabase-client.js';
             if (window.renderStudents) await window.renderStudents();
             if (window.renderAssignments) renderAssignments();
             if (window.renderSummary) renderSummary();
-            if (window.loadGradeSelectors) await window.loadGradeSelectors();
+            if (typeof window.refreshGradesUI === 'function') await window.refreshGradesUI();
+            else if (window.loadGradeSelectors) await window.loadGradeSelectors();
             if (window.renderExportPrep) window.renderExportPrep();
             if (window.invalidateDashboardCache) window.invalidateDashboardCache();
             if (window.renderDashboard) window.renderDashboard();
