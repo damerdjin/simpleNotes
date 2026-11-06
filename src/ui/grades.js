@@ -334,6 +334,7 @@
                 <div class="flex flex-col gap-2 w-full text-center sm:text-start">
                     <h3 class="text-xl sm:text-3xl font-black leading-tight break-words" title="${student.name}">${student.name}</h3>
                     <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 opacity-90">
+                        <span class="text-xs sm:text-sm font-bold bg-white/20 px-3 py-1 rounded-full">${typeof window.formatClassDisplayName === 'function' ? window.formatClassDisplayName(student.className || document.getElementById('select-class-grades')?.value || '') : (student.className || document.getElementById('select-class-grades')?.value || '')}</span>
                         <span class="text-xs sm:text-sm font-bold bg-black/10 px-3 py-1 rounded-full break-words max-w-full">${assignment.name}</span>
                         ${hasHistory ? `
                             <button onclick="undoLastGrade('${studentId}', '${assignmentId}')" class="p-1 px-3 bg-white/20 hover:bg-white/40 rounded-lg transition-all flex items-center gap-1.5 text-[10px] sm:text-xs font-bold shadow-sm" title="${t.undo || 'Annuler'}">
@@ -1212,6 +1213,26 @@
             }
         }
         
+        // Update Stepper Step 1 Label (Show class name when class is selected)
+        const classSelect = document.getElementById('select-class-grades');
+        const selectedClass = classSelect ? classSelect.value : '';
+        const stepLabel1 = document.getElementById('step-label-1');
+        if (stepLabel1) {
+            const t = getTranslations()[getLang()];
+            if (step >= 2 && selectedClass) {
+                stepLabel1.removeAttribute('data-translate');
+                const displayName = typeof window.formatClassDisplayName === 'function' 
+                    ? window.formatClassDisplayName(selectedClass) 
+                    : (typeof window.cleanClassName === 'function' ? window.cleanClassName(selectedClass) : selectedClass);
+                stepLabel1.textContent = displayName;
+                stepLabel1.title = displayName;
+            } else {
+                stepLabel1.setAttribute('data-translate', 'stepClass');
+                stepLabel1.textContent = t.stepClass || 'Classe';
+                stepLabel1.removeAttribute('title');
+            }
+        }
+        
         // Update Connectors
         const c1 = document.getElementById('step-connector-1');
         const c2 = document.getElementById('step-connector-2');
@@ -1440,7 +1461,7 @@
         const globalAcademicYear = window.getGlobalAcademicYear();
         const globalTrimester = window.getGlobalTrimester();
         
-        const color = window.currentClassColor || '#3b82f6';
+        const color = window.currentClassColor || (typeof window.getClassColor === 'function' ? window.getClassColor(className) : '#3b82f6');
         const colorLight = color + '15'; // Low opacity for backgrounds
 
         const assignments = data.assignments.filter(a => {

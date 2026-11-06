@@ -16,15 +16,18 @@
     window.levelFromClass = (className = '') => {
         const first = className.trim().split(/\s+/)[0] || '';
         const map = {
-            'أولى': 1, 'اولى': 1, '1ere': 1, '1ère': 1, '1': 1,
-            'ثانية': 2, '2nde': 2, '2': 2,
-            'ثالثة': 3, '3eme': 3, '3ème': 3, '3': 3,
-            'رابعة': 4, '4eme': 4, '4ème': 4, '4': 4,
-            'خامسة': 5, '5eme': 5, '5ème': 5, '5': 5,
-            'سادسة': 6, '6eme': 6, '6ème': 6, '6': 6
+            'أولى': 1, 'اولى': 1, 'أولي': 1, 'اولي': 1, '1ere': 1, '1ère': 1, '1': 1,
+            'ثانية': 2, 'ثانيه': 2, '2nde': 2, '2': 2,
+            'ثالثة': 3, 'ثالثه': 3, '3eme': 3, '3ème': 3, '3': 3,
+            'رابعة': 4, 'رابعه': 4, '4eme': 4, '4ème': 4, '4': 4,
+            'خامسة': 5, 'خامسه': 5, '5eme': 5, '5ème': 5, '5': 5,
+            'سادسة': 6, 'سادسه': 6, '6eme': 6, '6ème': 6, '6': 6
         };
         const key = first.toLowerCase();
-        return map[key] || '?';
+        if (map[key]) return map[key];
+        const match = className.trim().match(/^(\d+)/);
+        if (match) return parseInt(match[1], 10);
+        return '?';
     };
 
     window.cleanClassName = (className = '') => {
@@ -53,9 +56,18 @@
         return parts.join(' ');
     };
 
+    // Formate le nom affiché de la classe en gardant le niveau en lettres (ex: "ثالثة رياضي 1")
+    window.formatClassDisplayName = (className = '') => {
+        if (!className) return '';
+        let parts = className.trim().split(/\s+/);
+        const filtered = parts.filter(p => !['ثانوي', 'secondary', 'année', 'annee'].includes(p.toLowerCase()));
+        return filtered.length > 0 ? filtered.join(' ') : className.trim();
+    };
+
     // Internal references for backward compatibility within this file
     const levelFromClass = window.levelFromClass;
     const cleanClassName = window.cleanClassName;
+    const formatClassDisplayName = window.formatClassDisplayName;
 
     const studentsUiState = window.studentsUiState || { selectedClass: '', page: 1, pageSize: 12 };
     window.studentsUiState = studentsUiState;
