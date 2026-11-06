@@ -1880,7 +1880,32 @@
         if (typeof window.loadGradeSelectors === 'function') {
             await window.loadGradeSelectors();
         }
-        const currentStep = window.currentGradeStep || 1;
+        let currentStep = window.currentGradeStep || 1;
+        // Si l'utilisateur était à l'étape 3 (saisie de note pour un élève spécifique),
+        // on revient ergonomiquement à l'étape 2 (liste des devoirs de la classe) ou à l'étape 1
+        if (currentStep === 3) {
+            const classSelect = document.getElementById('select-class-grades');
+            const selectedClass = classSelect ? classSelect.value : '';
+            if (selectedClass) {
+                if (!window.currentClassColor && typeof window.getClassColor === 'function') {
+                    window.currentClassColor = window.getClassColor(selectedClass);
+                }
+                const data = (typeof getData === 'function') ? getData() : (window.store?.data || {});
+                const userId = window.currentUser?.email || window.currentUser?.id || 'unknown';
+                const globalAcademicYear = (typeof window.getGlobalAcademicYear === 'function') ? window.getGlobalAcademicYear() : '';
+                const globalTrimester = (typeof window.getGlobalTrimester === 'function') ? window.getGlobalTrimester() : '';
+                const hasAssignments = (data.assignments || []).some(a => 
+                    a.className === selectedClass && 
+                    (a.createdBy || 'unknown') === userId && 
+                    (!globalAcademicYear || (a.academicYear || '') === globalAcademicYear) && 
+                    (!globalTrimester || (a.trimester || '') === globalTrimester)
+                );
+                currentStep = hasAssignments ? 2 : 1;
+            } else {
+                currentStep = 1;
+            }
+            window.currentGradeStep = currentStep;
+        }
         if (typeof window.goToGradeStep === 'function') {
             await window.goToGradeStep(currentStep);
         }

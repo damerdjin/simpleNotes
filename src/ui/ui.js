@@ -185,6 +185,15 @@ import { supabase } from './supabase-client.js';
                 } else if (window.loadGradeSelectors) {
                     await window.loadGradeSelectors();
                 }
+            },
+            onHide: () => {
+                // Si on quitte l'onglet Notes pendant la saisie d'un élève (étape 3),
+                // on se repositionne sur la liste des devoirs de la classe (étape 2) ou étape 1
+                if (window.currentGradeStep === 3) {
+                    const classSelect = document.getElementById('select-class-grades');
+                    const selectedClass = classSelect ? classSelect.value : '';
+                    window.currentGradeStep = selectedClass ? 2 : 1;
+                }
             }
         });
 
@@ -241,6 +250,9 @@ import { supabase } from './supabase-client.js';
             if (isAlreadyActive && !options.skipHistory) {
                 if (tabId === 'students' && window.setStudentsSelectedClass) {
                     window.setStudentsSelectedClass('', { skipHistory: false });
+                }
+                if (tabId === 'grades' && window.goToGradeStep) {
+                    window.goToGradeStep(1);
                 }
                 return true;
             }
